@@ -34,9 +34,13 @@ package org.cbioportal.cmo.pipelines.gdd;
 
 import org.cbioportal.cmo.pipelines.gdd.model.*;
 
+import org.springframework.http.*;
 import org.springframework.batch.item.*;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+import org.springframework.beans.factory.annotation.Value;
 import java.util.List;
 
 /**
@@ -44,17 +48,48 @@ import java.util.List;
  */
 public class GDDClassifierReader implements ItemStreamReader<GDDResult>
 {
+    @Value("${gdd.url}")
+    private String gddURL;
 
-    List<GDDResult> results;
+    @Value("#{jobParameters[maf]}")
+	private String maf;
+
+    @Value("#{jobParameters[cna]}")
+	private String cna;
+
+    @Value("#{jobParameters[seg]}")
+	private String seg;
+
+    @Value("#{jobParameters[sv]}")
+	private String sv;
+
+    @Value("#{jobParameters[clinical]}")
+	private String clinical;
+
+    private List<GDDResult> results;
 
     @Override
     public void open(ExecutionContext executionContext) throws ItemStreamException
     {
-        String uri = "http://cbio.mskcc.org/~grossb/gdd-sample.json";
         RestTemplate restTemplate = new RestTemplate();
-        restTemplate.getMessageConverters().add(new MappingJackson2HttpMessageConverter());
-        GDDClassifier gddClassifier = restTemplate.getForObject(uri, GDDClassifier.class);
-        this.results = gddClassifier.getResult();
+        HttpEntity<LinkedMultiValueMap<String, Object>> requestEntity = getRequestEntity();
+        ResponseEntity<GDDClassifier> responseEntity =
+            restTemplate.exchange(gddURL, HttpMethod.POST, requestEntity, GDDClassifier.class);
+        this.results = responseEntity.getBody().getResult();
+    }
+
+    private HttpEntity<LinkedMultiValueMap<String, Object>> getRequestEntity()
+    {
+        LinkedMultiValueMap<String, Object> map = new LinkedMultiValueMap<>();
+        map.add("maf", new FileSystemResource(maf));
+        map.add("cna", new FileSystemResource(cna));
+        map.add("seg", new FileSystemResource(seg));
+        map.add("sv", new FileSystemResource(sv));
+        map.add("clinical", new FileSystemResource(clinical));
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+
+        return new HttpEntity<LinkedMultiValueMap<String, Object>>(map, headers);
     }
 
     @Override

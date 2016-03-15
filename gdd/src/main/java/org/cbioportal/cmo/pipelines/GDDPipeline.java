@@ -52,8 +52,12 @@ public class GDDPipeline
     {
         Options gnuOptions = new Options();
         gnuOptions.addOption("h", "help", false, "shows this help document and quits.")
-            .addOption("i", "input", true, "GDD Classifer input file location")
-            .addOption("o", "output", true, "Staging filename");
+            .addOption("maf", "maf", true, "MAF file")
+            .addOption("cna", "cna", true, "CNA file")
+            .addOption("seg", "seg", true, "SEG file")
+            .addOption("sv", "sv", true, "SV file")
+            .addOption("cl", "cl", true, "CLINICAL file")
+            .addOption("stage", "staging", true, "Staging filename");
 
         return gnuOptions;
     }
@@ -65,7 +69,9 @@ public class GDDPipeline
         System.exit(exitStatus);
     }
 
-    private static void launchJob(String[] args, String input, String output) throws Exception
+    private static void launchJob(String[] args, String maf, String cna,
+                                  String seg, String sv,
+                                  String clinical, String stagingFile) throws Exception
     {
         SpringApplication app = new SpringApplication(GDDPipeline.class);
         ConfigurableApplicationContext ctx= app.run(args);
@@ -73,8 +79,12 @@ public class GDDPipeline
 
         Job gddJob = ctx.getBean(BatchConfiguration.GDD_JOB, Job.class);
         JobParameters jobParameters = new JobParametersBuilder()
-    		.addString("input", input)
-            .addString("output", output)
+    		.addString("maf", maf)
+            .addString("cna", cna)
+            .addString("seg", seg)
+            .addString("sv", sv)
+            .addString("clinical", clinical)
+            .addString("stagingFile", stagingFile)
     		.toJobParameters();  
         JobExecution jobExecution = jobLauncher.run(gddJob, jobParameters);
     }
@@ -85,10 +95,17 @@ public class GDDPipeline
         CommandLineParser parser = new GnuParser();
         CommandLine commandLine = parser.parse(gnuOptions, args);
         if (commandLine.hasOption("h") ||
-            !commandLine.hasOption("i") ||
-            !commandLine.hasOption("o")) {
+            !commandLine.hasOption("maf") ||
+            !commandLine.hasOption("cna") ||
+            !commandLine.hasOption("seg") ||
+            !commandLine.hasOption("sv") ||
+            !commandLine.hasOption("cl") ||
+            !commandLine.hasOption("stage")) {
             help(gnuOptions, 0);
         }
-        launchJob(args, commandLine.getOptionValue("i"), commandLine.getOptionValue("o"));
+        launchJob(args, commandLine.getOptionValue("maf"),
+                  commandLine.getOptionValue("cna"), commandLine.getOptionValue("seg"),
+                  commandLine.getOptionValue("sv"), commandLine.getOptionValue("cl"),
+                  commandLine.getOptionValue("stage"));
     }
 }

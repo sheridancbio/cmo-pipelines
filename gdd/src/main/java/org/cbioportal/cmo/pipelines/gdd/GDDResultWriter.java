@@ -45,8 +45,8 @@ import java.util.*;
  */
 public class GDDResultWriter implements ItemStreamWriter<String>
 {
-    @Value("#{jobParameters[output]}")
-	private String output;
+    @Value("#{jobParameters[stage]}")
+	private String stagingFile;
 
     //private Resource resource;
     private List<String> writeList = new ArrayList<String>();
@@ -62,7 +62,7 @@ public class GDDResultWriter implements ItemStreamWriter<String>
                 writer.write("SAMPLE_ID\tCLASSIFICATION");
             }
         });
-        flatFileItemWriter.setResource(new FileSystemResource(output));
+        flatFileItemWriter.setResource(new FileSystemResource(stagingFile));
         flatFileItemWriter.open(executionContext);
     }
             
