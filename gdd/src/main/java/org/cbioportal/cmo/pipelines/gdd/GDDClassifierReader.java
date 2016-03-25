@@ -32,6 +32,11 @@
 
 package org.cbioportal.cmo.pipelines.gdd;
 
+import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
+import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import static com.fasterxml.jackson.databind.SerializationFeature.FAIL_ON_EMPTY_BEANS;
+import static com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS;
 import org.cbioportal.cmo.pipelines.gdd.model.*;
 
 import org.springframework.http.*;
@@ -41,7 +46,7 @@ import org.springframework.core.io.FileSystemResource;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.beans.factory.annotation.Value;
-import java.util.List;
+import java.util.*;
 
 /**
  * @author Benjamin Gross
@@ -101,9 +106,27 @@ public class GDDClassifierReader implements ItemStreamReader<GDDResult>
     @Override
     public GDDResult read() throws Exception
     {
-        if (!results.isEmpty()) {
-            return results.remove(0);
+        // necessary until bug that generates duplicate results in classifier script "generate_feature_table.R" gets fixed
+        if (!results.isEmpty() && results.get(0).getSampleId() != null) {            
+            return results.remove(0);            
         }
         return null;
+    }
+    
+    public MappingJackson2HttpMessageConverter jsonTextHtmlConverter() {
+        MappingJackson2HttpMessageConverter jsonConverter = new MappingJackson2HttpMessageConverter();
+        
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.configure(FAIL_ON_UNKNOWN_PROPERTIES, false);
+        objectMapper.configure(WRITE_DATES_AS_TIMESTAMPS, false);
+        objectMapper.configure(FAIL_ON_EMPTY_BEANS, false);
+        objectMapper.setSerializationInclusion(NON_NULL);        
+        jsonConverter.setObjectMapper(objectMapper);
+        
+        List<MediaType> mediaTypes = new ArrayList<>(); 
+        mediaTypes.add(new MediaType("text","html",MappingJackson2HttpMessageConverter.DEFAULT_CHARSET));
+        jsonConverter.setSupportedMediaTypes(mediaTypes);
+        
+        return jsonConverter;
     }
 }

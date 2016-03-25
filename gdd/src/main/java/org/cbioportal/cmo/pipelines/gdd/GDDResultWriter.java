@@ -45,7 +45,7 @@ import java.util.*;
  */
 public class GDDResultWriter implements ItemStreamWriter<String>
 {
-    @Value("#{jobParameters[stage]}")
+    @Value("#{jobParameters[stagingFile]}")
 	private String stagingFile;
 
     //private Resource resource;
