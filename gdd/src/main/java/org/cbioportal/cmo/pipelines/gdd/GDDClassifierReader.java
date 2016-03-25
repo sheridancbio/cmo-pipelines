@@ -45,9 +45,11 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.beans.factory.annotation.Value;
-import java.util.*;
 
+import java.util.*;
+import org.springframework.web.bind.annotation.*;
 /**
  * @author Benjamin Gross
  */
@@ -57,29 +59,32 @@ public class GDDClassifierReader implements ItemStreamReader<GDDResult>
     private String gddURL;
 
     @Value("#{jobParameters[maf]}")
-	private String maf;
+    private String maf;
 
     @Value("#{jobParameters[cna]}")
-	private String cna;
+    private String cna;
 
     @Value("#{jobParameters[seg]}")
-	private String seg;
+    private String seg;
 
     @Value("#{jobParameters[sv]}")
-	private String sv;
+    private String sv;
 
     @Value("#{jobParameters[clinical]}")
-	private String clinical;
+    private String clinical;
 
     private List<GDDResult> results;
-
+    
     @Override
     public void open(ExecutionContext executionContext) throws ItemStreamException
     {
         RestTemplate restTemplate = new RestTemplate();
-        HttpEntity<LinkedMultiValueMap<String, Object>> requestEntity = getRequestEntity();
+        HttpEntity<LinkedMultiValueMap<String, Object>> requestEntity = getRequestEntity();  
+        List<HttpMessageConverter<?>> converters = restTemplate.getMessageConverters();                
+        converters.add(jsonTextHtmlConverter());            
+        restTemplate.setMessageConverters(converters);
         ResponseEntity<GDDClassifier> responseEntity =
-            restTemplate.exchange(gddURL, HttpMethod.POST, requestEntity, GDDClassifier.class);
+            restTemplate.exchange(gddURL, HttpMethod.POST, requestEntity, GDDClassifier.class);  
         this.results = responseEntity.getBody().getResult();
     }
 
@@ -93,7 +98,6 @@ public class GDDClassifierReader implements ItemStreamReader<GDDResult>
         map.add("clinical", new FileSystemResource(clinical));
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.MULTIPART_FORM_DATA);
-
         return new HttpEntity<LinkedMultiValueMap<String, Object>>(map, headers);
     }
 
@@ -128,5 +132,5 @@ public class GDDClassifierReader implements ItemStreamReader<GDDResult>
         jsonConverter.setSupportedMediaTypes(mediaTypes);
         
         return jsonConverter;
-    }
+    }    
 }
