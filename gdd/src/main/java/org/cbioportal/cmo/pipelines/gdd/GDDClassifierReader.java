@@ -32,11 +32,6 @@
 
 package org.cbioportal.cmo.pipelines.gdd;
 
-import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
-import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import static com.fasterxml.jackson.databind.SerializationFeature.FAIL_ON_EMPTY_BEANS;
-import static com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS;
 import org.cbioportal.cmo.pipelines.gdd.model.*;
 
 import org.springframework.http.*;
@@ -44,12 +39,9 @@ import org.springframework.batch.item.*;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
-import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.beans.factory.annotation.Value;
 
 import java.util.*;
-import org.springframework.web.bind.annotation.*;
 /**
  * @author Benjamin Gross
  */
@@ -80,9 +72,6 @@ public class GDDClassifierReader implements ItemStreamReader<GDDResult>
     {
         RestTemplate restTemplate = new RestTemplate();
         HttpEntity<LinkedMultiValueMap<String, Object>> requestEntity = getRequestEntity();  
-        List<HttpMessageConverter<?>> converters = restTemplate.getMessageConverters();                
-        converters.add(jsonTextHtmlConverter());            
-        restTemplate.setMessageConverters(converters);
         ResponseEntity<GDDClassifier> responseEntity =
             restTemplate.exchange(gddURL, HttpMethod.POST, requestEntity, GDDClassifier.class);  
         this.results = responseEntity.getBody().getResult();
@@ -115,22 +104,5 @@ public class GDDClassifierReader implements ItemStreamReader<GDDResult>
             return results.remove(0);            
         }
         return null;
-    }
-    
-    public MappingJackson2HttpMessageConverter jsonTextHtmlConverter() {
-        MappingJackson2HttpMessageConverter jsonConverter = new MappingJackson2HttpMessageConverter();
-        
-        ObjectMapper objectMapper = new ObjectMapper();
-        objectMapper.configure(FAIL_ON_UNKNOWN_PROPERTIES, false);
-        objectMapper.configure(WRITE_DATES_AS_TIMESTAMPS, false);
-        objectMapper.configure(FAIL_ON_EMPTY_BEANS, false);
-        objectMapper.setSerializationInclusion(NON_NULL);        
-        jsonConverter.setObjectMapper(objectMapper);
-        
-        List<MediaType> mediaTypes = new ArrayList<>(); 
-        mediaTypes.add(new MediaType("text","html",MappingJackson2HttpMessageConverter.DEFAULT_CHARSET));
-        jsonConverter.setSupportedMediaTypes(mediaTypes);
-        
-        return jsonConverter;
-    }    
+    } 
 }
