@@ -45,8 +45,8 @@ import java.util.*;
  */
 public class GDDResultWriter implements ItemStreamWriter<String>
 {
-    @Value("#{jobParameters[stage]}")
-	private String stagingFile;
+    @Value("#{jobParameters[stagingFile]}")
+    private String stagingFile;
 
     //private Resource resource;
     private List<String> writeList = new ArrayList<String>();
@@ -58,6 +58,7 @@ public class GDDResultWriter implements ItemStreamWriter<String>
         PassThroughLineAggregator aggr = new PassThroughLineAggregator();
         flatFileItemWriter.setLineAggregator(aggr);
         flatFileItemWriter.setHeaderCallback(new FlatFileHeaderCallback() {
+            @Override
             public void writeHeader(Writer writer) throws IOException {
                 writer.write("SAMPLE_ID\tCLASSIFICATION");
             }
