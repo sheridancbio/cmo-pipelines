@@ -77,10 +77,10 @@ public class BatchConfiguration
 
     @Bean
     @StepScope
-	public ItemStreamReader<GDDResult> reader()
+    public ItemStreamReader<GDDResult> reader()
     {
-		return new GDDClassifierReader();
-	}
+        return new GDDClassifierReader();
+    }
 
     @Bean
     public GDDClassifierProcessor processor()
@@ -94,7 +94,7 @@ public class BatchConfiguration
     {
         return new GDDResultWriter();
     }
-    
+
 }
 
 

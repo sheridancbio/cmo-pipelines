@@ -58,7 +58,6 @@ public class GDDPipeline
             .addOption("sv", "sv", true, "SV file")
             .addOption("cl", "cl", true, "CLINICAL file")
             .addOption("stage", "staging", true, "Staging filename");
-
         return gnuOptions;
     }
 
@@ -77,15 +76,15 @@ public class GDDPipeline
         ConfigurableApplicationContext ctx= app.run(args);
         JobLauncher jobLauncher = ctx.getBean(JobLauncher.class);
 
-        Job gddJob = ctx.getBean(BatchConfiguration.GDD_JOB, Job.class);
+        Job gddJob = ctx.getBean(BatchConfiguration.GDD_JOB, Job.class);       
         JobParameters jobParameters = new JobParametersBuilder()
     		.addString("maf", maf)
-            .addString("cna", cna)
-            .addString("seg", seg)
-            .addString("sv", sv)
-            .addString("clinical", clinical)
-            .addString("stagingFile", stagingFile)
-    		.toJobParameters();  
+                .addString("cna", cna)
+                .addString("seg", seg)
+                .addString("sv", sv)
+                .addString("clinical", clinical)
+                .addString("stagingFile", stagingFile)
+    		.toJobParameters();        
         JobExecution jobExecution = jobLauncher.run(gddJob, jobParameters);
     }
     
