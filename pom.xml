@@ -11,6 +11,7 @@
 
   <modules>
     <module>gdd</module>
+    <module>crdb</module>
   </modules>
 
   <!-- inherit defaults from spring boot -->
