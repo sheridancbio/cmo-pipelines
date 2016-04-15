@@ -63,8 +63,8 @@ import org.springframework.transaction.annotation.Transactional;
  */
 public class CRDBSurveyReader implements ItemStreamReader<CRDBSurvey>
 {
-    @Value("${crdb.survey_table}")
-    private String crdbSurveyTable;
+    @Value("${crdb.survey_view}")
+    private String crdbSurveyView;
     
     @Value("#{jobParameters[cancerStudy]}")
     private String cancerStudy;
@@ -92,7 +92,7 @@ public class CRDBSurveyReader implements ItemStreamReader<CRDBSurvey>
     @Transactional
     private List<CRDBSurvey> getCrdbSurveyResults(OracleDataSource crdbDataSource) {
         QueryDslJdbcTemplate template = new QueryDslJdbcTemplate(crdbDataSource);
-        CRDBSurvey qCRDBS = alias(CRDBSurvey.class, crdbSurveyTable);
+        CRDBSurvey qCRDBS = alias(CRDBSurvey.class, crdbSurveyView);
         
         List<CRDBSurvey> crdbSurveyResults = new ArrayList<>();
         List<String> dmpIdList = new ArrayList<>();

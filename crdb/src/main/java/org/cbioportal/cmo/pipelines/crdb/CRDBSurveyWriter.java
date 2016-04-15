@@ -72,6 +72,10 @@ public class CRDBSurveyWriter implements ItemStreamWriter<String>
         flatFileItemWriter.open(executionContext);
     }
     
+    /**
+     * This function will eventually be useful and normalize the external
+     * column headers from the CRDB survey view for the staging file
+     **/
     private String normalizeHeaders(String[] columns) {
         return StringUtils.join(columns, "\t");
     }
