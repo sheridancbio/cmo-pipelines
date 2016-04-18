@@ -82,16 +82,11 @@ public class CRDBSurveyReader implements ItemStreamReader<CRDBSurvey>
         OracleDataSource crdbDataSource = beanFactory.getBean(OracleConfiguration.CRDB_DATA_SOURCE, OracleDataSource.class);
         this.crdbSurvey = getCrdbSurveyResults(crdbDataSource);
         
-//        this.cancerStudy = "mskimpact";
-//        Date qs_date_placeholder = new Date(04/13/2016);
-//        crdbSurvey.add(new CRDBSurvey("dmp_id_placeholder",qs_date_placeholder,"adj_txt_placeholder",
-//                "no_sys_txt_placeholder", "prior_rx_placeholder", "brain_met_placeholder", 
-//                "ecog_placeholder", "comments_placeholder"));
     }
     
     @Transactional
     private List<CRDBSurvey> getCrdbSurveyResults(OracleDataSource crdbDataSource) {
-        QueryDslJdbcTemplate template = new QueryDslJdbcTemplate(crdbDataSource);
+        //QueryDslJdbcTemplate template = new QueryDslJdbcTemplate(crdbDataSource);
         CRDBSurvey qCRDBS = alias(CRDBSurvey.class, crdbSurveyView);
         
         List<CRDBSurvey> crdbSurveyResults = new ArrayList<>();
@@ -100,6 +95,8 @@ public class CRDBSurveyReader implements ItemStreamReader<CRDBSurvey>
             if (dmpId != null) {
                 dmpIdList.add(dmpId);
                 CRDBSurvey record = new CRDBSurvey();
+                
+                //assuming only one record per dmpId right now...
                 record.setDmpId(dmpId);
                 record.setQsDate((Date)select($(qCRDBS.getQsDate())).from($(qCRDBS)).where($(qCRDBS.getDmpId()).eq(dmpId)).fetch());
                 record.setAdjTxt(select($(qCRDBS.getAdjTxt())).from($(qCRDBS)).where($(qCRDBS.getDmpId()).eq(dmpId)).fetchOne());
