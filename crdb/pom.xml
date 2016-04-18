@@ -31,24 +31,36 @@
       <artifactId>commons-cli</artifactId>
       <version>1.3</version>
     </dependency>
+    
+    <!-- for Google usage -->
+        <dependency>
+            <groupId>com.google.gdata</groupId>
+            <artifactId>core</artifactId>
+            <version>1.47.1</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.api-client</groupId>
+            <artifactId>google-api-client-java6</artifactId>
+            <version>1.20.0</version>
+        </dependency>    
+    
+    <!-- for Spring JDBC, QueryDSL usage -->
     <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-jdbc</artifactId>
-      <version>4.2.0.RC3</version>
+      <version>4.2.5.RELEASE</version>
       <type>jar</type>
-    </dependency>
-    
-    <dependency>
-        <groupId>org.springframework.data</groupId>
-        <artifactId>spring-data-oracle</artifactId>
-        <version>1.2.1.RELEASE</version>
     </dependency>
     <dependency>
       <groupId>com.querydsl</groupId>
       <artifactId>querydsl-sql-spatial</artifactId>
       <version>4.0.9</version>
     </dependency>
-
+    <dependency>
+      <groupId>com.mysema.querydsl</groupId>
+      <artifactId>querydsl-sql</artifactId>
+      <version>3.7.2</version>
+    </dependency>                
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-log4j12</artifactId>
@@ -61,32 +73,22 @@
       <artifactId>postgis-jdbc</artifactId>
       <version>1.3.3</version>
       <scope>provided</scope>
-    </dependency>          
+    </dependency>       
+       
     <!-- for Oracle usage -->
     <dependency>
       <groupId>com.oracle</groupId>
       <artifactId>ojdbc7</artifactId>
       <version>12.1.0.2</version>
     </dependency>    
-
     <dependency>
-      <groupId>com.mysema.querydsl</groupId>
-      <artifactId>querydsl-sql</artifactId>
-      <version>3.7.2</version>
-    </dependency>        
-    
-    <!-- for Spring JDBC usage -->
-    <!--
-    <dependency>
-        <groupId>org.springframework</groupId>
-        <artifactId>spring-jdbc</artifactId>
-        <version>4.2.0.RC3</version>        
-    </dependency>
-    -->        
-      
-                                    
+        <groupId>org.springframework.data</groupId>
+        <artifactId>spring-data-oracle</artifactId>
+        <version>1.2.1.RELEASE</version>
+    </dependency>                                        
   </dependencies>
   
+  <!-- Maven repo for QueryDSL -->
   <repositories>
       <repository>
           <id>msource</id>

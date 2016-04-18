@@ -67,6 +67,7 @@ public class BatchConfiguration
     
     
     public static final String CRDB_JOB = "crdbJob";
+    public static final String CRDB_DATA_SOURCE = "crdbDataSource";
 
     @Autowired
     public JobBuilderFactory jobBuilderFactory;

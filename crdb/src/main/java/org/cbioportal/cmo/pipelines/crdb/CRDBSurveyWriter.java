@@ -77,7 +77,10 @@ public class CRDBSurveyWriter implements ItemStreamWriter<String>
      * column headers from the CRDB survey view for the staging file
      **/
     private String normalizeHeaders(String[] columns) {
-        return StringUtils.join(columns, "\t");
+        String[] extColumns = columns;
+        String normColumns = "PATIENT_ID\tCRDB_COMMENTS\tCRDB_ADJ_TXT\tCRDB_PRIOR_RX\tCRDB_BRAINMET\tCRDB_ECOG\tCRDB_NOSYSTXT\tOTHER_SAMPLE_ID\tOTHER_PATIENT_ID";
+        //return StringUtils.join(columns, "\t");
+        return normColumns;
     }
             
     @Override
