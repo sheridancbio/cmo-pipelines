@@ -39,7 +39,6 @@ import org.springframework.batch.item.file.transform.PassThroughLineAggregator;
 import org.springframework.beans.factory.annotation.Value;
 import java.io.*;
 import java.util.*;
-import org.apache.commons.lang.StringUtils;
 
 /**
  * @author Benjamin Gross
@@ -78,7 +77,7 @@ public class CRDBSurveyWriter implements ItemStreamWriter<String>
      **/
     private String normalizeHeaders(String[] columns) {
         String[] extColumns = columns;
-        String normColumns = "PATIENT_ID\tCRDB_COMMENTS\tCRDB_ADJ_TXT\tCRDB_PRIOR_RX\tCRDB_BRAINMET\tCRDB_ECOG\tCRDB_NOSYSTXT\tOTHER_SAMPLE_ID\tOTHER_PATIENT_ID";
+        String normColumns = "PATIENT_ID\tCRDB_QS_DATE\tCRDB_ADJ_TXT\tCRDB_NOSYSTXT\tCRDB_PRIOR_RX\tCRDB_BRAINMET\tCRDB_ECOG\tCRDB_COMMENTS\tOTHER_SAMPLE_ID\tOTHER_PATIENT_ID";
         //return StringUtils.join(columns, "\t");
         return normColumns;
     }

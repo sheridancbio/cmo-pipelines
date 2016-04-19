@@ -68,7 +68,7 @@ public class CRDBPipeline
     private static void launchJob(String[] args, String cancerStudy, String stagingFile) throws Exception
     {
         SpringApplication app = new SpringApplication(CRDBPipeline.class);
-        ConfigurableApplicationContext ctx= app.run(args);
+        ConfigurableApplicationContext ctx = app.run(args);
         JobLauncher jobLauncher = ctx.getBean(JobLauncher.class);        
                 
         Job crdbJob = ctx.getBean(BatchConfiguration.CRDB_JOB, Job.class);        

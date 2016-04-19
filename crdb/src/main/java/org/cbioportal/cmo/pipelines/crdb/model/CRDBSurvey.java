@@ -32,19 +32,18 @@
 package org.cbioportal.cmo.pipelines.crdb.model;
 
 import java.util.*;
-import javax.annotation.Generated;
-import com.fasterxml.jackson.annotation.*;
+
 import org.apache.commons.lang.builder.ToStringBuilder;
 
 public class CRDBSurvey {
-    String dmpId;
-    Date qsDate;
-    String adjTxt;
-    String noSysTxt;
-    String priorRx;
-    String brainMet;
-    String ecog;
-    String comments;
+    private String DMP_ID;
+    private String QS_DATE;
+    private String ADJ_TXT;
+    private String NOSYSTXT;
+    private String PRIOR_RX;
+    private String BRAINMET;
+    private String ECOG;
+    private String COMMENTS;
     private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
 /**
@@ -56,232 +55,232 @@ public CRDBSurvey() {
 
 /**
 * 
-* @param dmpId
-* @param qsDate
-* @param adjTxt
-* @param noSysTxt
-* @param priorRx
-* @param brainMet
-* @param ecog
-* @param comments
+* @param DMP_ID
+* @param QS_DATE
+* @param ADJ_TXT
+* @param NOSYSTXT
+* @param PRIOR_RX
+* @param BRAINMET
+* @param ECOG
+* @param COMMENTS
 */
-public CRDBSurvey(String dmpId, Date qsDate, String adjTxt, String noSysTxt,
-        String priorRx, String brainMet, String ecog, String comments) {
-this.dmpId = dmpId;
-this.qsDate = qsDate;
-this.adjTxt = adjTxt;
-this.noSysTxt = noSysTxt;
-this.priorRx = priorRx;
-this.brainMet = brainMet;
-this.ecog = ecog;
-this.comments = comments;
+public CRDBSurvey(String DMP_ID, String QS_DATE, String ADJ_TXT, String NOSYSTXT,
+        String PRIOR_RX, String BRAINMET, String ECOG, String COMMENTS) {
+this.DMP_ID = DMP_ID;
+this.QS_DATE = QS_DATE;
+this.ADJ_TXT = ADJ_TXT;
+this.NOSYSTXT = NOSYSTXT;
+this.PRIOR_RX = PRIOR_RX;
+this.BRAINMET = BRAINMET;
+this.ECOG = ECOG;
+this.COMMENTS = COMMENTS;
 }
 
     /**
      * 
-     * @return dmpId
+     * @return DMP_ID
      */
-    public String getDmpId() {
-        return dmpId;
+    public String getDMP_ID() {
+        return DMP_ID;
     }
     
     /**
      * 
-     * @param dmpId 
+     * @param DMP_ID 
      */
-    public void setDmpId(String dmpId) {
-        this.dmpId = dmpId;
+    public void setDMP_ID(String DMP_ID) {
+        this.DMP_ID = DMP_ID;
     }
 
     /**
      * 
-     * @param dmpId
+     * @param DMP_ID
      * @return 
      */
-    public CRDBSurvey withDmpId(String dmpId) {
-        this.dmpId = dmpId;
-        return this;
-    }
-
-    /**
-     * 
-     * @return qsDate
-     */
-    public Date getQsDate() {
-        return qsDate;
-    }
-    
-    /**
-     * 
-     * @param qsDate 
-     */
-    public void setQsDate(Date qsDate) {
-        this.qsDate = qsDate;
-    }
-    
-    /**
-     * 
-     * @param qsDate
-     * @return 
-     */
-    public CRDBSurvey withQsDate(Date qsDate) {
-        this.qsDate = qsDate;
-        return this;
-    }
-    
-    /**
-     * 
-     * @return adjTxt
-     */
-    public String getAdjTxt() {
-        return adjTxt;
-    }
-    
-    /**
-     * 
-     * @param adjTxt 
-     */
-    public void setAdjTxt(String adjTxt) {
-        this.adjTxt = adjTxt;
-    }
-    
-    /**
-     * 
-     * @param adjTxt
-     * @return 
-     */
-    public CRDBSurvey withAdjTxt(String adjTxt) {
-        this.adjTxt = adjTxt;
-        return this;
-    }
-    
-    /**
-     * 
-     * @return noSysTxt
-     */
-    public String getNoSysTxt() {
-        return noSysTxt;
-    }
-    
-    /**
-     * 
-     * @param noSysTxt 
-     */
-    public void setNoSysTxt(String noSysTxt) {
-        this.noSysTxt = noSysTxt;
-    }
-    
-    /**
-     * 
-     * @param noSysTxt
-     * @return 
-     */
-    public CRDBSurvey withNoSysTxt(String noSysTxt) {
-        this.noSysTxt = noSysTxt;
+    public CRDBSurvey withDMP_ID(String DMP_ID) {
+        this.DMP_ID = DMP_ID;
         return this;
     }
 
     /**
      * 
-     * @return priorRx
+     * @return QS_DATE
      */
-    public String getPriorRx() {
-        return priorRx;
+    public String getQS_DATE() {
+        return QS_DATE;
     }
     
     /**
      * 
-     * @param priorRx 
+     * @param QS_DATE 
      */
-    public void setPriorRx(String priorRx) {
-        this.priorRx = priorRx;
+    public void setQS_DATE(String QS_DATE) {
+        this.QS_DATE = QS_DATE;
     }
     
     /**
      * 
-     * @param priorRx
+     * @param QS_DATE
      * @return 
      */
-    public CRDBSurvey withPriorRx(String priorRx) {
-        this.priorRx = priorRx;
+    public CRDBSurvey withQS_DATE(String QS_DATE) {
+        this.QS_DATE = QS_DATE;
+        return this;
+    }
+    
+    /**
+     * 
+     * @return ADJ_TXT
+     */
+    public String getADJ_TXT() {
+        return ADJ_TXT;
+    }
+    
+    /**
+     * 
+     * @param ADJ_TXT 
+     */
+    public void setADJ_TXT(String ADJ_TXT) {
+        this.ADJ_TXT = ADJ_TXT;
+    }
+    
+    /**
+     * 
+     * @param ADJ_TXT
+     * @return 
+     */
+    public CRDBSurvey withADJ_TXT(String ADJ_TXT) {
+        this.ADJ_TXT = ADJ_TXT;
+        return this;
+    }
+    
+    /**
+     * 
+     * @return NOSYSTXT
+     */
+    public String getNOSYSTXT() {
+        return NOSYSTXT;
+    }
+    
+    /**
+     * 
+     * @param NOSYSTXT 
+     */
+    public void setNOSYSTXT(String NOSYSTXT) {
+        this.NOSYSTXT = NOSYSTXT;
+    }
+    
+    /**
+     * 
+     * @param NOSYSTXT
+     * @return 
+     */
+    public CRDBSurvey withNOSYSTXT(String NOSYSTXT) {
+        this.NOSYSTXT = NOSYSTXT;
+        return this;
+    }
+
+    /**
+     * 
+     * @return PRIOR_RX
+     */
+    public String getPRIOR_RX() {
+        return PRIOR_RX;
+    }
+    
+    /**
+     * 
+     * @param PRIOR_RX 
+     */
+    public void setPRIOR_RX(String PRIOR_RX) {
+        this.PRIOR_RX = PRIOR_RX;
+    }
+    
+    /**
+     * 
+     * @param PRIOR_RX
+     * @return 
+     */
+    public CRDBSurvey withPRIOR_RX(String PRIOR_RX) {
+        this.PRIOR_RX = PRIOR_RX;
         return this;
     }    
     
     /**
      * 
-     * @return brainMet
+     * @return BRAINMET
      */
-    public String getBrainMet() {
-        return brainMet;
+    public String getBRAINMET() {
+        return BRAINMET;
     }
     
     /**
      * 
-     * @param brainMet 
+     * @param BRAINMET 
      */
-    public void setBrainMet(String brainMet) {
-        this.brainMet = brainMet;
+    public void setBRAINMET(String BRAINMET) {
+        this.BRAINMET = BRAINMET;
     }
     
     /**
      * 
-     * @param brainMet
+     * @param BRAINMET
      * @return 
      */
-    public CRDBSurvey withBrainMet(String brainMet) {
-        this.brainMet = brainMet;
+    public CRDBSurvey withBRAINMET(String BRAINMET) {
+        this.BRAINMET = BRAINMET;
         return this;
     }
 
     /**
      * 
-     * @return ecog
+     * @return ECOG
      */
-    public String getEcog() {
-        return ecog;
+    public String getECOG() {
+        return ECOG;
     }
     
     /**
      * 
-     * @param ecog 
+     * @param ECOG 
      */
-    public void setEcog(String ecog) {
-        this.ecog = ecog;
+    public void setECOG(String ECOG) {
+        this.ECOG = ECOG;
     }
     
     /**
      * 
-     * @param ecog
+     * @param ECOG
      * @return 
      */
-    public CRDBSurvey withEcog(String ecog) {
-        this.ecog = ecog;
+    public CRDBSurvey withECOG(String ECOG) {
+        this.ECOG = ECOG;
         return this;
     }    
 
     /**
      * 
-     * @return comments
+     * @return COMMENTS
      */
-    public String getComments() {
-        return comments;
+    public String getCOMMENTS() {
+        return COMMENTS;
     }
     
     /**
      * 
-     * @param comments 
+     * @param COMMENTS 
      */
-    public void setComments(String comments) {
-        this.comments = comments;
+    public void setCOMMENTS(String COMMENTS) {
+        this.COMMENTS = COMMENTS;
     }
     
     /**
      * 
-     * @param comments
+     * @param COMMENTS
      * @return 
      */
-    public CRDBSurvey withComments(String comments) {
-        this.comments = comments;
+    public CRDBSurvey withCOMMENTS(String COMMENTS) {
+        this.COMMENTS = COMMENTS;
         return this;
     }    
 
