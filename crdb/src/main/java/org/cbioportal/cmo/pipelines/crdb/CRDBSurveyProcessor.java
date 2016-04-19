@@ -50,14 +50,14 @@ public class CRDBSurveyProcessor implements ItemProcessor<CRDBSurvey, String>
     @Override
     public String process(final CRDBSurvey crdbSurvey) throws Exception
     {
-        List<String> record = Arrays.asList(crdbSurvey.getDmpId(),
-                mapper.writeValueAsString(crdbSurvey.getQsDate()),
-                crdbSurvey.getAdjTxt(),
-                crdbSurvey.getNoSysTxt(),
-                crdbSurvey.getPriorRx(),
-                crdbSurvey.getBrainMet(),
-                crdbSurvey.getEcog(),
-                crdbSurvey.getComments());
+        List<String> record = Arrays.asList(crdbSurvey.getDMP_ID(),
+                mapper.writeValueAsString(crdbSurvey.getQS_DATE()),
+                crdbSurvey.getADJ_TXT(),
+                crdbSurvey.getNOSYSTXT(),
+                crdbSurvey.getPRIOR_RX(),
+                crdbSurvey.getBRAINMET(),
+                crdbSurvey.getECOG(),
+                crdbSurvey.getCOMMENTS());
 
         return StringUtils.join(record, "\t");
     }

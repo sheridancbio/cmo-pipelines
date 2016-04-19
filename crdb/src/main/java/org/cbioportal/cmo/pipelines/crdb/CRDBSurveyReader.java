@@ -32,30 +32,26 @@
 
 package org.cbioportal.cmo.pipelines.crdb;
 
+import com.mysema.query.NonUniqueResultException;
 import static com.querydsl.core.alias.Alias.$;
 import static com.querydsl.core.alias.Alias.alias;
-import com.querydsl.sql.H2Templates;
 import com.querydsl.sql.OracleTemplates;
 import static com.querydsl.sql.SQLExpressions.select;
-import com.querydsl.sql.SQLQuery;
 import com.querydsl.sql.SQLQueryFactory;
 import com.querydsl.sql.SQLTemplates;
-import org.cbioportal.cmo.pipelines.crdb.model.*;
-import org.cbioportal.cmo.pipelines.crdb.OracleConfiguration;
+
+import org.cbioportal.cmo.pipelines.crdb.model.CRDBSurvey;
 
 import org.springframework.batch.item.*;
-import org.springframework.core.io.FileSystemResource;
-import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.beans.factory.BeanFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
-import java.lang.annotation.Annotation;
+import java.sql.SQLException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import oracle.jdbc.pool.OracleDataSource;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.data.jdbc.query.QueryDslJdbcTemplate;
-import org.springframework.transaction.annotation.Transactional;
 
 
 /**
@@ -70,48 +66,71 @@ public class CRDBSurveyReader implements ItemStreamReader<CRDBSurvey>
     private String cancerStudy;
 
     private List<CRDBSurvey> crdbSurvey;
+
+    @Value("${crdb.username}")
+    private String username;
     
-    @Autowired
-    public BeanFactory beanFactory;
+    @Value("${crdb.password}")
+    private String password;
     
+    @Value("${crdb.connection_string}")
+    private String connection_string;
     
     @Override
     public void open(ExecutionContext executionContext) throws ItemStreamException
     {
         //read from CRDB view 
-        OracleDataSource crdbDataSource = beanFactory.getBean(OracleConfiguration.CRDB_DATA_SOURCE, OracleDataSource.class);
+        OracleDataSource crdbDataSource = null;
+        try {
+            crdbDataSource = getCrdbDataSource();
+        } catch (SQLException ex) {
+            Logger.getLogger(CRDBSurveyReader.class.getName()).log(Level.SEVERE, null, ex);
+        }
         this.crdbSurvey = getCrdbSurveyResults(crdbDataSource);
-        
+                
     }
     
     @Transactional
     private List<CRDBSurvey> getCrdbSurveyResults(OracleDataSource crdbDataSource) {
-        //QueryDslJdbcTemplate template = new QueryDslJdbcTemplate(crdbDataSource);
-        CRDBSurvey qCRDBS = alias(CRDBSurvey.class, crdbSurveyView);
+        SQLTemplates templates = new OracleTemplates();
+        com.querydsl.sql.Configuration config = new com.querydsl.sql.Configuration(templates);
+        SQLQueryFactory queryFactory = new SQLQueryFactory(config, crdbDataSource);
         
+        CRDBSurvey qCRDBS = alias(CRDBSurvey.class, crdbSurveyView);
         List<CRDBSurvey> crdbSurveyResults = new ArrayList<>();
-        List<String> dmpIdList = new ArrayList<>();
-        for (String dmpId : select($(qCRDBS.getDmpId())).from($(qCRDBS)).fetch()) {
+        for (String dmpId : queryFactory.select($(qCRDBS.getDMP_ID())).from($(qCRDBS)).fetch()) {
+            
             if (dmpId != null) {
-                dmpIdList.add(dmpId);
+                System.out.println(dmpId);
                 CRDBSurvey record = new CRDBSurvey();
                 
                 //assuming only one record per dmpId right now...
-                record.setDmpId(dmpId);
-                record.setQsDate((Date)select($(qCRDBS.getQsDate())).from($(qCRDBS)).where($(qCRDBS.getDmpId()).eq(dmpId)).fetch());
-                record.setAdjTxt(select($(qCRDBS.getAdjTxt())).from($(qCRDBS)).where($(qCRDBS.getDmpId()).eq(dmpId)).fetchOne());
-                record.setNoSysTxt(select($(qCRDBS.getNoSysTxt())).from($(qCRDBS)).where($(qCRDBS.getDmpId()).eq(dmpId)).fetchOne());
-                record.setPriorRx(select($(qCRDBS.getPriorRx())).from($(qCRDBS)).where($(qCRDBS.getDmpId()).eq(dmpId)).fetchOne());
-                record.setBrainMet(select($(qCRDBS.getBrainMet())).from($(qCRDBS)).where($(qCRDBS.getDmpId()).eq(dmpId)).fetchOne());
-                record.setEcog(select($(qCRDBS.getEcog())).from($(qCRDBS)).where($(qCRDBS.getDmpId()).eq(dmpId)).fetchOne());
-                record.setComments(select($(qCRDBS.getComments())).from($(qCRDBS)).where($(qCRDBS.getDmpId()).eq(dmpId)).fetchOne());
-                crdbSurveyResults.add(record);
-            }
+                try { 
+                    record.setDMP_ID(dmpId);
+                    record.setQS_DATE(queryFactory.selectDistinct($(qCRDBS.getQS_DATE())).from($(qCRDBS)).where($(qCRDBS.getDMP_ID()).eq(dmpId)).fetchOne());
+                    record.setADJ_TXT(queryFactory.selectDistinct($(qCRDBS.getADJ_TXT())).from($(qCRDBS)).where($(qCRDBS.getDMP_ID()).eq(dmpId)).fetchOne());
+                    record.setNOSYSTXT(queryFactory.selectDistinct($(qCRDBS.getNOSYSTXT())).from($(qCRDBS)).where($(qCRDBS.getDMP_ID()).eq(dmpId)).fetchOne());
+                    record.setPRIOR_RX(queryFactory.selectDistinct($(qCRDBS.getPRIOR_RX())).from($(qCRDBS)).where($(qCRDBS.getDMP_ID()).eq(dmpId)).fetchOne());
+                    record.setBRAINMET(queryFactory.selectDistinct($(qCRDBS.getBRAINMET())).from($(qCRDBS)).where($(qCRDBS.getDMP_ID()).eq(dmpId)).fetchOne());
+                    record.setECOG(queryFactory.selectDistinct($(qCRDBS.getECOG())).from($(qCRDBS)).where($(qCRDBS.getDMP_ID()).eq(dmpId)).fetchOne());
+                    record.setCOMMENTS(queryFactory.selectDistinct($(qCRDBS.getCOMMENTS())).from($(qCRDBS)).where($(qCRDBS.getDMP_ID()).eq(dmpId)).fetchOne());
+                    crdbSurveyResults.add(record);
+                }
+                catch (NonUniqueResultException ex) {
+                    ex.printStackTrace();                    
+                }                
+            }                     
         }        
         return crdbSurveyResults;
     }
 
-    
+    private OracleDataSource getCrdbDataSource() throws SQLException {
+        OracleDataSource crdbDataSource = new OracleDataSource();
+        crdbDataSource.setUser(username);
+        crdbDataSource.setPassword(password);
+        crdbDataSource.setURL(connection_string);
+        return crdbDataSource;
+    }
 
     @Override
     public void update(ExecutionContext executionContext) throws ItemStreamException {}

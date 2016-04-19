@@ -32,18 +32,14 @@
 
 package org.cbioportal.cmo.pipelines.crdb;
 
-import java.sql.SQLException;
-import javax.activation.DataSource;
-import oracle.jdbc.pool.OracleDataSource;
 import org.cbioportal.cmo.pipelines.crdb.model.CRDBSurvey;
 
 import org.springframework.batch.core.*;
 import org.springframework.batch.item.*;
 import org.springframework.batch.core.configuration.annotation.*;
+import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.context.annotation.*;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.batch.core.configuration.annotation.StepScope;
-import org.springframework.beans.factory.annotation.*;
 
 /**
  * @author Benjamin Gross
@@ -52,22 +48,7 @@ import org.springframework.beans.factory.annotation.*;
 @EnableBatchProcessing
 public class BatchConfiguration
 {
-    @Value("${spring.datasource.username}")
-    private String username;
-    
-    @Value("${spring.datasource.password}")
-    private String password;
-    
-    @Value("${spring.datasource.url}")
-    private String connection;
-    
-    @Value("{spring.datasource.driver-class}")
-    private String driver;
-    
-    
-    
     public static final String CRDB_JOB = "crdbJob";
-    public static final String CRDB_DATA_SOURCE = "crdbDataSource";
 
     @Autowired
     public JobBuilderFactory jobBuilderFactory;
@@ -113,19 +94,4 @@ public class BatchConfiguration
     {
         return new CRDBSurveyWriter();
     }
-
-    @Bean
-    OracleDataSource crdbDataSource() throws SQLException {
-        OracleDataSource crdbDataSource = new OracleDataSource();
-        crdbDataSource.setUser(username);
-        crdbDataSource.setPassword(password);
-        crdbDataSource.setDriverType(driver);
-        crdbDataSource.setURL(connection);
-        crdbDataSource.setImplicitCachingEnabled(true);
-        crdbDataSource.setFastConnectionFailoverEnabled(true);
-        return crdbDataSource;
-    } 
-    
 }
-
-
