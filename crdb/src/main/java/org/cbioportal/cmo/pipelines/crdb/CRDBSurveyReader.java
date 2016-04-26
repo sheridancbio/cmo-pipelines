@@ -32,11 +32,9 @@
 
 package org.cbioportal.cmo.pipelines.crdb;
 
-import com.mysema.query.NonUniqueResultException;
 import static com.querydsl.core.alias.Alias.$;
 import static com.querydsl.core.alias.Alias.alias;
 import com.querydsl.sql.OracleTemplates;
-import static com.querydsl.sql.SQLExpressions.select;
 import com.querydsl.sql.SQLQueryFactory;
 import com.querydsl.sql.SQLTemplates;
 
@@ -61,9 +59,6 @@ public class CRDBSurveyReader implements ItemStreamReader<CRDBSurvey>
 {
     @Value("${crdb.survey_view}")
     private String crdbSurveyView;
-    
-    @Value("#{jobParameters[cancerStudy]}")
-    private String cancerStudy;
 
     private List<CRDBSurvey> crdbSurvey;
 
@@ -92,36 +87,37 @@ public class CRDBSurveyReader implements ItemStreamReader<CRDBSurvey>
     
     @Transactional
     private List<CRDBSurvey> getCrdbSurveyResults(OracleDataSource crdbDataSource) {
+        System.out.println("Beginning CRDB Survey View import...");
+        
         SQLTemplates templates = new OracleTemplates();
         com.querydsl.sql.Configuration config = new com.querydsl.sql.Configuration(templates);
         SQLQueryFactory queryFactory = new SQLQueryFactory(config, crdbDataSource);
         
-        CRDBSurvey qCRDBS = alias(CRDBSurvey.class, crdbSurveyView);
+        CRDBSurvey qCRDBS = alias(CRDBSurvey.class, crdbSurveyView);        
+        List<?> crdbSurveyList = (List<?>)(List<?>)queryFactory.select($(qCRDBS.getDMP_ID()), $(qCRDBS.getQS_DATE()), $(qCRDBS.getADJ_TXT()),
+                $(qCRDBS.getNOSYSTXT()), $(qCRDBS.getPRIOR_RX()), $(qCRDBS.getBRAINMET()), $(qCRDBS.getECOG()), $(qCRDBS.getCOMMENTS()))
+                .from($(qCRDBS)).fetch();
+                    
         List<CRDBSurvey> crdbSurveyResults = new ArrayList<>();
-        for (String dmpId : queryFactory.select($(qCRDBS.getDMP_ID())).from($(qCRDBS)).fetch()) {
-            
-            if (dmpId != null) {
-                System.out.println(dmpId);
-                CRDBSurvey record = new CRDBSurvey();
-                
-                //assuming only one record per dmpId right now...
-                try { 
-                    record.setDMP_ID(dmpId);
-                    record.setQS_DATE(queryFactory.selectDistinct($(qCRDBS.getQS_DATE())).from($(qCRDBS)).where($(qCRDBS.getDMP_ID()).eq(dmpId)).fetchOne());
-                    record.setADJ_TXT(queryFactory.selectDistinct($(qCRDBS.getADJ_TXT())).from($(qCRDBS)).where($(qCRDBS.getDMP_ID()).eq(dmpId)).fetchOne());
-                    record.setNOSYSTXT(queryFactory.selectDistinct($(qCRDBS.getNOSYSTXT())).from($(qCRDBS)).where($(qCRDBS.getDMP_ID()).eq(dmpId)).fetchOne());
-                    record.setPRIOR_RX(queryFactory.selectDistinct($(qCRDBS.getPRIOR_RX())).from($(qCRDBS)).where($(qCRDBS.getDMP_ID()).eq(dmpId)).fetchOne());
-                    record.setBRAINMET(queryFactory.selectDistinct($(qCRDBS.getBRAINMET())).from($(qCRDBS)).where($(qCRDBS.getDMP_ID()).eq(dmpId)).fetchOne());
-                    record.setECOG(queryFactory.selectDistinct($(qCRDBS.getECOG())).from($(qCRDBS)).where($(qCRDBS.getDMP_ID()).eq(dmpId)).fetchOne());
-                    record.setCOMMENTS(queryFactory.selectDistinct($(qCRDBS.getCOMMENTS())).from($(qCRDBS)).where($(qCRDBS.getDMP_ID()).eq(dmpId)).fetchOne());
-                    crdbSurveyResults.add(record);
-                }
-                catch (NonUniqueResultException ex) {
-                    ex.printStackTrace();                    
-                }                
-            }                     
-        }        
+        Integer numRows = 0;
+        for (int i=0; i<crdbSurveyList.size(); i++){
+            CRDBSurvey record = createRecord(crdbSurveyList.get(i).toString());
+            crdbSurveyResults.add(record);
+
+            numRows++;
+        }      
+        
+        System.out.println("Imported "+numRows+" records from CRDB Survey View.");
         return crdbSurveyResults;
+    }
+    
+    private CRDBSurvey createRecord(String recordString){
+        String[] vals = recordString.replace("[","").replace("]","").split(", ");
+        String dmpId = vals[0]; String qsDate = vals[1]; String adjTxt = fixNull(vals[2]);
+        String noSysTxt = fixNull(vals[3]); String priorRx = fixNull(vals[4]);
+        String brainMet = fixNull(vals[5]); String ecog = fixNull(vals[6]); 
+        String comments = fixNull(vals[7]);
+        return new CRDBSurvey(dmpId, qsDate, adjTxt, noSysTxt, priorRx, brainMet, ecog, comments);
     }
 
     private OracleDataSource getCrdbDataSource() throws SQLException {
@@ -130,6 +126,13 @@ public class CRDBSurveyReader implements ItemStreamReader<CRDBSurvey>
         crdbDataSource.setPassword(password);
         crdbDataSource.setURL(connection_string);
         return crdbDataSource;
+    }
+    
+    private String fixNull(String val){
+        if (val == null){
+            return "NA";
+        }
+        return val;
     }
 
     @Override

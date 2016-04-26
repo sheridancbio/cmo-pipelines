@@ -51,7 +51,7 @@ public class CRDBSurveyProcessor implements ItemProcessor<CRDBSurvey, String>
     public String process(final CRDBSurvey crdbSurvey) throws Exception
     {
         List<String> record = Arrays.asList(crdbSurvey.getDMP_ID(),
-                mapper.writeValueAsString(crdbSurvey.getQS_DATE()),
+                crdbSurvey.getQS_DATE(),
                 crdbSurvey.getADJ_TXT(),
                 crdbSurvey.getNOSYSTXT(),
                 crdbSurvey.getPRIOR_RX(),

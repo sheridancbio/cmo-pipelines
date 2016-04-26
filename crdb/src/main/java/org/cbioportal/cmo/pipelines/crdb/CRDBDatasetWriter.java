@@ -44,16 +44,16 @@ import org.apache.commons.lang.StringUtils;
 /**
  * @author Benjamin Gross
  */
-public class CRDBSurveyWriter implements ItemStreamWriter<String>
+public class CRDBDatasetWriter implements ItemStreamWriter<String>
 {
-    @Value("${crdb.survey_columns}")
-    private String survey_columns; 
+    @Value("${crdb.dataset_columns}")
+    private String dataset_columns; 
     
     @Value("#{jobParameters[stagingDirectory]}")
     private String stagingDirectory;
     
-    @Value("${crdb.survey_filename}")
-    private String surveyFilename;
+    @Value("${crdb.dataset_filename}")
+    private String datasetFilename;
 
     private List<String> writeList = new ArrayList<String>();
     private FlatFileItemWriter<String> flatFileItemWriter = new FlatFileItemWriter<String>();
@@ -67,15 +67,15 @@ public class CRDBSurveyWriter implements ItemStreamWriter<String>
         flatFileItemWriter.setHeaderCallback(new FlatFileHeaderCallback() {
             @Override
             public void writeHeader(Writer writer) throws IOException {
-                String[] columns = survey_columns.split("\t");
+                String[] columns = dataset_columns.split("\t");
                 writer.write(normalizeHeaders(columns));
             }
         });
         if (stagingDirectory.endsWith("/")){
-            stagingFile = stagingDirectory+surveyFilename;
+            stagingFile = stagingDirectory+datasetFilename;
         }
         else{
-            stagingFile = stagingDirectory+"/"+surveyFilename;
+            stagingFile = stagingDirectory+"/"+datasetFilename;
         }
         flatFileItemWriter.setResource(new FileSystemResource(stagingFile));
         flatFileItemWriter.open(executionContext);

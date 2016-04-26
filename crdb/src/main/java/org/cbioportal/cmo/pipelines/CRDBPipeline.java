@@ -53,7 +53,7 @@ public class CRDBPipeline
         Options gnuOptions = new Options();
         gnuOptions.addOption("h", "help", false, "shows this help document and quits.")
             .addOption("cancer_study", "cancer_study", true, "Cancer Study Identifier")
-            .addOption("stage", "staging", true, "Staging filename");
+            .addOption("stage", "staging", true, "Staging directory");
 
         return gnuOptions;
     }
@@ -65,7 +65,7 @@ public class CRDBPipeline
         System.exit(exitStatus);
     }
 
-    private static void launchJob(String[] args, String cancerStudy, String stagingFile) throws Exception
+    private static void launchJob(String[] args, String cancerStudy, String stagingDirectory) throws Exception
     {
         SpringApplication app = new SpringApplication(CRDBPipeline.class);
         ConfigurableApplicationContext ctx = app.run(args);
@@ -74,7 +74,7 @@ public class CRDBPipeline
         Job crdbJob = ctx.getBean(BatchConfiguration.CRDB_JOB, Job.class);        
         JobParameters jobParameters = new JobParametersBuilder()
     		.addString("cancerStudy", cancerStudy)
-                .addString("stagingFile", stagingFile)
+                .addString("stagingDirectory", stagingDirectory)
     		.toJobParameters();  
         JobExecution jobExecution = jobLauncher.run(crdbJob, jobParameters);
     }

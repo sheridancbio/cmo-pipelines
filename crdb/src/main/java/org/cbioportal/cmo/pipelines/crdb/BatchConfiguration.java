@@ -33,6 +33,7 @@
 package org.cbioportal.cmo.pipelines.crdb;
 
 import org.cbioportal.cmo.pipelines.crdb.model.CRDBSurvey;
+import org.cbioportal.cmo.pipelines.crdb.model.CRDBDataset;
 
 import org.springframework.batch.core.*;
 import org.springframework.batch.item.*;
@@ -60,38 +61,73 @@ public class BatchConfiguration
     public Job crdbJob()
     {
         return jobBuilderFactory.get(CRDB_JOB)
-            .start(step())
+            .start(step1())
+            .next(step2())
             .build();
     }
 
     @Bean
-    public Step step()
+    public Step step1()
     {
-        return stepBuilderFactory.get("step")
+        return stepBuilderFactory.get("step1")
             .<CRDBSurvey, String> chunk(10)
-            .reader(reader())
-            .processor(processor())
-            .writer(writer())
+            .reader(reader1())
+            .processor(processor1())
+            .writer(writer1())
             .build();
     }
 
     @Bean
     @StepScope
-	public ItemStreamReader<CRDBSurvey> reader()
+	public ItemStreamReader<CRDBSurvey> reader1()
     {
 		return new CRDBSurveyReader();
 	}
 
     @Bean
-    public CRDBSurveyProcessor processor()
+    public CRDBSurveyProcessor processor1()
     {
         return new CRDBSurveyProcessor();
     }
 
     @Bean
     @StepScope
-    public ItemStreamWriter<String> writer()
+    public ItemStreamWriter<String> writer1()
     {
         return new CRDBSurveyWriter();
     }
+    
+    
+    @Bean
+    public Step step2()
+    {
+        return stepBuilderFactory.get("step2")
+            .<CRDBDataset, String> chunk(10)
+            .reader(reader2())
+            .processor(processor2())
+            .writer(writer2())
+            .build();
+    }
+
+    @Bean
+    @StepScope
+	public ItemStreamReader<CRDBDataset> reader2()
+    {
+		return new CRDBDatasetReader();
+	}
+
+    @Bean
+    public CRDBDatasetProcessor processor2()
+    {
+        return new CRDBDatasetProcessor();
+    }
+
+    @Bean
+    @StepScope
+    public ItemStreamWriter<String> writer2()
+    {
+        return new CRDBDatasetWriter();
+    }
+    
+    
 }

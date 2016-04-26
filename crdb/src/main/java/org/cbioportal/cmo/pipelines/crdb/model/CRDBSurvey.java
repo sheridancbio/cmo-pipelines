@@ -76,6 +76,28 @@ this.ECOG = ECOG;
 this.COMMENTS = COMMENTS;
 }
 
+public CRDBSurvey(CRDBSurvey crdbSurvey) {
+this.DMP_ID = crdbSurvey.getDMP_ID();
+this.QS_DATE = crdbSurvey.getQS_DATE();
+this.ADJ_TXT = crdbSurvey.getADJ_TXT();
+this.NOSYSTXT = crdbSurvey.getNOSYSTXT();
+this.PRIOR_RX = crdbSurvey.getPRIOR_RX();
+this.BRAINMET = crdbSurvey.getBRAINMET();
+this.ECOG = crdbSurvey.getECOG();
+this.COMMENTS = crdbSurvey.getCOMMENTS();
+}
+
+
+public CRDBSurvey(List<?> crdbSurvey) {
+this.DMP_ID = (String) crdbSurvey.get(0);
+this.QS_DATE = (String) crdbSurvey.get(1);
+this.ADJ_TXT = (String) crdbSurvey.get(2);
+this.NOSYSTXT = (String) crdbSurvey.get(3);
+this.PRIOR_RX = (String) crdbSurvey.get(4);
+this.BRAINMET = (String) crdbSurvey.get(5);
+this.ECOG = (String) crdbSurvey.get(6);
+this.COMMENTS = (String) crdbSurvey.get(7);
+}
     /**
      * 
      * @return DMP_ID
@@ -282,8 +304,8 @@ this.COMMENTS = COMMENTS;
     public CRDBSurvey withCOMMENTS(String COMMENTS) {
         this.COMMENTS = COMMENTS;
         return this;
-    }    
-
+    }     
+        
     @Override
     public String toString() {
         return ToStringBuilder.reflectionToString(this);
