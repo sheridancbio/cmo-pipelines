@@ -39,7 +39,7 @@ import com.querydsl.sql.OracleTemplates;
 import com.querydsl.sql.SQLQueryFactory;
 import com.querydsl.sql.SQLTemplates;
 
-import org.cbioportal.cmo.pipelines.crdb.model.CRDBSurvey;
+import org.cbioportal.cmo.pipelines.crdb.model.CRDBDataset;
 
 import org.springframework.batch.item.*;
 import org.springframework.beans.factory.annotation.Value;
@@ -56,9 +56,9 @@ import oracle.jdbc.pool.OracleDataSource;
 /**
  * @author ochoaa
  */
-public class CRDBSurveyReader implements ItemStreamReader<CRDBSurvey> {
-    @Value("${crdb.survey_view}")
-    private String crdbSurveyView;
+public class CRDBDatasetReader implements ItemStreamReader<CRDBDataset> {
+    @Value("${crdb.dataset_view}")
+    private String crdbDatasetView;
 
     @Value("${crdb.username}")
     private String username;
@@ -68,8 +68,8 @@ public class CRDBSurveyReader implements ItemStreamReader<CRDBSurvey> {
     
     @Value("${crdb.connection_string}")
     private String connection_string;
-    
-    private List<CRDBSurvey> crdbSurvey;    
+
+    private List<CRDBDataset> crdbDataset;    
     
     @Override
     public void open(ExecutionContext executionContext) throws ItemStreamException {
@@ -78,31 +78,48 @@ public class CRDBSurveyReader implements ItemStreamReader<CRDBSurvey> {
         try {
             crdbDataSource = getCrdbDataSource();
         } catch (SQLException ex) {
-            Logger.getLogger(CRDBSurveyReader.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(CRDBDatasetReader.class.getName()).log(Level.SEVERE, null, ex);
         }
-        this.crdbSurvey = getCrdbSurveyResults(crdbDataSource);                
+        this.crdbDataset = getCrdbDatasetResults(crdbDataSource);                
     }
     
     @Transactional
-    private List<CRDBSurvey> getCrdbSurveyResults(OracleDataSource crdbDataSource) {
-        System.out.println("Beginning CRDB Survey View import...");
+    private List<CRDBDataset> getCrdbDatasetResults(OracleDataSource crdbDataSource) {
+        System.out.println("\nBeginning CRDB Dataset View import...");
         
         SQLTemplates templates = new OracleTemplates();
         com.querydsl.sql.Configuration config = new com.querydsl.sql.Configuration(templates);
         SQLQueryFactory queryFactory = new SQLQueryFactory(config, crdbDataSource);
         
-        CRDBSurvey qCRDBS = alias(CRDBSurvey.class, crdbSurveyView);         
-        List<CRDBSurvey> crdbSurveyResults = new ArrayList<>();
+        CRDBDataset qCRDBD = alias(CRDBDataset.class, crdbDatasetView);  
+        List<CRDBDataset> crdbDatasetResults = new ArrayList<>();
         Integer numRows = 0;
-            for (Tuple record : queryFactory.select($(qCRDBS.getDMP_ID()), $(qCRDBS.getQS_DATE()), $(qCRDBS.getADJ_TXT()),
-                $(qCRDBS.getNOSYSTXT()), $(qCRDBS.getPRIOR_RX()), $(qCRDBS.getBRAINMET()), $(qCRDBS.getECOG()), $(qCRDBS.getCOMMENTS()))
-                .from($(qCRDBS)).fetch()) {
-            crdbSurveyResults.add(new CRDBSurvey(record.toArray()));
+        for (Tuple record : queryFactory.select($(qCRDBD.getDMP_ID()), 
+                $(qCRDBD.getCONSENT_DATE_DAYS()), $(qCRDBD.getPRIM_DISEASE_12245()), $(qCRDBD.getINITIAL_SX_DAYS()), 
+                $(qCRDBD.getINITIAL_DX_DAYS()), $(qCRDBD.getFIRST_METASTASIS_DAYS()), $(qCRDBD.getINIT_DX_STATUS_ID()), 
+                $(qCRDBD.getINIT_DX_STATUS()), $(qCRDBD.getINIT_DX_STATUS_DAYS()), $(qCRDBD.getINIT_DX_STAGING_DSCRP()), 
+                $(qCRDBD.getINIT_DX_STAGE()), $(qCRDBD.getINIT_DX_STAGE_DSCRP()), $(qCRDBD.getINIT_DX_GRADE()), 
+                $(qCRDBD.getINIT_DX_GRADE_DSCRP()), $(qCRDBD.getINIT_DX_T_STAGE()), $(qCRDBD.getINIT_DX_T_STAGE_DSCRP()), 
+                $(qCRDBD.getINIT_DX_N_STAGE()), $(qCRDBD.getINIT_DX_N_STAGE_DSCRP()), $(qCRDBD.getINIT_DX_M_STAGE()), 
+                $(qCRDBD.getINIT_DX_M_STAGE_DSCRP()), $(qCRDBD.getINIT_DX_HIST()), $(qCRDBD.getINIT_DX_SUB_HIST()), 
+                $(qCRDBD.getINIT_DX_SUB_SUB_HIST()), $(qCRDBD.getINIT_DX_SUB_SUB_SUB_HIST()), $(qCRDBD.getINIT_DX_SITE()), 
+                $(qCRDBD.getINIT_DX_SUB_SITE()), $(qCRDBD.getINIT_DX_SUB_SUB_SITE()), $(qCRDBD.getENROLL_DX_STATUS_ID()), 
+                $(qCRDBD.getENROLL_DX_STATUS()), $(qCRDBD.getENROLL_DX_STATUS_DAYS()), $(qCRDBD.getENROLL_DX_STAGING_DSCRP()), 
+                $(qCRDBD.getENROLL_DX_STAGE()), $(qCRDBD.getENROLL_DX_STAGE_DSCRP()), $(qCRDBD.getENROLL_DX_GRADE()), 
+                $(qCRDBD.getENROLL_DX_GRADE_DSCRP()), $(qCRDBD.getENROLL_DX_T_STAGE()), $(qCRDBD.getENROLL_DX_T_STAGE_DSCRP()), 
+                $(qCRDBD.getENROLL_DX_N_STAGE()), $(qCRDBD.getENROLL_DX_N_STAGE_DSCRP()), $(qCRDBD.getENROLL_DX_M_STAGE()), 
+                $(qCRDBD.getENROLL_DX_M_STAGE_DSCRP()), $(qCRDBD.getENROLL_DX_HIST()), $(qCRDBD.getENROLL_DX_SUB_HIST()), 
+                $(qCRDBD.getENROLL_DX_SUB_SUB_HIST()), $(qCRDBD.getENROLL_DX_SUB_SUB_SUB_HIST()), $(qCRDBD.getENROLL_DX_SITE()), 
+                $(qCRDBD.getENROLL_DX_SUB_SITE()), $(qCRDBD.getENROLL_DX_SUB_SUB_SITE()), $(qCRDBD.getSURVIVAL_STATUS()), 
+                $(qCRDBD.getTREATMENT_END_DAYS()), $(qCRDBD.getOFF_STUDY_DAYS()), $(qCRDBD.getCOMMENTS()))
+                .from($(qCRDBD)).fetch()) {
+            crdbDatasetResults.add(new CRDBDataset(record.toArray()));
             numRows++;
+            
         }
-                             
-        System.out.println("Imported "+numRows+" records from CRDB Survey View.");
-        return crdbSurveyResults;
+
+        System.out.println("Imported "+numRows+" records from CRDB Dataset View.\n");
+        return crdbDatasetResults;
     }
 
     private OracleDataSource getCrdbDataSource() throws SQLException {
@@ -120,9 +137,9 @@ public class CRDBSurveyReader implements ItemStreamReader<CRDBSurvey> {
     public void close() throws ItemStreamException {}
 
     @Override
-    public CRDBSurvey read() throws Exception {
-        if (!crdbSurvey.isEmpty()) {            
-            return crdbSurvey.remove(0);            
+    public CRDBDataset read() throws Exception {
+        if (!crdbDataset.isEmpty()) {            
+            return crdbDataset.remove(0);            
         }
         return null;
     } 

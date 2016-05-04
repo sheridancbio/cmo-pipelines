@@ -45,42 +45,42 @@ import org.springframework.batch.core.launch.JobLauncher;
  * @author Benjamin Gross
  */
 @SpringBootApplication
-public class CRDBPipeline
-{
+public class CRDBPipeline {
 
-    private static Options getOptions(String[] args)
-    {
+    private static Options getOptions(String[] args) {
         Options gnuOptions = new Options();
         gnuOptions.addOption("h", "help", false, "shows this help document and quits.")
             .addOption("cancer_study", "cancer_study", true, "Cancer Study Identifier")
-            .addOption("stage", "staging", true, "Staging filename");
-
+            .addOption("stage", "staging", true, "Staging directory");
         return gnuOptions;
     }
 
-    private static void help(Options gnuOptions, int exitStatus)
-    {
+    private static void help(Options gnuOptions, int exitStatus) {
         HelpFormatter helpFormatter = new HelpFormatter();
         helpFormatter.printHelp("CRDBPipeline", gnuOptions);
         System.exit(exitStatus);
     }
 
-    private static void launchJob(String[] args, String cancerStudy, String stagingFile) throws Exception
-    {
-        SpringApplication app = new SpringApplication(CRDBPipeline.class);
-        ConfigurableApplicationContext ctx = app.run(args);
-        JobLauncher jobLauncher = ctx.getBean(JobLauncher.class);        
-                
-        Job crdbJob = ctx.getBean(BatchConfiguration.CRDB_JOB, Job.class);        
-        JobParameters jobParameters = new JobParametersBuilder()
-    		.addString("cancerStudy", cancerStudy)
-                .addString("stagingFile", stagingFile)
-    		.toJobParameters();  
-        JobExecution jobExecution = jobLauncher.run(crdbJob, jobParameters);
+    private static void launchJob(String[] args, String cancerStudy, String stagingDirectory) throws Exception {
+        if (cancerStudy.trim().equals("mskimpact")) {
+            SpringApplication app = new SpringApplication(CRDBPipeline.class);
+            ConfigurableApplicationContext ctx = app.run(args);
+            JobLauncher jobLauncher = ctx.getBean(JobLauncher.class);        
+
+            Job crdbJob = ctx.getBean(BatchConfiguration.CRDB_JOB, Job.class);        
+            JobParameters jobParameters = new JobParametersBuilder()
+                    .addString("cancerStudy", cancerStudy)
+                    .addString("stagingDirectory", stagingDirectory)
+                    .toJobParameters();  
+            JobExecution jobExecution = jobLauncher.run(crdbJob, jobParameters);            
+        }
+        else {
+            System.out.println("Cannot run CRDB job on cancer study "+cancerStudy);
+            System.exit(1);
+        }
     }
     
-    public static void main(String[] args) throws Exception
-    {
+    public static void main(String[] args) throws Exception {
         Options gnuOptions = CRDBPipeline.getOptions(args);
         CommandLineParser parser = new GnuParser();
         CommandLine commandLine = parser.parse(gnuOptions, args);

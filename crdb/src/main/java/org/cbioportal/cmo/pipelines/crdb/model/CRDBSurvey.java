@@ -76,6 +76,16 @@ this.ECOG = ECOG;
 this.COMMENTS = COMMENTS;
 }
 
+public CRDBSurvey(Object[] crdbSurvey) {
+this.DMP_ID = crdbSurvey[0]==null?"NA":crdbSurvey[0].toString();
+this.QS_DATE = crdbSurvey[1]==null?"NA":crdbSurvey[1].toString();
+this.ADJ_TXT = crdbSurvey[2]==null?"NA":crdbSurvey[2].toString();
+this.NOSYSTXT = crdbSurvey[3]==null?"NA":crdbSurvey[3].toString();
+this.PRIOR_RX = crdbSurvey[4]==null?"NA":crdbSurvey[4].toString();
+this.BRAINMET = crdbSurvey[5]==null?"NA":crdbSurvey[5].toString();
+this.ECOG = crdbSurvey[6]==null?"NA":crdbSurvey[6].toString();
+this.COMMENTS = crdbSurvey[7]==null?"NA":crdbSurvey[7].toString();
+}
     /**
      * 
      * @return DMP_ID
@@ -282,11 +292,15 @@ this.COMMENTS = COMMENTS;
     public CRDBSurvey withCOMMENTS(String COMMENTS) {
         this.COMMENTS = COMMENTS;
         return this;
-    }    
-
+    }     
+        
     @Override
     public String toString() {
         return ToStringBuilder.reflectionToString(this);
+    }
+    
+    public String[] getFieldNames() {
+        return toString().substring(toString().indexOf("[")+1,toString().indexOf("]")).replaceAll("=<null>", "").split(",");
     }
 
     public Map<String, Object> getAdditionalProperties() {
@@ -301,5 +315,4 @@ this.COMMENTS = COMMENTS;
         this.additionalProperties.put(name, value);
         return this;
     }
-
 }

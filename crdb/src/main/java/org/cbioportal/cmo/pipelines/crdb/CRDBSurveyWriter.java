@@ -39,61 +39,67 @@ import org.springframework.batch.item.file.transform.PassThroughLineAggregator;
 import org.springframework.beans.factory.annotation.Value;
 import java.io.*;
 import java.util.*;
+import org.apache.commons.lang.StringUtils;
+import org.cbioportal.cmo.pipelines.crdb.model.CRDBSurvey;
 
 /**
- * @author Benjamin Gross
+ * @author ochoaa
  */
 public class CRDBSurveyWriter implements ItemStreamWriter<String>
-{
-    @Value("${crdb.survey_columns}")
-    private String survey_columns; 
+{   
+    @Value("#{jobParameters[stagingDirectory]}")
+    private String stagingDirectory;
     
-    @Value("#{jobParameters[stagingFile]}")
-    private String stagingFile;
+    @Value("${crdb.survey_filename}")
+    private String surveyFilename;
 
-    //private Resource resource;
     private List<String> writeList = new ArrayList<String>();
     private FlatFileItemWriter<String> flatFileItemWriter = new FlatFileItemWriter<String>();
-        
+    private String stagingFile;
+    
     @Override
-    public void open(ExecutionContext executionContext) throws ItemStreamException
-    {
+    public void open(ExecutionContext executionContext) throws ItemStreamException {
         PassThroughLineAggregator aggr = new PassThroughLineAggregator();
         flatFileItemWriter.setLineAggregator(aggr);
         flatFileItemWriter.setHeaderCallback(new FlatFileHeaderCallback() {
             @Override
             public void writeHeader(Writer writer) throws IOException {
-                String[] columns = survey_columns.split("\t");
-                writer.write(normalizeHeaders(columns));
+                writer.write(normalizeHeaders(new CRDBSurvey().getFieldNames()));
             }
         });
+        if (stagingDirectory.endsWith("/")){
+            stagingFile = stagingDirectory+surveyFilename;
+        }
+        else{
+            stagingFile = stagingDirectory+"/"+surveyFilename;
+        }
         flatFileItemWriter.setResource(new FileSystemResource(stagingFile));
         flatFileItemWriter.open(executionContext);
     }
     
-    /**
-     * This function will eventually be useful and normalize the external
-     * column headers from the CRDB survey view for the staging file
-     **/
-    private String normalizeHeaders(String[] columns) {
-        String[] extColumns = columns;
-        String normColumns = "PATIENT_ID\tCRDB_QS_DATE\tCRDB_ADJ_TXT\tCRDB_NOSYSTXT\tCRDB_PRIOR_RX\tCRDB_BRAINMET\tCRDB_ECOG\tCRDB_COMMENTS\tOTHER_SAMPLE_ID\tOTHER_PATIENT_ID";
-        //return StringUtils.join(columns, "\t");
-        return normColumns;
+    private String normalizeHeaders(String[] columns) {        
+        List<String> normColumns = new ArrayList<>();
+        for (String col : columns){
+            if (col.equals("DMP_ID")){
+                normColumns.add("PATIENT_ID");
+            }
+            else if (!col.startsWith("additionalProperties")){
+                normColumns.add("CRDB_"+col);
+            }
+        }
+        return StringUtils.join(normColumns, "\t");
     }
             
     @Override
     public void update(ExecutionContext executionContext) throws ItemStreamException {}
 
     @Override
-    public void close() throws ItemStreamException
-    {
+    public void close() throws ItemStreamException {
         flatFileItemWriter.close();
     }
 
     @Override
-    public void write(List<? extends String> items) throws Exception
-    {
+    public void write(List<? extends String> items) throws Exception {
         writeList.clear();
         List<String> writeList = new ArrayList<>();
         for (String result : items) {
