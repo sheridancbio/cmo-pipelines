@@ -2,10 +2,8 @@ spring.batch.job.enabled=false
 
 #CRDB properties
 crdb.survey_view=
-crdb.survey_columns=
 crdb.survey_filename=
 crdb.dataset_view=
-crdb.dataset_columns=
 crdb.dataset_filename=
 
 #Oracle connection
