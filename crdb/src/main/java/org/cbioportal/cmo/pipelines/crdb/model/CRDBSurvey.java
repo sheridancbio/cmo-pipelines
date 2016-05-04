@@ -31,6 +31,7 @@
 */
 package org.cbioportal.cmo.pipelines.crdb.model;
 
+import com.querydsl.core.types.QTuple;
 import java.util.*;
 
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -76,27 +77,15 @@ this.ECOG = ECOG;
 this.COMMENTS = COMMENTS;
 }
 
-public CRDBSurvey(CRDBSurvey crdbSurvey) {
-this.DMP_ID = crdbSurvey.getDMP_ID();
-this.QS_DATE = crdbSurvey.getQS_DATE();
-this.ADJ_TXT = crdbSurvey.getADJ_TXT();
-this.NOSYSTXT = crdbSurvey.getNOSYSTXT();
-this.PRIOR_RX = crdbSurvey.getPRIOR_RX();
-this.BRAINMET = crdbSurvey.getBRAINMET();
-this.ECOG = crdbSurvey.getECOG();
-this.COMMENTS = crdbSurvey.getCOMMENTS();
-}
-
-
-public CRDBSurvey(List<?> crdbSurvey) {
-this.DMP_ID = (String) crdbSurvey.get(0);
-this.QS_DATE = (String) crdbSurvey.get(1);
-this.ADJ_TXT = (String) crdbSurvey.get(2);
-this.NOSYSTXT = (String) crdbSurvey.get(3);
-this.PRIOR_RX = (String) crdbSurvey.get(4);
-this.BRAINMET = (String) crdbSurvey.get(5);
-this.ECOG = (String) crdbSurvey.get(6);
-this.COMMENTS = (String) crdbSurvey.get(7);
+public CRDBSurvey(Object[] crdbSurvey) {
+this.DMP_ID = crdbSurvey[0]==null?"NA":crdbSurvey[0].toString();
+this.QS_DATE = crdbSurvey[1]==null?"NA":crdbSurvey[1].toString();
+this.ADJ_TXT = crdbSurvey[2]==null?"NA":crdbSurvey[2].toString();
+this.NOSYSTXT = crdbSurvey[3]==null?"NA":crdbSurvey[3].toString();
+this.PRIOR_RX = crdbSurvey[4]==null?"NA":crdbSurvey[4].toString();
+this.BRAINMET = crdbSurvey[5]==null?"NA":crdbSurvey[5].toString();
+this.ECOG = crdbSurvey[6]==null?"NA":crdbSurvey[6].toString();
+this.COMMENTS = crdbSurvey[7]==null?"NA":crdbSurvey[7].toString();
 }
     /**
      * 
@@ -309,6 +298,10 @@ this.COMMENTS = (String) crdbSurvey.get(7);
     @Override
     public String toString() {
         return ToStringBuilder.reflectionToString(this);
+    }
+    
+    public String[] getFieldNames() {
+        return toString().substring(toString().indexOf("[")+1,toString().indexOf("]")).replaceAll("=<null>", "").split(",");
     }
 
     public Map<String, Object> getAdditionalProperties() {

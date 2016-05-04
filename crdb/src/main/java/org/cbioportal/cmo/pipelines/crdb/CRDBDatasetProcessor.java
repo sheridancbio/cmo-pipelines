@@ -35,7 +35,7 @@ package org.cbioportal.cmo.pipelines.crdb;
 import org.cbioportal.cmo.pipelines.crdb.model.CRDBDataset;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.batch.item.ItemProcessor;
@@ -43,31 +43,17 @@ import org.springframework.batch.item.ItemProcessor;
 /**
  * @author Benjamin Gross
  */
-public class CRDBDatasetProcessor implements ItemProcessor<CRDBDataset, String>
-{
+public class CRDBDatasetProcessor implements ItemProcessor<CRDBDataset, String> {
     ObjectMapper mapper = new ObjectMapper();
     
     @Override
-    public String process(final CRDBDataset crdbDataset) throws Exception
-    {
-        List<String> record = Arrays.asList(crdbDataset.getDMP_ID(), crdbDataset.getCONSENT_DATE_DAYS(), 
-                crdbDataset.getPRIM_DISEASE_12245(), crdbDataset.getINITIAL_SX_DAYS(), crdbDataset.getINITIAL_DX_DAYS(), 
-                crdbDataset.getFIRST_METASTASIS_DAYS(), crdbDataset.getINIT_DX_STATUS_ID(), crdbDataset.getINIT_DX_STATUS(), 
-                crdbDataset.getINIT_DX_STATUS_DAYS(), crdbDataset.getINIT_DX_STAGING_DSCRP(), crdbDataset.getINIT_DX_STAGE(), 
-                crdbDataset.getINIT_DX_STAGE_DSCRP(), crdbDataset.getINIT_DX_GRADE(), crdbDataset.getINIT_DX_GRADE_DSCRP(), 
-                crdbDataset.getINIT_DX_T_STAGE(), crdbDataset.getINIT_DX_T_STAGE_DSCRP(), crdbDataset.getINIT_DX_N_STAGE(), 
-                crdbDataset.getINIT_DX_N_STAGE_DSCRP(), crdbDataset.getINIT_DX_M_STAGE(), crdbDataset.getINIT_DX_M_STAGE_DSCRP(), 
-                crdbDataset.getINIT_DX_HIST(), crdbDataset.getINIT_DX_SUB_HIST(), crdbDataset.getINIT_DX_SUB_SUB_HIST(), 
-                crdbDataset.getINIT_DX_SUB_SUB_SUB_HIST(), crdbDataset.getINIT_DX_SITE(), crdbDataset.getINIT_DX_SUB_SITE(), 
-                crdbDataset.getINIT_DX_SUB_SUB_SITE(), crdbDataset.getENROLL_DX_STATUS_ID(), crdbDataset.getENROLL_DX_STATUS(), 
-                crdbDataset.getENROLL_DX_STATUS_DAYS(), crdbDataset.getENROLL_DX_STAGING_DSCRP(), crdbDataset.getENROLL_DX_STAGE(), 
-                crdbDataset.getENROLL_DX_STAGE_DSCRP(), crdbDataset.getENROLL_DX_GRADE(), crdbDataset.getENROLL_DX_GRADE_DSCRP(), 
-                crdbDataset.getENROLL_DX_T_STAGE(), crdbDataset.getENROLL_DX_T_STAGE_DSCRP(), crdbDataset.getENROLL_DX_N_STAGE(), 
-                crdbDataset.getENROLL_DX_N_STAGE_DSCRP(), crdbDataset.getENROLL_DX_M_STAGE(), crdbDataset.getENROLL_DX_M_STAGE_DSCRP(), 
-                crdbDataset.getENROLL_DX_HIST(), crdbDataset.getENROLL_DX_SUB_HIST(), crdbDataset.getENROLL_DX_SUB_SUB_HIST(), 
-                crdbDataset.getENROLL_DX_SUB_SUB_SUB_HIST(), crdbDataset.getENROLL_DX_SITE(), crdbDataset.getENROLL_DX_SUB_SITE(), 
-                crdbDataset.getENROLL_DX_SUB_SUB_SITE(), crdbDataset.getSURVIVAL_STATUS(), crdbDataset.getTREATMENT_END_DAYS(), 
-                crdbDataset.getOFF_STUDY_DAYS(), crdbDataset.getCOMMENTS());
+    public String process(final CRDBDataset crdbDataset) throws Exception {
+        List<String> record = new ArrayList<>();
+        for (String values : crdbDataset.toString().split(",")) {
+            if (!values.startsWith("additionalProperties")) {
+                record.add(values.split("=")[1]);
+            }            
+        }
 
         return StringUtils.join(record, "\t");
     }

@@ -40,15 +40,13 @@ import org.springframework.beans.factory.annotation.Value;
 import java.io.*;
 import java.util.*;
 import org.apache.commons.lang.StringUtils;
+import org.cbioportal.cmo.pipelines.crdb.model.CRDBDataset;
 
 /**
  * @author Benjamin Gross
  */
 public class CRDBDatasetWriter implements ItemStreamWriter<String>
-{
-    @Value("${crdb.dataset_columns}")
-    private String dataset_columns; 
-    
+{    
     @Value("#{jobParameters[stagingDirectory]}")
     private String stagingDirectory;
     
@@ -60,15 +58,13 @@ public class CRDBDatasetWriter implements ItemStreamWriter<String>
     private String stagingFile;
     
     @Override
-    public void open(ExecutionContext executionContext) throws ItemStreamException
-    {
+    public void open(ExecutionContext executionContext) throws ItemStreamException {
         PassThroughLineAggregator aggr = new PassThroughLineAggregator();
         flatFileItemWriter.setLineAggregator(aggr);
         flatFileItemWriter.setHeaderCallback(new FlatFileHeaderCallback() {
             @Override
             public void writeHeader(Writer writer) throws IOException {
-                String[] columns = dataset_columns.split("\t");
-                writer.write(normalizeHeaders(columns));
+                writer.write(normalizeHeaders(new CRDBDataset().getFieldNames()));
             }
         });
         if (stagingDirectory.endsWith("/")){
@@ -87,7 +83,7 @@ public class CRDBDatasetWriter implements ItemStreamWriter<String>
             if (col.equals("DMP_ID")){
                 normColumns.add("PATIENT_ID");
             }
-            else {
+            else if (!col.startsWith("additionalProperties")){
                 normColumns.add("CRDB_"+col);
             }
         }
@@ -98,14 +94,12 @@ public class CRDBDatasetWriter implements ItemStreamWriter<String>
     public void update(ExecutionContext executionContext) throws ItemStreamException {}
 
     @Override
-    public void close() throws ItemStreamException
-    {
+    public void close() throws ItemStreamException {
         flatFileItemWriter.close();
     }
 
     @Override
-    public void write(List<? extends String> items) throws Exception
-    {
+    public void write(List<? extends String> items) throws Exception {
         writeList.clear();
         List<String> writeList = new ArrayList<>();
         for (String result : items) {

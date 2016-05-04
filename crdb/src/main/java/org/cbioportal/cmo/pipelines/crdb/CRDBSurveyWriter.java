@@ -40,15 +40,13 @@ import org.springframework.beans.factory.annotation.Value;
 import java.io.*;
 import java.util.*;
 import org.apache.commons.lang.StringUtils;
+import org.cbioportal.cmo.pipelines.crdb.model.CRDBSurvey;
 
 /**
  * @author Benjamin Gross
  */
 public class CRDBSurveyWriter implements ItemStreamWriter<String>
-{
-    @Value("${crdb.survey_columns}")
-    private String survey_columns; 
-    
+{   
     @Value("#{jobParameters[stagingDirectory]}")
     private String stagingDirectory;
     
@@ -60,15 +58,13 @@ public class CRDBSurveyWriter implements ItemStreamWriter<String>
     private String stagingFile;
     
     @Override
-    public void open(ExecutionContext executionContext) throws ItemStreamException
-    {
+    public void open(ExecutionContext executionContext) throws ItemStreamException {
         PassThroughLineAggregator aggr = new PassThroughLineAggregator();
         flatFileItemWriter.setLineAggregator(aggr);
         flatFileItemWriter.setHeaderCallback(new FlatFileHeaderCallback() {
             @Override
             public void writeHeader(Writer writer) throws IOException {
-                String[] columns = survey_columns.split("\t");
-                writer.write(normalizeHeaders(columns));
+                writer.write(normalizeHeaders(new CRDBSurvey().getFieldNames()));
             }
         });
         if (stagingDirectory.endsWith("/")){
@@ -81,13 +77,13 @@ public class CRDBSurveyWriter implements ItemStreamWriter<String>
         flatFileItemWriter.open(executionContext);
     }
     
-    private String normalizeHeaders(String[] columns) {
+    private String normalizeHeaders(String[] columns) {        
         List<String> normColumns = new ArrayList<>();
         for (String col : columns){
             if (col.equals("DMP_ID")){
                 normColumns.add("PATIENT_ID");
             }
-            else {
+            else if (!col.startsWith("additionalProperties")){
                 normColumns.add("CRDB_"+col);
             }
         }
@@ -98,14 +94,12 @@ public class CRDBSurveyWriter implements ItemStreamWriter<String>
     public void update(ExecutionContext executionContext) throws ItemStreamException {}
 
     @Override
-    public void close() throws ItemStreamException
-    {
+    public void close() throws ItemStreamException {
         flatFileItemWriter.close();
     }
 
     @Override
-    public void write(List<? extends String> items) throws Exception
-    {
+    public void write(List<? extends String> items) throws Exception {
         writeList.clear();
         List<String> writeList = new ArrayList<>();
         for (String result : items) {

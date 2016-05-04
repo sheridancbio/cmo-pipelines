@@ -32,6 +32,7 @@
 
 package org.cbioportal.cmo.pipelines.crdb;
 
+import com.querydsl.core.Tuple;
 import static com.querydsl.core.alias.Alias.$;
 import static com.querydsl.core.alias.Alias.alias;
 import com.querydsl.sql.OracleTemplates;
@@ -55,8 +56,7 @@ import oracle.jdbc.pool.OracleDataSource;
 /**
  * @author Benjamin Gross
  */
-public class CRDBSurveyReader implements ItemStreamReader<CRDBSurvey>
-{
+public class CRDBSurveyReader implements ItemStreamReader<CRDBSurvey> {
     @Value("${crdb.survey_view}")
     private String crdbSurveyView;
 
@@ -72,8 +72,7 @@ public class CRDBSurveyReader implements ItemStreamReader<CRDBSurvey>
     private String connection_string;
     
     @Override
-    public void open(ExecutionContext executionContext) throws ItemStreamException
-    {
+    public void open(ExecutionContext executionContext) throws ItemStreamException {
         //read from CRDB view 
         OracleDataSource crdbDataSource = null;
         try {
@@ -81,8 +80,7 @@ public class CRDBSurveyReader implements ItemStreamReader<CRDBSurvey>
         } catch (SQLException ex) {
             Logger.getLogger(CRDBSurveyReader.class.getName()).log(Level.SEVERE, null, ex);
         }
-        this.crdbSurvey = getCrdbSurveyResults(crdbDataSource);
-                
+        this.crdbSurvey = getCrdbSurveyResults(crdbDataSource);                
     }
     
     @Transactional
@@ -93,31 +91,18 @@ public class CRDBSurveyReader implements ItemStreamReader<CRDBSurvey>
         com.querydsl.sql.Configuration config = new com.querydsl.sql.Configuration(templates);
         SQLQueryFactory queryFactory = new SQLQueryFactory(config, crdbDataSource);
         
-        CRDBSurvey qCRDBS = alias(CRDBSurvey.class, crdbSurveyView);        
-        List<?> crdbSurveyList = (List<?>)(List<?>)queryFactory.select($(qCRDBS.getDMP_ID()), $(qCRDBS.getQS_DATE()), $(qCRDBS.getADJ_TXT()),
-                $(qCRDBS.getNOSYSTXT()), $(qCRDBS.getPRIOR_RX()), $(qCRDBS.getBRAINMET()), $(qCRDBS.getECOG()), $(qCRDBS.getCOMMENTS()))
-                .from($(qCRDBS)).fetch();
-                    
+        CRDBSurvey qCRDBS = alias(CRDBSurvey.class, crdbSurveyView);         
         List<CRDBSurvey> crdbSurveyResults = new ArrayList<>();
         Integer numRows = 0;
-        for (int i=0; i<crdbSurveyList.size(); i++){
-            CRDBSurvey record = createRecord(crdbSurveyList.get(i).toString());
-            crdbSurveyResults.add(record);
-
+            for (Tuple record : queryFactory.select($(qCRDBS.getDMP_ID()), $(qCRDBS.getQS_DATE()), $(qCRDBS.getADJ_TXT()),
+                $(qCRDBS.getNOSYSTXT()), $(qCRDBS.getPRIOR_RX()), $(qCRDBS.getBRAINMET()), $(qCRDBS.getECOG()), $(qCRDBS.getCOMMENTS()))
+                .from($(qCRDBS)).fetch()) {
+            crdbSurveyResults.add(new CRDBSurvey(record.toArray()));
             numRows++;
-        }      
-        
+        }
+                             
         System.out.println("Imported "+numRows+" records from CRDB Survey View.");
         return crdbSurveyResults;
-    }
-    
-    private CRDBSurvey createRecord(String recordString){
-        String[] vals = recordString.replace("[","").replace("]","").split(", ");
-        String dmpId = vals[0]; String qsDate = vals[1]; String adjTxt = fixNull(vals[2]);
-        String noSysTxt = fixNull(vals[3]); String priorRx = fixNull(vals[4]);
-        String brainMet = fixNull(vals[5]); String ecog = fixNull(vals[6]); 
-        String comments = fixNull(vals[7]);
-        return new CRDBSurvey(dmpId, qsDate, adjTxt, noSysTxt, priorRx, brainMet, ecog, comments);
     }
 
     private OracleDataSource getCrdbDataSource() throws SQLException {
@@ -127,13 +112,6 @@ public class CRDBSurveyReader implements ItemStreamReader<CRDBSurvey>
         crdbDataSource.setURL(connection_string);
         return crdbDataSource;
     }
-    
-    private String fixNull(String val){
-        if (val == null){
-            return "NA";
-        }
-        return val;
-    }
 
     @Override
     public void update(ExecutionContext executionContext) throws ItemStreamException {}
@@ -142,8 +120,7 @@ public class CRDBSurveyReader implements ItemStreamReader<CRDBSurvey>
     public void close() throws ItemStreamException {}
 
     @Override
-    public CRDBSurvey read() throws Exception
-    {
+    public CRDBSurvey read() throws Exception {
         if (!crdbSurvey.isEmpty()) {            
             return crdbSurvey.remove(0);            
         }

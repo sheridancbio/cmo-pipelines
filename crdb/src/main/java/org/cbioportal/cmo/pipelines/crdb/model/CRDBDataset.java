@@ -220,9 +220,62 @@ public CRDBDataset(String DMP_ID, String CONSENT_DATE_DAYS, String PRIM_DISEASE_
     this.SURVIVAL_STATUS = SURVIVAL_STATUS;
     this.TREATMENT_END_DAYS = TREATMENT_END_DAYS;
     this.OFF_STUDY_DAYS = OFF_STUDY_DAYS;
-    this.COMMENTS = COMMENTS;   
-    
-    
+    this.COMMENTS = COMMENTS;           
+}
+
+public CRDBDataset(Object[] crdbDataset) {
+    this.DMP_ID = crdbDataset[0]==null?"NA":crdbDataset[0].toString();
+    this.CONSENT_DATE_DAYS = crdbDataset[1]==null?"NA":crdbDataset[1].toString();
+    this.PRIM_DISEASE_12245 = crdbDataset[2]==null?"NA":crdbDataset[2].toString();
+    this.INITIAL_SX_DAYS = crdbDataset[3]==null?"NA":crdbDataset[3].toString();
+    this.INITIAL_DX_DAYS = crdbDataset[4]==null?"NA":crdbDataset[4].toString();
+    this.FIRST_METASTASIS_DAYS = crdbDataset[5]==null?"NA":crdbDataset[5].toString();
+    this.INIT_DX_STATUS_ID = crdbDataset[6]==null?"NA":crdbDataset[6].toString();
+    this.INIT_DX_STATUS = crdbDataset[7]==null?"NA":crdbDataset[7].toString();
+    this.INIT_DX_STATUS_DAYS = crdbDataset[8]==null?"NA":crdbDataset[8].toString();
+    this.INIT_DX_STAGING_DSCRP = crdbDataset[9]==null?"NA":crdbDataset[9].toString();
+    this.INIT_DX_STAGE = crdbDataset[10]==null?"NA":crdbDataset[10].toString();
+    this.INIT_DX_STAGE_DSCRP = crdbDataset[11]==null?"NA":crdbDataset[11].toString();
+    this.INIT_DX_GRADE = crdbDataset[12]==null?"NA":crdbDataset[12].toString();
+    this.INIT_DX_GRADE_DSCRP = crdbDataset[13]==null?"NA":crdbDataset[13].toString();
+    this.INIT_DX_T_STAGE = crdbDataset[14]==null?"NA":crdbDataset[14].toString();
+    this.INIT_DX_T_STAGE_DSCRP = crdbDataset[15]==null?"NA":crdbDataset[15].toString();
+    this.INIT_DX_N_STAGE = crdbDataset[16]==null?"NA":crdbDataset[16].toString();
+    this.INIT_DX_N_STAGE_DSCRP = crdbDataset[17]==null?"NA":crdbDataset[17].toString();
+    this.INIT_DX_M_STAGE = crdbDataset[18]==null?"NA":crdbDataset[18].toString();
+    this.INIT_DX_M_STAGE_DSCRP = crdbDataset[19]==null?"NA":crdbDataset[19].toString();
+    this.INIT_DX_HIST = crdbDataset[20]==null?"NA":crdbDataset[20].toString();
+    this.INIT_DX_SUB_HIST = crdbDataset[21]==null?"NA":crdbDataset[21].toString();
+    this.INIT_DX_SUB_SUB_HIST = crdbDataset[22]==null?"NA":crdbDataset[22].toString();
+    this.INIT_DX_SUB_SUB_SUB_HIST = crdbDataset[23]==null?"NA":crdbDataset[23].toString();
+    this.INIT_DX_SITE = crdbDataset[24]==null?"NA":crdbDataset[24].toString();
+    this.INIT_DX_SUB_SITE = crdbDataset[25]==null?"NA":crdbDataset[25].toString();
+    this.INIT_DX_SUB_SUB_SITE = crdbDataset[26]==null?"NA":crdbDataset[26].toString();
+    this.ENROLL_DX_STATUS_ID = crdbDataset[27]==null?"NA":crdbDataset[27].toString();
+    this.ENROLL_DX_STATUS = crdbDataset[28]==null?"NA":crdbDataset[28].toString();
+    this.ENROLL_DX_STATUS_DAYS = crdbDataset[29]==null?"NA":crdbDataset[29].toString();
+    this.ENROLL_DX_STAGING_DSCRP = crdbDataset[30]==null?"NA":crdbDataset[30].toString();
+    this.ENROLL_DX_STAGE = crdbDataset[31]==null?"NA":crdbDataset[31].toString();
+    this.ENROLL_DX_STAGE_DSCRP = crdbDataset[32]==null?"NA":crdbDataset[32].toString();
+    this.ENROLL_DX_GRADE = crdbDataset[33]==null?"NA":crdbDataset[33].toString();
+    this.ENROLL_DX_GRADE_DSCRP = crdbDataset[34]==null?"NA":crdbDataset[34].toString();
+    this.ENROLL_DX_T_STAGE = crdbDataset[35]==null?"NA":crdbDataset[35].toString();
+    this.ENROLL_DX_T_STAGE_DSCRP = crdbDataset[36]==null?"NA":crdbDataset[36].toString();
+    this.ENROLL_DX_N_STAGE = crdbDataset[37]==null?"NA":crdbDataset[37].toString();
+    this.ENROLL_DX_N_STAGE_DSCRP = crdbDataset[38]==null?"NA":crdbDataset[38].toString();
+    this.ENROLL_DX_M_STAGE = crdbDataset[39]==null?"NA":crdbDataset[39].toString();
+    this.ENROLL_DX_M_STAGE_DSCRP = crdbDataset[40]==null?"NA":crdbDataset[40].toString();
+    this.ENROLL_DX_HIST = crdbDataset[41]==null?"NA":crdbDataset[41].toString();
+    this.ENROLL_DX_SUB_HIST = crdbDataset[42]==null?"NA":crdbDataset[42].toString();
+    this.ENROLL_DX_SUB_SUB_HIST = crdbDataset[43]==null?"NA":crdbDataset[43].toString();
+    this.ENROLL_DX_SUB_SUB_SUB_HIST = crdbDataset[44]==null?"NA":crdbDataset[44].toString();
+    this.ENROLL_DX_SITE = crdbDataset[45]==null?"NA":crdbDataset[45].toString();
+    this.ENROLL_DX_SUB_SITE = crdbDataset[46]==null?"NA":crdbDataset[46].toString();
+    this.ENROLL_DX_SUB_SUB_SITE = crdbDataset[47]==null?"NA":crdbDataset[47].toString();
+    this.SURVIVAL_STATUS = crdbDataset[48]==null?"NA":crdbDataset[48].toString();
+    this.TREATMENT_END_DAYS = crdbDataset[49]==null?"NA":crdbDataset[49].toString();
+    this.OFF_STUDY_DAYS = crdbDataset[50]==null?"NA":crdbDataset[50].toString();
+    this.COMMENTS = crdbDataset[51]==null?"NA":crdbDataset[51].toString();     
 }
     /**
      * 
@@ -1525,12 +1578,14 @@ public CRDBDataset(String DMP_ID, String CONSENT_DATE_DAYS, String PRIM_DISEASE_
         return this;
     }
 
-
     @Override
     public String toString() {
         return ToStringBuilder.reflectionToString(this);
     }
 
+    public String[] getFieldNames() {
+        return toString().substring(toString().indexOf("[")+1,toString().indexOf("]")).replaceAll("=<null>", "").split(",");
+    }
     public Map<String, Object> getAdditionalProperties() {
         return this.additionalProperties;
     }

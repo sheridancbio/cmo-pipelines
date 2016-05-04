@@ -45,11 +45,9 @@ import org.springframework.batch.core.launch.JobLauncher;
  * @author Benjamin Gross
  */
 @SpringBootApplication
-public class CRDBPipeline
-{
+public class CRDBPipeline {
 
-    private static Options getOptions(String[] args)
-    {
+    private static Options getOptions(String[] args) {
         Options gnuOptions = new Options();
         gnuOptions.addOption("h", "help", false, "shows this help document and quits.")
             .addOption("cancer_study", "cancer_study", true, "Cancer Study Identifier")
@@ -58,15 +56,13 @@ public class CRDBPipeline
         return gnuOptions;
     }
 
-    private static void help(Options gnuOptions, int exitStatus)
-    {
+    private static void help(Options gnuOptions, int exitStatus) {
         HelpFormatter helpFormatter = new HelpFormatter();
         helpFormatter.printHelp("CRDBPipeline", gnuOptions);
         System.exit(exitStatus);
     }
 
-    private static void launchJob(String[] args, String cancerStudy, String stagingDirectory) throws Exception
-    {
+    private static void launchJob(String[] args, String cancerStudy, String stagingDirectory) throws Exception {
         SpringApplication app = new SpringApplication(CRDBPipeline.class);
         ConfigurableApplicationContext ctx = app.run(args);
         JobLauncher jobLauncher = ctx.getBean(JobLauncher.class);        
@@ -79,8 +75,7 @@ public class CRDBPipeline
         JobExecution jobExecution = jobLauncher.run(crdbJob, jobParameters);
     }
     
-    public static void main(String[] args) throws Exception
-    {
+    public static void main(String[] args) throws Exception {
         Options gnuOptions = CRDBPipeline.getOptions(args);
         CommandLineParser parser = new GnuParser();
         CommandLine commandLine = parser.parse(gnuOptions, args);

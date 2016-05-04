@@ -35,7 +35,7 @@ package org.cbioportal.cmo.pipelines.crdb;
 import org.cbioportal.cmo.pipelines.crdb.model.CRDBSurvey;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.batch.item.ItemProcessor;
@@ -43,22 +43,17 @@ import org.springframework.batch.item.ItemProcessor;
 /**
  * @author Benjamin Gross
  */
-public class CRDBSurveyProcessor implements ItemProcessor<CRDBSurvey, String>
-{
+public class CRDBSurveyProcessor implements ItemProcessor<CRDBSurvey, String> {
     ObjectMapper mapper = new ObjectMapper();
     
     @Override
-    public String process(final CRDBSurvey crdbSurvey) throws Exception
-    {
-        List<String> record = Arrays.asList(crdbSurvey.getDMP_ID(),
-                crdbSurvey.getQS_DATE(),
-                crdbSurvey.getADJ_TXT(),
-                crdbSurvey.getNOSYSTXT(),
-                crdbSurvey.getPRIOR_RX(),
-                crdbSurvey.getBRAINMET(),
-                crdbSurvey.getECOG(),
-                crdbSurvey.getCOMMENTS());
-
+    public String process(final CRDBSurvey crdbSurvey) throws Exception {
+        List<String> record = new ArrayList<>();
+        for (String values : crdbSurvey.toString().split(",")) {
+            if (!values.startsWith("additionalProperties")) {
+                record.add(values.split("=")[1]);
+            }            
+        }
         return StringUtils.join(record, "\t");
     }
 }

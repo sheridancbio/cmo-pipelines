@@ -32,6 +32,7 @@
 
 package org.cbioportal.cmo.pipelines.crdb;
 
+import com.querydsl.core.Tuple;
 import static com.querydsl.core.alias.Alias.$;
 import static com.querydsl.core.alias.Alias.alias;
 import com.querydsl.sql.OracleTemplates;
@@ -55,8 +56,7 @@ import oracle.jdbc.pool.OracleDataSource;
 /**
  * @author Benjamin Gross
  */
-public class CRDBDatasetReader implements ItemStreamReader<CRDBDataset>
-{
+public class CRDBDatasetReader implements ItemStreamReader<CRDBDataset> {
     @Value("${crdb.dataset_view}")
     private String crdbDatasetView;
 
@@ -72,8 +72,7 @@ public class CRDBDatasetReader implements ItemStreamReader<CRDBDataset>
     private String connection_string;
     
     @Override
-    public void open(ExecutionContext executionContext) throws ItemStreamException
-    {
+    public void open(ExecutionContext executionContext) throws ItemStreamException {
         //read from CRDB view 
         OracleDataSource crdbDataSource = null;
         try {
@@ -81,8 +80,7 @@ public class CRDBDatasetReader implements ItemStreamReader<CRDBDataset>
         } catch (SQLException ex) {
             Logger.getLogger(CRDBDatasetReader.class.getName()).log(Level.SEVERE, null, ex);
         }
-        this.crdbDataset = getCrdbDatasetResults(crdbDataSource);
-                
+        this.crdbDataset = getCrdbDatasetResults(crdbDataSource);                
     }
     
     @Transactional
@@ -93,8 +91,10 @@ public class CRDBDatasetReader implements ItemStreamReader<CRDBDataset>
         com.querydsl.sql.Configuration config = new com.querydsl.sql.Configuration(templates);
         SQLQueryFactory queryFactory = new SQLQueryFactory(config, crdbDataSource);
         
-        CRDBDataset qCRDBD = alias(CRDBDataset.class, crdbDatasetView);
-        List<?> crdbSurveyList = (List<?>)(List<?>)queryFactory.select($(qCRDBD.getDMP_ID()), 
+        CRDBDataset qCRDBD = alias(CRDBDataset.class, crdbDatasetView);  
+        List<CRDBDataset> crdbDatasetResults = new ArrayList<>();
+        Integer numRows = 0;
+        for (Tuple record : queryFactory.select($(qCRDBD.getDMP_ID()), 
                 $(qCRDBD.getCONSENT_DATE_DAYS()), $(qCRDBD.getPRIM_DISEASE_12245()), $(qCRDBD.getINITIAL_SX_DAYS()), 
                 $(qCRDBD.getINITIAL_DX_DAYS()), $(qCRDBD.getFIRST_METASTASIS_DAYS()), $(qCRDBD.getINIT_DX_STATUS_ID()), 
                 $(qCRDBD.getINIT_DX_STATUS()), $(qCRDBD.getINIT_DX_STATUS_DAYS()), $(qCRDBD.getINIT_DX_STAGING_DSCRP()), 
@@ -112,50 +112,15 @@ public class CRDBDatasetReader implements ItemStreamReader<CRDBDataset>
                 $(qCRDBD.getENROLL_DX_SUB_SUB_HIST()), $(qCRDBD.getENROLL_DX_SUB_SUB_SUB_HIST()), $(qCRDBD.getENROLL_DX_SITE()), 
                 $(qCRDBD.getENROLL_DX_SUB_SITE()), $(qCRDBD.getENROLL_DX_SUB_SUB_SITE()), $(qCRDBD.getSURVIVAL_STATUS()), 
                 $(qCRDBD.getTREATMENT_END_DAYS()), $(qCRDBD.getOFF_STUDY_DAYS()), $(qCRDBD.getCOMMENTS()))
-                .from($(qCRDBD)).fetch();
-        
-        List<CRDBDataset> crdbDatasetResults = new ArrayList<>();
-        Integer numRows = 0;
-        for (int i=0; i<crdbSurveyList.size(); i++){
-            CRDBDataset record = createRecord(crdbSurveyList.get(i).toString());
-            crdbDatasetResults.add(record);
+                .from($(qCRDBD)).fetch()) {
+            crdbDatasetResults.add(new CRDBDataset(record.toArray()));
             numRows++;
-        }      
-        
+            
+        }
+
         System.out.println("Imported "+numRows+" records from CRDB Dataset View.");
         return crdbDatasetResults;
     }
-    
-    private CRDBDataset createRecord(String recordString){
-        String[] vals = recordString.replace("[","").replace("]","").split(", ");
-        String dmpId = vals[0]; String consentDateDays = fixNull(vals[1]); String primDisease = fixNull(vals[2]); String initialSxDays = fixNull(vals[3]);
-        String initialDxDays = fixNull(vals[4]); String firstMetDays = fixNull(vals[5]); String initDxStatusId = fixNull(vals[6]);
-        String initDxStatus = fixNull(vals[7]); String initDxStatusDays = fixNull(vals[8]); String initDxStagingDscrp = fixNull(vals[9]);
-        String initDxStage = fixNull(vals[10]); String initDxStageDscrp = fixNull(vals[11]); String initDxGrade = fixNull(vals[12]);
-        String initDxGradeDscrp = fixNull(vals[13]); String initDxTStage = fixNull(vals[14]); String initDxTStageDscrp = fixNull(vals[15]);
-        String initDxNStage = fixNull(vals[16]); String initDxNStageDscrp = fixNull(vals[17]); String initDxMStage = fixNull(vals[18]);
-        String initDxMStageDscrp = fixNull(vals[19]); String initDxHist = fixNull(vals[20]); String initDxSubHist = fixNull(vals[21]);
-        String initDxSubSubHist = fixNull(vals[22]); String initDxSubSubSubHist = fixNull(vals[23]); String initDxSite = fixNull(vals[24]);
-        String initDxSubSite = fixNull(vals[25]); String initDxSubSubSite = fixNull(vals[26]); String enrollDxStatusId = fixNull(vals[27]);
-        String enrollDxStatus = fixNull(vals[28]); String enrollDxStatusDays = fixNull(vals[29]); String enrollDxStatusDscrp = fixNull(vals[30]);
-        String enrollDxStage = fixNull(vals[31]); String enrollDxStageDscrp = fixNull(vals[32]); String enrollDxGrade = fixNull(vals[33]);
-        String enrollDxGradeDscrp = fixNull(vals[34]); String enrollDxTStage = fixNull(vals[35]); String enrollDxTStageDscrp = fixNull(vals[36]);
-        String enrollDxNStage = fixNull(vals[37]); String enrollDxNStageDscrp = fixNull(vals[38]); String enrollDxMStage = fixNull(vals[39]);
-        String enrollDxMStageDscrp = fixNull(vals[40]); String enrollDxHist = fixNull(vals[41]); String enrollDxSubHist = fixNull(vals[42]);
-        String enrollDxSubSubHist = fixNull(vals[43]); String enrollDxSubSubSubHist = fixNull(vals[44]); String enrollDxSite = fixNull(vals[45]);
-        String enrollDxSubSite = fixNull(vals[46]); String enrollDxSubSubSite = fixNull(vals[47]); String survivalStatus = fixNull(vals[48]);
-        String treatmentEndDays = fixNull(vals[49]); String offStudyDays = fixNull(vals[50]); String comments = fixNull(vals[51]);
-        
-        return new CRDBDataset(dmpId, consentDateDays, primDisease, initialSxDays, initialDxDays, firstMetDays, 
-                initDxStatusId, initDxStatus, initDxStatusDays, initDxStagingDscrp, initDxStage, initDxStageDscrp, 
-                initDxGrade, initDxGradeDscrp, initDxTStage, initDxTStageDscrp, initDxNStage, initDxNStageDscrp, 
-                initDxMStage, initDxMStageDscrp, initDxHist, initDxSubHist, initDxSubSubHist, initDxSubSubSubHist, 
-                initDxSite, initDxSubSite, initDxSubSubSite, enrollDxStatusId, enrollDxStatus, enrollDxStatusDays, 
-                enrollDxStatusDscrp, enrollDxStage, enrollDxStageDscrp, enrollDxGrade, enrollDxGradeDscrp, enrollDxTStage, 
-                enrollDxTStageDscrp, enrollDxNStage, enrollDxNStageDscrp, enrollDxMStage, enrollDxMStageDscrp, enrollDxHist, 
-                enrollDxSubHist, enrollDxSubSubHist, enrollDxSubSubSubHist, enrollDxSite, enrollDxSubSite, enrollDxSubSubSite, 
-                survivalStatus, treatmentEndDays, offStudyDays, comments);
-    } 
 
     private OracleDataSource getCrdbDataSource() throws SQLException {
         OracleDataSource crdbDataSource = new OracleDataSource();
@@ -163,13 +128,6 @@ public class CRDBDatasetReader implements ItemStreamReader<CRDBDataset>
         crdbDataSource.setPassword(password);
         crdbDataSource.setURL(connection_string);
         return crdbDataSource;
-    }
-    
-    private String fixNull(String val){
-        if (val == null){
-            return "NA";
-        }
-        return val;
     }
 
     @Override
@@ -179,8 +137,7 @@ public class CRDBDatasetReader implements ItemStreamReader<CRDBDataset>
     public void close() throws ItemStreamException {}
 
     @Override
-    public CRDBDataset read() throws Exception
-    {
+    public CRDBDataset read() throws Exception {
         if (!crdbDataset.isEmpty()) {            
             return crdbDataset.remove(0);            
         }
