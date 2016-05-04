@@ -43,7 +43,7 @@ import org.springframework.context.annotation.*;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
- * @author Benjamin Gross
+ * @author ochoaa
  */
 @Configuration
 @EnableBatchProcessing

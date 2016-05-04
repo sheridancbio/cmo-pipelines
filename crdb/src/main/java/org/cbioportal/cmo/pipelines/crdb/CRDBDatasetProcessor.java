@@ -41,7 +41,7 @@ import org.apache.commons.lang.StringUtils;
 import org.springframework.batch.item.ItemProcessor;
 
 /**
- * @author Benjamin Gross
+ * @author ochoaa
  */
 public class CRDBDatasetProcessor implements ItemProcessor<CRDBDataset, String> {
     ObjectMapper mapper = new ObjectMapper();
@@ -54,7 +54,6 @@ public class CRDBDatasetProcessor implements ItemProcessor<CRDBDataset, String> 
                 record.add(values.split("=")[1]);
             }            
         }
-
         return StringUtils.join(record, "\t");
     }
 }

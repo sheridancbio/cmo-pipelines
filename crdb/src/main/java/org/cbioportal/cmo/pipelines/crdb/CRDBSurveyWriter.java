@@ -43,7 +43,7 @@ import org.apache.commons.lang.StringUtils;
 import org.cbioportal.cmo.pipelines.crdb.model.CRDBSurvey;
 
 /**
- * @author Benjamin Gross
+ * @author ochoaa
  */
 public class CRDBSurveyWriter implements ItemStreamWriter<String>
 {   

@@ -41,7 +41,7 @@ import org.apache.commons.lang.StringUtils;
 import org.springframework.batch.item.ItemProcessor;
 
 /**
- * @author Benjamin Gross
+ * @author ochoaa
  */
 public class CRDBSurveyProcessor implements ItemProcessor<CRDBSurvey, String> {
     ObjectMapper mapper = new ObjectMapper();

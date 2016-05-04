@@ -1598,5 +1598,4 @@ public CRDBDataset(Object[] crdbDataset) {
         this.additionalProperties.put(name, value);
         return this;
     }
-
 }

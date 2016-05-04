@@ -31,7 +31,6 @@
 */
 package org.cbioportal.cmo.pipelines.crdb.model;
 
-import com.querydsl.core.types.QTuple;
 import java.util.*;
 
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -316,5 +315,4 @@ this.COMMENTS = crdbSurvey[7]==null?"NA":crdbSurvey[7].toString();
         this.additionalProperties.put(name, value);
         return this;
     }
-
 }

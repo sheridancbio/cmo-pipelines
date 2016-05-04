@@ -54,13 +54,11 @@ import oracle.jdbc.pool.OracleDataSource;
 
 
 /**
- * @author Benjamin Gross
+ * @author ochoaa
  */
 public class CRDBDatasetReader implements ItemStreamReader<CRDBDataset> {
     @Value("${crdb.dataset_view}")
     private String crdbDatasetView;
-
-    private List<CRDBDataset> crdbDataset;
 
     @Value("${crdb.username}")
     private String username;
@@ -70,6 +68,8 @@ public class CRDBDatasetReader implements ItemStreamReader<CRDBDataset> {
     
     @Value("${crdb.connection_string}")
     private String connection_string;
+
+    private List<CRDBDataset> crdbDataset;    
     
     @Override
     public void open(ExecutionContext executionContext) throws ItemStreamException {
@@ -85,7 +85,7 @@ public class CRDBDatasetReader implements ItemStreamReader<CRDBDataset> {
     
     @Transactional
     private List<CRDBDataset> getCrdbDatasetResults(OracleDataSource crdbDataSource) {
-        System.out.println("Beginning CRDB Dataset View import...");
+        System.out.println("\nBeginning CRDB Dataset View import...");
         
         SQLTemplates templates = new OracleTemplates();
         com.querydsl.sql.Configuration config = new com.querydsl.sql.Configuration(templates);
@@ -118,7 +118,7 @@ public class CRDBDatasetReader implements ItemStreamReader<CRDBDataset> {
             
         }
 
-        System.out.println("Imported "+numRows+" records from CRDB Dataset View.");
+        System.out.println("Imported "+numRows+" records from CRDB Dataset View.\n");
         return crdbDatasetResults;
     }
 

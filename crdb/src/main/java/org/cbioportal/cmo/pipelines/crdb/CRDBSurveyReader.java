@@ -54,13 +54,11 @@ import oracle.jdbc.pool.OracleDataSource;
 
 
 /**
- * @author Benjamin Gross
+ * @author ochoaa
  */
 public class CRDBSurveyReader implements ItemStreamReader<CRDBSurvey> {
     @Value("${crdb.survey_view}")
     private String crdbSurveyView;
-
-    private List<CRDBSurvey> crdbSurvey;
 
     @Value("${crdb.username}")
     private String username;
@@ -70,6 +68,8 @@ public class CRDBSurveyReader implements ItemStreamReader<CRDBSurvey> {
     
     @Value("${crdb.connection_string}")
     private String connection_string;
+    
+    private List<CRDBSurvey> crdbSurvey;    
     
     @Override
     public void open(ExecutionContext executionContext) throws ItemStreamException {

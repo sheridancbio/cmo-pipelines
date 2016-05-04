@@ -43,7 +43,7 @@ import org.apache.commons.lang.StringUtils;
 import org.cbioportal.cmo.pipelines.crdb.model.CRDBDataset;
 
 /**
- * @author Benjamin Gross
+ * @author ochoaa
  */
 public class CRDBDatasetWriter implements ItemStreamWriter<String>
 {    
