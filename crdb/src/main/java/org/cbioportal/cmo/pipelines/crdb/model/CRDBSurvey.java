@@ -66,26 +66,16 @@ public CRDBSurvey() {
 */
 public CRDBSurvey(String DMP_ID, String QS_DATE, String ADJ_TXT, String NOSYSTXT,
         String PRIOR_RX, String BRAINMET, String ECOG, String COMMENTS) {
-this.DMP_ID = DMP_ID;
-this.QS_DATE = QS_DATE;
-this.ADJ_TXT = ADJ_TXT;
-this.NOSYSTXT = NOSYSTXT;
-this.PRIOR_RX = PRIOR_RX;
-this.BRAINMET = BRAINMET;
-this.ECOG = ECOG;
-this.COMMENTS = COMMENTS;
+this.DMP_ID = DMP_ID==null?"NA":DMP_ID;
+this.QS_DATE = QS_DATE==null?"NA":QS_DATE;
+this.ADJ_TXT = ADJ_TXT==null?"NA":ADJ_TXT;
+this.NOSYSTXT = NOSYSTXT==null?"NA":NOSYSTXT;
+this.PRIOR_RX = PRIOR_RX==null?"NA":PRIOR_RX;
+this.BRAINMET = BRAINMET==null?"NA":BRAINMET;
+this.ECOG = ECOG==null?"NA":ECOG;
+this.COMMENTS = COMMENTS==null?"NA":COMMENTS;
 }
 
-public CRDBSurvey(Object[] crdbSurvey) {
-this.DMP_ID = crdbSurvey[0]==null?"NA":crdbSurvey[0].toString();
-this.QS_DATE = crdbSurvey[1]==null?"NA":crdbSurvey[1].toString();
-this.ADJ_TXT = crdbSurvey[2]==null?"NA":crdbSurvey[2].toString();
-this.NOSYSTXT = crdbSurvey[3]==null?"NA":crdbSurvey[3].toString();
-this.PRIOR_RX = crdbSurvey[4]==null?"NA":crdbSurvey[4].toString();
-this.BRAINMET = crdbSurvey[5]==null?"NA":crdbSurvey[5].toString();
-this.ECOG = crdbSurvey[6]==null?"NA":crdbSurvey[6].toString();
-this.COMMENTS = crdbSurvey[7]==null?"NA":crdbSurvey[7].toString();
-}
     /**
      * 
      * @return DMP_ID
@@ -299,8 +289,14 @@ this.COMMENTS = crdbSurvey[7]==null?"NA":crdbSurvey[7].toString();
         return ToStringBuilder.reflectionToString(this);
     }
     
-    public String[] getFieldNames() {
-        return toString().substring(toString().indexOf("[")+1,toString().indexOf("]")).replaceAll("=<null>", "").split(",");
+    public List<String> getFieldNames() {
+        List<String> fieldNames = new ArrayList<>();
+        for (String field : toString().substring(toString().indexOf("[")+1,toString().indexOf("]")).split(",")) {
+            if (!field.startsWith("additionalProperties")) {
+                fieldNames.add(field.split("=")[0]);                
+            }
+        }
+        return fieldNames;
     }
 
     public Map<String, Object> getAdditionalProperties() {

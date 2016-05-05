@@ -32,9 +32,9 @@
 
 package org.cbioportal.cmo.pipelines.crdb;
 
-import com.querydsl.core.Tuple;
 import static com.querydsl.core.alias.Alias.$;
 import static com.querydsl.core.alias.Alias.alias;
+import com.querydsl.core.types.Projections;
 import com.querydsl.sql.OracleTemplates;
 import com.querydsl.sql.SQLQueryFactory;
 import com.querydsl.sql.SQLTemplates;
@@ -85,23 +85,18 @@ public class CRDBSurveyReader implements ItemStreamReader<CRDBSurvey> {
     
     @Transactional
     private List<CRDBSurvey> getCrdbSurveyResults(OracleDataSource crdbDataSource) {
-        System.out.println("Beginning CRDB Survey View import...");
+        System.out.println("\nBeginning CRDB Survey View import...");
         
         SQLTemplates templates = new OracleTemplates();
         com.querydsl.sql.Configuration config = new com.querydsl.sql.Configuration(templates);
         SQLQueryFactory queryFactory = new SQLQueryFactory(config, crdbDataSource);
         
-        CRDBSurvey qCRDBS = alias(CRDBSurvey.class, crdbSurveyView);         
-        List<CRDBSurvey> crdbSurveyResults = new ArrayList<>();
-        Integer numRows = 0;
-            for (Tuple record : queryFactory.select($(qCRDBS.getDMP_ID()), $(qCRDBS.getQS_DATE()), $(qCRDBS.getADJ_TXT()),
-                $(qCRDBS.getNOSYSTXT()), $(qCRDBS.getPRIOR_RX()), $(qCRDBS.getBRAINMET()), $(qCRDBS.getECOG()), $(qCRDBS.getCOMMENTS()))
-                .from($(qCRDBS)).fetch()) {
-            crdbSurveyResults.add(new CRDBSurvey(record.toArray()));
-            numRows++;
-        }
+        CRDBSurvey qCRDBS = alias(CRDBSurvey.class, crdbSurveyView);  
+        List<CRDBSurvey> crdbSurveyResults = queryFactory.select(Projections.constructor(CRDBSurvey.class, $(qCRDBS.getDMP_ID()), $(qCRDBS.getQS_DATE()), $(qCRDBS.getADJ_TXT()),
+                $(qCRDBS.getNOSYSTXT()), $(qCRDBS.getPRIOR_RX()), $(qCRDBS.getBRAINMET()), $(qCRDBS.getECOG()), $(qCRDBS.getCOMMENTS()))).from($(qCRDBS)).fetch();
+        Integer numRows = crdbSurveyResults.size();
                              
-        System.out.println("Imported "+numRows+" records from CRDB Survey View.");
+        System.out.println("Imported "+numRows+" records from CRDB Survey View.\n");
         return crdbSurveyResults;
     }
 
