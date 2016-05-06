@@ -39,10 +39,9 @@ import org.springframework.batch.item.*;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.beans.factory.annotation.Value;
-import java.util.List;
 
+import java.util.*;
 /**
  * @author Benjamin Gross
  */
@@ -52,29 +51,29 @@ public class GDDClassifierReader implements ItemStreamReader<GDDResult>
     private String gddURL;
 
     @Value("#{jobParameters[maf]}")
-	private String maf;
+    private String maf;
 
     @Value("#{jobParameters[cna]}")
-	private String cna;
+    private String cna;
 
     @Value("#{jobParameters[seg]}")
-	private String seg;
+    private String seg;
 
     @Value("#{jobParameters[sv]}")
-	private String sv;
+    private String sv;
 
     @Value("#{jobParameters[clinical]}")
-	private String clinical;
+    private String clinical;
 
     private List<GDDResult> results;
-
+    
     @Override
     public void open(ExecutionContext executionContext) throws ItemStreamException
     {
         RestTemplate restTemplate = new RestTemplate();
-        HttpEntity<LinkedMultiValueMap<String, Object>> requestEntity = getRequestEntity();
+        HttpEntity<LinkedMultiValueMap<String, Object>> requestEntity = getRequestEntity();  
         ResponseEntity<GDDClassifier> responseEntity =
-            restTemplate.exchange(gddURL, HttpMethod.POST, requestEntity, GDDClassifier.class);
+            restTemplate.exchange(gddURL, HttpMethod.POST, requestEntity, GDDClassifier.class);  
         this.results = responseEntity.getBody().getResult();
     }
 
@@ -88,7 +87,6 @@ public class GDDClassifierReader implements ItemStreamReader<GDDResult>
         map.add("clinical", new FileSystemResource(clinical));
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.MULTIPART_FORM_DATA);
-
         return new HttpEntity<LinkedMultiValueMap<String, Object>>(map, headers);
     }
 
@@ -101,9 +99,10 @@ public class GDDClassifierReader implements ItemStreamReader<GDDResult>
     @Override
     public GDDResult read() throws Exception
     {
-        if (!results.isEmpty()) {
-            return results.remove(0);
+        // necessary until bug that generates duplicate results in classifier script "generate_feature_table.R" gets fixed
+        if (!results.isEmpty() && results.get(0).getSampleId() != null) {            
+            return results.remove(0);            
         }
         return null;
-    }
+    } 
 }
