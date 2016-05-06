@@ -50,8 +50,9 @@ public class CRDBSurveyProcessor implements ItemProcessor<CRDBSurvey, String> {
     public String process(final CRDBSurvey crdbSurvey) throws Exception {
         List<String> record = new ArrayList<>();
         for (String field : new CRDBSurvey().getFieldNames()) {
+            if (!field.startsWith("QS_DATE")){
             record.add(crdbSurvey.getClass().getDeclaredField(field).toString());
-        }        
+        }        }
         return StringUtils.join(record, "\t");
     }
 }

@@ -1,4 +1,7 @@
 spring.batch.job.enabled=false
+#server properties
+server.address=
+server.port=
 
 #CRDB properties
 crdb.survey_view=
