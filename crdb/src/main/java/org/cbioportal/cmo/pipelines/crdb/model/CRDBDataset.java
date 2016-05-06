@@ -169,114 +169,60 @@ public CRDBDataset(String DMP_ID, String CONSENT_DATE_DAYS, String PRIM_DISEASE_
         String ENROLL_DX_SITE, String ENROLL_DX_SUB_SITE, String ENROLL_DX_SUB_SUB_SITE, 
         String SURVIVAL_STATUS, String TREATMENT_END_DAYS, String OFF_STUDY_DAYS, String COMMENTS) {
 
-    this.DMP_ID = DMP_ID;
-    this.CONSENT_DATE_DAYS = CONSENT_DATE_DAYS;
-    this.PRIM_DISEASE_12245 = PRIM_DISEASE_12245;
-    this.INITIAL_SX_DAYS = INITIAL_SX_DAYS;
-    this.INITIAL_DX_DAYS = INITIAL_DX_DAYS;
-    this.FIRST_METASTASIS_DAYS = FIRST_METASTASIS_DAYS;
-    this.INIT_DX_STATUS_ID = INIT_DX_STATUS_ID;
-    this.INIT_DX_STATUS = INIT_DX_STATUS;
-    this.INIT_DX_STATUS_DAYS = INIT_DX_STATUS_DAYS;
-    this.INIT_DX_STAGING_DSCRP = INIT_DX_STAGING_DSCRP;
-    this.INIT_DX_STAGE = INIT_DX_STAGE;
-    this.INIT_DX_STAGE_DSCRP = INIT_DX_STAGE_DSCRP;
-    this.INIT_DX_GRADE = INIT_DX_GRADE;
-    this.INIT_DX_GRADE_DSCRP = INIT_DX_GRADE_DSCRP;
-    this.INIT_DX_T_STAGE = INIT_DX_T_STAGE;
-    this.INIT_DX_T_STAGE_DSCRP = INIT_DX_T_STAGE_DSCRP;
-    this.INIT_DX_N_STAGE = INIT_DX_N_STAGE;
-    this.INIT_DX_N_STAGE_DSCRP = INIT_DX_N_STAGE_DSCRP;
-    this.INIT_DX_M_STAGE = INIT_DX_M_STAGE;
-    this.INIT_DX_M_STAGE_DSCRP = INIT_DX_M_STAGE_DSCRP;
-    this.INIT_DX_HIST = INIT_DX_HIST;
-    this.INIT_DX_SUB_HIST = INIT_DX_SUB_HIST;
-    this.INIT_DX_SUB_SUB_HIST = INIT_DX_SUB_SUB_HIST;
-    this.INIT_DX_SUB_SUB_SUB_HIST = INIT_DX_SUB_SUB_SUB_HIST;
-    this.INIT_DX_SITE = INIT_DX_SITE;
-    this.INIT_DX_SUB_SITE = INIT_DX_SUB_SITE;
-    this.INIT_DX_SUB_SUB_SITE = INIT_DX_SUB_SUB_SITE;
-    this.ENROLL_DX_STATUS_ID = ENROLL_DX_STATUS_ID;
-    this.ENROLL_DX_STATUS = ENROLL_DX_STATUS;
-    this.ENROLL_DX_STATUS_DAYS = ENROLL_DX_STATUS_DAYS;
-    this.ENROLL_DX_STAGING_DSCRP = ENROLL_DX_STAGING_DSCRP;
-    this.ENROLL_DX_STAGE = ENROLL_DX_STAGE;
-    this.ENROLL_DX_STAGE_DSCRP = ENROLL_DX_STAGE_DSCRP;
-    this.ENROLL_DX_GRADE = ENROLL_DX_GRADE;
-    this.ENROLL_DX_GRADE_DSCRP = ENROLL_DX_GRADE_DSCRP;
-    this.ENROLL_DX_T_STAGE = ENROLL_DX_T_STAGE;
-    this.ENROLL_DX_T_STAGE_DSCRP = ENROLL_DX_T_STAGE_DSCRP;
-    this.ENROLL_DX_N_STAGE = ENROLL_DX_N_STAGE;
-    this.ENROLL_DX_N_STAGE_DSCRP = ENROLL_DX_N_STAGE_DSCRP;
-    this.ENROLL_DX_M_STAGE = ENROLL_DX_M_STAGE;
-    this.ENROLL_DX_M_STAGE_DSCRP = ENROLL_DX_M_STAGE_DSCRP;
-    this.ENROLL_DX_HIST = ENROLL_DX_HIST;
-    this.ENROLL_DX_SUB_HIST = ENROLL_DX_SUB_HIST;
-    this.ENROLL_DX_SUB_SUB_HIST = ENROLL_DX_SUB_SUB_HIST;
-    this.ENROLL_DX_SUB_SUB_SUB_HIST = ENROLL_DX_SUB_SUB_SUB_HIST;
-    this.ENROLL_DX_SITE = ENROLL_DX_SITE;
-    this.ENROLL_DX_SUB_SITE = ENROLL_DX_SUB_SITE;
-    this.ENROLL_DX_SUB_SUB_SITE = ENROLL_DX_SUB_SUB_SITE;
-    this.SURVIVAL_STATUS = SURVIVAL_STATUS;
-    this.TREATMENT_END_DAYS = TREATMENT_END_DAYS;
-    this.OFF_STUDY_DAYS = OFF_STUDY_DAYS;
-    this.COMMENTS = COMMENTS;           
+    this.DMP_ID = DMP_ID==null?"NA":DMP_ID;
+    this.CONSENT_DATE_DAYS = CONSENT_DATE_DAYS==null?"NA":CONSENT_DATE_DAYS;
+    this.PRIM_DISEASE_12245 = PRIM_DISEASE_12245==null?"NA":PRIM_DISEASE_12245;
+    this.INITIAL_SX_DAYS = INITIAL_SX_DAYS==null?"NA":INITIAL_SX_DAYS;
+    this.INITIAL_DX_DAYS = INITIAL_DX_DAYS==null?"NA":INITIAL_DX_DAYS;
+    this.FIRST_METASTASIS_DAYS = FIRST_METASTASIS_DAYS==null?"NA":FIRST_METASTASIS_DAYS;
+    this.INIT_DX_STATUS_ID = INIT_DX_STATUS_ID==null?"NA":INIT_DX_STATUS_ID;
+    this.INIT_DX_STATUS = INIT_DX_STATUS==null?"NA":INIT_DX_STATUS;
+    this.INIT_DX_STATUS_DAYS = INIT_DX_STATUS_DAYS==null?"NA":INIT_DX_STATUS_DAYS;
+    this.INIT_DX_STAGING_DSCRP = INIT_DX_STAGING_DSCRP==null?"NA":INIT_DX_STAGING_DSCRP;
+    this.INIT_DX_STAGE = INIT_DX_STAGE==null?"NA":INIT_DX_STAGE;
+    this.INIT_DX_STAGE_DSCRP = INIT_DX_STAGE_DSCRP==null?"NA":INIT_DX_STAGE_DSCRP;
+    this.INIT_DX_GRADE = INIT_DX_GRADE==null?"NA":INIT_DX_GRADE;
+    this.INIT_DX_GRADE_DSCRP = INIT_DX_GRADE_DSCRP==null?"NA":INIT_DX_GRADE_DSCRP;
+    this.INIT_DX_T_STAGE = INIT_DX_T_STAGE==null?"NA":INIT_DX_T_STAGE;
+    this.INIT_DX_T_STAGE_DSCRP = INIT_DX_T_STAGE_DSCRP==null?"NA":INIT_DX_T_STAGE_DSCRP;
+    this.INIT_DX_N_STAGE = INIT_DX_N_STAGE==null?"NA":INIT_DX_N_STAGE;
+    this.INIT_DX_N_STAGE_DSCRP = INIT_DX_N_STAGE_DSCRP==null?"NA":INIT_DX_N_STAGE_DSCRP;
+    this.INIT_DX_M_STAGE = INIT_DX_M_STAGE==null?"NA":INIT_DX_M_STAGE;
+    this.INIT_DX_M_STAGE_DSCRP = INIT_DX_M_STAGE_DSCRP==null?"NA":INIT_DX_M_STAGE_DSCRP;
+    this.INIT_DX_HIST = INIT_DX_HIST==null?"NA":INIT_DX_HIST;
+    this.INIT_DX_SUB_HIST = INIT_DX_SUB_HIST==null?"NA":INIT_DX_SUB_HIST;
+    this.INIT_DX_SUB_SUB_HIST = INIT_DX_SUB_SUB_HIST==null?"NA":INIT_DX_SUB_SUB_HIST;
+    this.INIT_DX_SUB_SUB_SUB_HIST = INIT_DX_SUB_SUB_SUB_HIST==null?"NA":INIT_DX_SUB_SUB_SUB_HIST;
+    this.INIT_DX_SITE = INIT_DX_SITE==null?"NA":INIT_DX_SITE;
+    this.INIT_DX_SUB_SITE = INIT_DX_SUB_SITE==null?"NA":INIT_DX_SUB_SITE;
+    this.INIT_DX_SUB_SUB_SITE = INIT_DX_SUB_SUB_SITE==null?"NA":INIT_DX_SUB_SUB_SITE;
+    this.ENROLL_DX_STATUS_ID = ENROLL_DX_STATUS_ID==null?"NA":ENROLL_DX_STATUS_ID;
+    this.ENROLL_DX_STATUS = ENROLL_DX_STATUS==null?"NA":ENROLL_DX_STATUS;
+    this.ENROLL_DX_STATUS_DAYS = ENROLL_DX_STATUS_DAYS==null?"NA":ENROLL_DX_STATUS_DAYS;
+    this.ENROLL_DX_STAGING_DSCRP = ENROLL_DX_STAGING_DSCRP==null?"NA":ENROLL_DX_STAGING_DSCRP;
+    this.ENROLL_DX_STAGE = ENROLL_DX_STAGE==null?"NA":ENROLL_DX_STAGE;
+    this.ENROLL_DX_STAGE_DSCRP = ENROLL_DX_STAGE_DSCRP==null?"NA":ENROLL_DX_STAGE_DSCRP;
+    this.ENROLL_DX_GRADE = ENROLL_DX_GRADE==null?"NA":ENROLL_DX_GRADE;
+    this.ENROLL_DX_GRADE_DSCRP = ENROLL_DX_GRADE_DSCRP==null?"NA":ENROLL_DX_GRADE_DSCRP;
+    this.ENROLL_DX_T_STAGE = ENROLL_DX_T_STAGE==null?"NA":ENROLL_DX_T_STAGE;
+    this.ENROLL_DX_T_STAGE_DSCRP = ENROLL_DX_T_STAGE_DSCRP==null?"NA":ENROLL_DX_T_STAGE_DSCRP;
+    this.ENROLL_DX_N_STAGE = ENROLL_DX_N_STAGE==null?"NA":ENROLL_DX_N_STAGE;
+    this.ENROLL_DX_N_STAGE_DSCRP = ENROLL_DX_N_STAGE_DSCRP==null?"NA":ENROLL_DX_N_STAGE_DSCRP;
+    this.ENROLL_DX_M_STAGE = ENROLL_DX_M_STAGE==null?"NA":ENROLL_DX_M_STAGE;
+    this.ENROLL_DX_M_STAGE_DSCRP = ENROLL_DX_M_STAGE_DSCRP==null?"NA":ENROLL_DX_M_STAGE_DSCRP;
+    this.ENROLL_DX_HIST = ENROLL_DX_HIST==null?"NA":ENROLL_DX_HIST;
+    this.ENROLL_DX_SUB_HIST = ENROLL_DX_SUB_HIST==null?"NA":ENROLL_DX_SUB_HIST;
+    this.ENROLL_DX_SUB_SUB_HIST = ENROLL_DX_SUB_SUB_HIST==null?"NA":ENROLL_DX_SUB_SUB_HIST;
+    this.ENROLL_DX_SUB_SUB_SUB_HIST = ENROLL_DX_SUB_SUB_SUB_HIST==null?"NA":ENROLL_DX_SUB_SUB_SUB_HIST;
+    this.ENROLL_DX_SITE = ENROLL_DX_SITE==null?"NA":ENROLL_DX_SITE;
+    this.ENROLL_DX_SUB_SITE = ENROLL_DX_SUB_SITE==null?"NA":ENROLL_DX_SUB_SITE;
+    this.ENROLL_DX_SUB_SUB_SITE = ENROLL_DX_SUB_SUB_SITE==null?"NA":ENROLL_DX_SUB_SUB_SITE;
+    this.SURVIVAL_STATUS = SURVIVAL_STATUS==null?"NA":SURVIVAL_STATUS;
+    this.TREATMENT_END_DAYS = TREATMENT_END_DAYS==null?"NA":TREATMENT_END_DAYS;
+    this.OFF_STUDY_DAYS = OFF_STUDY_DAYS==null?"NA":OFF_STUDY_DAYS;
+    this.COMMENTS = COMMENTS==null?"NA":COMMENTS;
 }
 
-public CRDBDataset(Object[] crdbDataset) {
-    this.DMP_ID = crdbDataset[0]==null?"NA":crdbDataset[0].toString();
-    this.CONSENT_DATE_DAYS = crdbDataset[1]==null?"NA":crdbDataset[1].toString();
-    this.PRIM_DISEASE_12245 = crdbDataset[2]==null?"NA":crdbDataset[2].toString();
-    this.INITIAL_SX_DAYS = crdbDataset[3]==null?"NA":crdbDataset[3].toString();
-    this.INITIAL_DX_DAYS = crdbDataset[4]==null?"NA":crdbDataset[4].toString();
-    this.FIRST_METASTASIS_DAYS = crdbDataset[5]==null?"NA":crdbDataset[5].toString();
-    this.INIT_DX_STATUS_ID = crdbDataset[6]==null?"NA":crdbDataset[6].toString();
-    this.INIT_DX_STATUS = crdbDataset[7]==null?"NA":crdbDataset[7].toString();
-    this.INIT_DX_STATUS_DAYS = crdbDataset[8]==null?"NA":crdbDataset[8].toString();
-    this.INIT_DX_STAGING_DSCRP = crdbDataset[9]==null?"NA":crdbDataset[9].toString();
-    this.INIT_DX_STAGE = crdbDataset[10]==null?"NA":crdbDataset[10].toString();
-    this.INIT_DX_STAGE_DSCRP = crdbDataset[11]==null?"NA":crdbDataset[11].toString();
-    this.INIT_DX_GRADE = crdbDataset[12]==null?"NA":crdbDataset[12].toString();
-    this.INIT_DX_GRADE_DSCRP = crdbDataset[13]==null?"NA":crdbDataset[13].toString();
-    this.INIT_DX_T_STAGE = crdbDataset[14]==null?"NA":crdbDataset[14].toString();
-    this.INIT_DX_T_STAGE_DSCRP = crdbDataset[15]==null?"NA":crdbDataset[15].toString();
-    this.INIT_DX_N_STAGE = crdbDataset[16]==null?"NA":crdbDataset[16].toString();
-    this.INIT_DX_N_STAGE_DSCRP = crdbDataset[17]==null?"NA":crdbDataset[17].toString();
-    this.INIT_DX_M_STAGE = crdbDataset[18]==null?"NA":crdbDataset[18].toString();
-    this.INIT_DX_M_STAGE_DSCRP = crdbDataset[19]==null?"NA":crdbDataset[19].toString();
-    this.INIT_DX_HIST = crdbDataset[20]==null?"NA":crdbDataset[20].toString();
-    this.INIT_DX_SUB_HIST = crdbDataset[21]==null?"NA":crdbDataset[21].toString();
-    this.INIT_DX_SUB_SUB_HIST = crdbDataset[22]==null?"NA":crdbDataset[22].toString();
-    this.INIT_DX_SUB_SUB_SUB_HIST = crdbDataset[23]==null?"NA":crdbDataset[23].toString();
-    this.INIT_DX_SITE = crdbDataset[24]==null?"NA":crdbDataset[24].toString();
-    this.INIT_DX_SUB_SITE = crdbDataset[25]==null?"NA":crdbDataset[25].toString();
-    this.INIT_DX_SUB_SUB_SITE = crdbDataset[26]==null?"NA":crdbDataset[26].toString();
-    this.ENROLL_DX_STATUS_ID = crdbDataset[27]==null?"NA":crdbDataset[27].toString();
-    this.ENROLL_DX_STATUS = crdbDataset[28]==null?"NA":crdbDataset[28].toString();
-    this.ENROLL_DX_STATUS_DAYS = crdbDataset[29]==null?"NA":crdbDataset[29].toString();
-    this.ENROLL_DX_STAGING_DSCRP = crdbDataset[30]==null?"NA":crdbDataset[30].toString();
-    this.ENROLL_DX_STAGE = crdbDataset[31]==null?"NA":crdbDataset[31].toString();
-    this.ENROLL_DX_STAGE_DSCRP = crdbDataset[32]==null?"NA":crdbDataset[32].toString();
-    this.ENROLL_DX_GRADE = crdbDataset[33]==null?"NA":crdbDataset[33].toString();
-    this.ENROLL_DX_GRADE_DSCRP = crdbDataset[34]==null?"NA":crdbDataset[34].toString();
-    this.ENROLL_DX_T_STAGE = crdbDataset[35]==null?"NA":crdbDataset[35].toString();
-    this.ENROLL_DX_T_STAGE_DSCRP = crdbDataset[36]==null?"NA":crdbDataset[36].toString();
-    this.ENROLL_DX_N_STAGE = crdbDataset[37]==null?"NA":crdbDataset[37].toString();
-    this.ENROLL_DX_N_STAGE_DSCRP = crdbDataset[38]==null?"NA":crdbDataset[38].toString();
-    this.ENROLL_DX_M_STAGE = crdbDataset[39]==null?"NA":crdbDataset[39].toString();
-    this.ENROLL_DX_M_STAGE_DSCRP = crdbDataset[40]==null?"NA":crdbDataset[40].toString();
-    this.ENROLL_DX_HIST = crdbDataset[41]==null?"NA":crdbDataset[41].toString();
-    this.ENROLL_DX_SUB_HIST = crdbDataset[42]==null?"NA":crdbDataset[42].toString();
-    this.ENROLL_DX_SUB_SUB_HIST = crdbDataset[43]==null?"NA":crdbDataset[43].toString();
-    this.ENROLL_DX_SUB_SUB_SUB_HIST = crdbDataset[44]==null?"NA":crdbDataset[44].toString();
-    this.ENROLL_DX_SITE = crdbDataset[45]==null?"NA":crdbDataset[45].toString();
-    this.ENROLL_DX_SUB_SITE = crdbDataset[46]==null?"NA":crdbDataset[46].toString();
-    this.ENROLL_DX_SUB_SUB_SITE = crdbDataset[47]==null?"NA":crdbDataset[47].toString();
-    this.SURVIVAL_STATUS = crdbDataset[48]==null?"NA":crdbDataset[48].toString();
-    this.TREATMENT_END_DAYS = crdbDataset[49]==null?"NA":crdbDataset[49].toString();
-    this.OFF_STUDY_DAYS = crdbDataset[50]==null?"NA":crdbDataset[50].toString();
-    this.COMMENTS = crdbDataset[51]==null?"NA":crdbDataset[51].toString();     
-}
     /**
      * 
      * @return DMP_ID
@@ -1582,10 +1528,17 @@ public CRDBDataset(Object[] crdbDataset) {
     public String toString() {
         return ToStringBuilder.reflectionToString(this);
     }
-
-    public String[] getFieldNames() {
-        return toString().substring(toString().indexOf("[")+1,toString().indexOf("]")).replaceAll("=<null>", "").split(",");
+    
+    public List<String> getFieldNames() {
+        List<String> fieldNames = new ArrayList<>();
+        for (String field : toString().substring(toString().indexOf("[")+1,toString().indexOf("]")).split(",")) {
+            if (!field.startsWith("additionalProperties")) {
+                fieldNames.add(field.split("=")[0]);                
+            }
+        }
+        return fieldNames;
     }
+    
     public Map<String, Object> getAdditionalProperties() {
         return this.additionalProperties;
     }

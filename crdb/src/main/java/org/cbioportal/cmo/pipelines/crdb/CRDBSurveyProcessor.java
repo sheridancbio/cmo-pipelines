@@ -49,11 +49,10 @@ public class CRDBSurveyProcessor implements ItemProcessor<CRDBSurvey, String> {
     @Override
     public String process(final CRDBSurvey crdbSurvey) throws Exception {
         List<String> record = new ArrayList<>();
-        for (String values : crdbSurvey.toString().split(",")) {
-            if (!values.startsWith("additionalProperties")) {
-                record.add(values.split("=")[1]);
-            }            
-        }
+        for (String field : new CRDBSurvey().getFieldNames()) {
+            if (!field.startsWith("QS_DATE")){
+            record.add(crdbSurvey.getClass().getDeclaredField(field).toString());
+        }        }
         return StringUtils.join(record, "\t");
     }
 }

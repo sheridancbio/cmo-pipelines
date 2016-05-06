@@ -77,13 +77,13 @@ public class CRDBSurveyWriter implements ItemStreamWriter<String>
         flatFileItemWriter.open(executionContext);
     }
     
-    private String normalizeHeaders(String[] columns) {        
+    private String normalizeHeaders(List<String> columns) {        
         List<String> normColumns = new ArrayList<>();
         for (String col : columns){
             if (col.equals("DMP_ID")){
                 normColumns.add("PATIENT_ID");
             }
-            else if (!col.startsWith("additionalProperties")){
+            else if (!col.startsWith("QS_DATE")) {
                 normColumns.add("CRDB_"+col);
             }
         }

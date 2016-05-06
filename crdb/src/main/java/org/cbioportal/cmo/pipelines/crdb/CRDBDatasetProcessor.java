@@ -49,11 +49,9 @@ public class CRDBDatasetProcessor implements ItemProcessor<CRDBDataset, String> 
     @Override
     public String process(final CRDBDataset crdbDataset) throws Exception {
         List<String> record = new ArrayList<>();
-        for (String values : crdbDataset.toString().split(",")) {
-            if (!values.startsWith("additionalProperties")) {
-                record.add(values.split("=")[1]);
-            }            
-        }
+        for (String field : new CRDBDataset().getFieldNames()) {
+            record.add(crdbDataset.getClass().getDeclaredField(field).toString());
+        }        
         return StringUtils.join(record, "\t");
     }
 }

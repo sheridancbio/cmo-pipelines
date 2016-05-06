@@ -32,9 +32,9 @@
 
 package org.cbioportal.cmo.pipelines.crdb;
 
-import com.querydsl.core.Tuple;
 import static com.querydsl.core.alias.Alias.$;
 import static com.querydsl.core.alias.Alias.alias;
+import com.querydsl.core.types.Projections;
 import com.querydsl.sql.OracleTemplates;
 import com.querydsl.sql.SQLQueryFactory;
 import com.querydsl.sql.SQLTemplates;
@@ -92,9 +92,7 @@ public class CRDBDatasetReader implements ItemStreamReader<CRDBDataset> {
         SQLQueryFactory queryFactory = new SQLQueryFactory(config, crdbDataSource);
         
         CRDBDataset qCRDBD = alias(CRDBDataset.class, crdbDatasetView);  
-        List<CRDBDataset> crdbDatasetResults = new ArrayList<>();
-        Integer numRows = 0;
-        for (Tuple record : queryFactory.select($(qCRDBD.getDMP_ID()), 
+        List<CRDBDataset> crdbDatasetResults = queryFactory.select(Projections.constructor(CRDBDataset.class, $(qCRDBD.getDMP_ID()), 
                 $(qCRDBD.getCONSENT_DATE_DAYS()), $(qCRDBD.getPRIM_DISEASE_12245()), $(qCRDBD.getINITIAL_SX_DAYS()), 
                 $(qCRDBD.getINITIAL_DX_DAYS()), $(qCRDBD.getFIRST_METASTASIS_DAYS()), $(qCRDBD.getINIT_DX_STATUS_ID()), 
                 $(qCRDBD.getINIT_DX_STATUS()), $(qCRDBD.getINIT_DX_STATUS_DAYS()), $(qCRDBD.getINIT_DX_STAGING_DSCRP()), 
@@ -111,12 +109,9 @@ public class CRDBDatasetReader implements ItemStreamReader<CRDBDataset> {
                 $(qCRDBD.getENROLL_DX_M_STAGE_DSCRP()), $(qCRDBD.getENROLL_DX_HIST()), $(qCRDBD.getENROLL_DX_SUB_HIST()), 
                 $(qCRDBD.getENROLL_DX_SUB_SUB_HIST()), $(qCRDBD.getENROLL_DX_SUB_SUB_SUB_HIST()), $(qCRDBD.getENROLL_DX_SITE()), 
                 $(qCRDBD.getENROLL_DX_SUB_SITE()), $(qCRDBD.getENROLL_DX_SUB_SUB_SITE()), $(qCRDBD.getSURVIVAL_STATUS()), 
-                $(qCRDBD.getTREATMENT_END_DAYS()), $(qCRDBD.getOFF_STUDY_DAYS()), $(qCRDBD.getCOMMENTS()))
-                .from($(qCRDBD)).fetch()) {
-            crdbDatasetResults.add(new CRDBDataset(record.toArray()));
-            numRows++;
-            
-        }
+                $(qCRDBD.getTREATMENT_END_DAYS()), $(qCRDBD.getOFF_STUDY_DAYS()), $(qCRDBD.getCOMMENTS())))
+                .from($(qCRDBD)).fetch();
+        Integer numRows = crdbDatasetResults.size();
 
         System.out.println("Imported "+numRows+" records from CRDB Dataset View.\n");
         return crdbDatasetResults;
