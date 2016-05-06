@@ -85,7 +85,7 @@ public class CRDBDatasetReader implements ItemStreamReader<CRDBDataset> {
     
     @Transactional
     private List<CRDBDataset> getCrdbDatasetResults(OracleDataSource crdbDataSource) {
-        System.out.println("\nBeginning CRDB Dataset View import...");
+        System.out.println("Beginning CRDB Dataset View import...");
         
         SQLTemplates templates = new OracleTemplates();
         com.querydsl.sql.Configuration config = new com.querydsl.sql.Configuration(templates);
@@ -113,7 +113,7 @@ public class CRDBDatasetReader implements ItemStreamReader<CRDBDataset> {
                 .from($(qCRDBD)).fetch();
         Integer numRows = crdbDatasetResults.size();
 
-        System.out.println("Imported "+numRows+" records from CRDB Dataset View.\n");
+        System.out.println("Imported "+numRows+" records from CRDB Dataset View.");
         return crdbDatasetResults;
     }
 

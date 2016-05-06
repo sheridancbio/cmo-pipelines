@@ -52,7 +52,8 @@ public class CRDBSurveyProcessor implements ItemProcessor<CRDBSurvey, String> {
         for (String field : new CRDBSurvey().getFieldNames()) {
             if (!field.startsWith("QS_DATE")){
             record.add(crdbSurvey.getClass().getDeclaredField(field).toString());
-        }        }
+            }        
+        }
         return StringUtils.join(record, "\t");
     }
 }

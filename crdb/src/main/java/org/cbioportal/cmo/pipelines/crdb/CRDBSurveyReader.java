@@ -85,7 +85,7 @@ public class CRDBSurveyReader implements ItemStreamReader<CRDBSurvey> {
     
     @Transactional
     private List<CRDBSurvey> getCrdbSurveyResults(OracleDataSource crdbDataSource) {
-        System.out.println("\nBeginning CRDB Survey View import...");
+        System.out.println("Beginning CRDB Survey View import...");
         
         SQLTemplates templates = new OracleTemplates();
         com.querydsl.sql.Configuration config = new com.querydsl.sql.Configuration(templates);
@@ -96,7 +96,7 @@ public class CRDBSurveyReader implements ItemStreamReader<CRDBSurvey> {
                 $(qCRDBS.getNOSYSTXT()), $(qCRDBS.getPRIOR_RX()), $(qCRDBS.getBRAINMET()), $(qCRDBS.getECOG()), $(qCRDBS.getCOMMENTS()))).from($(qCRDBS)).fetch();
         Integer numRows = crdbSurveyResults.size();
                              
-        System.out.println("Imported "+numRows+" records from CRDB Survey View.\n");
+        System.out.println("Imported "+numRows+" records from CRDB Survey View.");
         return crdbSurveyResults;
     }
 
