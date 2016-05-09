@@ -43,8 +43,11 @@ import org.springframework.context.annotation.*;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
+ * Configuration for running the CRDB clinical data fetcher.
+ * 
  * @author ochoaa
  */
+
 @Configuration
 @EnableBatchProcessing
 public class BatchConfiguration
@@ -65,6 +68,9 @@ public class BatchConfiguration
             .build();
     }
 
+    /**
+     * Step 1 reads, processes, and writes the CRDB Survey query results
+     */
     @Bean
     public Step step1() {
         return stepBuilderFactory.get("step1")
@@ -92,6 +98,9 @@ public class BatchConfiguration
         return new CRDBSurveyWriter();
     }
         
+    /**
+     * Step 2 reads, processes, and writes the CRDB Dataset query results
+     */    
     @Bean
     public Step step2() {
         return stepBuilderFactory.get("step2") 

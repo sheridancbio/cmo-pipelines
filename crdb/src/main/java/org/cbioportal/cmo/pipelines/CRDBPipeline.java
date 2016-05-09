@@ -42,8 +42,11 @@ import org.springframework.batch.core.*;
 import org.springframework.batch.core.launch.JobLauncher;
 
 /**
- * @author Benjamin Gross
+ * Pipeline for running the CRDB clinical data job.
+ * 
+ * @author ochoaa
  */
+
 @SpringBootApplication
 public class CRDBPipeline {
 

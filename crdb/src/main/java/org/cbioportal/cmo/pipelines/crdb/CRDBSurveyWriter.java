@@ -32,19 +32,25 @@
 
 package org.cbioportal.cmo.pipelines.crdb;
 
+import org.cbioportal.cmo.pipelines.crdb.model.CRDBSurvey;
+
 import org.springframework.core.io.*;
 import org.springframework.batch.item.*;
 import org.springframework.batch.item.file.*;
 import org.springframework.batch.item.file.transform.PassThroughLineAggregator;
 import org.springframework.beans.factory.annotation.Value;
+
 import java.io.*;
 import java.util.*;
+
 import org.apache.commons.lang.StringUtils;
-import org.cbioportal.cmo.pipelines.crdb.model.CRDBSurvey;
 
 /**
+ * Class for writing the CRDB Survey results to the staging file.
+ * 
  * @author ochoaa
  */
+
 public class CRDBSurveyWriter implements ItemStreamWriter<String>
 {   
     @Value("#{jobParameters[stagingDirectory]}")
@@ -53,8 +59,8 @@ public class CRDBSurveyWriter implements ItemStreamWriter<String>
     @Value("${crdb.survey_filename}")
     private String surveyFilename;
 
-    private List<String> writeList = new ArrayList<String>();
-    private FlatFileItemWriter<String> flatFileItemWriter = new FlatFileItemWriter<String>();
+    private final List<String> writeList = new ArrayList<>();
+    private final FlatFileItemWriter<String> flatFileItemWriter = new FlatFileItemWriter<>();
     private String stagingFile;
     
     @Override
@@ -67,6 +73,7 @@ public class CRDBSurveyWriter implements ItemStreamWriter<String>
                 writer.write(normalizeHeaders(new CRDBSurvey().getFieldNames()));
             }
         });
+        
         if (stagingDirectory.endsWith("/")){
             stagingFile = stagingDirectory+surveyFilename;
         }

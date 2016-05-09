@@ -32,19 +32,25 @@
 
 package org.cbioportal.cmo.pipelines.crdb;
 
+import org.cbioportal.cmo.pipelines.crdb.model.CRDBDataset;
+
 import org.springframework.core.io.*;
 import org.springframework.batch.item.*;
 import org.springframework.batch.item.file.*;
 import org.springframework.batch.item.file.transform.PassThroughLineAggregator;
 import org.springframework.beans.factory.annotation.Value;
+
 import java.io.*;
 import java.util.*;
+
 import org.apache.commons.lang.StringUtils;
-import org.cbioportal.cmo.pipelines.crdb.model.CRDBDataset;
 
 /**
+ * Class for writing the CRDB Dataset results to the staging file.
+ * 
  * @author ochoaa
  */
+
 public class CRDBDatasetWriter implements ItemStreamWriter<String>
 {    
     @Value("#{jobParameters[stagingDirectory]}")

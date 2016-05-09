@@ -41,8 +41,11 @@ import org.apache.commons.lang.StringUtils;
 import org.springframework.batch.item.ItemProcessor;
 
 /**
+ * Class for processing the CRDB Dataset results for the staging file.
+ * 
  * @author ochoaa
  */
+
 public class CRDBDatasetProcessor implements ItemProcessor<CRDBDataset, String> {
     ObjectMapper mapper = new ObjectMapper();
     

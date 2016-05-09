@@ -41,8 +41,11 @@ import org.apache.commons.lang.StringUtils;
 import org.springframework.batch.item.ItemProcessor;
 
 /**
+ * Class for processing the CRDB Survey results for the staging file.
+ * 
  * @author ochoaa
  */
+
 public class CRDBSurveyProcessor implements ItemProcessor<CRDBSurvey, String> {
     ObjectMapper mapper = new ObjectMapper();
     
@@ -51,7 +54,7 @@ public class CRDBSurveyProcessor implements ItemProcessor<CRDBSurvey, String> {
         List<String> record = new ArrayList<>();
         for (String field : new CRDBSurvey().getFieldNames()) {
             if (!field.startsWith("QS_DATE")){
-            record.add(crdbSurvey.getClass().getDeclaredField(field).toString());
+                record.add(crdbSurvey.getClass().getDeclaredField(field).toString());
             }        
         }
         return StringUtils.join(record, "\t");
