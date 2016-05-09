@@ -32,80 +32,62 @@
 
 package org.cbioportal.cmo.pipelines.crdb;
 
+import org.cbioportal.cmo.pipelines.crdb.model.CRDBSurvey;
+
 import static com.querydsl.core.alias.Alias.$;
 import static com.querydsl.core.alias.Alias.alias;
 import com.querydsl.core.types.Projections;
-import com.querydsl.sql.OracleTemplates;
 import com.querydsl.sql.SQLQueryFactory;
-import com.querydsl.sql.SQLTemplates;
-
-import org.cbioportal.cmo.pipelines.crdb.model.CRDBSurvey;
 
 import org.springframework.batch.item.*;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
-import java.sql.SQLException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import oracle.jdbc.pool.OracleDataSource;
-
 
 /**
+ * Class for querying the CRDB Survey view.
+ * 
  * @author ochoaa
  */
+
 public class CRDBSurveyReader implements ItemStreamReader<CRDBSurvey> {
     @Value("${crdb.survey_view}")
     private String crdbSurveyView;
 
-    @Value("${crdb.username}")
-    private String username;
-    
-    @Value("${crdb.password}")
-    private String password;
-    
-    @Value("${crdb.connection_string}")
-    private String connection_string;
-    
-    private List<CRDBSurvey> crdbSurvey;    
+    @Autowired
+    SQLQueryFactory crdbQueryFactory;
+
+    private List<CRDBSurvey> crdbSurveyResults;    
     
     @Override
     public void open(ExecutionContext executionContext) throws ItemStreamException {
-        //read from CRDB view 
-        OracleDataSource crdbDataSource = null;
-        try {
-            crdbDataSource = getCrdbDataSource();
-        } catch (SQLException ex) {
-            Logger.getLogger(CRDBSurveyReader.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        this.crdbSurvey = getCrdbSurveyResults(crdbDataSource);                
+        this.crdbSurveyResults = getCrdbSurveyResults();
     }
     
+    /**
+     * Creates an alias for the CRDB Survey view query type and projects query as
+     * a list of CRDBSurvey objects
+     * 
+     * @return List<CRDBSurvey>
+     */
     @Transactional
-    private List<CRDBSurvey> getCrdbSurveyResults(OracleDataSource crdbDataSource) {
-        System.out.println("\nBeginning CRDB Survey View import...");
-        
-        SQLTemplates templates = new OracleTemplates();
-        com.querydsl.sql.Configuration config = new com.querydsl.sql.Configuration(templates);
-        SQLQueryFactory queryFactory = new SQLQueryFactory(config, crdbDataSource);
+    private List<CRDBSurvey> getCrdbSurveyResults() {
+        System.out.println("Beginning CRDB Survey View import...");
         
         CRDBSurvey qCRDBS = alias(CRDBSurvey.class, crdbSurveyView);  
-        List<CRDBSurvey> crdbSurveyResults = queryFactory.select(Projections.constructor(CRDBSurvey.class, $(qCRDBS.getDMP_ID()), $(qCRDBS.getQS_DATE()), $(qCRDBS.getADJ_TXT()),
-                $(qCRDBS.getNOSYSTXT()), $(qCRDBS.getPRIOR_RX()), $(qCRDBS.getBRAINMET()), $(qCRDBS.getECOG()), $(qCRDBS.getCOMMENTS()))).from($(qCRDBS)).fetch();
-        Integer numRows = crdbSurveyResults.size();
+        List<CRDBSurvey> crdbSurveyResults = crdbQueryFactory.select(
+                Projections.constructor(CRDBSurvey.class, $(qCRDBS.getDMP_ID()), 
+                        $(qCRDBS.getQS_DATE()), $(qCRDBS.getADJ_TXT()), 
+                        $(qCRDBS.getNOSYSTXT()), $(qCRDBS.getPRIOR_RX()), 
+                        $(qCRDBS.getBRAINMET()), $(qCRDBS.getECOG()), 
+                        $(qCRDBS.getCOMMENTS())))
+                .from($(qCRDBS))
+                .fetch();
                              
-        System.out.println("Imported "+numRows+" records from CRDB Survey View.\n");
+        System.out.println("Imported "+crdbSurveyResults.size()+" records from CRDB Survey View.");
         return crdbSurveyResults;
-    }
-
-    private OracleDataSource getCrdbDataSource() throws SQLException {
-        OracleDataSource crdbDataSource = new OracleDataSource();
-        crdbDataSource.setUser(username);
-        crdbDataSource.setPassword(password);
-        crdbDataSource.setURL(connection_string);
-        return crdbDataSource;
     }
 
     @Override
@@ -116,8 +98,8 @@ public class CRDBSurveyReader implements ItemStreamReader<CRDBSurvey> {
 
     @Override
     public CRDBSurvey read() throws Exception {
-        if (!crdbSurvey.isEmpty()) {            
-            return crdbSurvey.remove(0);            
+        if (!crdbSurveyResults.isEmpty()) {            
+            return crdbSurveyResults.remove(0);            
         }
         return null;
     } 

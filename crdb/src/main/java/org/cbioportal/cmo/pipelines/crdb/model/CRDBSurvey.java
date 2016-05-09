@@ -35,6 +35,12 @@ import java.util.*;
 
 import org.apache.commons.lang.builder.ToStringBuilder;
 
+/**
+ * Model for CRDBSurvey results.
+ * 
+ * @author ochoaa
+ */
+
 public class CRDBSurvey {
     private String DMP_ID;
     private String QS_DATE;
@@ -289,6 +295,10 @@ this.COMMENTS = COMMENTS==null?"NA":COMMENTS;
         return ToStringBuilder.reflectionToString(this);
     }
     
+    /**
+     * Returns the field names in CRDBSurvey without additional properties.
+     * @return List<String>
+     */
     public List<String> getFieldNames() {
         List<String> fieldNames = new ArrayList<>();
         for (String field : toString().substring(toString().indexOf("[")+1,toString().indexOf("]")).split(",")) {

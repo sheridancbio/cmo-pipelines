@@ -42,8 +42,11 @@ import org.springframework.batch.core.*;
 import org.springframework.batch.core.launch.JobLauncher;
 
 /**
- * @author Benjamin Gross
+ * Pipeline for running the CRDB clinical data job.
+ * 
+ * @author ochoaa
  */
+
 @SpringBootApplication
 public class CRDBPipeline {
 
@@ -72,7 +75,10 @@ public class CRDBPipeline {
                     .addString("cancerStudy", cancerStudy)
                     .addString("stagingDirectory", stagingDirectory)
                     .toJobParameters();  
-            JobExecution jobExecution = jobLauncher.run(crdbJob, jobParameters);            
+            JobExecution jobExecution = jobLauncher.run(crdbJob, jobParameters); 
+            
+            System.out.println("Shutting down CRDBPipeline.");
+            ctx.close();
         }
         else {
             System.out.println("Cannot run CRDB job on cancer study "+cancerStudy);
@@ -90,6 +96,6 @@ public class CRDBPipeline {
             help(gnuOptions, 0);
         }
         launchJob(args, commandLine.getOptionValue("cancer_study"),
-                  commandLine.getOptionValue("stage"));
+                  commandLine.getOptionValue("stage"));        
     }
 }

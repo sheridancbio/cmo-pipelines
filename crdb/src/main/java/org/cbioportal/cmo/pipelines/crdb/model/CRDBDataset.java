@@ -35,6 +35,12 @@ import java.util.*;
 
 import org.apache.commons.lang.builder.ToStringBuilder;
 
+/**
+ * Model for CRDBDataset results.
+ * 
+ * @author ochoaa
+ */
+
 public class CRDBDataset {
     private String DMP_ID;
     private String CONSENT_DATE_DAYS;
@@ -1529,6 +1535,10 @@ public CRDBDataset(String DMP_ID, String CONSENT_DATE_DAYS, String PRIM_DISEASE_
         return ToStringBuilder.reflectionToString(this);
     }
     
+    /**
+     * Returns the field names in CRDBDataset without additional properties.
+     * @return List<String>
+     */    
     public List<String> getFieldNames() {
         List<String> fieldNames = new ArrayList<>();
         for (String field : toString().substring(toString().indexOf("[")+1,toString().indexOf("]")).split(",")) {
