@@ -32,7 +32,7 @@
 
 package org.cbioportal.cmo.pipelines.crdb;
 
-import org.cbioportal.cmo.pipelines.crdb.model.CRDBSurvey;
+import org.cbioportal.cmo.pipelines.crdb.model.CRDBDataset;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.ArrayList;
@@ -41,22 +41,20 @@ import org.apache.commons.lang.StringUtils;
 import org.springframework.batch.item.ItemProcessor;
 
 /**
- * Class for processing the CRDB Survey results for the staging file.
+ * Class for processing the CRDB Dataset results for the staging file.
  * 
  * @author ochoaa
  */
 
-public class CRDBSurveyProcessor implements ItemProcessor<CRDBSurvey, String> {
+public class CRDBDatasetProcessor implements ItemProcessor<CRDBDataset, String> {
     ObjectMapper mapper = new ObjectMapper();
     
     @Override
-    public String process(final CRDBSurvey crdbSurvey) throws Exception {
+    public String process(final CRDBDataset crdbDataset) throws Exception {
         List<String> record = new ArrayList<>();
-        for (String field : new CRDBSurvey().getFieldNames()) {
-            if (!field.startsWith("QS_DATE")){
-                record.add(crdbSurvey.getClass().getMethod("get"+field).invoke(crdbSurvey).toString());
-            }        
-        }
+        for (String field : new CRDBDataset().getFieldNames()) {
+            record.add(crdbDataset.getClass().getMethod("get"+field).invoke(crdbDataset).toString());
+        }        
         return StringUtils.join(record, "\t");
     }
 }

@@ -32,86 +32,63 @@
 
 package org.cbioportal.cmo.pipelines.crdb;
 
+import org.cbioportal.cmo.pipelines.crdb.model.CRDBSurvey;
+
 import static com.querydsl.core.alias.Alias.$;
 import static com.querydsl.core.alias.Alias.alias;
-import com.querydsl.sql.H2Templates;
-import com.querydsl.sql.OracleTemplates;
-import static com.querydsl.sql.SQLExpressions.select;
-import com.querydsl.sql.SQLQuery;
+import com.querydsl.core.types.Projections;
 import com.querydsl.sql.SQLQueryFactory;
-import com.querydsl.sql.SQLTemplates;
-import org.cbioportal.cmo.pipelines.crdb.model.*;
-import org.cbioportal.cmo.pipelines.crdb.OracleConfiguration;
 
 import org.springframework.batch.item.*;
-import org.springframework.core.io.FileSystemResource;
-import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import java.util.*;
-import java.lang.annotation.Annotation;
-import oracle.jdbc.pool.OracleDataSource;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.data.jdbc.query.QueryDslJdbcTemplate;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.*;
 
 /**
- * @author Benjamin Gross
+ * Class for querying the CRDB Survey view.
+ * 
+ * @author ochoaa
  */
-public class CRDBSurveyReader implements ItemStreamReader<CRDBSurvey>
-{
+
+public class CRDBSurveyReader implements ItemStreamReader<CRDBSurvey> {
     @Value("${crdb.survey_view}")
     private String crdbSurveyView;
-    
-    @Value("#{jobParameters[cancerStudy]}")
-    private String cancerStudy;
 
-    private List<CRDBSurvey> crdbSurvey;
-    
     @Autowired
-    public BeanFactory beanFactory;
-    
+    SQLQueryFactory crdbQueryFactory;
+
+    private List<CRDBSurvey> crdbSurveyResults;    
     
     @Override
-    public void open(ExecutionContext executionContext) throws ItemStreamException
-    {
-        //read from CRDB view 
-        OracleDataSource crdbDataSource = beanFactory.getBean(OracleConfiguration.CRDB_DATA_SOURCE, OracleDataSource.class);
-        this.crdbSurvey = getCrdbSurveyResults(crdbDataSource);
-        
+    public void open(ExecutionContext executionContext) throws ItemStreamException {
+        this.crdbSurveyResults = getCrdbSurveyResults();
     }
     
+    /**
+     * Creates an alias for the CRDB Survey view query type and projects query as
+     * a list of CRDBSurvey objects
+     * 
+     * @return List<CRDBSurvey>
+     */
     @Transactional
-    private List<CRDBSurvey> getCrdbSurveyResults(OracleDataSource crdbDataSource) {
-        //QueryDslJdbcTemplate template = new QueryDslJdbcTemplate(crdbDataSource);
-        CRDBSurvey qCRDBS = alias(CRDBSurvey.class, crdbSurveyView);
+    private List<CRDBSurvey> getCrdbSurveyResults() {
+        System.out.println("Beginning CRDB Survey View import...");
         
-        List<CRDBSurvey> crdbSurveyResults = new ArrayList<>();
-        List<String> dmpIdList = new ArrayList<>();
-        for (String dmpId : select($(qCRDBS.getDmpId())).from($(qCRDBS)).fetch()) {
-            if (dmpId != null) {
-                dmpIdList.add(dmpId);
-                CRDBSurvey record = new CRDBSurvey();
-                
-                //assuming only one record per dmpId right now...
-                record.setDmpId(dmpId);
-                record.setQsDate((Date)select($(qCRDBS.getQsDate())).from($(qCRDBS)).where($(qCRDBS.getDmpId()).eq(dmpId)).fetch());
-                record.setAdjTxt(select($(qCRDBS.getAdjTxt())).from($(qCRDBS)).where($(qCRDBS.getDmpId()).eq(dmpId)).fetchOne());
-                record.setNoSysTxt(select($(qCRDBS.getNoSysTxt())).from($(qCRDBS)).where($(qCRDBS.getDmpId()).eq(dmpId)).fetchOne());
-                record.setPriorRx(select($(qCRDBS.getPriorRx())).from($(qCRDBS)).where($(qCRDBS.getDmpId()).eq(dmpId)).fetchOne());
-                record.setBrainMet(select($(qCRDBS.getBrainMet())).from($(qCRDBS)).where($(qCRDBS.getDmpId()).eq(dmpId)).fetchOne());
-                record.setEcog(select($(qCRDBS.getEcog())).from($(qCRDBS)).where($(qCRDBS.getDmpId()).eq(dmpId)).fetchOne());
-                record.setComments(select($(qCRDBS.getComments())).from($(qCRDBS)).where($(qCRDBS.getDmpId()).eq(dmpId)).fetchOne());
-                crdbSurveyResults.add(record);
-            }
-        }        
+        CRDBSurvey qCRDBS = alias(CRDBSurvey.class, crdbSurveyView);  
+        List<CRDBSurvey> crdbSurveyResults = crdbQueryFactory.select(
+                Projections.constructor(CRDBSurvey.class, $(qCRDBS.getDMP_ID()), 
+                        $(qCRDBS.getQS_DATE()), $(qCRDBS.getADJ_TXT()), 
+                        $(qCRDBS.getNOSYSTXT()), $(qCRDBS.getPRIOR_RX()), 
+                        $(qCRDBS.getBRAINMET()), $(qCRDBS.getECOG()), 
+                        $(qCRDBS.getCOMMENTS())))
+                .from($(qCRDBS))
+                .fetch();
+                             
+        System.out.println("Imported "+crdbSurveyResults.size()+" records from CRDB Survey View.");
         return crdbSurveyResults;
     }
-
-    
 
     @Override
     public void update(ExecutionContext executionContext) throws ItemStreamException {}
@@ -120,10 +97,9 @@ public class CRDBSurveyReader implements ItemStreamReader<CRDBSurvey>
     public void close() throws ItemStreamException {}
 
     @Override
-    public CRDBSurvey read() throws Exception
-    {
-        if (!crdbSurvey.isEmpty()) {            
-            return crdbSurvey.remove(0);            
+    public CRDBSurvey read() throws Exception {
+        if (!crdbSurveyResults.isEmpty()) {            
+            return crdbSurveyResults.remove(0);            
         }
         return null;
     } 

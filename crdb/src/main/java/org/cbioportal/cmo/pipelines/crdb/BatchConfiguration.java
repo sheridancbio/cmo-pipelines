@@ -32,42 +32,27 @@
 
 package org.cbioportal.cmo.pipelines.crdb;
 
-import java.sql.SQLException;
-import javax.activation.DataSource;
-import oracle.jdbc.pool.OracleDataSource;
 import org.cbioportal.cmo.pipelines.crdb.model.CRDBSurvey;
+import org.cbioportal.cmo.pipelines.crdb.model.CRDBDataset;
 
 import org.springframework.batch.core.*;
 import org.springframework.batch.item.*;
 import org.springframework.batch.core.configuration.annotation.*;
+import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.context.annotation.*;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.batch.core.configuration.annotation.StepScope;
-import org.springframework.beans.factory.annotation.*;
 
 /**
- * @author Benjamin Gross
+ * Configuration for running the CRDB clinical data fetcher.
+ * 
+ * @author ochoaa
  */
+
 @Configuration
 @EnableBatchProcessing
 public class BatchConfiguration
 {
-    @Value("${spring.datasource.username}")
-    private String username;
-    
-    @Value("${spring.datasource.password}")
-    private String password;
-    
-    @Value("${spring.datasource.url}")
-    private String connection;
-    
-    @Value("{spring.datasource.driver-class}")
-    private String driver;
-    
-    
-    
-    public static final String CRDB_JOB = "crdbJob";
-    public static final String CRDB_DATA_SOURCE = "crdbDataSource";
+    public static final String CRDB_IMPACT_JOB = "crdbImpactJob";
 
     @Autowired
     public JobBuilderFactory jobBuilderFactory;
@@ -76,56 +61,70 @@ public class BatchConfiguration
     public StepBuilderFactory stepBuilderFactory;
 
     @Bean
-    public Job crdbJob()
-    {
-        return jobBuilderFactory.get(CRDB_JOB)
-            .start(step())
+    public Job crdbImpactJob() {
+        return jobBuilderFactory.get(CRDB_IMPACT_JOB)
+            .start(step1())
+            .next(step2())
             .build();
     }
 
+    /**
+     * Step 1 reads, processes, and writes the CRDB Survey query results
+     */
     @Bean
-    public Step step()
-    {
-        return stepBuilderFactory.get("step")
+    public Step step1() {
+        return stepBuilderFactory.get("step1")
             .<CRDBSurvey, String> chunk(10)
-            .reader(reader())
-            .processor(processor())
-            .writer(writer())
+            .reader(reader1())
+            .processor(processor1())
+            .writer(writer1())
             .build();
     }
 
     @Bean
     @StepScope
-	public ItemStreamReader<CRDBSurvey> reader()
-    {
+	public ItemStreamReader<CRDBSurvey> reader1() {
 		return new CRDBSurveyReader();
 	}
 
     @Bean
-    public CRDBSurveyProcessor processor()
-    {
+    public CRDBSurveyProcessor processor1() {
         return new CRDBSurveyProcessor();
     }
 
     @Bean
     @StepScope
-    public ItemStreamWriter<String> writer()
-    {
+    public ItemStreamWriter<String> writer1() {
         return new CRDBSurveyWriter();
+    }
+        
+    /**
+     * Step 2 reads, processes, and writes the CRDB Dataset query results
+     */    
+    @Bean
+    public Step step2() {
+        return stepBuilderFactory.get("step2") 
+            .<CRDBDataset, String> chunk(10)
+            .reader(reader2())
+            .processor(processor2())
+            .writer(writer2())
+            .build();
     }
 
     @Bean
-    OracleDataSource crdbDataSource() throws SQLException {
-        OracleDataSource crdbDataSource = new OracleDataSource();
-        crdbDataSource.setUser(username);
-        crdbDataSource.setPassword(password);
-        crdbDataSource.setDriverType(driver);
-        crdbDataSource.setURL(connection);
-        crdbDataSource.setImplicitCachingEnabled(true);
-        crdbDataSource.setFastConnectionFailoverEnabled(true);
-        return crdbDataSource;
-    } 
-    
+    @StepScope
+	public ItemStreamReader<CRDBDataset> reader2() {
+		return new CRDBDatasetReader();
+	}
+
+    @Bean
+    public CRDBDatasetProcessor processor2() {
+        return new CRDBDatasetProcessor();
+    }
+
+    @Bean
+    @StepScope
+    public ItemStreamWriter<String> writer2() {
+        return new CRDBDatasetWriter();
+    }    
 }
-
-
