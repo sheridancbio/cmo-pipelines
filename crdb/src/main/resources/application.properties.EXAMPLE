@@ -1,6 +1,6 @@
 spring.batch.job.enabled=false
 
-#server settings
+#server properties
 server.address=
 server.port=
 
