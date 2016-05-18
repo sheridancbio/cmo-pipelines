@@ -90,7 +90,10 @@ public class CRDBSurveyWriter implements ItemStreamWriter<String>
             if (col.equals("DMP_ID")){
                 normColumns.add("PATIENT_ID");
             }
-            else if (!col.startsWith("QS_DATE")) {
+            else if (col.equals("COMMENTS")) {
+                normColumns.add("CRDB_SURVEY_"+col);
+            }
+            else if (!col.equals("QS_DATE")){
                 normColumns.add("CRDB_"+col);
             }
         }

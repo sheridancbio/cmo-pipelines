@@ -43,7 +43,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 
 public class CRDBSurvey {
     private String DMP_ID;
-    private String QS_DATE;
+    private Date QS_DATE;
     private String ADJ_TXT;
     private String NOSYSTXT;
     private String PRIOR_RX;
@@ -70,10 +70,10 @@ public CRDBSurvey() {
 * @param ECOG
 * @param COMMENTS
 */
-public CRDBSurvey(String DMP_ID, String QS_DATE, String ADJ_TXT, String NOSYSTXT,
+public CRDBSurvey(String DMP_ID, Date QS_DATE, String ADJ_TXT, String NOSYSTXT,
         String PRIOR_RX, String BRAINMET, String ECOG, String COMMENTS) {
 this.DMP_ID = DMP_ID==null?"NA":DMP_ID;
-this.QS_DATE = QS_DATE==null?"NA":QS_DATE;
+this.QS_DATE = QS_DATE==null?null:QS_DATE;
 this.ADJ_TXT = ADJ_TXT==null?"NA":ADJ_TXT;
 this.NOSYSTXT = NOSYSTXT==null?"NA":NOSYSTXT;
 this.PRIOR_RX = PRIOR_RX==null?"NA":PRIOR_RX;
@@ -112,7 +112,7 @@ this.COMMENTS = COMMENTS==null?"NA":COMMENTS;
      * 
      * @return QS_DATE
      */
-    public String getQS_DATE() {
+    public Date getQS_DATE() {
         return QS_DATE;
     }
     
@@ -120,7 +120,7 @@ this.COMMENTS = COMMENTS==null?"NA":COMMENTS;
      * 
      * @param QS_DATE 
      */
-    public void setQS_DATE(String QS_DATE) {
+    public void setQS_DATE(Date QS_DATE) {
         this.QS_DATE = QS_DATE;
     }
     
@@ -129,7 +129,7 @@ this.COMMENTS = COMMENTS==null?"NA":COMMENTS;
      * @param QS_DATE
      * @return 
      */
-    public CRDBSurvey withQS_DATE(String QS_DATE) {
+    public CRDBSurvey withQS_DATE(Date QS_DATE) {
         this.QS_DATE = QS_DATE;
         return this;
     }
