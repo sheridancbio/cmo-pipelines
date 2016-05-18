@@ -37,6 +37,7 @@ import org.cbioportal.cmo.pipelines.crdb.model.CRDBSurvey;
 import static com.querydsl.core.alias.Alias.$;
 import static com.querydsl.core.alias.Alias.alias;
 import com.querydsl.core.types.Projections;
+import com.querydsl.sql.SQLExpressions;
 import com.querydsl.sql.SQLQueryFactory;
 
 import org.springframework.batch.item.*;
@@ -77,14 +78,21 @@ public class CRDBSurveyReader implements ItemStreamReader<CRDBSurvey> {
         System.out.println("Beginning CRDB Survey View import...");
         
         CRDBSurvey qCRDBS = alias(CRDBSurvey.class, crdbSurveyView);  
-        List<CRDBSurvey> crdbSurveyResults = crdbQueryFactory.select(
+        List<CRDBSurvey> crdbSurveyResults = new ArrayList<>();
+        List<String> dmpIdList = crdbQueryFactory.selectDistinct($(qCRDBS.getDMP_ID())).from($(qCRDBS)).fetch();
+        for (String dmpId : dmpIdList) {
+            CRDBSurvey record = crdbQueryFactory.select(
                 Projections.constructor(CRDBSurvey.class, $(qCRDBS.getDMP_ID()), 
                         $(qCRDBS.getQS_DATE()), $(qCRDBS.getADJ_TXT()), 
                         $(qCRDBS.getNOSYSTXT()), $(qCRDBS.getPRIOR_RX()), 
                         $(qCRDBS.getBRAINMET()), $(qCRDBS.getECOG()), 
                         $(qCRDBS.getCOMMENTS())))
-                .from($(qCRDBS))
-                .fetch();
+                    .from($(qCRDBS))
+                    .where($(qCRDBS.getDMP_ID()).eq(dmpId))
+                    .orderBy($(qCRDBS.getQS_DATE()).desc())
+                    .fetchFirst();
+            crdbSurveyResults.add(record);
+        }
                              
         System.out.println("Imported "+crdbSurveyResults.size()+" records from CRDB Survey View.");
         return crdbSurveyResults;
