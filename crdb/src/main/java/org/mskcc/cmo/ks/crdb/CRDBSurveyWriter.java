@@ -30,9 +30,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-package org.cbioportal.cmo.pipelines.crdb;
+package org.mskcc.cmo.ks.crdb;
 
-import org.cbioportal.cmo.pipelines.crdb.model.CRDBDataset;
+import org.mskcc.cmo.ks.crdb.model.CRDBSurvey;
 
 import org.springframework.core.io.*;
 import org.springframework.batch.item.*;
@@ -46,21 +46,21 @@ import java.util.*;
 import org.apache.commons.lang.StringUtils;
 
 /**
- * Class for writing the CRDB Dataset results to the staging file.
+ * Class for writing the CRDB Survey results to the staging file.
  * 
  * @author ochoaa
  */
 
-public class CRDBDatasetWriter implements ItemStreamWriter<String>
-{    
+public class CRDBSurveyWriter implements ItemStreamWriter<String>
+{   
     @Value("#{jobParameters[stagingDirectory]}")
     private String stagingDirectory;
     
-    @Value("${crdb.dataset_filename}")
-    private String datasetFilename;
+    @Value("${crdb.survey_filename}")
+    private String surveyFilename;
 
-    private List<String> writeList = new ArrayList<String>();
-    private FlatFileItemWriter<String> flatFileItemWriter = new FlatFileItemWriter<String>();
+    private final List<String> writeList = new ArrayList<>();
+    private final FlatFileItemWriter<String> flatFileItemWriter = new FlatFileItemWriter<>();
     private String stagingFile;
     
     @Override
@@ -70,29 +70,30 @@ public class CRDBDatasetWriter implements ItemStreamWriter<String>
         flatFileItemWriter.setHeaderCallback(new FlatFileHeaderCallback() {
             @Override
             public void writeHeader(Writer writer) throws IOException {
-                writer.write(normalizeHeaders(new CRDBDataset().getFieldNames()));
+                writer.write(normalizeHeaders(new CRDBSurvey().getFieldNames()));
             }
         });
+        
         if (stagingDirectory.endsWith("/")){
-            stagingFile = stagingDirectory+datasetFilename;
+            stagingFile = stagingDirectory+surveyFilename;
         }
         else{
-            stagingFile = stagingDirectory+"/"+datasetFilename;
+            stagingFile = stagingDirectory+"/"+surveyFilename;
         }
         flatFileItemWriter.setResource(new FileSystemResource(stagingFile));
         flatFileItemWriter.open(executionContext);
     }
     
-    private String normalizeHeaders(List<String> columns) {
+    private String normalizeHeaders(List<String> columns) {        
         List<String> normColumns = new ArrayList<>();
         for (String col : columns){
             if (col.equals("DMP_ID")){
                 normColumns.add("PATIENT_ID");
             }
-            else if (col.equals("COMMENTS")){
-                normColumns.add("CRDB_BASIC_"+col);
+            else if (col.equals("COMMENTS")) {
+                normColumns.add("CRDB_SURVEY_"+col);
             }
-            else {
+            else if (!col.equals("QS_DATE")){
                 normColumns.add("CRDB_"+col);
             }
         }

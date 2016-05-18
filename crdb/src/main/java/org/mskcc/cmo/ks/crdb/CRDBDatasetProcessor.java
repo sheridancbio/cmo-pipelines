@@ -30,9 +30,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-package org.cbioportal.cmo.pipelines.crdb;
+package org.mskcc.cmo.ks.crdb;
 
-import org.cbioportal.cmo.pipelines.crdb.model.CRDBDataset;
+import org.mskcc.cmo.ks.crdb.model.CRDBDataset;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.ArrayList;
@@ -50,11 +50,38 @@ public class CRDBDatasetProcessor implements ItemProcessor<CRDBDataset, String> 
     ObjectMapper mapper = new ObjectMapper();
     
     @Override
-    public String process(final CRDBDataset crdbDataset) throws Exception {
+    public String process(final CRDBDataset crdbDataset) throws Exception {              
         List<String> record = new ArrayList<>();
         for (String field : new CRDBDataset().getFieldNames()) {
-            record.add(crdbDataset.getClass().getMethod("get"+field).invoke(crdbDataset).toString());
+            String value;
+            if (field.equals("PARTA_CONSENTED")) {
+                // resolve part a consented value
+                value = resolvePartAConsented(crdbDataset.getCONSENT_DATE_DAYS());
+            }
+            else {
+                value = crdbDataset.getClass().getMethod("get"+field).invoke(crdbDataset).toString();
+            }
+            record.add(value);
         }        
         return StringUtils.join(record, "\t");
+    }
+    
+    /**
+     * Resolves the value for the PARTA_CONSENTED field.
+     * @param consentDays
+     * @return 
+     */
+    private String resolvePartAConsented(String consentDays) {
+        String value = "NO"; // default value is NO to minimize NA's in data
+        
+        // if consent days is larger than 0 then set value to YES, else set to NO
+        try {
+            if (Integer.valueOf(consentDays) > 0) {
+                value = "YES";
+            }
+        }
+        catch (NumberFormatException ex) {}
+
+        return value;
     }
 }

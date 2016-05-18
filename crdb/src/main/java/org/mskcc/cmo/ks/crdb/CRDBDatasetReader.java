@@ -30,9 +30,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-package org.cbioportal.cmo.pipelines.crdb;
+package org.mskcc.cmo.ks.crdb;
 
-import org.cbioportal.cmo.pipelines.crdb.model.CRDBDataset;
+import org.mskcc.cmo.ks.crdb.model.CRDBDataset;
 
 import static com.querydsl.core.alias.Alias.$;
 import static com.querydsl.core.alias.Alias.alias;

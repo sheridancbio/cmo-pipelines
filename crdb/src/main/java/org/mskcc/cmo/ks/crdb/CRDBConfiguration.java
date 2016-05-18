@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.cbioportal.cmo.pipelines.crdb;
+package org.mskcc.cmo.ks.crdb;
 
 import com.querydsl.sql.OracleTemplates;
 import com.querydsl.sql.SQLQueryFactory;
