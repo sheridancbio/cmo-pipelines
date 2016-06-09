@@ -1,0 +1,22 @@
+
+spring.batch.job.enabled=false
+
+#server properties
+server.address=
+server.port=
+
+#Darwin properties
+darwin.demographics_view=
+darwin.demographics_filename=
+darwin.icdo_view=
+darwin.icdo_filename=
+darwin.timeline_view=
+darwin.timeline_filename=
+darwin.clinical_view=
+darwin.clinical_filename=
+
+#DB2 connection
+darwin.username=
+darwin.password=
+darwin.connection_string=
+darwin.driver=

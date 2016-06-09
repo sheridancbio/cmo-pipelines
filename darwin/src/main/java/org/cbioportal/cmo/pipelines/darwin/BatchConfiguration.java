@@ -50,7 +50,7 @@ import org.springframework.batch.core.configuration.annotation.StepScope;
 @EnableBatchProcessing
 public class BatchConfiguration {
     public static final String DARWIN_JOB = "darwinJob";
-    
+        
     @Autowired
     public JobBuilderFactory jobBuilderFactory;
     
@@ -58,7 +58,7 @@ public class BatchConfiguration {
     public StepBuilderFactory stepBuilderFactory;
     
     @Bean
-    public Job dcJob(){
+    public Job darwinJob(){
         return jobBuilderFactory.get(DARWIN_JOB)
                 .start(stepDPD())
                 .next(stepDTBS())
@@ -145,7 +145,7 @@ public class BatchConfiguration {
     
     @Bean
     @StepScope
-    public ItemStreamWriter<String> wrtierDPIR(){
+    public ItemStreamWriter<String> writerDPIR(){
         return new DarwinPatientIcdoWriter();
     }
     

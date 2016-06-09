@@ -36,6 +36,7 @@ public class DarwinPipeline {
     
     private static void launchJob(String[] args, String stagingDirectory) throws Exception{
         SpringApplication app = new SpringApplication(DarwinPipeline.class);
+        
         ConfigurableApplicationContext ctx = app.run(args);
         JobLauncher jobLauncher = ctx.getBean(JobLauncher.class);
        

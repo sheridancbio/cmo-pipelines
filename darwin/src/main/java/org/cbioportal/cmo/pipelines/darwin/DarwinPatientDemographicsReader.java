@@ -23,7 +23,7 @@ import java.util.*;
  * @author jake
  */
 public class DarwinPatientDemographicsReader implements ItemStreamReader<DarwinPatientDemographics>{
-    @Value("${DVCBIO.DEMOGRAPHICS_V}")
+    @Value("${darwin.demographics_view}")
     private String patientDemographicsView;
     
     @Autowired
@@ -39,15 +39,17 @@ public class DarwinPatientDemographicsReader implements ItemStreamReader<DarwinP
     @Transactional
     private List<DarwinPatientDemographics> getDarwinDemographicsResults(){
         System.out.println("Start of Darwin Patient Demographics View Import...");
-        DarwinPatientDemographics qDDR = alias(DarwinPatientDemographics.class, patientDemographicsView);
-        List<DarwinPatientDemographics> darwinDemographicsResults = darwinQueryFactory.select(
-                Projections.constructor(DarwinPatientDemographics.class, 
-                        $(qDDR.getPT_ID_DEMO()), $(qDDR.getDMP_ID_DEMO()), $(qDDR.getGENDER()),
-                        $(qDDR.getRACE()), $(qDDR.getRELIGION()), $(qDDR.getAGE_AT_DATE_OF_DEATH_IN_DAYS()),
-                        $(qDDR.getDEATH_SOURCE_DESCRIPTION()), $(qDDR.getPT_COUNTRY()), $(qDDR.getPT_STATE()),
-                        $(qDDR.getPT_ZIP3_CD()), $(qDDR.getPT_BIRTH_YEAR()), $(qDDR.getPT_SEX_DESC()), 
-                        $(qDDR.getPT_VITAL_STATUS()), $(qDDR.getPT_MARITAL_STS_DESC()), $(qDDR.getPT_DEATH_YEAR())))
-                .from($(qDDR))
+        DarwinPatientDemographics qDPD = alias(DarwinPatientDemographics.class, patientDemographicsView);
+        List<DarwinPatientDemographics> darwinDemographicsResults;
+        darwinDemographicsResults = darwinQueryFactory.select( 
+                Projections.constructor(DarwinPatientDemographics.class,
+                        $(qDPD.getPT_ID_DEMO()), $(qDPD.getDMP_ID_DEMO()), $(qDPD.getGENDER()),
+                        $(qDPD.getRACE()), $(qDPD.getRELIGION()), $(qDPD.getAGE_AT_DATE_OF_DEATH_IN_DAYS()),
+                        $(qDPD.getDEATH_SOURCE_DESCRIPTION()), $(qDPD.getVITAL_STATUS()), $(qDPD.getPT_COUNTRY()), $(qDPD.getPT_STATE()),
+                        $(qDPD.getPT_ZIP3_CD()), $(qDPD.getPT_BIRTH_YEAR()), $(qDPD.getPT_SEX_DESC()), 
+                        $(qDPD.getPT_VITAL_STATUS()), $(qDPD.getPT_MARITAL_STS_DESC()), $(qDPD.getPT_DEATH_YEAR()), $(qDPD.getPT_MRN_CREATE_YEAR())))
+                .from($(qDPD))
+                //.where(($(qDPD.getPT_ID_DEMO().equals(""))).isFalse())
                 .fetch();
         
         System.out.println("Imported " + darwinDemographicsResults.size() + " records from Darwin Patient Demographics View.");
