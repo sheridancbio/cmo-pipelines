@@ -188,7 +188,7 @@ public class DarwinPatientIcdoRecord {
     private String TM_MBASIS_DESC; 
     private String TM_AJCC; 
     private String TM_AJCC_DESC;
-    private String TM_MSK_ST;
+    private String TM_MSK_STG;
     
     public DarwinPatientIcdoRecord(){}
     
@@ -368,7 +368,7 @@ public class DarwinPatientIcdoRecord {
             String TM_MBASIS_DESC,
             String TM_AJCC,
             String TM_AJCC_DESC,
-            String TM_MSK_ST){
+            String TM_MSK_STG){
         this.PT_ID_ICDO = PT_ID_ICDO != null ? PT_ID_ICDO : "";
         this.DMP_ID_ICDO = DMP_ID_ICDO != null ? DMP_ID_ICDO : "";
         this.TM_TUMOR_SEQ_DESC = TM_TUMOR_SEQ_DESC != null ? TM_TUMOR_SEQ_DESC : "";
@@ -545,7 +545,7 @@ public class DarwinPatientIcdoRecord {
         this.TM_MBASIS_DESC = TM_MBASIS_DESC != null ? TM_MBASIS_DESC : "";
         this.TM_AJCC = TM_AJCC != null ? TM_AJCC : "";
         this.TM_AJCC_DESC = TM_AJCC_DESC != null ? TM_AJCC_DESC : "";
-        this.TM_MSK_ST = TM_MSK_ST != null ? TM_MSK_ST : "";
+        this.TM_MSK_STG = TM_MSK_STG != null ? TM_MSK_STG : "";
     }
     
     public String getPT_ID_ICDO(){
@@ -1956,12 +1956,12 @@ public class DarwinPatientIcdoRecord {
         this.TM_AJCC_DESC = TM_AJCC_DESC != null ? TM_AJCC_DESC : "";
     }
 
-    public String getTM_MSK_ST() {
-        return TM_MSK_ST;
+    public String getTM_MSK_STG() {
+        return TM_MSK_STG;
     }
 
-    public void setTM_MSK_ST(String TM_MSK_ST) {
-        this.TM_MSK_ST = TM_MSK_ST != null ? TM_MSK_ST : "";
+    public void setTM_MSK_STG(String TM_MSK_STG) {
+        this.TM_MSK_STG = TM_MSK_STG != null ? TM_MSK_STG : "";
     }
     
     @Override
@@ -2147,7 +2147,7 @@ public class DarwinPatientIcdoRecord {
         fieldNames.add("TM_MBASIS_DESC");
         fieldNames.add("TM_AJCC");
         fieldNames.add("TM_AJCC_DESC");
-        fieldNames.add("TM_MSK_ST");
+        fieldNames.add("TM_MSK_STG");
 
         return fieldNames;
     }

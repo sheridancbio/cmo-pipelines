@@ -7,13 +7,11 @@ package org.cbioportal.cmo.pipelines.darwin;
 
 import com.ibm.db2.jcc.DB2SimpleDataSource;
 import com.querydsl.sql.SQLQueryFactory;
-import com.querydsl.sql.SQLTemplates;
 import com.querydsl.sql.DB2Templates;
 import java.sql.SQLException;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
-//import org.apache.commons.dbcp2.BasicDataSource;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
 /**
@@ -30,9 +28,6 @@ public class DarwinConfiguration {
     @Value("${darwin.password}")
     private String password;
     
-    @Value("${darwin.driver}")
-    private String driver;
-    
     @Value("${darwin.server}")
     private String server;
     
@@ -42,6 +37,9 @@ public class DarwinConfiguration {
     @Value("${darwin.database}")
     private String database;
     
+    @Value("${darwin.schema}")
+    private String schema;
+    
     @Bean
     public static PropertySourcesPlaceholderConfigurer propertyConfigInDev() {
         return new PropertySourcesPlaceholderConfigurer();
@@ -50,7 +48,7 @@ public class DarwinConfiguration {
         
     @Bean
     public SQLQueryFactory darwinQueryFactory() throws SQLException{
-        SQLTemplates templates = new DB2Templates();
+        DB2Templates templates = new DB2Templates();
         com.querydsl.sql.Configuration config = new com.querydsl.sql.Configuration(templates);
         return new SQLQueryFactory(config, darwinDataSource()); 
     }
@@ -63,6 +61,7 @@ public class DarwinConfiguration {
         dataSource.setUser(username);
         dataSource.setPassword(password);
         dataSource.setDatabaseName(database);
+        dataSource.setCurrentSchema(schema);
         dataSource.setServerName(server);
         dataSource.setDriverType(4);
         return dataSource;

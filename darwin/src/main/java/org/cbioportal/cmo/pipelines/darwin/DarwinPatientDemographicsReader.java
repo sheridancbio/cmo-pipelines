@@ -35,7 +35,7 @@ public class DarwinPatientDemographicsReader implements ItemStreamReader<DarwinP
     public void open(ExecutionContext executionContext) throws ItemStreamException{
         this.darwinDemographicsResults = getDarwinDemographicsResults();
     }
-    
+            
     @Transactional
     private List<DarwinPatientDemographics> getDarwinDemographicsResults(){
         System.out.println("Start of Darwin Patient Demographics View Import...");
@@ -49,7 +49,7 @@ public class DarwinPatientDemographicsReader implements ItemStreamReader<DarwinP
                         $(qDPD.getPT_ZIP3_CD()), $(qDPD.getPT_BIRTH_YEAR()), $(qDPD.getPT_SEX_DESC()), 
                         $(qDPD.getPT_VITAL_STATUS()), $(qDPD.getPT_MARITAL_STS_DESC()), $(qDPD.getPT_DEATH_YEAR()), $(qDPD.getPT_MRN_CREATE_YEAR())))
                 .from($(qDPD))
-                //.where(($(qDPD.getPT_ID_DEMO().equals(""))).isFalse())
+                .where($(qDPD.getPT_ID_DEMO()).isNotEmpty())
                 .fetch();
         
         System.out.println("Imported " + darwinDemographicsResults.size() + " records from Darwin Patient Demographics View.");

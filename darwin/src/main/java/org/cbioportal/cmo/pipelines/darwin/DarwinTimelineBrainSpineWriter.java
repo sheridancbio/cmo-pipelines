@@ -24,7 +24,7 @@ public class DarwinTimelineBrainSpineWriter implements ItemStreamWriter<String>{
     @Value("#{jobParameters[stagingDirectory]}")
     private String stagingDirectory;
     
-    @Value("${darwin.timeline_filename")
+    @Value("${darwin.timeline_filename}")
     private String datasetFilename;
     
     private List<String> writeList = new ArrayList<>();

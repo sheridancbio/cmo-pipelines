@@ -53,7 +53,7 @@ public class DarwinClinicalBrainSpineReader implements ItemStreamReader<DarwinCl
                 $(qCBSR.getHISTOLOGY()),
                 $(qCBSR.getWHO_GRADE()),
                 $(qCBSR.getMGMT_STATUS())))
-                .where($(qCBSR.getDMT_PATIENT_ID_BRAINSPINECLIN().equals("")).isFalse())
+                .where($(qCBSR.getDMT_PATIENT_ID_BRAINSPINECLIN()).isNotEmpty())
                 .from($(qCBSR))
                 .fetch();
         

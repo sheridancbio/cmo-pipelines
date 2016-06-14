@@ -23,7 +23,7 @@ public class DarwinPatientIcdoWriter implements ItemStreamWriter<String>{
     @Value("#{jobParameters[stagingDirectory]}")
     private String stagingDirectory;
     
-    @Value("${darwin.icdo_filename")
+    @Value("${darwin.icdo_filename}")
     private String datasetFilename;
     
     private List<String> writeList = new ArrayList<>();

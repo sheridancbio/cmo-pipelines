@@ -20,10 +20,10 @@ import org.apache.commons.lang.StringUtils;
  * @author jake
  */
 public class DarwinClinicalBrainSpineWriter implements ItemStreamWriter<String>{
-    @Value("#{jobParameters[staginDirectory]}")
+    @Value("#{jobParameters[stagingDirectory]}")
     private String stagingDirectory;
     
-    @Value("${darwin.demographics_filename")
+    @Value("${darwin.clinical_filename}")
     private String datasetFilename;
     
     private List<String> writeList = new ArrayList<>();

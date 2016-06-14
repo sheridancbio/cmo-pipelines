@@ -218,8 +218,8 @@ public class DarwinPatientIcdoReader implements ItemStreamReader<DarwinPatientIc
                         $(qDICDO.getTM_MBASIS_DESC()),
                         $(qDICDO.getTM_AJCC()),
                         $(qDICDO.getTM_AJCC_DESC()),
-                        $(qDICDO.getTM_MSK_ST())))
-                .where($(qDICDO.getPT_ID_ICDO().equals("")).isFalse())
+                        $(qDICDO.getTM_MSK_STG())))
+                .where($(qDICDO.getPT_ID_ICDO()).isNotEmpty())
                 .from($(qDICDO))
                 .fetch();
         

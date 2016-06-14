@@ -1,9 +1,10 @@
-
 spring.batch.job.enabled=false
 
 #server properties
-server.address=
-server.port=
+darwin.server=
+darwin.port=
+darwin.database=
+darwin.schema=
 
 #Darwin properties
 darwin.demographics_view=
@@ -15,8 +16,6 @@ darwin.timeline_filename=
 darwin.clinical_view=
 darwin.clinical_filename=
 
-#DB2 connection
+#DB2 Connection
 darwin.username=
 darwin.password=
-darwin.connection_string=
-darwin.driver=

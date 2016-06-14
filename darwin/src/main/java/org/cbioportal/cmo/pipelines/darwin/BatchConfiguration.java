@@ -35,6 +35,7 @@ package org.cbioportal.cmo.pipelines.darwin;
 import org.cbioportal.cmo.pipelines.darwin.model.DarwinPatientDemographics;
 import org.cbioportal.cmo.pipelines.darwin.model.DarwinPatientIcdoRecord;
 import org.cbioportal.cmo.pipelines.darwin.model.DarwinTimelineBrainSpine;
+import org.cbioportal.cmo.pipelines.darwin.model.DarwinClinicalBrainSpine;
 
 import org.springframework.batch.core.*;
 import org.springframework.batch.item.*;
@@ -63,6 +64,7 @@ public class BatchConfiguration {
                 .start(stepDPD())
                 .next(stepDTBS())
                 .next(stepDPIR())
+                .next(stepDCBS())
                 .build();
     }
     
@@ -147,6 +149,33 @@ public class BatchConfiguration {
     @StepScope
     public ItemStreamWriter<String> writerDPIR(){
         return new DarwinPatientIcdoWriter();
+    }
+    
+    @Bean
+    public Step stepDCBS(){
+        return stepBuilderFactory.get("stepDCBS")
+                .<DarwinClinicalBrainSpine, String> chunk(10)
+                .reader(readerDCBS())
+                .processor(processorDCBS())
+                .writer(writerDCBS())
+                .build();
+    }
+    
+    @Bean
+    @StepScope
+    public ItemStreamReader<DarwinClinicalBrainSpine> readerDCBS(){
+        return new DarwinClinicalBrainSpineReader();
+    }
+    
+    @Bean
+    public DarwinClinicalBrainSpineProcessor processorDCBS(){
+        return new DarwinClinicalBrainSpineProcessor();
+    }
+    
+    @Bean
+    @StepScope
+    public ItemStreamWriter<String> writerDCBS(){
+        return new DarwinClinicalBrainSpineWriter();
     }
     
 }

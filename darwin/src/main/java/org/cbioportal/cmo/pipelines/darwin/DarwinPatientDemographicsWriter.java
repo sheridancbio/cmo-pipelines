@@ -24,7 +24,7 @@ public class DarwinPatientDemographicsWriter implements ItemStreamWriter<String>
     @Value("#{jobParameters[stagingDirectory]}")
     private String stagingDirectory;
     
-    @Value("${darwin.demographics_filename")
+    @Value("${darwin.demographics_filename}")
     private String datasetFilename;
     
     private List<String> writeList = new ArrayList<>();
