@@ -61,8 +61,9 @@ public class DarwinPatientDemographicsWriter implements ItemStreamWriter<String>
     
     @Override
     public void write(List<? extends String> items) throws Exception{
-        //writeList.clear();
+        writeList.clear();
         List<String> writeList = new ArrayList<>();
+        System.out.println("Items in writer " + items.size());
         for(String result : items){
             writeList.add(result);
         }
