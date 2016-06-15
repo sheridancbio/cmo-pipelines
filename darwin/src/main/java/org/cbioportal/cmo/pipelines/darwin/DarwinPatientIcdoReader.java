@@ -42,6 +42,7 @@ public class DarwinPatientIcdoReader implements ItemStreamReader<DarwinPatientIc
         DarwinPatientIcdoRecord qDICDO = alias(DarwinPatientIcdoRecord.class, patientIcdoView);
         List<DarwinPatientIcdoRecord> darwinIcdoResults = darwinQueryFactory.select(
                 Projections.constructor(DarwinPatientIcdoRecord.class, 
+                        $(qDICDO.getTUMOR_YEAR()),
                         $(qDICDO.getPT_ID_ICDO()),
                         $(qDICDO.getDMP_ID_ICDO()),
                         $(qDICDO.getTM_TUMOR_SEQ_DESC()),
