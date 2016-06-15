@@ -27,7 +27,7 @@ public class DarwinClinicalBrainSpine {
     
     public DarwinClinicalBrainSpine(){}
     
-    public DarwinClinicalBrainSpine(String DMT_PATIENT_ID_BRAINSPINECLIN,
+    public DarwinClinicalBrainSpine(
             String DMP_PATIENT_ID_BRAINSPINECLIN,
             String DMP_SAMPLE_ID_BRAINSPINECLIN,
             String AGE,
@@ -39,7 +39,7 @@ public class DarwinClinicalBrainSpine {
             String HISTOLOGY,
             String WHO_GRADE,
             String MGMT_STATUS){
-        this.DMT_PATIENT_ID_BRAINSPINECLIN = DMT_PATIENT_ID_BRAINSPINECLIN != null ? DMT_PATIENT_ID_BRAINSPINECLIN : "";
+        
         this.DMP_PATIENT_ID_BRAINSPINECLIN = DMP_PATIENT_ID_BRAINSPINECLIN != null ? DMP_PATIENT_ID_BRAINSPINECLIN : "";
         this.DMP_SAMPLE_ID_BRAINSPINECLIN = DMP_SAMPLE_ID_BRAINSPINECLIN != null ? DMP_SAMPLE_ID_BRAINSPINECLIN : "";
         this.AGE = AGE != null ? AGE : "";
@@ -53,13 +53,7 @@ public class DarwinClinicalBrainSpine {
         this.MGMT_STATUS = MGMT_STATUS != null ? MGMT_STATUS : "";
     }
     
-    public String getDMT_PATIENT_ID_BRAINSPINECLIN() {
-        return DMT_PATIENT_ID_BRAINSPINECLIN;
-    }
-
-    public void setDMT_PATIENT_ID_BRAINSPINECLIN(String DMT_PATIENT_ID_BRAINSPINECLIN) {
-        this.DMT_PATIENT_ID_BRAINSPINECLIN = DMT_PATIENT_ID_BRAINSPINECLIN != null ? DMT_PATIENT_ID_BRAINSPINECLIN : "";
-    }
+   
 
     public String getDMP_PATIENT_ID_BRAINSPINECLIN() {
         return DMP_PATIENT_ID_BRAINSPINECLIN;
@@ -156,7 +150,6 @@ public class DarwinClinicalBrainSpine {
     
     public List<String> getFieldNames(){
         List<String> fieldNames = new ArrayList<>();
-        fieldNames.add("DMT_PATIENT_ID_BRAINSPINECLIN");
         fieldNames.add("DMP_PATIENT_ID_BRAINSPINECLIN");
         fieldNames.add("DMP_SAMPLE_ID_BRAINSPINECLIN");
         fieldNames.add("AGE");
@@ -166,6 +159,22 @@ public class DarwinClinicalBrainSpine {
         fieldNames.add("DFS_STATUS");
         fieldNames.add("DFS_MONTHS");
         fieldNames.add("HISTOLOGY");
+        fieldNames.add("WHO_GRADE");
+        fieldNames.add("MGMT_STATUS");
+        
+        return fieldNames;
+    }
+    public List<String> getHeaders(){
+        List<String> fieldNames = new ArrayList<>();
+        fieldNames.add("PATIENT_ID");
+        fieldNames.add("SAMPLE_ID");
+        fieldNames.add("AGE");
+        fieldNames.add("SEX");
+        fieldNames.add("OS_STATUS");
+        fieldNames.add("OS_MONTHS");
+        fieldNames.add("DFS_STATUS");
+        fieldNames.add("DFS_MONTHS");
+        fieldNames.add("HISTOLOGICAL_DIAGNOSIS");
         fieldNames.add("WHO_GRADE");
         fieldNames.add("MGMT_STATUS");
         

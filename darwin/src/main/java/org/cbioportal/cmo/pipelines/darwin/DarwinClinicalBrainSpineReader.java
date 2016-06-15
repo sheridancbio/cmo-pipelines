@@ -41,7 +41,6 @@ public class DarwinClinicalBrainSpineReader implements ItemStreamReader<DarwinCl
         System.out.println("Start of Clinical Brain Spine View Import...");
         DarwinClinicalBrainSpine qCBSR = alias(DarwinClinicalBrainSpine.class, clinicalBrainSpineView);
         List<DarwinClinicalBrainSpine> clinicalBrainSpineResults = darwinQueryFactory.select(Projections.constructor(DarwinClinicalBrainSpine.class, 
-                $(qCBSR.getDMT_PATIENT_ID_BRAINSPINECLIN()),
                 $(qCBSR.getDMP_PATIENT_ID_BRAINSPINECLIN()),
                 $(qCBSR.getDMP_SAMPLE_ID_BRAINSPINECLIN()),
                 $(qCBSR.getAGE()),
@@ -53,7 +52,7 @@ public class DarwinClinicalBrainSpineReader implements ItemStreamReader<DarwinCl
                 $(qCBSR.getHISTOLOGY()),
                 $(qCBSR.getWHO_GRADE()),
                 $(qCBSR.getMGMT_STATUS())))
-                .where($(qCBSR.getDMT_PATIENT_ID_BRAINSPINECLIN()).isNotEmpty())
+                .where($(qCBSR.getDMP_PATIENT_ID_BRAINSPINECLIN()).isNotEmpty())
                 .from($(qCBSR))
                 .fetch();
         

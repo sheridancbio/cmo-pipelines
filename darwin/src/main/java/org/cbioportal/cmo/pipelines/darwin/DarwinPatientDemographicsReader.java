@@ -6,6 +6,7 @@
 package org.cbioportal.cmo.pipelines.darwin;
 
 import org.cbioportal.cmo.pipelines.darwin.model.DarwinPatientDemographics;
+import org.cbioportal.cmo.pipelines.darwin.model.DarwinPatientIcdoRecord;
 
 import static com.querydsl.core.alias.Alias.$;
 import static com.querydsl.core.alias.Alias.alias;
@@ -26,6 +27,9 @@ public class DarwinPatientDemographicsReader implements ItemStreamReader<DarwinP
     @Value("${darwin.demographics_view}")
     private String patientDemographicsView;
     
+    @Value("${darwin.icdo_view}")
+    private String patientIcdoView;
+    
     @Autowired
     SQLQueryFactory darwinQueryFactory;
     
@@ -40,6 +44,7 @@ public class DarwinPatientDemographicsReader implements ItemStreamReader<DarwinP
     private List<DarwinPatientDemographics> getDarwinDemographicsResults(){
         System.out.println("Start of Darwin Patient Demographics View Import...");
         DarwinPatientDemographics qDPD = alias(DarwinPatientDemographics.class, patientDemographicsView);
+        DarwinPatientIcdoRecord qDPIR = alias(DarwinPatientIcdoRecord.class, patientIcdoView);
         List<DarwinPatientDemographics> darwinDemographicsResults;
         darwinDemographicsResults = darwinQueryFactory.select( 
                 Projections.constructor(DarwinPatientDemographics.class,
@@ -47,7 +52,7 @@ public class DarwinPatientDemographicsReader implements ItemStreamReader<DarwinP
                         $(qDPD.getRACE()), $(qDPD.getRELIGION()), $(qDPD.getAGE_AT_DATE_OF_DEATH_IN_DAYS()),
                         $(qDPD.getDEATH_SOURCE_DESCRIPTION()), $(qDPD.getVITAL_STATUS()), $(qDPD.getPT_COUNTRY()), $(qDPD.getPT_STATE()),
                         $(qDPD.getPT_ZIP3_CD()), $(qDPD.getPT_BIRTH_YEAR()), $(qDPD.getPT_SEX_DESC()), 
-                        $(qDPD.getPT_VITAL_STATUS()), $(qDPD.getPT_MARITAL_STS_DESC()), $(qDPD.getPT_DEATH_YEAR()), $(qDPD.getPT_MRN_CREATE_YEAR())))
+                        $(qDPD.getPT_VITAL_STATUS()), $(qDPD.getPT_MARITAL_STS_DESC()), $(qDPD.getPT_DEATH_YEAR()), $(qDPD.getPT_MRN_CREATE_YEAR()), $(qDPIR.getTUMOR_YEAR())))
                 .from($(qDPD))
                 .where($(qDPD.getPT_ID_DEMO()).isNotEmpty())
                 .fetch();

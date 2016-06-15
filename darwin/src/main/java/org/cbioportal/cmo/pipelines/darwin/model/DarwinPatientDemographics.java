@@ -25,12 +25,13 @@ public class DarwinPatientDemographics {
     private String PT_COUNTRY;
     private String PT_STATE;
     private String PT_ZIP3_CD;
-    private String PT_BIRTH_YEAR;
+    private Integer PT_BIRTH_YEAR;
     private String PT_SEX_DESC;
     private String PT_VITAL_STATUS;
     private String PT_MARITAL_STS_DESC;
     private String PT_DEATH_YEAR;
     private String PT_MRN_CREATE_YEAR;
+    private Integer TUMOR_YEAR;
     private Map<String, Object> additionalProperties = new HashMap<>();
 
     public DarwinPatientDemographics() {
@@ -38,8 +39,8 @@ public class DarwinPatientDemographics {
 
     public DarwinPatientDemographics(String PT_ID_DEMO, String DMP_ID_DEMO, String GENDER,
             String RACE, String RELIGION, String AGE_AT_DATE_OF_DEATH_IN_DAYS, String DEATH_SOURCE_DESCRIPTION, String VITAL_STATUS,
-            String PT_COUNTRY, String PT_STATE, String PT_ZIP3_CD, String PT_BIRTH_YEAR, String PT_SEX_DESC,
-            String PT_VITAL_STATUS, String PT_MARITAL_STS_DESC, String PT_DEATH_YEAR, String PT_MRN_CREATE_YEAR) {
+            String PT_COUNTRY, String PT_STATE, String PT_ZIP3_CD, Integer PT_BIRTH_YEAR, String PT_SEX_DESC,
+            String PT_VITAL_STATUS, String PT_MARITAL_STS_DESC, String PT_DEATH_YEAR, String PT_MRN_CREATE_YEAR, Integer TUMOR_YEAR) {
         this.PT_ID_DEMO = PT_ID_DEMO != null ? PT_ID_DEMO : "";
         this.DMP_ID_DEMO = DMP_ID_DEMO != null ? DMP_ID_DEMO : "";
         this.GENDER = GENDER != null ? GENDER : "";
@@ -51,12 +52,30 @@ public class DarwinPatientDemographics {
         this.PT_COUNTRY = PT_COUNTRY != null ? PT_COUNTRY : "";
         this.PT_STATE = PT_STATE != null ? PT_STATE : "";
         this.PT_ZIP3_CD = PT_ZIP3_CD != null ? PT_ZIP3_CD : "";
-        this.PT_BIRTH_YEAR = PT_BIRTH_YEAR != null ? PT_BIRTH_YEAR : "";
+        this.PT_BIRTH_YEAR = PT_BIRTH_YEAR != null ? PT_BIRTH_YEAR : -1;
         this.PT_SEX_DESC = PT_SEX_DESC != null ? PT_SEX_DESC : "";
         this.PT_VITAL_STATUS = PT_VITAL_STATUS != null ? PT_VITAL_STATUS : "";
         this.PT_MARITAL_STS_DESC = PT_MARITAL_STS_DESC != null ? PT_MARITAL_STS_DESC : "";
         this.PT_DEATH_YEAR = PT_DEATH_YEAR != null ? PT_DEATH_YEAR : "";
         this.PT_MRN_CREATE_YEAR = PT_MRN_CREATE_YEAR != null ? PT_MRN_CREATE_YEAR : "";
+        this.TUMOR_YEAR = TUMOR_YEAR != null ? TUMOR_YEAR : -1;
+    }
+    
+    public Integer getTUMOR_YEAR() {
+        return TUMOR_YEAR;
+    }
+
+    public void setTUMOR_YEAR(Integer TUMOR_YEAR) {
+        this.TUMOR_YEAR = TUMOR_YEAR != null ? TUMOR_YEAR : -1;
+    }
+    
+    public Integer getAGE_AT_DIAGNOSIS(){
+        if(this.PT_BIRTH_YEAR>0 && this.TUMOR_YEAR>0){
+                return this.TUMOR_YEAR - this.PT_BIRTH_YEAR;
+        }
+        else{
+            return -1;
+        }
     }
 
     public String getPT_ID_DEMO() {
@@ -147,12 +166,12 @@ public class DarwinPatientDemographics {
         this.PT_ZIP3_CD = PT_ZIP3_CD != null ? PT_ZIP3_CD : "";
     }
 
-    public String getPT_BIRTH_YEAR() {
+    public Integer getPT_BIRTH_YEAR() {
         return PT_BIRTH_YEAR;
     }
 
-    public void setPT_BIRTH_YEAR(String PT_BIRTH_YEAR) {
-        this.PT_BIRTH_YEAR = PT_BIRTH_YEAR != null ? PT_BIRTH_YEAR : "";
+    public void setPT_BIRTH_YEAR(Integer PT_BIRTH_YEAR) {
+        this.PT_BIRTH_YEAR = PT_BIRTH_YEAR != null ? PT_BIRTH_YEAR : -1;
     }
 
     public String getPT_SEX_DESC() {
@@ -202,23 +221,24 @@ public class DarwinPatientDemographics {
 
     public List<String> getFieldNames() {
         List<String> fieldNames = new ArrayList<>();
-        fieldNames.add("PT_ID_DEMO");
         fieldNames.add("DMP_ID_DEMO");
         fieldNames.add("GENDER");
         fieldNames.add("RACE");
         fieldNames.add("RELIGION");
-        fieldNames.add("AGE_AT_DATE_OF_DEATH_IN_DAYS");
-        fieldNames.add("DEATH_SOURCE_DESCRIPTION");
         fieldNames.add("VITAL_STATUS");
-        fieldNames.add("PT_COUNTRY");
-        fieldNames.add("PT_STATE");
-        fieldNames.add("PT_ZIP3_CD");
-        fieldNames.add("PT_BIRTH_YEAR");
-        fieldNames.add("PT_SEX_DESC");
-        fieldNames.add("PT_VITAL_STATUS");
-        fieldNames.add("PT_MARITAL_STS_DESC");
-        fieldNames.add("PT_DEATH_YEAR");
-        fieldNames.add("PT_MRN_CREATE_YEAR");
+        fieldNames.add("AGE_AT_DIAGNOSIS");
+
+        return fieldNames;
+
+    }
+    public List<String> getHeaders() {
+        List<String> fieldNames = new ArrayList<>();
+        fieldNames.add("PATIENT_ID");
+        fieldNames.add("DARWIN_SEX");
+        fieldNames.add("DARWIN_RACE");
+        fieldNames.add("DARWIN_RELIGION");
+        fieldNames.add("DARWIN_VITAL_STATUS");
+        fieldNames.add("DARWIN_AGE_AT_DIAGNOSIS");
 
         return fieldNames;
 

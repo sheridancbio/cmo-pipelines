@@ -38,7 +38,7 @@ public class DarwinPatientDemographicsWriter implements ItemStreamWriter<String>
         flatFileItemWriter.setHeaderCallback(new FlatFileHeaderCallback(){
             @Override
             public void writeHeader(Writer writer) throws IOException{
-                writer.write(StringUtils.join(new DarwinPatientDemographics().getFieldNames(), "\t"));
+                writer.write(StringUtils.join(new DarwinPatientDemographics().getHeaders(), "\t"));
             }
         });
         if(stagingDirectory.endsWith("/")){
