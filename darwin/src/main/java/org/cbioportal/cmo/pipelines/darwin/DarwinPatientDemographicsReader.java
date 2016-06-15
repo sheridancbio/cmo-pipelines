@@ -57,6 +57,7 @@ public class DarwinPatientDemographicsReader implements ItemStreamReader<DarwinP
                 .from($(qDPIR))
                 .where($(qDPD.getDMP_ID_DEMO()).isNotEmpty())
                 .where($(qDPD.getDMP_ID_DEMO()).eq($(qDPIR.getDMP_ID_ICDO())))
+                .where($(qDPIR.getTUMOR_YEAR()).loe($(qDPIR.getTUMOR_YEAR())))
                 .fetch();
         
         System.out.println("Imported " + darwinDemographicsResults.size() + " records from Darwin Patient Demographics View.");
