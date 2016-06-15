@@ -12,7 +12,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * @author jake
  */
 public class DarwinPatientIcdoRecord {
-    private String TUMOR_YEAR;
+    private Integer TUMOR_YEAR;
     private String PT_ID_ICDO;
     private String DMP_ID_ICDO;
     private String TM_TUMOR_SEQ_DESC;
@@ -194,7 +194,7 @@ public class DarwinPatientIcdoRecord {
     public DarwinPatientIcdoRecord(){}
     
     public DarwinPatientIcdoRecord(
-            String TUMOR_YEAR,
+            Integer TUMOR_YEAR,
             String PT_ID_ICDO,
             String DMP_ID_ICDO,
             String TM_TUMOR_SEQ_DESC,
@@ -372,7 +372,7 @@ public class DarwinPatientIcdoRecord {
             String TM_AJCC,
             String TM_AJCC_DESC,
             String TM_MSK_STG){
-        this.TUMOR_YEAR = TUMOR_YEAR != null ? TUMOR_YEAR : "";
+        this.TUMOR_YEAR = TUMOR_YEAR != null ? TUMOR_YEAR : -1;
         this.PT_ID_ICDO = PT_ID_ICDO != null ? PT_ID_ICDO : "";
         this.DMP_ID_ICDO = DMP_ID_ICDO != null ? DMP_ID_ICDO : "";
         this.TM_TUMOR_SEQ_DESC = TM_TUMOR_SEQ_DESC != null ? TM_TUMOR_SEQ_DESC : "";
@@ -560,12 +560,12 @@ public class DarwinPatientIcdoRecord {
         this.PT_ID_ICDO = PT_ID_ICDO != null ? PT_ID_ICDO : "";
     }
     
-    public String getTUMOR_YEAR(){
+    public Integer getTUMOR_YEAR(){
 	return TUMOR_YEAR;
     }
 
-    public void setTUMOR_YEAR(String TUMOR_YEAR) {
-        this.TUMOR_YEAR = TUMOR_YEAR != null ? TUMOR_YEAR : "";
+    public void setTUMOR_YEAR(Integer TUMOR_YEAR) {
+        this.TUMOR_YEAR = TUMOR_YEAR != null ? TUMOR_YEAR : -1;
     }
 
     public String getDMP_ID_ICDO() {
