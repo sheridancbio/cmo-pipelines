@@ -45,23 +45,29 @@ public class DarwinPatientDemographicsReader implements ItemStreamReader<DarwinP
         System.out.println("Start of Darwin Patient Demographics View Import...");
         DarwinPatientDemographics qDPD = alias(DarwinPatientDemographics.class, patientDemographicsView);
         DarwinPatientIcdoRecord qDPIR = alias(DarwinPatientIcdoRecord.class, patientIcdoView);
-        List<DarwinPatientDemographics> darwinDemographicsResults;
-        darwinDemographicsResults = darwinQueryFactory.selectDistinct( 
-                Projections.constructor(DarwinPatientDemographics.class,
-                        $(qDPD.getPT_ID_DEMO()), $(qDPD.getDMP_ID_DEMO()), $(qDPD.getGENDER()),
-                        $(qDPD.getRACE()), $(qDPD.getRELIGION()), $(qDPD.getAGE_AT_DATE_OF_DEATH_IN_DAYS()),
-                        $(qDPD.getDEATH_SOURCE_DESCRIPTION()), $(qDPD.getVITAL_STATUS()), $(qDPD.getPT_COUNTRY()), $(qDPD.getPT_STATE()),
-                        $(qDPD.getPT_ZIP3_CD()), $(qDPD.getPT_BIRTH_YEAR()), $(qDPD.getPT_SEX_DESC()), 
-                        $(qDPD.getPT_VITAL_STATUS()), $(qDPD.getPT_MARITAL_STS_DESC()), $(qDPD.getPT_DEATH_YEAR()), $(qDPD.getPT_MRN_CREATE_YEAR()), $(qDPIR.getTUMOR_YEAR())))
-                .from($(qDPD))
-                .from($(qDPIR))
-                .where($(qDPD.getDMP_ID_DEMO()).isNotEmpty())
-                .where($(qDPD.getDMP_ID_DEMO()).eq($(qDPIR.getDMP_ID_ICDO())))
-                .where($(qDPIR.getTUMOR_YEAR()).loe($(qDPIR.getTUMOR_YEAR())))
-                .fetch();
+        List<DarwinPatientDemographics> darwinDemographicsResults = new ArrayList<>();
+        List<String> darwinPatientID = darwinQueryFactory.selectDistinct($(qDPD.getDMP_ID_DEMO())).from($(qDPD)).fetch();
+        for(String patientID : darwinPatientID){
+            DarwinPatientDemographics darwinDemographicsResult = darwinQueryFactory.selectDistinct(
+                    Projections.constructor(DarwinPatientDemographics.class,
+                            $(qDPD.getPT_ID_DEMO()), $(qDPD.getDMP_ID_DEMO()), $(qDPD.getGENDER()),
+                            $(qDPD.getRACE()), $(qDPD.getRELIGION()), $(qDPD.getAGE_AT_DATE_OF_DEATH_IN_DAYS()),
+                            $(qDPD.getDEATH_SOURCE_DESCRIPTION()), $(qDPD.getVITAL_STATUS()), $(qDPD.getPT_COUNTRY()), $(qDPD.getPT_STATE()),
+                            $(qDPD.getPT_ZIP3_CD()), $(qDPD.getPT_BIRTH_YEAR()), $(qDPD.getPT_SEX_DESC()),
+                            $(qDPD.getPT_VITAL_STATUS()), $(qDPD.getPT_MARITAL_STS_DESC()), $(qDPD.getPT_DEATH_YEAR()), $(qDPD.getPT_MRN_CREATE_YEAR()), $(qDPIR.getTUMOR_YEAR())))
+                    .from($(qDPD))
+                    .from($(qDPIR))
+                    .where($(qDPD.getDMP_ID_DEMO()).isNotEmpty())
+                    .where($(qDPD.getDMP_ID_DEMO()).eq($(qDPIR.getDMP_ID_ICDO())))
+                    .where($(qDPD.getDMP_ID_DEMO()).eq(patientID))
+                    .orderBy($(qDPIR.getTUMOR_YEAR()).asc())
+                    .fetchFirst();
+            darwinDemographicsResults.add(darwinDemographicsResult);
+
+        }
         
-        System.out.println("Imported " + darwinDemographicsResults.size() + " records from Darwin Patient Demographics View.");
-        return darwinDemographicsResults;
+            System.out.println("Imported " + darwinDemographicsResults.size() + " records from Darwin Patient Demographics View.");
+            return darwinDemographicsResults;
     }
     
     @Override
