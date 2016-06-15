@@ -46,7 +46,7 @@ public class DarwinPatientDemographicsReader implements ItemStreamReader<DarwinP
         DarwinPatientDemographics qDPD = alias(DarwinPatientDemographics.class, patientDemographicsView);
         DarwinPatientIcdoRecord qDPIR = alias(DarwinPatientIcdoRecord.class, patientIcdoView);
         List<DarwinPatientDemographics> darwinDemographicsResults;
-        darwinDemographicsResults = darwinQueryFactory.select( 
+        darwinDemographicsResults = darwinQueryFactory.selectDistinct( 
                 Projections.constructor(DarwinPatientDemographics.class,
                         $(qDPD.getPT_ID_DEMO()), $(qDPD.getDMP_ID_DEMO()), $(qDPD.getGENDER()),
                         $(qDPD.getRACE()), $(qDPD.getRELIGION()), $(qDPD.getAGE_AT_DATE_OF_DEATH_IN_DAYS()),
