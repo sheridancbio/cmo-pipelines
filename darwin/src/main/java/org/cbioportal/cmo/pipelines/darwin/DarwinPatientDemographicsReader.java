@@ -49,7 +49,7 @@ public class DarwinPatientDemographicsReader implements ItemStreamReader<DarwinP
         List<String> darwinPatientID = darwinQueryFactory.selectDistinct($(qDPD.getDMP_ID_DEMO())).from($(qDPD)).fetch();
         System.out.println("Fetched "+ darwinPatientID.size() +" distinct IDs");
         for(String patientID : darwinPatientID){
-            DarwinPatientDemographics darwinDemographicsResult = darwinQueryFactory.selectDistinct(
+            DarwinPatientDemographics darwinDemographicsResult = darwinQueryFactory.select(
                     Projections.constructor(DarwinPatientDemographics.class,
                             $(qDPD.getPT_ID_DEMO()), $(qDPD.getDMP_ID_DEMO()), $(qDPD.getGENDER()),
                             $(qDPD.getRACE()), $(qDPD.getRELIGION()), $(qDPD.getAGE_AT_DATE_OF_DEATH_IN_DAYS()),
