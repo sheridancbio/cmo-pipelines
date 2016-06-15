@@ -5,7 +5,7 @@
  */
 package org.cbioportal.cmo.pipelines.darwin;
 
-import org.cbioportal.cmo.pipelines.darwin.model.DarwinPatientIcdoRecord;
+import org.cbioportal.cmo.pipelines.darwin.model.MSK_ImpactPatientIcdoRecord;
 
 import static com.querydsl.core.alias.Alias.$;
 import static com.querydsl.core.alias.Alias.alias;
@@ -22,14 +22,14 @@ import java.util.*;
  *
  * @author jake
  */
-public class DarwinPatientIcdoReader implements ItemStreamReader<DarwinPatientIcdoRecord>{
+public class MSK_ImpactPatientIcdoReader implements ItemStreamReader<MSK_ImpactPatientIcdoRecord>{
     @Value("${darwin.icdo_view}")
     private String patientIcdoView;
     
     @Autowired
     SQLQueryFactory darwinQueryFactory;
     
-    private List<DarwinPatientIcdoRecord> darwinIcdoResults;
+    private List<MSK_ImpactPatientIcdoRecord> darwinIcdoResults;
     
     @Override
     public void open(ExecutionContext executionContext) throws ItemStreamException{
@@ -37,11 +37,11 @@ public class DarwinPatientIcdoReader implements ItemStreamReader<DarwinPatientIc
     }
     
     @Transactional
-    private List<DarwinPatientIcdoRecord> getDarwinIcdoResults(){
+    private List<MSK_ImpactPatientIcdoRecord> getDarwinIcdoResults(){
         System.out.println("Start of Darwin Patient ICDO Record View Import...");
-        DarwinPatientIcdoRecord qDICDO = alias(DarwinPatientIcdoRecord.class, patientIcdoView);
-        List<DarwinPatientIcdoRecord> darwinIcdoResults = darwinQueryFactory.select(
-                Projections.constructor(DarwinPatientIcdoRecord.class, 
+        MSK_ImpactPatientIcdoRecord qDICDO = alias(MSK_ImpactPatientIcdoRecord.class, patientIcdoView);
+        List<MSK_ImpactPatientIcdoRecord> darwinIcdoResults = darwinQueryFactory.select(Projections.constructor(MSK_ImpactPatientIcdoRecord.class, 
+                        $(qDICDO.getTUMOR_YEAR()),
                         $(qDICDO.getPT_ID_ICDO()),
                         $(qDICDO.getDMP_ID_ICDO()),
                         $(qDICDO.getTM_TUMOR_SEQ_DESC()),
@@ -234,7 +234,7 @@ public class DarwinPatientIcdoReader implements ItemStreamReader<DarwinPatientIc
     public void close() throws ItemStreamException{}
     
     @Override
-    public DarwinPatientIcdoRecord read() throws Exception{
+    public MSK_ImpactPatientIcdoRecord read() throws Exception{
         if(!darwinIcdoResults.isEmpty()){
             return darwinIcdoResults.remove(0);
         }

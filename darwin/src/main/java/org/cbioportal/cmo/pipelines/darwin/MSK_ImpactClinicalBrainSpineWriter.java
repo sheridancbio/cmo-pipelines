@@ -5,7 +5,7 @@
  */
 package org.cbioportal.cmo.pipelines.darwin;
 
-import org.cbioportal.cmo.pipelines.darwin.model.DarwinTimelineBrainSpine;
+import org.cbioportal.cmo.pipelines.darwin.model.MSK_ImpactClinicalBrainSpine;
 
 import org.springframework.batch.item.*;
 import org.springframework.batch.item.file.*;
@@ -15,16 +15,15 @@ import org.springframework.beans.factory.annotation.Value;
 import java.io.*;
 import java.util.*;
 import org.apache.commons.lang.StringUtils;
-
 /**
  *
  * @author jake
  */
-public class DarwinTimelineBrainSpineWriter implements ItemStreamWriter<String>{
+public class MSK_ImpactClinicalBrainSpineWriter implements ItemStreamWriter<String>{
     @Value("#{jobParameters[stagingDirectory]}")
     private String stagingDirectory;
     
-    @Value("${darwin.timeline_filename}")
+    @Value("${darwin.clinical_filename}")
     private String datasetFilename;
     
     private List<String> writeList = new ArrayList<>();
@@ -38,7 +37,7 @@ public class DarwinTimelineBrainSpineWriter implements ItemStreamWriter<String>{
         flatFileItemWriter.setHeaderCallback(new FlatFileHeaderCallback(){
             @Override
             public void writeHeader(Writer writer) throws IOException{
-                writer.write(StringUtils.join(new DarwinTimelineBrainSpine().getFieldNames(), "\t"));
+                writer.write(StringUtils.join(new MSK_ImpactClinicalBrainSpine().getHeaders(), "\t"));
             }
         });
         if(stagingDirectory.endsWith("/")){

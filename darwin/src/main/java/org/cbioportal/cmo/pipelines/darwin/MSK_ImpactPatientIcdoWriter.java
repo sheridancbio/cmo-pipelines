@@ -5,7 +5,7 @@
  */
 package org.cbioportal.cmo.pipelines.darwin;
 
-import org.cbioportal.cmo.pipelines.darwin.model.DarwinClinicalBrainSpine;
+import org.cbioportal.cmo.pipelines.darwin.model.MSK_ImpactPatientIcdoRecord;
 
 import org.springframework.batch.item.*;
 import org.springframework.batch.item.file.*;
@@ -19,11 +19,11 @@ import org.apache.commons.lang.StringUtils;
  *
  * @author jake
  */
-public class DarwinClinicalBrainSpineWriter implements ItemStreamWriter<String>{
+public class MSK_ImpactPatientIcdoWriter implements ItemStreamWriter<String>{
     @Value("#{jobParameters[stagingDirectory]}")
     private String stagingDirectory;
     
-    @Value("${darwin.clinical_filename}")
+    @Value("${darwin.icdo_filename}")
     private String datasetFilename;
     
     private List<String> writeList = new ArrayList<>();
@@ -37,7 +37,7 @@ public class DarwinClinicalBrainSpineWriter implements ItemStreamWriter<String>{
         flatFileItemWriter.setHeaderCallback(new FlatFileHeaderCallback(){
             @Override
             public void writeHeader(Writer writer) throws IOException{
-                writer.write(StringUtils.join(new DarwinClinicalBrainSpine().getFieldNames(), "\t"));
+                writer.write(StringUtils.join(new MSK_ImpactPatientIcdoRecord().getFieldNames(), "\t"));
             }
         });
         if(stagingDirectory.endsWith("/")){

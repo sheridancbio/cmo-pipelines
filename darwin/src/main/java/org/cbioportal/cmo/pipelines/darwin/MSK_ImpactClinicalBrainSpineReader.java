@@ -5,7 +5,7 @@
  */
 package org.cbioportal.cmo.pipelines.darwin;
 
-import org.cbioportal.cmo.pipelines.darwin.model.DarwinClinicalBrainSpine;
+import org.cbioportal.cmo.pipelines.darwin.model.MSK_ImpactClinicalBrainSpine;
 
 import static com.querydsl.core.alias.Alias.$;
 import static com.querydsl.core.alias.Alias.alias;
@@ -22,14 +22,14 @@ import java.util.*;
  *
  * @author jake
  */
-public class DarwinClinicalBrainSpineReader implements ItemStreamReader<DarwinClinicalBrainSpine>{
+public class MSK_ImpactClinicalBrainSpineReader implements ItemStreamReader<MSK_ImpactClinicalBrainSpine>{
     @Value("${darwin.clinical_view}")
     private String clinicalBrainSpineView;
     
     @Autowired
     SQLQueryFactory darwinQueryFactory;
     
-    private List<DarwinClinicalBrainSpine> clinicalBrainSpineResults;
+    private List<MSK_ImpactClinicalBrainSpine> clinicalBrainSpineResults;
     
     @Override
     public void open(ExecutionContext executionContext) throws ItemStreamException{
@@ -37,10 +37,10 @@ public class DarwinClinicalBrainSpineReader implements ItemStreamReader<DarwinCl
     }
     
     @Transactional
-    private List<DarwinClinicalBrainSpine> getClinicalBrainSpineResults(){
+    private List<MSK_ImpactClinicalBrainSpine> getClinicalBrainSpineResults(){
         System.out.println("Start of Clinical Brain Spine View Import...");
-        DarwinClinicalBrainSpine qCBSR = alias(DarwinClinicalBrainSpine.class, clinicalBrainSpineView);
-        List<DarwinClinicalBrainSpine> clinicalBrainSpineResults = darwinQueryFactory.select(Projections.constructor(DarwinClinicalBrainSpine.class, 
+        MSK_ImpactClinicalBrainSpine qCBSR = alias(MSK_ImpactClinicalBrainSpine.class, clinicalBrainSpineView);
+        List<MSK_ImpactClinicalBrainSpine> clinicalBrainSpineResults = darwinQueryFactory.select(Projections.constructor(MSK_ImpactClinicalBrainSpine.class, 
                 $(qCBSR.getDMP_PATIENT_ID_BRAINSPINECLIN()),
                 $(qCBSR.getDMP_SAMPLE_ID_BRAINSPINECLIN()),
                 $(qCBSR.getAGE()),
@@ -52,9 +52,9 @@ public class DarwinClinicalBrainSpineReader implements ItemStreamReader<DarwinCl
                 $(qCBSR.getHISTOLOGY()),
                 $(qCBSR.getWHO_GRADE()),
                 $(qCBSR.getMGMT_STATUS())))
-                .where($(qCBSR.getDMP_PATIENT_ID_BRAINSPINECLIN()).isNotEmpty())
-                .from($(qCBSR))
-                .fetch();
+            .where($(qCBSR.getDMP_PATIENT_ID_BRAINSPINECLIN()).isNotEmpty())
+            .from($(qCBSR))
+            .fetch();
         
         System.out.println("Imported " + clinicalBrainSpineResults.size() + " records from Clinical Brain Spine View.");
         return clinicalBrainSpineResults;
@@ -67,7 +67,7 @@ public class DarwinClinicalBrainSpineReader implements ItemStreamReader<DarwinCl
     public void close() throws ItemStreamException{}
     
     @Override
-    public DarwinClinicalBrainSpine read() throws Exception{
+    public MSK_ImpactClinicalBrainSpine read() throws Exception{
         if(!clinicalBrainSpineResults.isEmpty()){
             return clinicalBrainSpineResults.remove(0);
         }

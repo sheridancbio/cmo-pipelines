@@ -5,27 +5,27 @@
  */
 package org.cbioportal.cmo.pipelines.darwin;
 
-import org.cbioportal.cmo.pipelines.darwin.model.DarwinClinicalBrainSpine;
+import org.cbioportal.cmo.pipelines.darwin.model.MSK_ImpactPatientDemographics;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.*;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.batch.item.ItemProcessor;
+
 /**
  *
  * @author jake
  */
-public class DarwinClinicalBrainSpineProcessor implements ItemProcessor<DarwinClinicalBrainSpine, String>{
+public class MSK_ImpactPatientDemographicsProcessor implements ItemProcessor<MSK_ImpactPatientDemographics, String>{
     ObjectMapper mapper = new ObjectMapper();
     
     @Override
-    public String process(final DarwinClinicalBrainSpine darwinClinicalBrainSpine) throws Exception{
+    public String process(final MSK_ImpactPatientDemographics darwinPatientDemographics) throws Exception{
         List<String> record = new ArrayList<>();
-        for(String field : new DarwinClinicalBrainSpine().getFieldNames()){
-            record.add(darwinClinicalBrainSpine.getClass().getMethod("get"+field).invoke(darwinClinicalBrainSpine, null).toString());
+        for(String field : new MSK_ImpactPatientDemographics().getFieldNames()){
+            record.add(darwinPatientDemographics.getClass().getMethod("get"+field).invoke(darwinPatientDemographics).toString());
         }
         
         return StringUtils.join(record, "\t");
     }
-    
 }

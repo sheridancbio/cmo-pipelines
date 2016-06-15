@@ -12,7 +12,10 @@ darwin.demographics_filename=
 darwin.icdo_view=
 darwin.icdo_filename=
 darwin.timeline_view=
-darwin.timeline_filename=
+darwin.timeline_bs_status=
+darwin.timeline_bs_specimen=
+darwin.timeline_bs_treatment=
+darwin.timeline_bs_imaging=
 darwin.clinical_view=
 darwin.clinical_filename=
 

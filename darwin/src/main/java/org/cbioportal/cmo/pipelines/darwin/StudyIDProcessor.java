@@ -4,8 +4,7 @@
  * and open the template in the editor.
  */
 package org.cbioportal.cmo.pipelines.darwin;
-
-import org.cbioportal.cmo.pipelines.darwin.model.DarwinPatientIcdoRecord;
+import org.cbioportal.cmo.pipelines.darwin.model.StudyIDRecord;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.*;
@@ -15,14 +14,14 @@ import org.springframework.batch.item.ItemProcessor;
  *
  * @author jake
  */
-public class DarwinPatientIcdoProcessor implements ItemProcessor<DarwinPatientIcdoRecord, String>{
+public class StudyIDProcessor implements ItemProcessor<StudyIDRecord, String>{
     ObjectMapper mapper = new ObjectMapper();
     
     @Override
-    public String process(final DarwinPatientIcdoRecord darwinPatientIcdoRecord) throws Exception{
+    public String process(final StudyIDRecord studyIDResults) throws Exception{
         List<String> record = new ArrayList<>();
-        for(String field : new DarwinPatientIcdoRecord().getFieldNames()){
-            record.add(darwinPatientIcdoRecord.getClass().getMethod("get"+field).invoke(darwinPatientIcdoRecord, null).toString());
+        for(String field : new StudyIDRecord().getFieldNames()){
+            record.add(studyIDResults.getClass().getMethod("get"+field).invoke(studyIDResults).toString());
         }
         
         return StringUtils.join(record, "\t");
