@@ -57,9 +57,8 @@ public class DarwinPatientDemographicsReader implements ItemStreamReader<DarwinP
                             $(qDPD.getPT_VITAL_STATUS()), $(qDPD.getPT_MARITAL_STS_DESC()), $(qDPD.getPT_DEATH_YEAR()), $(qDPD.getPT_MRN_CREATE_YEAR()), $(qDPIR.getTUMOR_YEAR())))
                     .from($(qDPD))
                     .from($(qDPIR))
-                    .where($(qDPD.getDMP_ID_DEMO()).isNotEmpty())
-                    .where($(qDPD.getDMP_ID_DEMO()).eq($(qDPIR.getDMP_ID_ICDO())))
                     .where($(qDPD.getDMP_ID_DEMO()).eq(patientID))
+                    .where($(qDPD.getDMP_ID_DEMO()).eq($(qDPIR.getDMP_ID_ICDO())))
                     .orderBy($(qDPIR.getTUMOR_YEAR()).asc())
                     .fetchFirst();
             darwinDemographicsResults.add(darwinDemographicsResult);
