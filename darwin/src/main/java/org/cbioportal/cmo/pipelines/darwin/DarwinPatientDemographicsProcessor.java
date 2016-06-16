@@ -23,7 +23,7 @@ public class DarwinPatientDemographicsProcessor implements ItemProcessor<DarwinP
     public String process(final DarwinPatientDemographics darwinPatientDemographics) throws Exception{
         List<String> record = new ArrayList<>();
         for(String field : new DarwinPatientDemographics().getFieldNames()){
-            record.add(darwinPatientDemographics.getClass().getMethod("get"+field).invoke(darwinPatientDemographics, null).toString());
+            record.add(darwinPatientDemographics.getClass().getMethod("get"+field).invoke(darwinPatientDemographics).toString());
         }
         
         return StringUtils.join(record, "\t");

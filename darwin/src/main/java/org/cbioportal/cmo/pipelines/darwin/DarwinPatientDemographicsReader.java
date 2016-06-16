@@ -57,17 +57,17 @@ public class DarwinPatientDemographicsReader implements ItemStreamReader<DarwinP
                             $(qDPD.getPT_ZIP3_CD()), $(qDPD.getPT_BIRTH_YEAR()), $(qDPD.getPT_SEX_DESC()),
                             $(qDPD.getPT_VITAL_STATUS()), $(qDPD.getPT_MARITAL_STS_DESC()), $(qDPD.getPT_DEATH_YEAR()), $(qDPD.getPT_MRN_CREATE_YEAR()), $(qDPIR.getTUMOR_YEAR())))
                     .from($(qDPD))
-                    .from($(qDPIR))
+                    .join($(qDPIR))
+                    .on($(qDPD.getDMP_ID_DEMO()).eq($(qDPIR.getDMP_ID_ICDO())))
                     .where($(qDPD.getDMP_ID_DEMO()).eq(patientID))
-                    .where($(qDPD.getDMP_ID_DEMO()).eq($(qDPIR.getDMP_ID_ICDO())))
                     .orderBy($(qDPIR.getTUMOR_YEAR()).asc())
                     .fetchFirst();
             darwinDemographicsResults.add(darwinDemographicsResult);
 
         }
-        
-            System.out.println("Imported " + darwinDemographicsResults.size() + " records from Darwin Patient Demographics View.");
-            return darwinDemographicsResults;
+            
+        System.out.println("Imported " + darwinDemographicsResults.size() + " records from Darwin Patient Demographics View.");
+        return darwinDemographicsResults;
     }
     
     @Override
@@ -79,8 +79,12 @@ public class DarwinPatientDemographicsReader implements ItemStreamReader<DarwinP
     @Override
     public DarwinPatientDemographics read() throws Exception{
         if(!darwinDemographicsResults.isEmpty()){
+            if(darwinDemographicsResults.get(0).getDMP_ID_DEMO().isEmpty()||darwinDemographicsResults.get(0).getDMP_ID_DEMO()==null){
+                System.out.println("Empty patient ID!");
+            }
             return darwinDemographicsResults.remove(0);
         }
+        
         return null;
     }
 }

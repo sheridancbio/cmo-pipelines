@@ -52,9 +52,9 @@ public class DarwinClinicalBrainSpineReader implements ItemStreamReader<DarwinCl
                 $(qCBSR.getHISTOLOGY()),
                 $(qCBSR.getWHO_GRADE()),
                 $(qCBSR.getMGMT_STATUS())))
-                .where($(qCBSR.getDMP_PATIENT_ID_BRAINSPINECLIN()).isNotEmpty())
-                .from($(qCBSR))
-                .fetch();
+            .where($(qCBSR.getDMP_PATIENT_ID_BRAINSPINECLIN()).isNotEmpty())
+            .from($(qCBSR))
+            .fetch();
         
         System.out.println("Imported " + clinicalBrainSpineResults.size() + " records from Clinical Brain Spine View.");
         return clinicalBrainSpineResults;

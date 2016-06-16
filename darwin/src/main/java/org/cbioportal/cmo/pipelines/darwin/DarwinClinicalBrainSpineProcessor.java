@@ -22,7 +22,7 @@ public class DarwinClinicalBrainSpineProcessor implements ItemProcessor<DarwinCl
     public String process(final DarwinClinicalBrainSpine darwinClinicalBrainSpine) throws Exception{
         List<String> record = new ArrayList<>();
         for(String field : new DarwinClinicalBrainSpine().getFieldNames()){
-            record.add(darwinClinicalBrainSpine.getClass().getMethod("get"+field).invoke(darwinClinicalBrainSpine, null).toString());
+            record.add(darwinClinicalBrainSpine.getClass().getMethod("get"+field).invoke(darwinClinicalBrainSpine).toString());
         }
         
         return StringUtils.join(record, "\t");

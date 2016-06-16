@@ -22,7 +22,7 @@ public class DarwinPatientIcdoProcessor implements ItemProcessor<DarwinPatientIc
     public String process(final DarwinPatientIcdoRecord darwinPatientIcdoRecord) throws Exception{
         List<String> record = new ArrayList<>();
         for(String field : new DarwinPatientIcdoRecord().getFieldNames()){
-            record.add(darwinPatientIcdoRecord.getClass().getMethod("get"+field).invoke(darwinPatientIcdoRecord, null).toString());
+            record.add(darwinPatientIcdoRecord.getClass().getMethod("get"+field).invoke(darwinPatientIcdoRecord).toString());
         }
         
         return StringUtils.join(record, "\t");
