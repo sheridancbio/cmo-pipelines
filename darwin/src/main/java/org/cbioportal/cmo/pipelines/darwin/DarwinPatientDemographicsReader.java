@@ -65,6 +65,13 @@ public class DarwinPatientDemographicsReader implements ItemStreamReader<DarwinP
             if(darwinDemographicsResult!=null){
                 darwinDemographicsResults.add(darwinDemographicsResult);
             }
+            else{
+                darwinDemographicsResult = darwinQueryFactory.select(Projections.constructor(DarwinPatientDemographics.class, $(qDPD.getDMP_ID_DEMO()), $(qDPD.getGENDER()),
+                            $(qDPD.getRACE()), $(qDPD.getRELIGION()),$(qDPD.getVITAL_STATUS())))
+                        .from($(qDPD))
+                        .fetchFirst();
+                darwinDemographicsResults.add(darwinDemographicsResult);
+            }
 
         }
             

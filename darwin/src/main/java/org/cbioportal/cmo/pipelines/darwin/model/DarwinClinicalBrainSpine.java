@@ -40,17 +40,17 @@ public class DarwinClinicalBrainSpine {
             String WHO_GRADE,
             String MGMT_STATUS){
         
-        this.DMP_PATIENT_ID_BRAINSPINECLIN = DMP_PATIENT_ID_BRAINSPINECLIN != null ? DMP_PATIENT_ID_BRAINSPINECLIN : "";
-        this.DMP_SAMPLE_ID_BRAINSPINECLIN = DMP_SAMPLE_ID_BRAINSPINECLIN != null ? DMP_SAMPLE_ID_BRAINSPINECLIN : "";
-        this.AGE = AGE != null ? AGE : "";
-        this.SEX = SEX != null ? SEX : "";
-        this.OS_STATUS = OS_STATUS != null ? OS_STATUS : "";
-        this.OS_MONTHS = OS_MONTHS != null ? OS_MONTHS : "";
-        this.DFS_STATUS = DFS_STATUS != null ? DFS_STATUS : "";
-        this.DFS_MONTHS = DFS_MONTHS != null ? DFS_MONTHS : "";
-        this.HISTOLOGY = HISTOLOGY != null ? HISTOLOGY : "";
-        this.WHO_GRADE = WHO_GRADE != null ? WHO_GRADE : "";
-        this.MGMT_STATUS = MGMT_STATUS != null ? MGMT_STATUS : "";
+        this.DMP_PATIENT_ID_BRAINSPINECLIN = DMP_PATIENT_ID_BRAINSPINECLIN != null ? DMP_PATIENT_ID_BRAINSPINECLIN : "N/A";
+        this.DMP_SAMPLE_ID_BRAINSPINECLIN = DMP_SAMPLE_ID_BRAINSPINECLIN != null ? DMP_SAMPLE_ID_BRAINSPINECLIN : "N/A";
+        this.AGE = AGE != null ? AGE : "N/A";
+        this.SEX = SEX != null ? SEX : "N/A";
+        this.OS_STATUS = OS_STATUS != null ? OS_STATUS : "N/A";
+        this.OS_MONTHS = OS_MONTHS != null ? OS_MONTHS : "N/A";
+        this.DFS_STATUS = DFS_STATUS != null ? DFS_STATUS : "N/A";
+        this.DFS_MONTHS = DFS_MONTHS != null ? DFS_MONTHS : "N/A";
+        this.HISTOLOGY = HISTOLOGY != null ? HISTOLOGY : "N/A";
+        this.WHO_GRADE = WHO_GRADE != null ? WHO_GRADE : "N/A";
+        this.MGMT_STATUS = MGMT_STATUS != null ? MGMT_STATUS : "N/A";
     }
     
    
@@ -60,7 +60,7 @@ public class DarwinClinicalBrainSpine {
     }
 
     public void setDMP_PATIENT_ID_BRAINSPINECLIN(String DMP_PATIENT_ID_BRAINSPINECLIN) {
-        this.DMP_PATIENT_ID_BRAINSPINECLIN = DMP_PATIENT_ID_BRAINSPINECLIN != null ? DMP_PATIENT_ID_BRAINSPINECLIN : "";
+        this.DMP_PATIENT_ID_BRAINSPINECLIN = DMP_PATIENT_ID_BRAINSPINECLIN != null ? DMP_PATIENT_ID_BRAINSPINECLIN : "N/A";
     }
 
     public String getDMP_SAMPLE_ID_BRAINSPINECLIN() {
@@ -68,7 +68,7 @@ public class DarwinClinicalBrainSpine {
     }
 
     public void setDMP_SAMPLE_ID_BRAINSPINECLIN(String DMP_SAMPLE_ID_BRAINSPINECLIN) {
-        this.DMP_SAMPLE_ID_BRAINSPINECLIN = DMP_SAMPLE_ID_BRAINSPINECLIN != null ? DMP_SAMPLE_ID_BRAINSPINECLIN : "";
+        this.DMP_SAMPLE_ID_BRAINSPINECLIN = DMP_SAMPLE_ID_BRAINSPINECLIN != null ? DMP_SAMPLE_ID_BRAINSPINECLIN : "N/A";
     }
 
     public String getAGE() {
@@ -76,7 +76,7 @@ public class DarwinClinicalBrainSpine {
     }
 
     public void setAGE(String AGE) {
-        this.AGE = AGE != null ? AGE : "";
+        this.AGE = AGE != null ? AGE : "N/A";
     }
 
     public String getSEX() {
@@ -84,7 +84,7 @@ public class DarwinClinicalBrainSpine {
     }
 
     public void setSEX(String SEX) {
-        this.SEX = SEX != null ? SEX : "";
+        this.SEX = SEX != null ? SEX : "N/A";
     }
 
     public String getOS_STATUS() {
@@ -92,7 +92,7 @@ public class DarwinClinicalBrainSpine {
     }
 
     public void setOS_STATUS(String OS_STATUS) {
-        this.OS_STATUS = OS_STATUS != null ? OS_STATUS : "";
+        this.OS_STATUS = OS_STATUS != null ? OS_STATUS : "N/A";
     }
 
     public String getOS_MONTHS() {
@@ -100,7 +100,7 @@ public class DarwinClinicalBrainSpine {
     }
 
     public void setOS_MONTHS(String OS_MONTHS) {
-        this.OS_MONTHS = OS_MONTHS != null ? OS_MONTHS : "";
+        this.OS_MONTHS = OS_MONTHS != null ? OS_MONTHS : "N/A";
     }
 
     public String getDFS_STATUS() {
@@ -108,7 +108,7 @@ public class DarwinClinicalBrainSpine {
     }
 
     public void setDFS_STATUS(String DFS_STATUS) {
-        this.DFS_STATUS = DFS_STATUS != null ? DFS_STATUS : "";
+        this.DFS_STATUS = DFS_STATUS != null ? DFS_STATUS : "N/A";
     }
 
     public String getDFS_MONTHS() {
@@ -116,7 +116,7 @@ public class DarwinClinicalBrainSpine {
     }
 
     public void setDFS_MONTHS(String DFS_MONTHS) {
-        this.DFS_MONTHS = DFS_MONTHS != null ? DFS_MONTHS : "";
+        this.DFS_MONTHS = DFS_MONTHS != null ? DFS_MONTHS : "N/A";
     }
 
     public String getHISTOLOGY() {
@@ -124,7 +124,7 @@ public class DarwinClinicalBrainSpine {
     }
 
     public void setHISTOLOGY(String HISTOLOGY) {
-        this.HISTOLOGY = HISTOLOGY != null ? HISTOLOGY : "";
+        this.HISTOLOGY = HISTOLOGY != null ? HISTOLOGY : "N/A";
     }
 
     public String getWHO_GRADE() {
@@ -132,7 +132,7 @@ public class DarwinClinicalBrainSpine {
     }
 
     public void setWHO_GRADE(String WHO_GRADE) {
-        this.WHO_GRADE = WHO_GRADE != null ? WHO_GRADE : "";
+        this.WHO_GRADE = WHO_GRADE != null ? WHO_GRADE : "N/A";
     }
 
     public String getMGMT_STATUS() {
@@ -140,7 +140,7 @@ public class DarwinClinicalBrainSpine {
     }
 
     public void setMGMT_STATUS(String MGMT_STATUS) {
-        this.MGMT_STATUS = MGMT_STATUS != null ? MGMT_STATUS : "";
+        this.MGMT_STATUS = MGMT_STATUS != null ? MGMT_STATUS : "N/A";
     }
     
     @Override
