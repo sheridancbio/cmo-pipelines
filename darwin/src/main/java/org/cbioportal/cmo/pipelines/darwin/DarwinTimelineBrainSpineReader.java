@@ -52,7 +52,7 @@ public class DarwinTimelineBrainSpineReader implements ItemStreamReader<DarwinTi
                         $(qDTR.getMGMT_STATUS()), $(qDTR.getSOURCE_PATHOLOGY()), $(qDTR.getNOTE()), $(qDTR.getDIAGNOSTIC_TYPE()),
                         $(qDTR.getDIAGNOSTIC_TYPE_DETAILED()), $(qDTR.getSOURCE())))
                 .from($(qDTR))
-                .where($(qDTR.getDMT_PATIENT_ID_BRAINSPINETMLN()).isNotEmpty())
+                .where($(qDTR.getDMT_PATIENT_ID_BRAINSPINETMLN()).isNotNull())
                 .fetch();
 
         System.out.println("Imported " + darwinTimelineResults.size() + " records from Darwin Timeline Brain Spine View.");
