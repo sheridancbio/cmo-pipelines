@@ -5,7 +5,7 @@
  */
 package org.cbioportal.cmo.pipelines.darwin;
 
-import org.cbioportal.cmo.pipelines.darwin.model.DarwinPatientDemographics;
+import org.cbioportal.cmo.pipelines.darwin.model.MSK_ImpactPatientDemographics;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.*;
@@ -16,13 +16,13 @@ import org.springframework.batch.item.ItemProcessor;
  *
  * @author jake
  */
-public class DarwinPatientDemographicsProcessor implements ItemProcessor<DarwinPatientDemographics, String>{
+public class MSK_ImpactPatientDemographicsProcessor implements ItemProcessor<MSK_ImpactPatientDemographics, String>{
     ObjectMapper mapper = new ObjectMapper();
     
     @Override
-    public String process(final DarwinPatientDemographics darwinPatientDemographics) throws Exception{
+    public String process(final MSK_ImpactPatientDemographics darwinPatientDemographics) throws Exception{
         List<String> record = new ArrayList<>();
-        for(String field : new DarwinPatientDemographics().getFieldNames()){
+        for(String field : new MSK_ImpactPatientDemographics().getFieldNames()){
             record.add(darwinPatientDemographics.getClass().getMethod("get"+field).invoke(darwinPatientDemographics).toString());
         }
         

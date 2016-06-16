@@ -5,7 +5,7 @@
  */
 package org.cbioportal.cmo.pipelines.darwin;
 
-import org.cbioportal.cmo.pipelines.darwin.model.DarwinPatientDemographics;
+import org.cbioportal.cmo.pipelines.darwin.model.MSK_ImpactPatientIcdoRecord;
 
 import org.springframework.batch.item.*;
 import org.springframework.batch.item.file.*;
@@ -15,16 +15,15 @@ import org.springframework.beans.factory.annotation.Value;
 import java.io.*;
 import java.util.*;
 import org.apache.commons.lang.StringUtils;
-
 /**
  *
  * @author jake
  */
-public class DarwinPatientDemographicsWriter implements ItemStreamWriter<String>{
+public class MSK_ImpactPatientIcdoWriter implements ItemStreamWriter<String>{
     @Value("#{jobParameters[stagingDirectory]}")
     private String stagingDirectory;
     
-    @Value("${darwin.demographics_filename}")
+    @Value("${darwin.icdo_filename}")
     private String datasetFilename;
     
     private List<String> writeList = new ArrayList<>();
@@ -38,7 +37,7 @@ public class DarwinPatientDemographicsWriter implements ItemStreamWriter<String>
         flatFileItemWriter.setHeaderCallback(new FlatFileHeaderCallback(){
             @Override
             public void writeHeader(Writer writer) throws IOException{
-                writer.write(StringUtils.join(new DarwinPatientDemographics().getHeaders(), "\t"));
+                writer.write(StringUtils.join(new MSK_ImpactPatientIcdoRecord().getFieldNames(), "\t"));
             }
         });
         if(stagingDirectory.endsWith("/")){
@@ -63,11 +62,9 @@ public class DarwinPatientDemographicsWriter implements ItemStreamWriter<String>
     public void write(List<? extends String> items) throws Exception{
         writeList.clear();
         List<String> writeList = new ArrayList<>();
-        //System.out.println("Items in writer " + items.size());
         for(String result : items){
             writeList.add(result);
         }
         flatFileItemWriter.write(writeList);
     }
-    
 }

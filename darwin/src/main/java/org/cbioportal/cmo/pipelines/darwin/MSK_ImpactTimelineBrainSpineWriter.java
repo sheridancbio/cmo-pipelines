@@ -5,7 +5,7 @@
  */
 package org.cbioportal.cmo.pipelines.darwin;
 
-import org.cbioportal.cmo.pipelines.darwin.model.DarwinTimelineBrainSpine;
+import org.cbioportal.cmo.pipelines.darwin.model.MSK_ImpactTimelineBrainSpine;
 
 import org.springframework.batch.item.*;
 import org.springframework.batch.item.file.*;
@@ -20,7 +20,7 @@ import org.apache.commons.lang.StringUtils;
  *
  * @author jake
  */
-public class DarwinTimelineBrainSpineWriter implements ItemStreamWriter<String>{
+public class MSK_ImpactTimelineBrainSpineWriter implements ItemStreamWriter<String>{
     @Value("#{jobParameters[stagingDirectory]}")
     private String stagingDirectory;
     
@@ -38,7 +38,7 @@ public class DarwinTimelineBrainSpineWriter implements ItemStreamWriter<String>{
         flatFileItemWriter.setHeaderCallback(new FlatFileHeaderCallback(){
             @Override
             public void writeHeader(Writer writer) throws IOException{
-                writer.write(StringUtils.join(new DarwinTimelineBrainSpine().getFieldNames(), "\t"));
+                writer.write(StringUtils.join(new MSK_ImpactTimelineBrainSpine().getFieldNames(), "\t"));
             }
         });
         if(stagingDirectory.endsWith("/")){

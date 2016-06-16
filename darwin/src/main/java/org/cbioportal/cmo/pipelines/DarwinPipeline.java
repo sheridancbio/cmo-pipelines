@@ -23,7 +23,8 @@ public class DarwinPipeline {
     private static Options getOptions(String[] args){
         Options gnuOptions = new Options();
         gnuOptions.addOption("h", "help", false, "shows this help document and quits.")
-        .addOption("stage", "staging", true, "Staging directory");
+        .addOption("stage", "staging", true, "Staging directory")
+        .addOption("study", "Study_ID", true, "Cancer Study ID");
         return gnuOptions;
     }
     
@@ -34,17 +35,34 @@ public class DarwinPipeline {
     }
     
     
-    private static void launchJob(String[] args, String stagingDirectory) throws Exception{
+    private static void launchJob(String[] args, String stagingDirectory, String studyID) throws Exception{
         SpringApplication app = new SpringApplication(DarwinPipeline.class);
         
         ConfigurableApplicationContext ctx = app.run(args);
         JobLauncher jobLauncher = ctx.getBean(JobLauncher.class);
        
-        Job darwinJob = ctx.getBean(BatchConfiguration.DARWIN_JOB, Job.class);
+        Job darwinJob;
         JobParameters jobParameters = new JobParametersBuilder()
                 .addString("stagingDirectory", stagingDirectory)
+                .addString("studyID", studyID)
                 .toJobParameters();
-        JobExecution jobExecution = jobLauncher.run(darwinJob, jobParameters);
+        switch (studyID) {
+            case "SomeStudy":
+                darwinJob = ctx.getBean(BatchConfiguration.STUDYID_JOB, Job.class);
+                break;
+            case "MSK_IMPACT":
+                darwinJob = ctx.getBean(BatchConfiguration.MSK_IMPACT_JOB, Job.class);
+                break;
+            default:
+                darwinJob = null;
+                break;
+        }
+        if(darwinJob!=null){
+            JobExecution jobExecution = jobLauncher.run(darwinJob, jobParameters);
+        }
+        else{
+            System.out.println("Failed to start DarwinPipeline");
+        }
         
         System.out.println("Shutting down DarwinPipeline");
         ctx.close();
@@ -59,7 +77,7 @@ public class DarwinPipeline {
             help(gnuOptions, 0);
         }
         
-        launchJob(args, commandLine.getOptionValue("stage"));
+        launchJob(args, commandLine.getOptionValue("stage"), commandLine.getOptionValue("studyID"));
     }
             
         

@@ -5,8 +5,8 @@
  */
 package org.cbioportal.cmo.pipelines.darwin;
 
-import org.cbioportal.cmo.pipelines.darwin.model.DarwinPatientDemographics;
-import org.cbioportal.cmo.pipelines.darwin.model.DarwinPatientIcdoRecord;
+import org.cbioportal.cmo.pipelines.darwin.model.MSK_ImpactPatientDemographics;
+import org.cbioportal.cmo.pipelines.darwin.model.MSK_ImpactPatientIcdoRecord;
 
 import static com.querydsl.core.alias.Alias.$;
 import static com.querydsl.core.alias.Alias.alias;
@@ -19,11 +19,25 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
+import static com.querydsl.core.alias.Alias.$;
+import static com.querydsl.core.alias.Alias.alias;
+import static com.querydsl.core.alias.Alias.$;
+import static com.querydsl.core.alias.Alias.alias;
+import static com.querydsl.core.alias.Alias.$;
+import static com.querydsl.core.alias.Alias.alias;
+import static com.querydsl.core.alias.Alias.$;
+import static com.querydsl.core.alias.Alias.alias;
+import static com.querydsl.core.alias.Alias.$;
+import static com.querydsl.core.alias.Alias.alias;
+import static com.querydsl.core.alias.Alias.$;
+import static com.querydsl.core.alias.Alias.alias;
+import static com.querydsl.core.alias.Alias.$;
+import static com.querydsl.core.alias.Alias.alias;
 /**
  *
  * @author jake
  */
-public class DarwinPatientDemographicsReader implements ItemStreamReader<DarwinPatientDemographics>{
+public class MSK_ImpactPatientDemographicsReader implements ItemStreamReader<MSK_ImpactPatientDemographics>{
     @Value("${darwin.demographics_view}")
     private String patientDemographicsView;
     
@@ -33,7 +47,7 @@ public class DarwinPatientDemographicsReader implements ItemStreamReader<DarwinP
     @Autowired
     SQLQueryFactory darwinQueryFactory;
     
-    private List<DarwinPatientDemographics> darwinDemographicsResults;
+    private List<MSK_ImpactPatientDemographics> darwinDemographicsResults;
     
     @Override
     public void open(ExecutionContext executionContext) throws ItemStreamException{
@@ -41,16 +55,15 @@ public class DarwinPatientDemographicsReader implements ItemStreamReader<DarwinP
     }
             
     @Transactional
-    private List<DarwinPatientDemographics> getDarwinDemographicsResults(){
+    private List<MSK_ImpactPatientDemographics> getDarwinDemographicsResults(){
         System.out.println("Start of Darwin Patient Demographics View Import...");
-        DarwinPatientDemographics qDPD = alias(DarwinPatientDemographics.class, patientDemographicsView);
-        DarwinPatientIcdoRecord qDPIR = alias(DarwinPatientIcdoRecord.class, patientIcdoView);
-        List<DarwinPatientDemographics> darwinDemographicsResults = new ArrayList<>();
+        MSK_ImpactPatientDemographics qDPD = alias(MSK_ImpactPatientDemographics.class, patientDemographicsView);
+        MSK_ImpactPatientIcdoRecord qDPIR = alias(MSK_ImpactPatientIcdoRecord.class, patientIcdoView);
+        List<MSK_ImpactPatientDemographics> darwinDemographicsResults = new ArrayList<>();
         List<String> darwinPatientID = darwinQueryFactory.selectDistinct($(qDPD.getDMP_ID_DEMO())).from($(qDPD)).where($(qDPD.getDMP_ID_DEMO()).isNotEmpty()).fetch();
         System.out.println("Fetched "+ darwinPatientID.size() +" distinct IDs");
         for(String patientID : darwinPatientID){
-            DarwinPatientDemographics darwinDemographicsResult = darwinQueryFactory.select(
-                    Projections.constructor(DarwinPatientDemographics.class,
+            MSK_ImpactPatientDemographics darwinDemographicsResult = darwinQueryFactory.select(Projections.constructor(MSK_ImpactPatientDemographics.class,
                             $(qDPD.getPT_ID_DEMO()), $(qDPD.getDMP_ID_DEMO()), $(qDPD.getGENDER()),
                             $(qDPD.getRACE()), $(qDPD.getRELIGION()), $(qDPD.getAGE_AT_DATE_OF_DEATH_IN_DAYS()),
                             $(qDPD.getDEATH_SOURCE_DESCRIPTION()), $(qDPD.getVITAL_STATUS()), $(qDPD.getPT_COUNTRY()), $(qDPD.getPT_STATE()),
@@ -66,7 +79,7 @@ public class DarwinPatientDemographicsReader implements ItemStreamReader<DarwinP
                 darwinDemographicsResults.add(darwinDemographicsResult);
             }
             else{
-                darwinDemographicsResult = darwinQueryFactory.select(Projections.constructor(DarwinPatientDemographics.class, $(qDPD.getDMP_ID_DEMO()), $(qDPD.getGENDER()),
+                darwinDemographicsResult = darwinQueryFactory.select(Projections.constructor(MSK_ImpactPatientDemographics.class, $(qDPD.getDMP_ID_DEMO()), $(qDPD.getGENDER()),
                             $(qDPD.getRACE()), $(qDPD.getRELIGION()),$(qDPD.getVITAL_STATUS())))
                         .from($(qDPD))
                         .fetchFirst();
@@ -86,7 +99,7 @@ public class DarwinPatientDemographicsReader implements ItemStreamReader<DarwinP
     public void close() throws ItemStreamException{}
     
     @Override
-    public DarwinPatientDemographics read() throws Exception{
+    public MSK_ImpactPatientDemographics read() throws Exception{
         if(!darwinDemographicsResults.isEmpty()){
             return darwinDemographicsResults.remove(0);
         }      

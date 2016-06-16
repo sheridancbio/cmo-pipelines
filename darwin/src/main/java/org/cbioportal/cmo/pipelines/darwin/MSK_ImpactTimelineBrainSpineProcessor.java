@@ -5,7 +5,7 @@
  */
 package org.cbioportal.cmo.pipelines.darwin;
 
-import org.cbioportal.cmo.pipelines.darwin.model.DarwinTimelineBrainSpine;
+import org.cbioportal.cmo.pipelines.darwin.model.MSK_ImpactTimelineBrainSpine;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.*;
@@ -15,13 +15,13 @@ import org.springframework.batch.item.ItemProcessor;
  *
  * @author jake
  */
-public class DarwinTimelineBrainSpineProcessor implements ItemProcessor<DarwinTimelineBrainSpine, String>{
+public class MSK_ImpactTimelineBrainSpineProcessor implements ItemProcessor<MSK_ImpactTimelineBrainSpine, String>{
     ObjectMapper mapper = new ObjectMapper();
     
     @Override
-    public String process(final DarwinTimelineBrainSpine darwinTimelineBrainSpine) throws Exception{
+    public String process(final MSK_ImpactTimelineBrainSpine darwinTimelineBrainSpine) throws Exception{
         List<String> record = new ArrayList<>();
-        for(String field : new DarwinTimelineBrainSpine().getFieldNames()){
+        for(String field : new MSK_ImpactTimelineBrainSpine().getFieldNames()){
             record.add(darwinTimelineBrainSpine.getClass().getMethod("get"+field).invoke(darwinTimelineBrainSpine, null).toString());
         }
         

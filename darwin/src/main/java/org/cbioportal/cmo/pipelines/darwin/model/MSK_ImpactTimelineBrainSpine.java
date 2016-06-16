@@ -11,7 +11,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  *
  * @author jake
  */
-public class DarwinTimelineBrainSpine {
+public class MSK_ImpactTimelineBrainSpine {
     private String DMT_PATIENT_ID_BRAINSPINETMLN;
     private String DMP_PATIENT_ID_MIN_BRAINSPINETMLN;
     private String DMP_PATIENT_ID_MAX_BRAINSPINETMLN;
@@ -40,9 +40,9 @@ public class DarwinTimelineBrainSpine {
     private String SOURCE;
     private Map<String, Object> additionalProperties = new HashMap<>();
     
-    public DarwinTimelineBrainSpine(){}
+    public MSK_ImpactTimelineBrainSpine(){}
     
-    public DarwinTimelineBrainSpine(String DMT_PATIENT_ID_BRAINSPINETMLN, String DMP_PATIENT_ID_MIN_BRAINSPINETMLN,
+    public MSK_ImpactTimelineBrainSpine(String DMT_PATIENT_ID_BRAINSPINETMLN, String DMP_PATIENT_ID_MIN_BRAINSPINETMLN,
         String DMP_PATIENT_ID_MAX_BRAINSPINETMLN,
         String DMP_PATIENT_ID_COUNT_BRAINSPINETMLN,
         String DMP_PATIENT_ID_ALL_BRAINSPINETMLN,

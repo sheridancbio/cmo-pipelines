@@ -11,7 +11,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  *
  * @author jake
  */
-public class DarwinClinicalBrainSpine {
+public class MSK_ImpactClinicalBrainSpine {
     private String DMT_PATIENT_ID_BRAINSPINECLIN;
     private String DMP_PATIENT_ID_BRAINSPINECLIN;
     private String DMP_SAMPLE_ID_BRAINSPINECLIN;
@@ -25,9 +25,9 @@ public class DarwinClinicalBrainSpine {
     private String WHO_GRADE;
     private String MGMT_STATUS;
     
-    public DarwinClinicalBrainSpine(){}
+    public MSK_ImpactClinicalBrainSpine(){}
     
-    public DarwinClinicalBrainSpine(
+    public MSK_ImpactClinicalBrainSpine(
             String DMP_PATIENT_ID_BRAINSPINECLIN,
             String DMP_SAMPLE_ID_BRAINSPINECLIN,
             String AGE,

@@ -12,7 +12,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  *
  * @author jake
  */
-public class DarwinPatientDemographics {
+public class MSK_ImpactPatientDemographics {
 
     private String PT_ID_DEMO;
     private String DMP_ID_DEMO;
@@ -34,10 +34,10 @@ public class DarwinPatientDemographics {
     private Integer TUMOR_YEAR;
     private Map<String, Object> additionalProperties = new HashMap<>();
 
-    public DarwinPatientDemographics() {
+    public MSK_ImpactPatientDemographics() {
     }
 
-    public DarwinPatientDemographics(String PT_ID_DEMO, String DMP_ID_DEMO, String GENDER,
+    public MSK_ImpactPatientDemographics(String PT_ID_DEMO, String DMP_ID_DEMO, String GENDER,
             String RACE, String RELIGION, String AGE_AT_DATE_OF_DEATH_IN_DAYS, String DEATH_SOURCE_DESCRIPTION, String VITAL_STATUS,
             String PT_COUNTRY, String PT_STATE, String PT_ZIP3_CD, Integer PT_BIRTH_YEAR, String PT_SEX_DESC,
             String PT_VITAL_STATUS, String PT_MARITAL_STS_DESC, String PT_DEATH_YEAR, String PT_MRN_CREATE_YEAR, Integer TUMOR_YEAR) {
@@ -61,7 +61,7 @@ public class DarwinPatientDemographics {
         this.TUMOR_YEAR = TUMOR_YEAR != null ? TUMOR_YEAR : -1;
     }
     
-    public DarwinPatientDemographics(String DMP_ID_DEMO, String GENDER, String RACE, String RELIGION, String VITAL_STATUS){
+    public MSK_ImpactPatientDemographics(String DMP_ID_DEMO, String GENDER, String RACE, String RELIGION, String VITAL_STATUS){
         this.DMP_ID_DEMO = DMP_ID_DEMO != null ? DMP_ID_DEMO : "N/A";
         this.GENDER = GENDER != null ? GENDER : "N/A";
         this.RACE = RACE != null ? RACE : "N/A";

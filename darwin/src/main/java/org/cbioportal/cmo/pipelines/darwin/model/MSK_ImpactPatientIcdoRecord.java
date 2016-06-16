@@ -11,7 +11,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  *
  * @author jake
  */
-public class DarwinPatientIcdoRecord {
+public class MSK_ImpactPatientIcdoRecord {
     private Integer TUMOR_YEAR;
     private String PT_ID_ICDO;
     private String DMP_ID_ICDO;
@@ -191,9 +191,9 @@ public class DarwinPatientIcdoRecord {
     private String TM_AJCC_DESC;
     private String TM_MSK_STG;
     
-    public DarwinPatientIcdoRecord(){}
+    public MSK_ImpactPatientIcdoRecord(){}
     
-    public DarwinPatientIcdoRecord(
+    public MSK_ImpactPatientIcdoRecord(
             Integer TUMOR_YEAR,
             String PT_ID_ICDO,
             String DMP_ID_ICDO,

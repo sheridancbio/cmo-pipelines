@@ -5,7 +5,7 @@
  */
 package org.cbioportal.cmo.pipelines.darwin;
 
-import org.cbioportal.cmo.pipelines.darwin.model.DarwinTimelineBrainSpine;
+import org.cbioportal.cmo.pipelines.darwin.model.MSK_ImpactTimelineBrainSpine;
 
 import static com.querydsl.core.alias.Alias.$;
 import static com.querydsl.core.alias.Alias.alias;
@@ -18,18 +18,24 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
+import static com.querydsl.core.alias.Alias.$;
+import static com.querydsl.core.alias.Alias.alias;
+import static com.querydsl.core.alias.Alias.$;
+import static com.querydsl.core.alias.Alias.alias;
+import static com.querydsl.core.alias.Alias.$;
+import static com.querydsl.core.alias.Alias.alias;
 /**
  *
  * @author jake
  */
-public class DarwinTimelineBrainSpineReader implements ItemStreamReader<DarwinTimelineBrainSpine>{
+public class MSK_ImpactTimelineBrainSpineReader implements ItemStreamReader<MSK_ImpactTimelineBrainSpine>{
     @Value("${darwin.timeline_view}")
     private String timelineBrainSpineView;
     
     @Autowired
     SQLQueryFactory darwinQueryFactory;
     
-    private List<DarwinTimelineBrainSpine> darwinTimelineResults;
+    private List<MSK_ImpactTimelineBrainSpine> darwinTimelineResults;
     
     @Override
     public void open(ExecutionContext executionContext) throws ItemStreamException{
@@ -37,11 +43,10 @@ public class DarwinTimelineBrainSpineReader implements ItemStreamReader<DarwinTi
     }
     
     @Transactional
-    private List<DarwinTimelineBrainSpine> getDarwinTimelineResults(){
+    private List<MSK_ImpactTimelineBrainSpine> getDarwinTimelineResults(){
         System.out.println("Start of Darwin Timeline Brain Spine View import...");
-        DarwinTimelineBrainSpine qDTR = alias(DarwinTimelineBrainSpine.class, timelineBrainSpineView);
-        List<DarwinTimelineBrainSpine> darwinTimelineResults = darwinQueryFactory.select(
-                Projections.constructor(DarwinTimelineBrainSpine.class, $(qDTR.getDMT_PATIENT_ID_BRAINSPINETMLN()),
+        MSK_ImpactTimelineBrainSpine qDTR = alias(MSK_ImpactTimelineBrainSpine.class, timelineBrainSpineView);
+        List<MSK_ImpactTimelineBrainSpine> darwinTimelineResults = darwinQueryFactory.select(Projections.constructor(MSK_ImpactTimelineBrainSpine.class, $(qDTR.getDMT_PATIENT_ID_BRAINSPINETMLN()),
                         $(qDTR.getDMP_PATIENT_ID_MIN_BRAINSPINETMLN()),
                         $(qDTR.getDMP_PATIENT_ID_MAX_BRAINSPINETMLN()), $(qDTR.getDMP_PATIENT_ID_COUNT_BRAINSPINETMLN()),
                         $(qDTR.getDMP_PATIENT_ID_ALL_BRAINSPINETMLN()), $(qDTR.getSTART_DATE()), $(qDTR.getSTOP_DATE()),
@@ -66,7 +71,7 @@ public class DarwinTimelineBrainSpineReader implements ItemStreamReader<DarwinTi
     public void close() throws ItemStreamException{}
     
     @Override
-    public DarwinTimelineBrainSpine read() throws Exception{
+    public MSK_ImpactTimelineBrainSpine read() throws Exception{
         if(!darwinTimelineResults.isEmpty()){
             return darwinTimelineResults.remove(0);
         }

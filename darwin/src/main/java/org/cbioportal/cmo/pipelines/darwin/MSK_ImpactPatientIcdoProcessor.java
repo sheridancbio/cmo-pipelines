@@ -5,7 +5,7 @@
  */
 package org.cbioportal.cmo.pipelines.darwin;
 
-import org.cbioportal.cmo.pipelines.darwin.model.DarwinPatientIcdoRecord;
+import org.cbioportal.cmo.pipelines.darwin.model.MSK_ImpactPatientIcdoRecord;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.*;
@@ -15,13 +15,13 @@ import org.springframework.batch.item.ItemProcessor;
  *
  * @author jake
  */
-public class DarwinPatientIcdoProcessor implements ItemProcessor<DarwinPatientIcdoRecord, String>{
+public class MSK_ImpactPatientIcdoProcessor implements ItemProcessor<MSK_ImpactPatientIcdoRecord, String>{
     ObjectMapper mapper = new ObjectMapper();
     
     @Override
-    public String process(final DarwinPatientIcdoRecord darwinPatientIcdoRecord) throws Exception{
+    public String process(final MSK_ImpactPatientIcdoRecord darwinPatientIcdoRecord) throws Exception{
         List<String> record = new ArrayList<>();
-        for(String field : new DarwinPatientIcdoRecord().getFieldNames()){
+        for(String field : new MSK_ImpactPatientIcdoRecord().getFieldNames()){
             record.add(darwinPatientIcdoRecord.getClass().getMethod("get"+field).invoke(darwinPatientIcdoRecord).toString());
         }
         
