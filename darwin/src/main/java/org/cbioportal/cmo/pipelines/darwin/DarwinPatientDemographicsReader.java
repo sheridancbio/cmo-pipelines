@@ -62,7 +62,9 @@ public class DarwinPatientDemographicsReader implements ItemStreamReader<DarwinP
                     .where($(qDPD.getDMP_ID_DEMO()).eq(patientID))
                     .orderBy($(qDPIR.getTUMOR_YEAR()).asc())
                     .fetchFirst();
-            darwinDemographicsResults.add(darwinDemographicsResult);
+            if(darwinDemographicsResult!=null){
+                darwinDemographicsResults.add(darwinDemographicsResult);
+            }
 
         }
             
