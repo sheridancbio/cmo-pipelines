@@ -80,17 +80,9 @@ public class DarwinPatientDemographicsReader implements ItemStreamReader<DarwinP
     
     @Override
     public DarwinPatientDemographics read() throws Exception{
-        System.out.println("Size of current list "+ darwinDemographicsResults.size());
         if(!darwinDemographicsResults.isEmpty()){
-            /*
-            if(darwinDemographicsResults.get(0).getDMP_ID_DEMO().isEmpty()||darwinDemographicsResults.get(0).getDMP_ID_DEMO()==null){
-                System.out.println("Empty patient ID!");
-            }
-            */
             return darwinDemographicsResults.remove(0);
-        }
-        System.out.println("Size of list post-read "+ darwinDemographicsResults.size());
-        
+        }      
         return null;
     }
 }
