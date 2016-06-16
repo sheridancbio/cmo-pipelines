@@ -61,7 +61,6 @@ public class MSK_ImpactPatientDemographicsReader implements ItemStreamReader<MSK
         MSK_ImpactPatientIcdoRecord qDPIR = alias(MSK_ImpactPatientIcdoRecord.class, patientIcdoView);
         List<MSK_ImpactPatientDemographics> darwinDemographicsResults = new ArrayList<>();
         List<String> darwinPatientID = darwinQueryFactory.selectDistinct($(qDPD.getDMP_ID_DEMO())).from($(qDPD)).where($(qDPD.getDMP_ID_DEMO()).isNotEmpty()).fetch();
-        System.out.println("Fetched "+ darwinPatientID.size() +" distinct IDs");
         for(String patientID : darwinPatientID){
             MSK_ImpactPatientDemographics darwinDemographicsResult = darwinQueryFactory.select(Projections.constructor(MSK_ImpactPatientDemographics.class,
                             $(qDPD.getPT_ID_DEMO()), $(qDPD.getDMP_ID_DEMO()), $(qDPD.getGENDER()),
