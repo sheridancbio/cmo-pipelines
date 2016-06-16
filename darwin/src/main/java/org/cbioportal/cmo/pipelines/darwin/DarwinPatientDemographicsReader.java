@@ -46,7 +46,7 @@ public class DarwinPatientDemographicsReader implements ItemStreamReader<DarwinP
         DarwinPatientDemographics qDPD = alias(DarwinPatientDemographics.class, patientDemographicsView);
         DarwinPatientIcdoRecord qDPIR = alias(DarwinPatientIcdoRecord.class, patientIcdoView);
         List<DarwinPatientDemographics> darwinDemographicsResults = new ArrayList<>();
-        List<String> darwinPatientID = darwinQueryFactory.selectDistinct($(qDPD.getDMP_ID_DEMO())).from($(qDPD)).fetch();
+        List<String> darwinPatientID = darwinQueryFactory.selectDistinct($(qDPD.getDMP_ID_DEMO())).from($(qDPD)).where($(qDPD.getDMP_ID_DEMO()).isNotEmpty()).fetch();
         System.out.println("Fetched "+ darwinPatientID.size() +" distinct IDs");
         for(String patientID : darwinPatientID){
             DarwinPatientDemographics darwinDemographicsResult = darwinQueryFactory.select(
