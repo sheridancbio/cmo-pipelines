@@ -39,11 +39,12 @@ public class MSK_ImpactTimelineBrainSpineCompositeWriter implements ItemStreamWr
     List<ItemStreamWriter> delegates = new ArrayList<>();
     MSK_ImpactTimelineBrainSpineStatusWriter writer1 = new MSK_ImpactTimelineBrainSpineStatusWriter();
     MSK_ImpactTimelineBrainSpineSpecimenWriter writer2 = new MSK_ImpactTimelineBrainSpineSpecimenWriter();
-    
+    CompositeItemWriter compWriter = new CompositeItemWriter();
     @Override
     public void close() throws ItemStreamException{
         writer1.close();
         writer2.close();
+        compWriter.close();
     }
         
     @Override
@@ -71,12 +72,10 @@ public class MSK_ImpactTimelineBrainSpineCompositeWriter implements ItemStreamWr
     
     @Override
     public void write(List<? extends String> items) throws Exception{
-        CompositeItemWriter compWriter = new CompositeItemWriter();
         delegates.add(writer1);
         delegates.add(writer2);
         compWriter.setDelegates(delegates);
         compWriter.write(items);
-        compWriter.close();
     }
     
 }
