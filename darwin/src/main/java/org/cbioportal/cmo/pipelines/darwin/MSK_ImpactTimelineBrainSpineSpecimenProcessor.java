@@ -25,7 +25,7 @@ public class MSK_ImpactTimelineBrainSpineSpecimenProcessor implements ItemProces
         for(String field : new MSK_ImpactTimelineBrainSpine().getSpecimenFields()){
             recordPost.add(composite.record.getClass().getMethod("get" + field).invoke(composite.record).toString());
         }
-        composite.setResult2(StringUtils.join(recordPost, "/t"));
+        composite.setResult2(StringUtils.join(recordPost, "\t"));
         
         return composite;
     }
