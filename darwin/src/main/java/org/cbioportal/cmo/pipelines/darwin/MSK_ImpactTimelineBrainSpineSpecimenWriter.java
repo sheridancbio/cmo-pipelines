@@ -66,7 +66,8 @@ public class MSK_ImpactTimelineBrainSpineSpecimenWriter implements ItemStreamWri
         List<String> writeList = new ArrayList<>();
         for(String result : items){
             String[] toAdd = result.split("\n");
-            writeList.add(toAdd[1]);
+            if(!toAdd[1].isEmpty())
+                writeList.add(toAdd[1]);
         }
         if(!writeList.isEmpty()){
             flatFileItemWriter.write(writeList);
