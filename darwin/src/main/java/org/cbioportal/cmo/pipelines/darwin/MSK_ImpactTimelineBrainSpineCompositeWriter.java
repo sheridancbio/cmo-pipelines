@@ -58,11 +58,11 @@ public class MSK_ImpactTimelineBrainSpineCompositeWriter implements ItemStreamWr
             specimenFile = stagingDirectory + "/" + specimenFilename;
         }
         try{
-            writer1.getClass().getMethod("setStagingFile").invoke(writer1.getClass(), statusFilename);
+            writer1.getClass().getMethod("setStagingFile").invoke(writer1, statusFilename);
         }
         catch(Exception e){}
         try{
-            writer1.getClass().getMethod("setStagingFile").invoke(writer1.getClass(), specimenFilename);
+            writer1.getClass().getMethod("setStagingFile").invoke(writer1, specimenFilename);
         }
         catch(Exception e){}
         
