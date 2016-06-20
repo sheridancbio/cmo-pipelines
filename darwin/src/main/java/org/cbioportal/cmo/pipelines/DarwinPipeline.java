@@ -73,11 +73,12 @@ public class DarwinPipeline {
         CommandLineParser parser = new GnuParser();
         CommandLine commandLine = parser.parse(gnuOptions, args);
         if (commandLine.hasOption("h")||
-            !commandLine.hasOption("stage")){
+            !commandLine.hasOption("stage")||
+            !commandLine.hasOption("study")){
             help(gnuOptions, 0);
         }
         
-        launchJob(args, commandLine.getOptionValue("stage"), commandLine.getOptionValue("studyID"));
+        launchJob(args, commandLine.getOptionValue("stage"), commandLine.getOptionValue("study"));
     }
             
         
