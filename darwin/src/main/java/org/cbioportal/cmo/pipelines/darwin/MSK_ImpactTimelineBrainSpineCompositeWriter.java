@@ -27,7 +27,7 @@ public class MSK_ImpactTimelineBrainSpineCompositeWriter implements ItemStreamWr
     @Value("#{jobParameters[stagingDirectory]}")
     private String stagingDirectory;
     
-    private String datasetFilename = "composite";
+    private String datasetFilename = "composite.txt";
     private String stagingFile;
     
     List<ItemStreamWriter> delegates = new ArrayList<>();
