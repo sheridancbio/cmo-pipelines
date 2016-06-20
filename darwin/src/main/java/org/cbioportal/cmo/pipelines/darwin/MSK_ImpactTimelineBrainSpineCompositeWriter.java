@@ -45,7 +45,7 @@ public class MSK_ImpactTimelineBrainSpineCompositeWriter implements ItemStreamWr
         else{
             stagingFile = stagingDirectory + "/" + datasetFilename;
         }
-        flatFileItemWriter.setResource(new FileSystemResource(stagingDirectory));
+        flatFileItemWriter.setResource(new FileSystemResource(stagingFile));
         flatFileItemWriter.open(executionContext);
     }
     
