@@ -9,13 +9,14 @@ import org.cbioportal.cmo.pipelines.darwin.model.MSK_ImpactTimelineBrainSpine;
 import org.cbioportal.cmo.pipelines.darwin.model.TimelineBrainSpineComposite;
 
 import java.util.*;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.batch.item.support.CompositeItemProcessor;
 /**
  *
  * @author jake
  */
-public class MSK_ImpactTimelineBrainSpineCompositeProcessor implements ItemProcessor<MSK_ImpactTimelineBrainSpine, TimelineBrainSpineComposite>{
+public class MSK_ImpactTimelineBrainSpineCompositeProcessor implements ItemProcessor<MSK_ImpactTimelineBrainSpine, String>{
     List<ItemProcessor> delegates = new ArrayList<>();
     List<String> record = new ArrayList<>();
     
@@ -23,7 +24,7 @@ public class MSK_ImpactTimelineBrainSpineCompositeProcessor implements ItemProce
     //private MSK_ImpactTimelineBrainSpineSpecimenProcessor processor2 = new MSK_ImpactTimelineBrainSpineSpecimenProcessor();
         
     @Override
-    public TimelineBrainSpineComposite process(MSK_ImpactTimelineBrainSpine darwinTimelineBrainSpine) throws Exception{
+    public String process(MSK_ImpactTimelineBrainSpine darwinTimelineBrainSpine) throws Exception{
         MSK_ImpactTimelineBrainSpineSpecimenProcessor processor2 = new MSK_ImpactTimelineBrainSpineSpecimenProcessor();
         delegates.add(processor1);
         delegates.add(processor2);
@@ -31,7 +32,8 @@ public class MSK_ImpactTimelineBrainSpineCompositeProcessor implements ItemProce
         CompositeItemProcessor compProcessor = new CompositeItemProcessor();
         compProcessor.setDelegates(delegates);
         compProcessor.process(darwinTimelineBrainSpine);
-        return composite;
+        String jointResult = composite.getStatusResult() + "\n" + composite.getSpecimenResult();
+        return jointResult;
     }
     
     

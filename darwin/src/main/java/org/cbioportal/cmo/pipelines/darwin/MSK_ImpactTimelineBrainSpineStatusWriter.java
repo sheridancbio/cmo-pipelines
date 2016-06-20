@@ -21,7 +21,7 @@ import org.apache.commons.lang.StringUtils;
  *
  * @author jake
  */
-public class MSK_ImpactTimelineBrainSpineStatusWriter implements ItemStreamWriter<TimelineBrainSpineComposite>{
+public class MSK_ImpactTimelineBrainSpineStatusWriter implements ItemStreamWriter<String>{
     @Value("#{jobParameters[stagingDirectory]}")
     private String stagingDirectory;
     
@@ -61,11 +61,12 @@ public class MSK_ImpactTimelineBrainSpineStatusWriter implements ItemStreamWrite
     }
     
     @Override
-    public void write(List<? extends TimelineBrainSpineComposite> items) throws Exception{
+    public void write(List<? extends String> items) throws Exception{
         writeList.clear();
         List<String> writeList = new ArrayList<>();
-        for(TimelineBrainSpineComposite result : items){
-            writeList.add(result.getResult1());
+        for(String result : items){
+            String[] toAdd = result.split("\n");
+            writeList.add(toAdd[0]);
         }
         flatFileItemWriter.write(writeList);
     }

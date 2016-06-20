@@ -17,7 +17,7 @@ import org.springframework.batch.item.support.CompositeItemWriter;
  *
  * @author jake
  */
-public class MSK_ImpactTimelineBrainSpineCompositeWriter implements ItemStreamWriter<TimelineBrainSpineComposite>{
+public class MSK_ImpactTimelineBrainSpineCompositeWriter implements ItemStreamWriter<String>{
     
     List<ItemStreamWriter> delegates = new ArrayList<>();
     ItemStreamWriter writer1 = new MSK_ImpactTimelineBrainSpineStatusWriter();
@@ -33,7 +33,7 @@ public class MSK_ImpactTimelineBrainSpineCompositeWriter implements ItemStreamWr
     public void update(ExecutionContext executionContext) throws ItemStreamException{}
     
     @Override
-    public void write(List<? extends TimelineBrainSpineComposite> items) throws Exception{
+    public void write(List<? extends String> items) throws Exception{
         CompositeItemWriter compWriter = new CompositeItemWriter();
         delegates.add(writer1);
         delegates.add(writer2);
