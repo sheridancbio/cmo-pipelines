@@ -47,7 +47,7 @@ public class MSK_ImpactTimelineBrainSpineStatusWriter implements ItemStreamWrite
             }
         });
         
-        flatFileItemWriter.setResource(new FileSystemResource(stagingFile));
+        flatFileItemWriter.setResource(new FileSystemResource(this.stagingFile));
         flatFileItemWriter.open(executionContext);
     }
     

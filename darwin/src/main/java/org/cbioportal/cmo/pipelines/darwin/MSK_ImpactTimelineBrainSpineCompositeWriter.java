@@ -62,7 +62,7 @@ public class MSK_ImpactTimelineBrainSpineCompositeWriter implements ItemStreamWr
         }
         catch(Exception e){}
         try{
-            writer1.getClass().getMethod("setStagingFile").invoke(writer1, specimenFilename);
+            writer2.getClass().getMethod("setStagingFile").invoke(writer1, specimenFilename);
         }
         catch(Exception e){}
         

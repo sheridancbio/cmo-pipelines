@@ -47,7 +47,7 @@ public class MSK_ImpactTimelineBrainSpineSpecimenWriter implements ItemStreamWri
             }
         });
         
-        flatFileItemWriter.setResource(new FileSystemResource(stagingFile));
+        flatFileItemWriter.setResource(new FileSystemResource(this.stagingFile));
         flatFileItemWriter.open(executionContext);
     }
     
