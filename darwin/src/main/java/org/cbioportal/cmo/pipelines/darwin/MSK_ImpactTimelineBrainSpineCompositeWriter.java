@@ -39,14 +39,8 @@ public class MSK_ImpactTimelineBrainSpineCompositeWriter implements ItemStreamWr
         
     @Override
     public void open(ExecutionContext executionContext) throws ItemStreamException{
-        if(stagingDirectory.endsWith("/")){
-            stagingFile = stagingDirectory + datasetFilename;
-        }
-        else{
-            stagingFile = stagingDirectory + "/" + datasetFilename;
-        }
-        flatFileItemWriter.setResource(new FileSystemResource(stagingFile));
-        flatFileItemWriter.open(executionContext);
+        writer1.open(executionContext);
+        writer2.open(executionContext);
     }
     
     @Override
