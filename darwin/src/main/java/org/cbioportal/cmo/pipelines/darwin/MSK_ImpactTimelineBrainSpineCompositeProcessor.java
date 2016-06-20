@@ -26,6 +26,7 @@ public class MSK_ImpactTimelineBrainSpineCompositeProcessor implements ItemProce
     
     @Override
     public String process(MSK_ImpactTimelineBrainSpine darwinTimelineBrainSpine) throws Exception{
+        delegates.clear();
         delegates.add(processor1);
         delegates.add(processor2);
         TimelineBrainSpineComposite composite = new TimelineBrainSpineComposite(darwinTimelineBrainSpine);
