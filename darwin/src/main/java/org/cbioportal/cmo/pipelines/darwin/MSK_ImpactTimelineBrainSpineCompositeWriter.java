@@ -27,6 +27,8 @@ public class MSK_ImpactTimelineBrainSpineCompositeWriter implements ItemStreamWr
     @Value("#{jobParameters[stagingDirectory]}")
     private String stagingDirectory;
     
+    private String datasetFilename = "composite";
+    private String stagingFile;
     
     List<ItemStreamWriter> delegates = new ArrayList<>();
     ItemStreamWriter writer1 = new MSK_ImpactTimelineBrainSpineStatusWriter();
@@ -37,6 +39,12 @@ public class MSK_ImpactTimelineBrainSpineCompositeWriter implements ItemStreamWr
         
     @Override
     public void open(ExecutionContext executionContext) throws ItemStreamException{
+        if(stagingDirectory.endsWith("/")){
+            stagingFile = stagingDirectory + datasetFilename;
+        }
+        else{
+            stagingFile = stagingDirectory + "/" + datasetFilename;
+        }
         flatFileItemWriter.setResource(new FileSystemResource(stagingDirectory));
         flatFileItemWriter.open(executionContext);
     }
