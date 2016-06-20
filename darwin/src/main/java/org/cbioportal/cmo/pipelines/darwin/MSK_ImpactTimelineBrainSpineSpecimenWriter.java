@@ -62,7 +62,6 @@ public class MSK_ImpactTimelineBrainSpineSpecimenWriter implements ItemStreamWri
     @Override
     public void write(List<? extends String> items) throws Exception{
         writeList.clear();
-        List<String> writeList = new ArrayList<>();
         for(String result : items){
             String[] toAdd = result.split("\n");
             if(toAdd[1]!=null)
