@@ -21,17 +21,16 @@ public class MSK_ImpactTimelineBrainSpineCompositeProcessor implements ItemProce
     List<String> record = new ArrayList<>();
     
     MSK_ImpactTimelineBrainSpineStatusProcessor processor1 = new MSK_ImpactTimelineBrainSpineStatusProcessor();
-    //private MSK_ImpactTimelineBrainSpineSpecimenProcessor processor2 = new MSK_ImpactTimelineBrainSpineSpecimenProcessor();
+    MSK_ImpactTimelineBrainSpineSpecimenProcessor processor2 = new MSK_ImpactTimelineBrainSpineSpecimenProcessor();
         
     @Override
     public String process(MSK_ImpactTimelineBrainSpine darwinTimelineBrainSpine) throws Exception{
-        MSK_ImpactTimelineBrainSpineSpecimenProcessor processor2 = new MSK_ImpactTimelineBrainSpineSpecimenProcessor();
         delegates.add(processor1);
         delegates.add(processor2);
         TimelineBrainSpineComposite composite = new TimelineBrainSpineComposite(darwinTimelineBrainSpine);
         CompositeItemProcessor compProcessor = new CompositeItemProcessor();
         compProcessor.setDelegates(delegates);
-        compProcessor.process(darwinTimelineBrainSpine);
+        compProcessor.process(composite);
         String jointResult = composite.getStatusResult() + "\n" + composite.getSpecimenResult();
         return jointResult;
     }

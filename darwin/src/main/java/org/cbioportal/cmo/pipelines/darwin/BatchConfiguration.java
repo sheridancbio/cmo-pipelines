@@ -52,7 +52,7 @@ import org.springframework.batch.core.configuration.annotation.StepScope;
 @Configuration
 @EnableBatchProcessing
 public class BatchConfiguration {
-    public static final String MSK_IMPACT_JOB = "darwinJob";
+    public static final String MSK_IMPACT_JOB = "msk_ImpactJob";
     public static final String STUDYID_JOB = "studyIDJob";
       
     @Autowired
