@@ -37,8 +37,8 @@ public class MSK_ImpactTimelineBrainSpineCompositeWriter implements ItemStreamWr
     private String specimenFile;
     
     List<ItemStreamWriter> delegates = new ArrayList<>();
-    MSK_ImpactTimelineBrainSpineStatusWriter writer1 = new MSK_ImpactTimelineBrainSpineStatusWriter();
-    MSK_ImpactTimelineBrainSpineSpecimenWriter writer2 = new MSK_ImpactTimelineBrainSpineSpecimenWriter();
+    MSK_ImpactTimelineBrainSpineStatusWriter writer1;
+    MSK_ImpactTimelineBrainSpineSpecimenWriter writer2;
     
     @Override
     public void close() throws ItemStreamException{}
@@ -57,7 +57,8 @@ public class MSK_ImpactTimelineBrainSpineCompositeWriter implements ItemStreamWr
         else{
             specimenFile = stagingDirectory + "/" + specimenFilename;
         }
-        
+        writer1 = new MSK_ImpactTimelineBrainSpineStatusWriter();
+        writer2 = new MSK_ImpactTimelineBrainSpineSpecimenWriter();
         try{
             writer1.getClass().getMethod("setStagingFile").invoke(writer1, statusFilename);
         }
