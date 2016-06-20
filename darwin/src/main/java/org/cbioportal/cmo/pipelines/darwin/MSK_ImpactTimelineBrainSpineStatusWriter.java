@@ -68,6 +68,8 @@ public class MSK_ImpactTimelineBrainSpineStatusWriter implements ItemStreamWrite
             String[] toAdd = result.split("\n");
             writeList.add(toAdd[0]);
         }
-        flatFileItemWriter.write(writeList);
+        if(!writeList.isEmpty()){
+            flatFileItemWriter.write(writeList);
+        }
     }
 }
