@@ -27,8 +27,14 @@ public class MSK_ImpactTimelineBrainSpineCompositeWriter implements ItemStreamWr
     @Value("#{jobParameters[stagingDirectory]}")
     private String stagingDirectory;
     
-    private String datasetFilename = "composite.txt";
-    private String stagingFile;
+    @Value("${darwin.timeline_bs_status}")
+    private String statusFilename;
+    
+    @Value("${darwin.timeline_bs_specimen}")
+    private String specimenFilename;
+    
+    private String statusFile;
+    private String specimenFile;
     
     List<ItemStreamWriter> delegates = new ArrayList<>();
     ItemStreamWriter writer1 = new MSK_ImpactTimelineBrainSpineStatusWriter();
@@ -39,6 +45,27 @@ public class MSK_ImpactTimelineBrainSpineCompositeWriter implements ItemStreamWr
         
     @Override
     public void open(ExecutionContext executionContext) throws ItemStreamException{
+        if(stagingDirectory.endsWith("/")){
+            statusFile = stagingDirectory + statusFilename;
+        }
+        else{
+            statusFile = stagingDirectory + "/" + statusFilename;
+        }
+        if(stagingDirectory.endsWith("/")){
+            specimenFile = stagingDirectory + specimenFilename;
+        }
+        else{
+            specimenFile = stagingDirectory + "/" + specimenFilename;
+        }
+        try{
+            writer1.getClass().getMethod("setStagingFile").invoke(writer1.getClass(), statusFilename);
+        }
+        catch(Exception e){}
+        try{
+            writer1.getClass().getMethod("setStagingFile").invoke(writer1.getClass(), specimenFilename);
+        }
+        catch(Exception e){}
+        
         writer1.open(executionContext);
         writer2.open(executionContext);
     }

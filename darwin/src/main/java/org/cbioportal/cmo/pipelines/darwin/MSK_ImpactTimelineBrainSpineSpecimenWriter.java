@@ -32,6 +32,10 @@ public class MSK_ImpactTimelineBrainSpineSpecimenWriter implements ItemStreamWri
     private final FlatFileItemWriter<String> flatFileItemWriter = new FlatFileItemWriter<>();
     private String stagingFile;
     
+    public void setStagingFile(String file){
+        this.stagingFile = file;
+    }
+    
     @Override
     public void open(ExecutionContext executionContext) throws ItemStreamException{
         PassThroughLineAggregator aggr = new PassThroughLineAggregator();
@@ -42,12 +46,7 @@ public class MSK_ImpactTimelineBrainSpineSpecimenWriter implements ItemStreamWri
                 writer.write(StringUtils.join(new MSK_ImpactTimelineBrainSpine().getSpecimenHeaders(), "\t"));
             }
         });
-        if(stagingDirectory.endsWith("/")){
-            stagingFile = stagingDirectory + datasetFilename;
-        }
-        else{
-            stagingFile = stagingDirectory + "/" + datasetFilename;
-        }
+        
         flatFileItemWriter.setResource(new FileSystemResource(stagingFile));
         flatFileItemWriter.open(executionContext);
     }
