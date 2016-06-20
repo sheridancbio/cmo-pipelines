@@ -58,6 +58,7 @@ public class MSK_ImpactTimelineBrainSpineCompositeWriter implements ItemStreamWr
         delegates.add(writer1);
         delegates.add(writer2);
         compWriter.setDelegates(delegates);
+        compWriter.setIgnoreItemStream(true);
         compWriter.write(items);
         compWriter.close();
     }
