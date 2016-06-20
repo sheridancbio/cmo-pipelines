@@ -11,6 +11,8 @@ import org.cbioportal.cmo.pipelines.darwin.model.TimelineBrainSpineComposite;
 
 import org.springframework.batch.item.*;
 import org.springframework.batch.item.file.*;
+import org.springframework.core.io.*;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.util.*;
 import org.springframework.batch.item.support.CompositeItemWriter;
@@ -21,7 +23,11 @@ import org.springframework.batch.item.support.CompositeItemWriter;
 public class MSK_ImpactTimelineBrainSpineCompositeWriter implements ItemStreamWriter<String>{
     
     private final FlatFileItemWriter<String> flatFileItemWriter = new FlatFileItemWriter<>();
-
+    
+    @Value("#{jobParameters[stagingDirectory]}")
+    private String stagingDirectory;
+    
+    
     List<ItemStreamWriter> delegates = new ArrayList<>();
     ItemStreamWriter writer1 = new MSK_ImpactTimelineBrainSpineStatusWriter();
     ItemStreamWriter writer2 = new MSK_ImpactTimelineBrainSpineSpecimenWriter();
@@ -31,6 +37,7 @@ public class MSK_ImpactTimelineBrainSpineCompositeWriter implements ItemStreamWr
         
     @Override
     public void open(ExecutionContext executionContext) throws ItemStreamException{
+        flatFileItemWriter.setResource(new FileSystemResource(stagingDirectory));
         flatFileItemWriter.open(executionContext);
     }
     
