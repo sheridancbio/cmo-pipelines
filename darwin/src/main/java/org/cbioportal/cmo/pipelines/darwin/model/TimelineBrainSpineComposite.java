@@ -25,14 +25,14 @@ public class TimelineBrainSpineComposite {
     }
     
     public String getStatusResult(){
-        return this.result1;
+        return result1;
     }
     public void setResult1(String s){
         this.result1 = s;
     }
     
     public String getSpecimenResult(){
-        return this.result2;
+        return result2;
     }
     public void setResult2(String s){
         this.result2 = s;

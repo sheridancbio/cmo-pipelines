@@ -41,7 +41,10 @@ public class MSK_ImpactTimelineBrainSpineCompositeWriter implements ItemStreamWr
     MSK_ImpactTimelineBrainSpineSpecimenWriter writer2 = new MSK_ImpactTimelineBrainSpineSpecimenWriter();
     
     @Override
-    public void close() throws ItemStreamException{}
+    public void close() throws ItemStreamException{
+        writer1.close();
+        writer2.close();
+    }
         
     @Override
     public void open(ExecutionContext executionContext) throws ItemStreamException{
@@ -72,7 +75,6 @@ public class MSK_ImpactTimelineBrainSpineCompositeWriter implements ItemStreamWr
         delegates.add(writer1);
         delegates.add(writer2);
         compWriter.setDelegates(delegates);
-        compWriter.setIgnoreItemStream(true);
         compWriter.write(items);
         compWriter.close();
     }
