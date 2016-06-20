@@ -23,7 +23,7 @@ public class MSK_ImpactTimelineBrainSpineSpecimenProcessor implements ItemProces
     public TimelineBrainSpineComposite process(final TimelineBrainSpineComposite composite) throws Exception{
         List<String> record = new ArrayList<>();
         for(String field : new MSK_ImpactTimelineBrainSpine().getSpecimenFields()){
-            record.add(composite.record.getClass().getMethod("get" + field).toString());
+            record.add(composite.record.getClass().getMethod("get" + field).invoke(record).toString());
         }
         composite.setResult2(StringUtils.join(record, "/t"));
         
