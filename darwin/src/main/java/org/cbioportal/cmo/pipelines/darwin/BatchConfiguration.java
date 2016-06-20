@@ -32,6 +32,7 @@
 
 package org.cbioportal.cmo.pipelines.darwin;
 
+import org.cbioportal.cmo.pipelines.darwin.model.TimelineBrainSpineComposite;
 import org.cbioportal.cmo.pipelines.darwin.model.MSK_ImpactPatientDemographics;
 import org.cbioportal.cmo.pipelines.darwin.model.MSK_ImpactPatientIcdoRecord;
 import org.cbioportal.cmo.pipelines.darwin.model.MSK_ImpactTimelineBrainSpine;
@@ -53,7 +54,7 @@ import org.springframework.batch.core.configuration.annotation.StepScope;
 public class BatchConfiguration {
     public static final String MSK_IMPACT_JOB = "darwinJob";
     public static final String STUDYID_JOB = "studyIDJob";
-        
+      
     @Autowired
     public JobBuilderFactory jobBuilderFactory;
     
@@ -154,14 +155,15 @@ public class BatchConfiguration {
     }
     
     @Bean
-    public MSK_ImpactTimelineBrainSpineProcessor processorDTBS(){
-        return new MSK_ImpactTimelineBrainSpineProcessor();
+    @StepScope
+    public ItemProcessor processorDTBS(){
+        return new MSK_ImpactTimelineBrainSpineCompositeProcessor();
     }
     
     @Bean
     @StepScope
-    public ItemStreamWriter<String> writerDTBS(){
-        return new MSK_ImpactTimelineBrainSpineWriter();
+    public ItemStreamWriter<TimelineBrainSpineComposite> writerDTBS(){
+        return new MSK_ImpactTimelineBrainSpineStatusWriter();
     }
     
     @Bean

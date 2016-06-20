@@ -6,6 +6,7 @@
 package org.cbioportal.cmo.pipelines.darwin;
 
 import org.cbioportal.cmo.pipelines.darwin.model.MSK_ImpactTimelineBrainSpine;
+import org.cbioportal.cmo.pipelines.darwin.model.TimelineBrainSpineComposite;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.*;
@@ -15,16 +16,17 @@ import org.springframework.batch.item.ItemProcessor;
  *
  * @author jake
  */
-public class MSK_ImpactTimelineBrainSpineProcessor implements ItemProcessor<MSK_ImpactTimelineBrainSpine, String>{
+public class MSK_ImpactTimelineBrainSpineSpecimenProcessor implements ItemProcessor<TimelineBrainSpineComposite, TimelineBrainSpineComposite>{
     ObjectMapper mapper = new ObjectMapper();
     
     @Override
-    public String process(final MSK_ImpactTimelineBrainSpine darwinTimelineBrainSpine) throws Exception{
+    public TimelineBrainSpineComposite process(final TimelineBrainSpineComposite composite) throws Exception{
         List<String> record = new ArrayList<>();
-        for(String field : new MSK_ImpactTimelineBrainSpine().getFieldNames()){
-            record.add(darwinTimelineBrainSpine.getClass().getMethod("get"+field).invoke(darwinTimelineBrainSpine, null).toString());
+        for(String field : new MSK_ImpactTimelineBrainSpine().getSpecimenFields()){
+            record.add(composite.record.getClass().getMethod("get" + field).toString());
         }
+        composite.setResult2(StringUtils.join(record, "/t"));
         
-        return StringUtils.join(record, "\t");
+        return composite;
     }
 }
