@@ -63,7 +63,8 @@ public class MSK_ImpactTimelineBrainSpineTreatmentWriter implements ItemStreamWr
         writeList.clear();
         for(String result : items){
             String[] toAdd = result.split("\n");
-            if(!toAdd[2].equals(""))
+            if(toAdd.length>0)
+                if(!toAdd[2].isEmpty())
                 writeList.add(toAdd[2]);
         }
         if(!writeList.isEmpty()){
