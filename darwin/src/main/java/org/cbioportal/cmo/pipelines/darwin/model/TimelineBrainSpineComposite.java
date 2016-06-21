@@ -21,10 +21,10 @@ public class TimelineBrainSpineComposite {
     private MSK_ImpactTimelineBrainSpine record;
     
     public TimelineBrainSpineComposite(MSK_ImpactTimelineBrainSpine record){
-        this.statusResult = "";
-        this.specimenResult = "";
-        this.treatmentResult = "";
-        this.imagingResult = "";
+        this.statusResult = "0";
+        this.specimenResult = "0";
+        this.treatmentResult = "0";
+        this.imagingResult = "0";
         this.record = record;
     }
     
