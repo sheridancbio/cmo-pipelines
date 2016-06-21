@@ -16,7 +16,7 @@ public class TimelineBrainSpineComposite {
     
     private String result1;
     private String result2;
-    public MSK_ImpactTimelineBrainSpine record;
+    private MSK_ImpactTimelineBrainSpine record;
     
     public TimelineBrainSpineComposite(MSK_ImpactTimelineBrainSpine record){
         this.result1 = null;
@@ -36,6 +36,13 @@ public class TimelineBrainSpineComposite {
     }
     public void setResult2(String s){
         this.result2 = s;
+    }
+    
+    public MSK_ImpactTimelineBrainSpine getRecord(){
+        return this.record;
+    }
+    public void setRecord(MSK_ImpactTimelineBrainSpine record){
+        this.record = record;
     }
     
     
