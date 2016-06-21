@@ -72,6 +72,7 @@ public class MSK_ImpactTimelineBrainSpineCompositeWriter implements ItemStreamWr
     
     @Override
     public void write(List<? extends String> items) throws Exception{
+        delegates.clear();
         delegates.add(writer1);
         delegates.add(writer2);
         compWriter.setDelegates(delegates);

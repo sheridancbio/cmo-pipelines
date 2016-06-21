@@ -5,7 +5,6 @@
  */
 package org.cbioportal.cmo.pipelines.darwin;
 
-import org.cbioportal.cmo.pipelines.darwin.model.MSK_ImpactTimelineBrainSpine;
 import org.cbioportal.cmo.pipelines.darwin.model.TimelineBrainSpineComposite;
 
 import com.fasterxml.jackson.databind.ObjectMapper;

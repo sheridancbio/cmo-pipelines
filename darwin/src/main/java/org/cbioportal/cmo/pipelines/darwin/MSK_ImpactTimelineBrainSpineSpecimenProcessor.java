@@ -5,7 +5,6 @@
  */
 package org.cbioportal.cmo.pipelines.darwin;
 
-import org.cbioportal.cmo.pipelines.darwin.model.MSK_ImpactTimelineBrainSpine;
 import org.cbioportal.cmo.pipelines.darwin.model.TimelineBrainSpineComposite;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -22,7 +21,7 @@ public class MSK_ImpactTimelineBrainSpineSpecimenProcessor implements ItemProces
     @Override
     public TimelineBrainSpineComposite process(final TimelineBrainSpineComposite composite) throws Exception{
         List<String> recordPost = new ArrayList<>();
-        for(String field : new MSK_ImpactTimelineBrainSpine().getSpecimenFields()){
+        for(String field : composite.getRecord().getSpecimenFields()){
             recordPost.add(composite.getRecord().getClass().getMethod("get" + field).invoke(composite.getRecord()).toString());
         }
         composite.setResult2(StringUtils.join(recordPost, "\t"));
