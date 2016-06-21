@@ -22,6 +22,8 @@ public class MSK_ImpactTimelineBrainSpineCompositeProcessor implements ItemProce
     
     MSK_ImpactTimelineBrainSpineStatusProcessor processor1 = new MSK_ImpactTimelineBrainSpineStatusProcessor();
     MSK_ImpactTimelineBrainSpineSpecimenProcessor processor2 = new MSK_ImpactTimelineBrainSpineSpecimenProcessor();
+    MSK_ImpactTimelineBrainSpineTreatmentProcessor processor3 = new MSK_ImpactTimelineBrainSpineTreatmentProcessor();
+    MSK_ImpactTimelineBrainSpineImagingProcessor processor4 = new MSK_ImpactTimelineBrainSpineImagingProcessor();
     CompositeItemProcessor compProcessor = new CompositeItemProcessor();
     
     @Override
@@ -29,10 +31,12 @@ public class MSK_ImpactTimelineBrainSpineCompositeProcessor implements ItemProce
         delegates.clear();
         delegates.add(processor1);
         delegates.add(processor2);
+        delegates.add(processor3);
+        delegates.add(processor4);
         TimelineBrainSpineComposite composite = new TimelineBrainSpineComposite(darwinTimelineBrainSpine);
         compProcessor.setDelegates(delegates);
         compProcessor.process(composite);
-        String jointResult = composite.getStatusResult() + "\n" + composite.getSpecimenResult();
+        String jointResult = composite.getStatusResult() + "\n" + composite.getSpecimenResult() + "\n" + composite.getTreatmentResult() + "\n" + composite.getImagingResult();
         return jointResult;
     }
     

@@ -24,7 +24,9 @@ public class MSK_ImpactTimelineBrainSpineStatusProcessor implements ItemProcesso
         for(String field : composite.getRecord().getStatusFields()){
             recordPost.add(composite.getRecord().getClass().getMethod("get" + field).invoke(composite.getRecord()).toString());
         }
-        composite.setResult1(StringUtils.join(recordPost, "\t"));
+        if(recordPost.contains("STATUS")){
+            composite.setStatusResult(StringUtils.join(recordPost, "\t"));
+        }
         
         return composite;
     }

@@ -5,7 +5,6 @@
  */
 package org.cbioportal.cmo.pipelines.darwin;
 
-import org.cbioportal.cmo.pipelines.darwin.model.TimelineBrainSpineComposite;
 import org.cbioportal.cmo.pipelines.darwin.model.MSK_ImpactTimelineBrainSpine;
 
 import org.springframework.batch.item.*;
@@ -64,7 +63,7 @@ public class MSK_ImpactTimelineBrainSpineSpecimenWriter implements ItemStreamWri
         writeList.clear();
         for(String result : items){
             String[] toAdd = result.split("\n");
-            if(toAdd[1]!=null)
+            if(!toAdd[1].equals(""))
                 writeList.add(toAdd[1]);
         }
         if(!writeList.isEmpty()){

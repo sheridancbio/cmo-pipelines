@@ -291,29 +291,12 @@ public class MSK_ImpactTimelineBrainSpine {
     
     public List<String> getStatusFields(){
         List<String> fieldNames = new ArrayList<>();
-        //fieldNames.add("DMP_PATIENT_ID_MAX_BRAINSPINETMLN");
-        //fieldNames.add("DMP_PATIENT_ID_COUNT_BRAINSPINETMLN");
         fieldNames.add("DMP_PATIENT_ID_ALL_BRAINSPINETMLN");
         fieldNames.add("START_DATE");
-        //fieldNames.add("STOP_DATE");
         fieldNames.add("EVENT_TYPE");
-        /*fieldNames.add("TREATMENT_TYPE");
-        fieldNames.add("SUBTYPE");
-        fieldNames.add("AGENT");
-        fieldNames.add("SPECIMEN_REFERENCE_NUMBER");
-        fieldNames.add("SPECIMEN_SITE");
-        fieldNames.add("SPECIMEN_TYPE");*/
         fieldNames.add("STATUS");
         fieldNames.add("KARNOFSKY_PERFORMANCE_SCORE");
-        /*fieldNames.add("SURGERY_DETAILS");
-        fieldNames.add("EVENT_TYPE_DETAILED");
-        fieldNames.add("HISTOLOGY");
-        fieldNames.add("WHO_GRADE");
-        fieldNames.add("MGMT_STATUS");
-        fieldNames.add("SOURCE_PATHOLOGY");*/
         fieldNames.add("NOTE");
-        /*fieldNames.add("DIAGNOSTIC_TYPE");
-        fieldNames.add("DIAGNOSTIC_TYPE_DETAILED");*/
         fieldNames.add("SOURCE");
                 
         return fieldNames;
@@ -352,6 +335,58 @@ public class MSK_ImpactTimelineBrainSpine {
         fieldNames.add("SPECIMEN_REFERENCE_NUMBER");
         fieldNames.add("SPECIMEN_SITE");
         fieldNames.add("SPECIMEN_TYPE");
+        
+        return fieldNames;
+    }
+    
+    public List<String> getTreatmentFields(){
+        List<String> fieldNames = new ArrayList<>();
+        fieldNames.add("DMP_PATIENT_ID_ALL_BRAINSPINETMLN");
+        fieldNames.add("START_DATE");
+        fieldNames.add("EVENT_TYPE");
+        fieldNames.add("STOP_DATE");
+        fieldNames.add("TREATMENT_TYPE");
+        fieldNames.add("SUBTYPE");
+        fieldNames.add("AGENT");
+        fieldNames.add("NOTE");
+        fieldNames.add("SOURCE");
+        
+        return fieldNames;
+    }
+    public List<String> getTreatmentHeaders(){
+        List<String> fieldNames = new ArrayList<>();
+        fieldNames.add("PATIENT_ID");
+        fieldNames.add("START_DATE");
+        fieldNames.add("EVENT_TYPE");
+        fieldNames.add("STOP_DATE");
+        fieldNames.add("TREATMENT_TYPE");
+        fieldNames.add("SUBTYPE");
+        fieldNames.add("AGENT");
+        fieldNames.add("NOTE");
+        fieldNames.add("SOURCE");
+        
+        return fieldNames;
+    }
+    
+    public List<String> getImagingFields(){
+        List<String> fieldNames = new ArrayList<>();
+        fieldNames.add("DMP_PATIENT_ID_ALL_BRAINSPINETMLN");
+        fieldNames.add("START_DATE");
+        fieldNames.add("EVENT_TYPE");
+        fieldNames.add("DIAGNOSTIC_TYPE");
+        fieldNames.add("DIAGNOSTIC_TYPE_DETAILED");
+        fieldNames.add("SOURCE");
+        
+        return fieldNames;
+    }
+    public List<String> getImagingHeaders(){
+        List<String> fieldNames = new ArrayList<>();
+        fieldNames.add("PATIENT_ID");
+        fieldNames.add("START_DATE");
+        fieldNames.add("EVENT_TYPE");
+        fieldNames.add("DIAGNOSTIC_TYPE");
+        fieldNames.add("DIAGNOSTIC_TYPE_DETAILED");
+        fieldNames.add("SOURCE");
         
         return fieldNames;
     }

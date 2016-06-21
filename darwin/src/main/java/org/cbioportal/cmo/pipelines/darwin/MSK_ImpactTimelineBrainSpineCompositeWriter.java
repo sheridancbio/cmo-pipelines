@@ -33,17 +33,29 @@ public class MSK_ImpactTimelineBrainSpineCompositeWriter implements ItemStreamWr
     @Value("${darwin.timeline_bs_specimen}")
     private String specimenFilename;
     
+    @Value("${darwin.timeline_bs_treatment}")
+    private String treatmentFilename;
+    
+    @Value("${darwin.timeline_bs_imaging}")
+    private String imagingFilename;
+    
     private String statusFile;
     private String specimenFile;
+    private String treatmentFile;
+    private String imagingFile;
     
     List<ItemStreamWriter> delegates = new ArrayList<>();
     MSK_ImpactTimelineBrainSpineStatusWriter writer1 = new MSK_ImpactTimelineBrainSpineStatusWriter();
     MSK_ImpactTimelineBrainSpineSpecimenWriter writer2 = new MSK_ImpactTimelineBrainSpineSpecimenWriter();
+    MSK_ImpactTimelineBrainSpineTreatmentWriter writer3 = new MSK_ImpactTimelineBrainSpineTreatmentWriter();
+    MSK_ImpactTimelineBrainSpineImagingWriter writer4 = new MSK_ImpactTimelineBrainSpineImagingWriter();
     CompositeItemWriter compWriter = new CompositeItemWriter();
     @Override
     public void close() throws ItemStreamException{
         writer1.close();
         writer2.close();
+        writer3.close();
+        writer4.close();
         compWriter.close();
     }
         
@@ -51,20 +63,25 @@ public class MSK_ImpactTimelineBrainSpineCompositeWriter implements ItemStreamWr
     public void open(ExecutionContext executionContext) throws ItemStreamException{
         if(stagingDirectory.endsWith("/")){
             statusFile = stagingDirectory + statusFilename;
+            specimenFile = stagingDirectory + specimenFilename;
+            treatmentFile = stagingDirectory + treatmentFilename;
+            imagingFile = stagingDirectory + imagingFilename;
         }
         else{
             statusFile = stagingDirectory + "/" + statusFilename;
-        }
-        if(stagingDirectory.endsWith("/")){
-            specimenFile = stagingDirectory + specimenFilename;
-        }
-        else{
             specimenFile = stagingDirectory + "/" + specimenFilename;
+            treatmentFile = stagingDirectory + "/" + treatmentFilename;
+            imagingFile = stagingDirectory + "/" + imagingFilename;
         }
+        
         writer1.setStagingFile(statusFile);
         writer2.setStagingFile(specimenFile); 
+        writer3.setStagingFile(treatmentFile);
+        writer4.setStagingFile(imagingFile);
         writer1.open(executionContext);
         writer2.open(executionContext);
+        writer3.open(executionContext);
+        writer4.open(executionContext);
     }
     
     @Override
@@ -75,6 +92,8 @@ public class MSK_ImpactTimelineBrainSpineCompositeWriter implements ItemStreamWr
         delegates.clear();
         delegates.add(writer1);
         delegates.add(writer2);
+        delegates.add(writer3);
+        delegates.add(writer4);
         compWriter.setDelegates(delegates);
         compWriter.write(items);
     }

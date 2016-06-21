@@ -20,7 +20,7 @@ import org.apache.commons.lang.StringUtils;
  *
  * @author jake
  */
-public class MSK_ImpactTimelineBrainSpineStatusWriter implements ItemStreamWriter<String>{
+public class MSK_ImpactTimelineBrainSpineTreatmentWriter implements ItemStreamWriter<String>{
     @Value("#{jobParameters[stagingDirectory]}")
     private String stagingDirectory;
     
@@ -42,7 +42,7 @@ public class MSK_ImpactTimelineBrainSpineStatusWriter implements ItemStreamWrite
         flatFileItemWriter.setHeaderCallback(new FlatFileHeaderCallback(){
             @Override
             public void writeHeader(Writer writer) throws IOException{
-                writer.write(StringUtils.join(new MSK_ImpactTimelineBrainSpine().getStatusHeaders(), "\t"));
+                writer.write(StringUtils.join(new MSK_ImpactTimelineBrainSpine().getTreatmentHeaders(), "\t"));
             }
         });
         
@@ -63,8 +63,8 @@ public class MSK_ImpactTimelineBrainSpineStatusWriter implements ItemStreamWrite
         writeList.clear();
         for(String result : items){
             String[] toAdd = result.split("\n");
-            if(!toAdd[0].equals(""))
-                writeList.add(toAdd[0]);
+            if(!toAdd[2].equals(""))
+                writeList.add(toAdd[2]);
         }
         if(!writeList.isEmpty()){
             flatFileItemWriter.write(writeList);

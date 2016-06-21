@@ -15,19 +15,20 @@ import org.springframework.batch.item.ItemProcessor;
  *
  * @author jake
  */
-public class MSK_ImpactTimelineBrainSpineSpecimenProcessor implements ItemProcessor<TimelineBrainSpineComposite, TimelineBrainSpineComposite>{
+public class MSK_ImpactTimelineBrainSpineTreatmentProcessor implements ItemProcessor<TimelineBrainSpineComposite, TimelineBrainSpineComposite>{
     ObjectMapper mapper = new ObjectMapper();
     
     @Override
     public TimelineBrainSpineComposite process(final TimelineBrainSpineComposite composite) throws Exception{
         List<String> recordPost = new ArrayList<>();
-        for(String field : composite.getRecord().getSpecimenFields()){
+        for(String field : composite.getRecord().getTreatmentFields()){
             recordPost.add(composite.getRecord().getClass().getMethod("get" + field).invoke(composite.getRecord()).toString());
         }
-        if(recordPost.contains("SPECIMEN")){
-            composite.setSpecimenResult(StringUtils.join(recordPost, "\t"));
+        if(recordPost.contains("TREATMENT")){
+            composite.setTreatmentResult(StringUtils.join(recordPost, "\t"));
         }
         
         return composite;
     }
 }
+
