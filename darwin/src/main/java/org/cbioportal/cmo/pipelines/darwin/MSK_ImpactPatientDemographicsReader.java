@@ -67,7 +67,6 @@ public class MSK_ImpactPatientDemographicsReader implements ItemStreamReader<MSK
                 .from($(qDPD))
                 .join($(qDPIR))
                 .on($(qDPD.getDMP_ID_DEMO()).eq($(qDPIR.getDMP_ID_ICDO())))
-                .orderBy($(qDPD.getDMP_ID_DEMO()).asc())
                 .orderBy($(qDPIR.getTUMOR_YEAR()).asc())
                 .fetch();
         darwinDemographicsResults.addAll(darwinQueryFactory.select(Projections.constructor(MSK_ImpactPatientDemographics.class,
