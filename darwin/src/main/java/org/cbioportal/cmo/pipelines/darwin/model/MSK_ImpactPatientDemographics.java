@@ -224,6 +224,11 @@ public class MSK_ImpactPatientDemographics {
     public void setPT_MRN_CREATE_YEAR(String PT_MRN_CREATE_YEAR) {
         this.PT_MRN_CREATE_YEAR = PT_MRN_CREATE_YEAR != null ? PT_MRN_CREATE_YEAR : "N/A";
     }
+    //Note: update 2016 yearly because lazy
+    public String getDARWIN_PATIENT_AGE(){
+        Integer i = 2016-this.PT_BIRTH_YEAR;
+        return i.toString();
+    }
 
     @Override
     public String toString() {
@@ -232,11 +237,12 @@ public class MSK_ImpactPatientDemographics {
 
     public List<String> getFieldNames() {
         List<String> fieldNames = new ArrayList<>();
-        fieldNames.add("DMP_ID_DEMO");
-        fieldNames.add("GENDER");
+        fieldNames.add("DARWIN_PATIENT_AGE");
         fieldNames.add("RACE");
         fieldNames.add("RELIGION");
+        fieldNames.add("GENDER");
         fieldNames.add("VITAL_STATUS");
+        fieldNames.add("DMP_ID_DEMO");
         fieldNames.add("AGE_AT_DIAGNOSIS");
 
         return fieldNames;
@@ -244,11 +250,12 @@ public class MSK_ImpactPatientDemographics {
     }
     public List<String> getHeaders() {
         List<String> fieldNames = new ArrayList<>();
-        fieldNames.add("PATIENT_ID");
-        fieldNames.add("DARWIN_SEX");
+        fieldNames.add("DARWIN_PATIENT_AGE");
         fieldNames.add("DARWIN_RACE");
         fieldNames.add("DARWIN_RELIGION");
+        fieldNames.add("DARWIN_SEX");
         fieldNames.add("DARWIN_VITAL_STATUS");
+        fieldNames.add("PATIENT_ID");
         fieldNames.add("DARWIN_AGE_AT_DIAGNOSIS");
 
         return fieldNames;
