@@ -76,7 +76,7 @@ public class MSK_ImpactPatientDemographics {
     }
 
     public void setTUMOR_YEAR(Integer TUMOR_YEAR) {
-        this.TUMOR_YEAR = TUMOR_YEAR != null ? TUMOR_YEAR : -1;
+        this.TUMOR_YEAR = TUMOR_YEAR != null ? TUMOR_YEAR : 0;
     }
     
     public String getAGE_AT_DIAGNOSIS(){
@@ -182,7 +182,7 @@ public class MSK_ImpactPatientDemographics {
     }
 
     public void setPT_BIRTH_YEAR(Integer PT_BIRTH_YEAR) {
-        this.PT_BIRTH_YEAR = PT_BIRTH_YEAR != null ? PT_BIRTH_YEAR : -1;
+        this.PT_BIRTH_YEAR = PT_BIRTH_YEAR != null ? PT_BIRTH_YEAR : 0;
     }
 
     public String getPT_SEX_DESC() {
@@ -226,8 +226,13 @@ public class MSK_ImpactPatientDemographics {
     }
     //Note: update 2016 yearly because lazy
     public String getDARWIN_PATIENT_AGE(){
-        Integer i = 2016-this.PT_BIRTH_YEAR;
-        return i.toString();
+        if(this.PT_BIRTH_YEAR>0){
+            Integer i = 2016-this.PT_BIRTH_YEAR;
+            return i.toString();
+        }
+        else{
+            return "N/A";
+        }
     }
 
     @Override
