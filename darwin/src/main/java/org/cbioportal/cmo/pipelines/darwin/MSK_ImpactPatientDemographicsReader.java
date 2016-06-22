@@ -97,6 +97,7 @@ public class MSK_ImpactPatientDemographicsReader implements ItemStreamReader<MSK
                     while (true) {
                         darwinDemographicsResults.remove(0);
                         if (darwinDemographicsResults.isEmpty()) {
+                            System.out.println("Imported " + darwinDemographicsIDs.size() + " records from Demographics View.");
                             return null;
                         } else if (!darwinDemographicsIDs.contains(darwinDemographicsResults.get(0).getDMP_ID_DEMO())) {
                             break;
@@ -108,7 +109,8 @@ public class MSK_ImpactPatientDemographicsReader implements ItemStreamReader<MSK
             }
             darwinDemographicsIDs.add(darwinDemographicsResults.get(0).getDMP_ID_DEMO());
             return darwinDemographicsResults.remove(0);
-        }      
+        }
+        System.out.println("Imported " + darwinDemographicsIDs.size() + " records from Demographics View.");
         return null;
     }
 }
