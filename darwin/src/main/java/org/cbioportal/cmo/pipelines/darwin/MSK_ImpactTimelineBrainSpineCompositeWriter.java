@@ -6,6 +6,8 @@
 package org.cbioportal.cmo.pipelines.darwin;
 
 import org.springframework.batch.item.*;
+
+import org.springframework.batch.item.file.*;
 import org.springframework.beans.factory.annotation.Value;
 
 import java.util.*;
@@ -16,6 +18,7 @@ import org.springframework.batch.item.support.CompositeItemWriter;
  */
 public class MSK_ImpactTimelineBrainSpineCompositeWriter implements ItemStreamWriter<String>{
     
+    private final FlatFileItemWriter<String> flatFileItemWriter = new FlatFileItemWriter<>();
     
     @Value("#{jobParameters[stagingDirectory]}")
     private String stagingDirectory;

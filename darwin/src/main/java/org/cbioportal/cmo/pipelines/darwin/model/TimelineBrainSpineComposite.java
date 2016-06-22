@@ -36,7 +36,6 @@ public class TimelineBrainSpineComposite {
     public void setSurgeryResult(String s){
         this.surgeryResult = s;
     }
-    
     public String getImagingResult(){
         return imagingResult;
     }
