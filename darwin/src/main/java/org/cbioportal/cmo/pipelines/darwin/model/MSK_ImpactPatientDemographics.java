@@ -228,7 +228,12 @@ public class MSK_ImpactPatientDemographics {
     public String getDARWIN_PATIENT_AGE(){
         if(this.PT_BIRTH_YEAR>0){
             Integer i = 2016-this.PT_BIRTH_YEAR;
-            return i.toString();
+            //Age > 90 is considered identifying
+            if (i > 90) {
+                return i.toString();
+            } else {
+                return "N/A";
+            }
         }
         else{
             return "N/A";

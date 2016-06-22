@@ -92,21 +92,28 @@ public class MSK_ImpactPatientDemographicsReader implements ItemStreamReader<MSK
     @Override
     public MSK_ImpactPatientDemographics read() throws Exception{
         if(!darwinDemographicsResults.isEmpty()){
+            //This logic flow is to ensure one record for each patient as multiple tumor years may exist for each ID
             if (!darwinDemographicsIDs.isEmpty()) {
+                //Checks if next ID has been processed yet
                 if (darwinDemographicsIDs.contains(darwinDemographicsResults.get(0).getDMP_ID_DEMO())) {
                     while (true) {
-                        darwinDemographicsResults.remove(0);
+                        darwinDemographicsResults.remove(0);//Pops off any records already sent to processor
+                        //Check for end of imports
                         if (darwinDemographicsResults.isEmpty()) {
                             System.out.println("Imported " + darwinDemographicsIDs.size() + " records from Demographics View.");
                             return null;
-                        } else if (!darwinDemographicsIDs.contains(darwinDemographicsResults.get(0).getDMP_ID_DEMO())) {
+                        } 
+                        //Checks if the new ID has been processed yet
+                        else if (!darwinDemographicsIDs.contains(darwinDemographicsResults.get(0).getDMP_ID_DEMO())) {
                             break;
                         }
                     }
                 }
+                //Pop off to processor and add new ID to list
                 darwinDemographicsIDs.add(darwinDemographicsResults.get(0).getDMP_ID_DEMO());
                 return darwinDemographicsResults.remove(0);
             }
+            //Pop off to processor and add new ID to list
             darwinDemographicsIDs.add(darwinDemographicsResults.get(0).getDMP_ID_DEMO());
             return darwinDemographicsResults.remove(0);
         }
