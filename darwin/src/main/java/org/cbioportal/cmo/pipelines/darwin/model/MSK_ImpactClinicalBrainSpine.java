@@ -150,33 +150,33 @@ public class MSK_ImpactClinicalBrainSpine {
     
     public List<String> getFieldNames(){
         List<String> fieldNames = new ArrayList<>();
-        fieldNames.add("HISTOLOGY");
-        fieldNames.add("WHO_GRADE");
-        fieldNames.add("MGMT_STATUS");
         fieldNames.add("DMP_PATIENT_ID_BRAINSPINECLIN");
         fieldNames.add("DMP_SAMPLE_ID_BRAINSPINECLIN");
+        fieldNames.add("AGE");
         fieldNames.add("SEX");
         fieldNames.add("OS_STATUS");
         fieldNames.add("OS_MONTHS");
         fieldNames.add("DFS_STATUS");
         fieldNames.add("DFS_MONTHS");
-        fieldNames.add("AGE");
+        fieldNames.add("HISTOLOGY");
+        fieldNames.add("WHO_GRADE");
+        fieldNames.add("MGMT_STATUS");
         
         return fieldNames;
     }
     public List<String> getHeaders(){
         List<String> fieldNames = new ArrayList<>();
-        fieldNames.add("HISTOLOGICAL_DIAGNOSIS");
-        fieldNames.add("WHO_GRADE");
-        fieldNames.add("MGMT_STATUS");
         fieldNames.add("PATIENT_ID");
         fieldNames.add("SAMPLE_ID");
+        fieldNames.add("AGE");
         fieldNames.add("SEX");
         fieldNames.add("OS_STATUS");
         fieldNames.add("OS_MONTHS");
         fieldNames.add("DFS_STATUS");
         fieldNames.add("DFS_MONTHS");
-        fieldNames.add("AGE");
+        fieldNames.add("HISTOLOGICAL_DIAGNOSIS");
+        fieldNames.add("WHO_GRADE");
+        fieldNames.add("MGMT_STATUS");
         
         return fieldNames;
     }

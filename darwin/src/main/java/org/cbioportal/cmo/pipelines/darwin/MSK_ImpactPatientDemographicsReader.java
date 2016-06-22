@@ -34,7 +34,7 @@ public class MSK_ImpactPatientDemographicsReader implements ItemStreamReader<MSK
     SQLQueryFactory darwinQueryFactory;
     
     private List<MSK_ImpactPatientDemographics> darwinDemographicsResults;
-    
+    private List<String> darwinDemographicsIDs = new ArrayList<>();
     @Override
     public void open(ExecutionContext executionContext) throws ItemStreamException{
         this.darwinDemographicsResults = getDarwinDemographicsResults();
@@ -45,35 +45,40 @@ public class MSK_ImpactPatientDemographicsReader implements ItemStreamReader<MSK
         System.out.println("Start of Darwin Patient Demographics View Import...");
         MSK_ImpactPatientDemographics qDPD = alias(MSK_ImpactPatientDemographics.class, patientDemographicsView);
         MSK_ImpactPatientIcdoRecord qDPIR = alias(MSK_ImpactPatientIcdoRecord.class, patientIcdoView);
-        List<MSK_ImpactPatientDemographics> darwinDemographicsResults = new ArrayList<>();
-        List<String> darwinPatientID = darwinQueryFactory.selectDistinct($(qDPD.getDMP_ID_DEMO())).from($(qDPD)).where($(qDPD.getDMP_ID_DEMO()).isNotEmpty()).fetch();
-        for(String patientID : darwinPatientID){
-            MSK_ImpactPatientDemographics darwinDemographicsResult = darwinQueryFactory.select(Projections.constructor(MSK_ImpactPatientDemographics.class,
-                            $(qDPD.getPT_ID_DEMO()), $(qDPD.getDMP_ID_DEMO()), $(qDPD.getGENDER()),
-                            $(qDPD.getRACE()), $(qDPD.getRELIGION()), $(qDPD.getAGE_AT_DATE_OF_DEATH_IN_DAYS()),
-                            $(qDPD.getDEATH_SOURCE_DESCRIPTION()), $(qDPD.getVITAL_STATUS()), $(qDPD.getPT_COUNTRY()), $(qDPD.getPT_STATE()),
-                            $(qDPD.getPT_ZIP3_CD()), $(qDPD.getPT_BIRTH_YEAR()), $(qDPD.getPT_SEX_DESC()),
-                            $(qDPD.getPT_VITAL_STATUS()), $(qDPD.getPT_MARITAL_STS_DESC()), $(qDPD.getPT_DEATH_YEAR()), $(qDPD.getPT_MRN_CREATE_YEAR()), $(qDPIR.getTUMOR_YEAR())))
-                    .from($(qDPD))
-                    .join($(qDPIR))
-                    .on($(qDPD.getDMP_ID_DEMO()).eq($(qDPIR.getDMP_ID_ICDO())))
-                    .where($(qDPD.getDMP_ID_DEMO()).eq(patientID))
-                    .orderBy($(qDPIR.getTUMOR_YEAR()).asc())
-                    .fetchFirst();
-            if(darwinDemographicsResult!=null){
-                darwinDemographicsResults.add(darwinDemographicsResult);
-            }
-            else{
-                darwinDemographicsResult = darwinQueryFactory.select(Projections.constructor(MSK_ImpactPatientDemographics.class, $(qDPD.getDMP_ID_DEMO()), $(qDPD.getGENDER()),
-                            $(qDPD.getRACE()), $(qDPD.getRELIGION()),$(qDPD.getVITAL_STATUS())))
-                        .from($(qDPD))
-                        .fetchFirst();
-                darwinDemographicsResults.add(darwinDemographicsResult);
-            }
+        List<MSK_ImpactPatientDemographics> darwinDemographicsResults = darwinQueryFactory.select(Projections.constructor(MSK_ImpactPatientDemographics.class,
+                $(qDPD.getPT_ID_DEMO()),
+                $(qDPD.getDMP_ID_DEMO()),
+                $(qDPD.getGENDER()),
+                $(qDPD.getRACE()),
+                $(qDPD.getRELIGION()),
+                $(qDPD.getAGE_AT_DATE_OF_DEATH_IN_DAYS()),
+                $(qDPD.getDEATH_SOURCE_DESCRIPTION()),
+                $(qDPD.getVITAL_STATUS()),
+                $(qDPD.getPT_COUNTRY()),
+                $(qDPD.getPT_STATE()),
+                $(qDPD.getPT_ZIP3_CD()),
+                $(qDPD.getPT_BIRTH_YEAR()),
+                $(qDPD.getPT_SEX_DESC()),
+                $(qDPD.getPT_VITAL_STATUS()),
+                $(qDPD.getPT_MARITAL_STS_DESC()),
+                $(qDPD.getPT_DEATH_YEAR()),
+                $(qDPD.getPT_MRN_CREATE_YEAR()),
+                $(qDPIR.getTUMOR_YEAR())))
+                .from($(qDPD))
+                .join($(qDPIR))
+                .on($(qDPD.getDMP_ID_DEMO()).eq($(qDPIR.getDMP_ID_ICDO())))
+                .orderBy($(qDPIR.getTUMOR_YEAR()).asc())
+                .fetch();
+        darwinDemographicsResults.addAll(darwinQueryFactory.select(Projections.constructor(MSK_ImpactPatientDemographics.class,
+                $(qDPD.getDMP_ID_DEMO()),
+                $(qDPD.getGENDER()),
+                $(qDPD.getRACE()),
+                $(qDPD.getRELIGION()),
+                $(qDPD.getVITAL_STATUS())))
+                .from($(qDPD))
+                .orderBy($(qDPD.getDMP_ID_DEMO()).asc())
+                .fetch());
 
-        }
-            
-        System.out.println("Imported " + darwinDemographicsResults.size() + " records from Darwin Patient Demographics View.");
         return darwinDemographicsResults;
     }
     
@@ -86,8 +91,32 @@ public class MSK_ImpactPatientDemographicsReader implements ItemStreamReader<MSK
     @Override
     public MSK_ImpactPatientDemographics read() throws Exception{
         if(!darwinDemographicsResults.isEmpty()){
+            //This logic flow is to ensure one record for each patient as multiple tumor years may exist for each ID
+            if (!darwinDemographicsIDs.isEmpty()) {
+                //Checks if next ID has been processed yet
+                if (darwinDemographicsIDs.contains(darwinDemographicsResults.get(0).getDMP_ID_DEMO())) {
+                    while (true) {
+                        darwinDemographicsResults.remove(0);//Pops off any records already sent to processor
+                        //Check for end of imports
+                        if (darwinDemographicsResults.isEmpty()) {
+                            System.out.println("Imported " + darwinDemographicsIDs.size() + " records from Demographics View.");
+                            return null;
+                        } 
+                        //Checks if the new ID has been processed yet
+                        else if (!darwinDemographicsIDs.contains(darwinDemographicsResults.get(0).getDMP_ID_DEMO())) {
+                            break;
+                        }
+                    }
+                }
+                //Pop off to processor and add new ID to list
+                darwinDemographicsIDs.add(darwinDemographicsResults.get(0).getDMP_ID_DEMO());
+                return darwinDemographicsResults.remove(0);
+            }
+            //Pop off to processor and add new ID to list
+            darwinDemographicsIDs.add(darwinDemographicsResults.get(0).getDMP_ID_DEMO());
             return darwinDemographicsResults.remove(0);
-        }      
+        }
+        System.out.println("Imported " + darwinDemographicsIDs.size() + " records from Demographics View.");
         return null;
     }
 }

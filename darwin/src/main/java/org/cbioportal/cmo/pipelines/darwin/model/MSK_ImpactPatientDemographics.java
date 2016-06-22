@@ -52,13 +52,13 @@ public class MSK_ImpactPatientDemographics {
         this.PT_COUNTRY = PT_COUNTRY != null ? PT_COUNTRY : "N/A";
         this.PT_STATE = PT_STATE != null ? PT_STATE : "N/A";
         this.PT_ZIP3_CD = PT_ZIP3_CD != null ? PT_ZIP3_CD : "N/A";
-        this.PT_BIRTH_YEAR = PT_BIRTH_YEAR != null ? PT_BIRTH_YEAR : -1;
+        this.PT_BIRTH_YEAR = PT_BIRTH_YEAR != null ? PT_BIRTH_YEAR : 0;
         this.PT_SEX_DESC = PT_SEX_DESC != null ? PT_SEX_DESC : "N/A";
         this.PT_VITAL_STATUS = PT_VITAL_STATUS != null ? PT_VITAL_STATUS : "N/A";
         this.PT_MARITAL_STS_DESC = PT_MARITAL_STS_DESC != null ? PT_MARITAL_STS_DESC : "N/A";
         this.PT_DEATH_YEAR = PT_DEATH_YEAR != null ? PT_DEATH_YEAR : "N/A";
         this.PT_MRN_CREATE_YEAR = PT_MRN_CREATE_YEAR != null ? PT_MRN_CREATE_YEAR : "N/A";
-        this.TUMOR_YEAR = TUMOR_YEAR != null ? TUMOR_YEAR : -1;
+        this.TUMOR_YEAR = TUMOR_YEAR != null ? TUMOR_YEAR : 0;
     }
     
     public MSK_ImpactPatientDemographics(String DMP_ID_DEMO, String GENDER, String RACE, String RELIGION, String VITAL_STATUS){
@@ -76,11 +76,11 @@ public class MSK_ImpactPatientDemographics {
     }
 
     public void setTUMOR_YEAR(Integer TUMOR_YEAR) {
-        this.TUMOR_YEAR = TUMOR_YEAR != null ? TUMOR_YEAR : -1;
+        this.TUMOR_YEAR = TUMOR_YEAR != null ? TUMOR_YEAR : 0;
     }
     
     public String getAGE_AT_DIAGNOSIS(){
-        if(this.PT_BIRTH_YEAR>0 && this.TUMOR_YEAR>0){
+        if(this.PT_BIRTH_YEAR>0 && this.TUMOR_YEAR>0 && this.TUMOR_YEAR>this.PT_BIRTH_YEAR){
                 Integer i = this.TUMOR_YEAR - this.PT_BIRTH_YEAR;
                 return i.toString();
         }
@@ -182,7 +182,7 @@ public class MSK_ImpactPatientDemographics {
     }
 
     public void setPT_BIRTH_YEAR(Integer PT_BIRTH_YEAR) {
-        this.PT_BIRTH_YEAR = PT_BIRTH_YEAR != null ? PT_BIRTH_YEAR : -1;
+        this.PT_BIRTH_YEAR = PT_BIRTH_YEAR != null ? PT_BIRTH_YEAR : 0;
     }
 
     public String getPT_SEX_DESC() {
@@ -224,6 +224,21 @@ public class MSK_ImpactPatientDemographics {
     public void setPT_MRN_CREATE_YEAR(String PT_MRN_CREATE_YEAR) {
         this.PT_MRN_CREATE_YEAR = PT_MRN_CREATE_YEAR != null ? PT_MRN_CREATE_YEAR : "N/A";
     }
+    //Note: update 2016 yearly because lazy
+    public String getDARWIN_PATIENT_AGE(){
+        if(this.PT_BIRTH_YEAR>0){
+            Integer i = 2016-this.PT_BIRTH_YEAR;
+            //Age > 90 is considered identifying
+            if (i < 90) {
+                return i.toString();
+            } else {
+                return "N/A";
+            }
+        }
+        else{
+            return "N/A";
+        }
+    }
 
     @Override
     public String toString() {
@@ -232,11 +247,12 @@ public class MSK_ImpactPatientDemographics {
 
     public List<String> getFieldNames() {
         List<String> fieldNames = new ArrayList<>();
-        fieldNames.add("DMP_ID_DEMO");
-        fieldNames.add("GENDER");
+        fieldNames.add("DARWIN_PATIENT_AGE");
         fieldNames.add("RACE");
         fieldNames.add("RELIGION");
+        fieldNames.add("GENDER");
         fieldNames.add("VITAL_STATUS");
+        fieldNames.add("DMP_ID_DEMO");
         fieldNames.add("AGE_AT_DIAGNOSIS");
 
         return fieldNames;
@@ -244,11 +260,12 @@ public class MSK_ImpactPatientDemographics {
     }
     public List<String> getHeaders() {
         List<String> fieldNames = new ArrayList<>();
-        fieldNames.add("PATIENT_ID");
-        fieldNames.add("DARWIN_SEX");
+        fieldNames.add("DARWIN_PATIENT_AGE");
         fieldNames.add("DARWIN_RACE");
         fieldNames.add("DARWIN_RELIGION");
+        fieldNames.add("DARWIN_SEX");
         fieldNames.add("DARWIN_VITAL_STATUS");
+        fieldNames.add("PATIENT_ID");
         fieldNames.add("DARWIN_AGE_AT_DIAGNOSIS");
 
         return fieldNames;
