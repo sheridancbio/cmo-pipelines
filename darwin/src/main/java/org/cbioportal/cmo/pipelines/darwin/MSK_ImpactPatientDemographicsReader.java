@@ -85,15 +85,14 @@ public class MSK_ImpactPatientDemographicsReader implements ItemStreamReader<MSK
     public MSK_ImpactPatientDemographics read() throws Exception{
         if(!darwinDemographicsResults.isEmpty()){
             if (!darwinDemographicsIDs.isEmpty()) {
-                while (darwinDemographicsIDs.contains(darwinDemographicsResults.get(0).getDMP_ID_DEMO())) {
-                    if (!darwinDemographicsResults.isEmpty()) {
+                if (darwinDemographicsIDs.contains(darwinDemographicsResults.get(0).getDMP_ID_DEMO())) {
+                    while (true) {
                         darwinDemographicsResults.remove(0);
-                        if(darwinDemographicsResults.isEmpty()){
+                        if (darwinDemographicsResults.isEmpty()) {
                             return null;
+                        } else if (!darwinDemographicsIDs.contains(darwinDemographicsResults.get(0).getDMP_ID_DEMO())) {
+                            break;
                         }
-                    } 
-                    else {
-                        return null;
                     }
                 }
                 darwinDemographicsIDs.add(darwinDemographicsResults.get(0).getDMP_ID_DEMO());
