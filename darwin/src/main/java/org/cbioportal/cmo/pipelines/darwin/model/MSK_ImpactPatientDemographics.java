@@ -229,7 +229,7 @@ public class MSK_ImpactPatientDemographics {
         if(this.PT_BIRTH_YEAR>0){
             Integer i = 2016-this.PT_BIRTH_YEAR;
             //Age > 90 is considered identifying
-            if (i > 90) {
+            if (i < 90) {
                 return i.toString();
             } else {
                 return "N/A";
