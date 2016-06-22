@@ -34,7 +34,7 @@ public class MSK_ImpactPatientDemographicsReader implements ItemStreamReader<MSK
     SQLQueryFactory darwinQueryFactory;
     
     private List<MSK_ImpactPatientDemographics> darwinDemographicsResults;
-    private List<String> darwinDemographicsIDs;
+    private List<String> darwinDemographicsIDs = new ArrayList<>();
     @Override
     public void open(ExecutionContext executionContext) throws ItemStreamException{
         this.darwinDemographicsResults = getDarwinDemographicsResults();
