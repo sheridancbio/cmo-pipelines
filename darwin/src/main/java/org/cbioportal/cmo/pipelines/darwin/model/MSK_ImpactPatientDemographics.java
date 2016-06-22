@@ -52,13 +52,13 @@ public class MSK_ImpactPatientDemographics {
         this.PT_COUNTRY = PT_COUNTRY != null ? PT_COUNTRY : "N/A";
         this.PT_STATE = PT_STATE != null ? PT_STATE : "N/A";
         this.PT_ZIP3_CD = PT_ZIP3_CD != null ? PT_ZIP3_CD : "N/A";
-        this.PT_BIRTH_YEAR = PT_BIRTH_YEAR != null ? PT_BIRTH_YEAR : -1;
+        this.PT_BIRTH_YEAR = PT_BIRTH_YEAR != null ? PT_BIRTH_YEAR : 0;
         this.PT_SEX_DESC = PT_SEX_DESC != null ? PT_SEX_DESC : "N/A";
         this.PT_VITAL_STATUS = PT_VITAL_STATUS != null ? PT_VITAL_STATUS : "N/A";
         this.PT_MARITAL_STS_DESC = PT_MARITAL_STS_DESC != null ? PT_MARITAL_STS_DESC : "N/A";
         this.PT_DEATH_YEAR = PT_DEATH_YEAR != null ? PT_DEATH_YEAR : "N/A";
         this.PT_MRN_CREATE_YEAR = PT_MRN_CREATE_YEAR != null ? PT_MRN_CREATE_YEAR : "N/A";
-        this.TUMOR_YEAR = TUMOR_YEAR != null ? TUMOR_YEAR : -1;
+        this.TUMOR_YEAR = TUMOR_YEAR != null ? TUMOR_YEAR : 0;
     }
     
     public MSK_ImpactPatientDemographics(String DMP_ID_DEMO, String GENDER, String RACE, String RELIGION, String VITAL_STATUS){
@@ -80,7 +80,7 @@ public class MSK_ImpactPatientDemographics {
     }
     
     public String getAGE_AT_DIAGNOSIS(){
-        if(this.PT_BIRTH_YEAR>0 && this.TUMOR_YEAR>0){
+        if(this.PT_BIRTH_YEAR>0 && this.TUMOR_YEAR>0 && this.TUMOR_YEAR>this.PT_BIRTH_YEAR){
                 Integer i = this.TUMOR_YEAR - this.PT_BIRTH_YEAR;
                 return i.toString();
         }
