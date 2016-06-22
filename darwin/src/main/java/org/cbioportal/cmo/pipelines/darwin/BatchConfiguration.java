@@ -66,7 +66,7 @@ public class BatchConfiguration {
         return jobBuilderFactory.get(MSK_IMPACT_JOB)
                 .start(stepDPD())
                 .next(stepDTBS())
-                .next(stepDPIR())
+                //.next(stepDPIR())
                 .next(stepDCBS())
                 .build();
     }
