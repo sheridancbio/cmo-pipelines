@@ -85,7 +85,7 @@ public class MSK_ImpactPatientDemographicsReader implements ItemStreamReader<MSK
     public MSK_ImpactPatientDemographics read() throws Exception{
         if(!darwinDemographicsResults.isEmpty()){
             if (!darwinDemographicsIDs.isEmpty()) {
-                while (darwinDemographicsIDs.contains(darwinDemographicsResults.get(0).getDMP_ID_DEMO())) {
+                while (darwinDemographicsIDs.contains(darwinDemographicsResults.get(0).getDMP_ID_DEMO())&&!darwinDemographicsResults.isEmpty()) {
                     if (!darwinDemographicsResults.isEmpty()) {
                         darwinDemographicsResults.remove(0);
                     } else {
