@@ -96,6 +96,8 @@ public class MSK_ImpactPatientDemographicsReader implements ItemStreamReader<MSK
                         return null;
                     }
                 }
+                darwinDemographicsIDs.add(darwinDemographicsResults.get(0).getDMP_ID_DEMO());
+                return darwinDemographicsResults.remove(0);
             }
             darwinDemographicsIDs.add(darwinDemographicsResults.get(0).getDMP_ID_DEMO());
             return darwinDemographicsResults.remove(0);
