@@ -408,7 +408,7 @@ public class MSK_ImpactTimelineBrainSpine {
     }
     public List<String> getSurgeryHeaders(){
         List<String> fieldNames = new ArrayList<>();
-        fieldNames.add("DMP_PATIENT_ID_ALL_BRAINSPINETMLN");
+        fieldNames.add("PATIENT_ID");
         fieldNames.add("START_DATE");
         fieldNames.add("EVENT_TYPE");
         fieldNames.add("MGMT_STATUS");
