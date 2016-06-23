@@ -9,6 +9,7 @@ import org.cbioportal.cmo.pipelines.darwin.model.MSK_ImpactTimelineBrainSpine;
 import org.cbioportal.cmo.pipelines.darwin.model.TimelineBrainSpineComposite;
 
 import java.util.*;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.batch.item.support.CompositeItemProcessor;
 /**
@@ -37,8 +38,7 @@ public class MSK_ImpactTimelineBrainSpineCompositeProcessor implements ItemProce
         TimelineBrainSpineComposite composite = new TimelineBrainSpineComposite(darwinTimelineBrainSpine);
         compProcessor.setDelegates(delegates);
         compProcessor.process(composite);
-        String jointResult = composite.getStatusResult() + "\n" + composite.getSpecimenResult() + "\n" + composite.getTreatmentResult() + "\n" + composite.getImagingResult() + "\n" + composite.getSurgeryResult();
-        return jointResult;
+        return StringUtils.join(composite.getJointRecord(), "\n");
     }
     
     

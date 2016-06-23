@@ -5,6 +5,7 @@
  */
 package org.cbioportal.cmo.pipelines.darwin.model;
 
+import java.util.*;
 //import org.cbioportal.cmo.pipelines.darwin.model.MSK_ImpactTimelineBrainSpine;
 
 /**
@@ -71,6 +72,15 @@ public class TimelineBrainSpineComposite {
         this.record = record;
     }
     
+    public List<String> getJointRecord(){
+        List<String> jointRecord = new ArrayList();
+        jointRecord.add(this.statusResult);
+        jointRecord.add(this.specimenResult);
+        jointRecord.add(this.treatmentResult);
+        jointRecord.add(this.imagingResult);
+        jointRecord.add(this.surgeryResult);
+        return jointRecord;
+    }
     
     
     
