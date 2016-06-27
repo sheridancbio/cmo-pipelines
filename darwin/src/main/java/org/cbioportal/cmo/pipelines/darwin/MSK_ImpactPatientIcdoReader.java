@@ -16,6 +16,7 @@ import org.springframework.batch.item.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
+import org.apache.log4j.Logger;
 
 import java.util.*;
 /**
@@ -31,6 +32,8 @@ public class MSK_ImpactPatientIcdoReader implements ItemStreamReader<MSK_ImpactP
     
     private List<MSK_ImpactPatientIcdoRecord> darwinIcdoResults;
     
+    Logger log = Logger.getLogger(MSK_ImpactPatientIcdoReader.class);
+    
     @Override
     public void open(ExecutionContext executionContext) throws ItemStreamException{
         this.darwinIcdoResults = getDarwinIcdoResults();
@@ -38,7 +41,7 @@ public class MSK_ImpactPatientIcdoReader implements ItemStreamReader<MSK_ImpactP
     
     @Transactional
     private List<MSK_ImpactPatientIcdoRecord> getDarwinIcdoResults(){
-        System.out.println("Start of Darwin Patient ICDO Record View Import...");
+        log.info("Start of Darwin Patient ICDO Record View Import...");
         MSK_ImpactPatientIcdoRecord qDICDO = alias(MSK_ImpactPatientIcdoRecord.class, patientIcdoView);
         List<MSK_ImpactPatientIcdoRecord> darwinIcdoResults = darwinQueryFactory.select(Projections.constructor(MSK_ImpactPatientIcdoRecord.class, 
                         $(qDICDO.getTUMOR_YEAR()),
@@ -223,7 +226,7 @@ public class MSK_ImpactPatientIcdoReader implements ItemStreamReader<MSK_ImpactP
                 .from($(qDICDO))
                 .fetch();
         
-        System.out.println("Imported " + darwinIcdoResults.size() + " records from Darwin Patient ICDO Record View.");
+        log.info("Imported " + darwinIcdoResults.size() + " records from Darwin Patient ICDO Record View.");
         return darwinIcdoResults;
     }
     

@@ -17,6 +17,7 @@ import org.springframework.batch.item.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
+import org.apache.log4j.Logger;
 
 import java.util.*;
 /**
@@ -35,6 +36,9 @@ public class MSK_ImpactPatientDemographicsReader implements ItemStreamReader<MSK
     
     private List<MSK_ImpactPatientDemographics> darwinDemographicsResults;
     private List<String> darwinDemographicsIDs = new ArrayList<>();
+    
+    Logger log = Logger.getLogger(MSK_ImpactPatientDemographicsReader.class);
+    
     @Override
     public void open(ExecutionContext executionContext) throws ItemStreamException{
         this.darwinDemographicsResults = getDarwinDemographicsResults();
@@ -42,7 +46,7 @@ public class MSK_ImpactPatientDemographicsReader implements ItemStreamReader<MSK
             
     @Transactional
     private List<MSK_ImpactPatientDemographics> getDarwinDemographicsResults(){
-        System.out.println("Start of Darwin Patient Demographics View Import...");
+        log.info("Start of Darwin Patient Demographics View Import...");
         MSK_ImpactPatientDemographics qDPD = alias(MSK_ImpactPatientDemographics.class, patientDemographicsView);
         MSK_ImpactPatientIcdoRecord qDPIR = alias(MSK_ImpactPatientIcdoRecord.class, patientIcdoView);
         List<MSK_ImpactPatientDemographics> darwinDemographicsResults = darwinQueryFactory.select(Projections.constructor(MSK_ImpactPatientDemographics.class,
@@ -99,7 +103,7 @@ public class MSK_ImpactPatientDemographicsReader implements ItemStreamReader<MSK
                         darwinDemographicsResults.remove(0);//Pops off any records already sent to processor
                         //Check for end of imports
                         if (darwinDemographicsResults.isEmpty()) {
-                            System.out.println("Imported " + darwinDemographicsIDs.size() + " records from Demographics View.");
+                            log.info("Imported " + darwinDemographicsIDs.size() + " records from Demographics View.");
                             return null;
                         } 
                         //Checks if the new ID has been processed yet
@@ -116,7 +120,7 @@ public class MSK_ImpactPatientDemographicsReader implements ItemStreamReader<MSK
             darwinDemographicsIDs.add(darwinDemographicsResults.get(0).getDMP_ID_DEMO());
             return darwinDemographicsResults.remove(0);
         }
-        System.out.println("Imported " + darwinDemographicsIDs.size() + " records from Demographics View.");
+        log.info("Imported " + darwinDemographicsIDs.size() + " records from Demographics View.");
         return null;
     }
 }

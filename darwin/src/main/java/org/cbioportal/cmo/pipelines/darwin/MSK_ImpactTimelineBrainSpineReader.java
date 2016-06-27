@@ -16,6 +16,7 @@ import org.springframework.batch.item.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
+import org.apache.log4j.Logger;
 
 import java.util.*;
 import static com.querydsl.core.alias.Alias.$;
@@ -33,6 +34,8 @@ public class MSK_ImpactTimelineBrainSpineReader implements ItemStreamReader<MSK_
     
     private List<MSK_ImpactTimelineBrainSpine> darwinTimelineResults;
     
+    Logger log = Logger.getLogger(MSK_ImpactTimelineBrainSpineReader.class);
+    
     @Override
     public void open(ExecutionContext executionContext) throws ItemStreamException{
         this.darwinTimelineResults = getDarwinTimelineResults();
@@ -40,7 +43,7 @@ public class MSK_ImpactTimelineBrainSpineReader implements ItemStreamReader<MSK_
     
     @Transactional
     private List<MSK_ImpactTimelineBrainSpine> getDarwinTimelineResults(){
-        System.out.println("Start of Darwin Timeline Brain Spine View import...");
+        log.info("Start of Darwin Timeline Brain Spine View import...");
         MSK_ImpactTimelineBrainSpine qDTR = alias(MSK_ImpactTimelineBrainSpine.class, timelineBrainSpineView);
         List<MSK_ImpactTimelineBrainSpine> darwinTimelineResults = darwinQueryFactory.select(Projections.constructor(MSK_ImpactTimelineBrainSpine.class, $(qDTR.getDMT_PATIENT_ID_BRAINSPINETMLN()),
                         $(qDTR.getDMP_PATIENT_ID_MIN_BRAINSPINETMLN()),
@@ -56,7 +59,7 @@ public class MSK_ImpactTimelineBrainSpineReader implements ItemStreamReader<MSK_
                 .where($(qDTR.getDMT_PATIENT_ID_BRAINSPINETMLN()).isNotNull())
                 .fetch();
 
-        System.out.println("Imported " + darwinTimelineResults.size() + " records from Darwin Timeline Brain Spine View.");
+        log.info("Imported " + darwinTimelineResults.size() + " records from Darwin Timeline Brain Spine View.");
         return darwinTimelineResults;
     }
     

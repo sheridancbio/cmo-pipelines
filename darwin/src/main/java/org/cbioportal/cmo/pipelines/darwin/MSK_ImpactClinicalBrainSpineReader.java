@@ -16,6 +16,7 @@ import org.springframework.batch.item.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
+import org.apache.log4j.Logger;
 
 import java.util.*;
 /**
@@ -31,6 +32,8 @@ public class MSK_ImpactClinicalBrainSpineReader implements ItemStreamReader<MSK_
     
     private List<MSK_ImpactClinicalBrainSpine> clinicalBrainSpineResults;
     
+    Logger log = Logger.getLogger(MSK_ImpactClinicalBrainSpineReader.class);
+    
     @Override
     public void open(ExecutionContext executionContext) throws ItemStreamException{
         this.clinicalBrainSpineResults = getClinicalBrainSpineResults();
@@ -38,7 +41,7 @@ public class MSK_ImpactClinicalBrainSpineReader implements ItemStreamReader<MSK_
     
     @Transactional
     private List<MSK_ImpactClinicalBrainSpine> getClinicalBrainSpineResults(){
-        System.out.println("Start of Clinical Brain Spine View Import...");
+        log.info("Start of Clinical Brain Spine View Import...");
         MSK_ImpactClinicalBrainSpine qCBSR = alias(MSK_ImpactClinicalBrainSpine.class, clinicalBrainSpineView);
         List<MSK_ImpactClinicalBrainSpine> clinicalBrainSpineResults = darwinQueryFactory.select(Projections.constructor(MSK_ImpactClinicalBrainSpine.class, 
                 $(qCBSR.getDMP_PATIENT_ID_BRAINSPINECLIN()),
@@ -56,7 +59,7 @@ public class MSK_ImpactClinicalBrainSpineReader implements ItemStreamReader<MSK_
             .from($(qCBSR))
             .fetch();
         
-        System.out.println("Imported " + clinicalBrainSpineResults.size() + " records from Clinical Brain Spine View.");
+        log.info("Imported " + clinicalBrainSpineResults.size() + " records from Clinical Brain Spine View.");
         return clinicalBrainSpineResults;
     }
     

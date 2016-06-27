@@ -40,19 +40,4 @@ public class MSK_ImpactTimelineBrainSpineCompositeProcessor implements ItemProce
         compProcessor.process(composite);
         return StringUtils.join(composite.getJointRecord(), "\n");
     }
-    
-    
-    
-    /*
-    @Override
-    public String process(MSK_ImpactTimelineBrainSpine msk_timelineBrainSpine) throws Exception{
-        List record = new ArrayList();
-        MSK_ImpactTimelineBrainSpineProcessor processor1 = new MSK_ImpactTimelineBrainSpineProcessor();
-        processor1.process(msk_timelineBrainSpine);
-        
-        return StringUtils.join(record, "\t");
-    }
-    */
-    
-    
 }
