@@ -247,12 +247,12 @@ public class MSK_ImpactPatientDemographics {
 
     public List<String> getFieldNames() {
         List<String> fieldNames = new ArrayList<>();
+        fieldNames.add("DMP_ID_DEMO");
         fieldNames.add("DARWIN_PATIENT_AGE");
         fieldNames.add("RACE");
         fieldNames.add("RELIGION");
         fieldNames.add("GENDER");
         fieldNames.add("VITAL_STATUS");
-        fieldNames.add("DMP_ID_DEMO");
         fieldNames.add("AGE_AT_DIAGNOSIS");
 
         return fieldNames;
@@ -260,12 +260,12 @@ public class MSK_ImpactPatientDemographics {
     }
     public List<String> getHeaders() {
         List<String> fieldNames = new ArrayList<>();
+        fieldNames.add("PATIENT_ID");
         fieldNames.add("DARWIN_PATIENT_AGE");
         fieldNames.add("DARWIN_RACE");
         fieldNames.add("DARWIN_RELIGION");
         fieldNames.add("DARWIN_SEX");
         fieldNames.add("DARWIN_VITAL_STATUS");
-        fieldNames.add("PATIENT_ID");
         fieldNames.add("DARWIN_AGE_AT_DIAGNOSIS");
 
         return fieldNames;

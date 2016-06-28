@@ -150,7 +150,6 @@ public class MSK_ImpactClinicalBrainSpine {
     
     public List<String> getFieldNames(){
         List<String> fieldNames = new ArrayList<>();
-        fieldNames.add("DMP_PATIENT_ID_BRAINSPINECLIN");
         fieldNames.add("DMP_SAMPLE_ID_BRAINSPINECLIN");
         fieldNames.add("AGE");
         fieldNames.add("SEX");
@@ -161,12 +160,12 @@ public class MSK_ImpactClinicalBrainSpine {
         fieldNames.add("HISTOLOGY");
         fieldNames.add("WHO_GRADE");
         fieldNames.add("MGMT_STATUS");
+        fieldNames.add("DMP_PATIENT_ID_BRAINSPINECLIN");
         
         return fieldNames;
     }
     public List<String> getHeaders(){
         List<String> fieldNames = new ArrayList<>();
-        fieldNames.add("PATIENT_ID");
         fieldNames.add("SAMPLE_ID");
         fieldNames.add("AGE");
         fieldNames.add("SEX");
@@ -177,6 +176,7 @@ public class MSK_ImpactClinicalBrainSpine {
         fieldNames.add("HISTOLOGICAL_DIAGNOSIS");
         fieldNames.add("WHO_GRADE");
         fieldNames.add("MGMT_STATUS");
+        fieldNames.add("PATIENT_ID");
         
         return fieldNames;
     }
