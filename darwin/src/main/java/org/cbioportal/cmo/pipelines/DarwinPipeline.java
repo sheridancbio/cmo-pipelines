@@ -13,12 +13,15 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.batch.core.*;
 import org.springframework.batch.core.launch.JobLauncher;
+import org.apache.log4j.Logger;
 /**
  *
  * @author jake
  */
 @SpringBootApplication
 public class DarwinPipeline {
+    
+    private static Logger log = Logger.getLogger(DarwinPipeline.class);
     
     private static Options getOptions(String[] args){
         Options gnuOptions = new Options();
@@ -61,10 +64,10 @@ public class DarwinPipeline {
             JobExecution jobExecution = jobLauncher.run(darwinJob, jobParameters);
         }
         else{
-            System.out.println("Failed to start DarwinPipeline");
+            log.fatal("Failed to start DarwinPipeline");
         }
         
-        System.out.println("Shutting down DarwinPipeline");
+        log.info("Shutting down DarwinPipeline");
         ctx.close();
     }
     
