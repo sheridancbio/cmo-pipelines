@@ -25,4 +25,4 @@ darwin.timeline_bs_surgery=data_timeline_surgery_caisis_gbm.txtq
 darwin.clinical_view=DMT_CLINICAL_BRAINSPINE_V
 darwin.clinical_filename=data_clinical_supp_caisis_gbm.txt
 
-#NOTE: runs with two settings, -stage [stagingDirectory] -study [StudyID(MSK_IMPACT for default]
+#NOTE: runs with two settings, -stage [stagingDirectory] -study [StudyID(msk-impact for default]
