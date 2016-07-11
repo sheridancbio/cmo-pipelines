@@ -12,19 +12,30 @@ import java.util.*;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.batch.item.support.CompositeItemProcessor;
+import org.springframework.beans.factory.annotation.Autowired;
 /**
  *
  * @author jake
  */
-public class MSK_ImpactTimelineBrainSpineCompositeProcessor implements ItemProcessor<MSK_ImpactTimelineBrainSpine, String>{
+public class MSK_ImpactTimelineBrainSpineCompositeProcessor extends CompositeItemProcessor<MSK_ImpactTimelineBrainSpine, String>{
     List<ItemProcessor> delegates = new ArrayList<>();
     List<String> record = new ArrayList<>();
     
-    MSK_ImpactTimelineBrainSpineStatusProcessor processor1 = new MSK_ImpactTimelineBrainSpineStatusProcessor();
-    MSK_ImpactTimelineBrainSpineSpecimenProcessor processor2 = new MSK_ImpactTimelineBrainSpineSpecimenProcessor();
-    MSK_ImpactTimelineBrainSpineTreatmentProcessor processor3 = new MSK_ImpactTimelineBrainSpineTreatmentProcessor();
-    MSK_ImpactTimelineBrainSpineImagingProcessor processor4 = new MSK_ImpactTimelineBrainSpineImagingProcessor();
-    MSK_ImpactTimelineBrainSpineSurgeryProcessor processor5 = new MSK_ImpactTimelineBrainSpineSurgeryProcessor();
+    @Autowired
+    private MSK_ImpactTimelineBrainSpineStatusProcessor processor1;
+    
+    @Autowired
+    private MSK_ImpactTimelineBrainSpineSpecimenProcessor processor2;
+    
+    @Autowired
+    private MSK_ImpactTimelineBrainSpineTreatmentProcessor processor3;
+    
+    @Autowired
+    MSK_ImpactTimelineBrainSpineImagingProcessor processor4;
+    
+    @Autowired
+    MSK_ImpactTimelineBrainSpineSurgeryProcessor processor5;
+    
     CompositeItemProcessor compProcessor = new CompositeItemProcessor();
     
     @Override
