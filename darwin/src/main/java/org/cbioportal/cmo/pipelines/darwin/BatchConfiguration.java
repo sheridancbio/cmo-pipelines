@@ -185,7 +185,7 @@ public class BatchConfiguration {
     
     @Bean
     @StepScope
-    public static ItemStreamWriter<String> writerDarwinClinicalBrainSpine(){
+    public ItemStreamWriter<String> writerDarwinClinicalBrainSpine(){
         return new MSK_ImpactClinicalBrainSpineWriter();
     }
     
