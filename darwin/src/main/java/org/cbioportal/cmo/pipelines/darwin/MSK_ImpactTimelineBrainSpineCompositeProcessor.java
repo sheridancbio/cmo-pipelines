@@ -17,7 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
  *
  * @author jake
  */
-public class MSK_ImpactTimelineBrainSpineCompositeProcessor extends CompositeItemProcessor<MSK_ImpactTimelineBrainSpine, String>{
+public class MSK_ImpactTimelineBrainSpineCompositeProcessor implements ItemProcessor<MSK_ImpactTimelineBrainSpine, String>{
     List<ItemProcessor> delegates = new ArrayList<>();
     List<String> record = new ArrayList<>();
     

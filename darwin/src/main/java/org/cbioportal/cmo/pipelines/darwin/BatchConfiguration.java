@@ -111,27 +111,27 @@ public class BatchConfiguration {
     public Step stepDarwinTimelineBrainSpine(){
         return stepBuilderFactory.get("stepDTBS")
                 .<MSK_ImpactTimelineBrainSpine, String> chunk(10)
-                .reader(readerDarwinTimlineBrainSpine())
-                .processor(processorDarwinTimlineBrainSpine())
-                .writer(writerDarwinTimlineBrainSpine())
+                .reader(readerDarwinTimelineBrainSpine())
+                .processor(processorDarwinTimelineBrainSpine())
+                .writer(writerDarwinTimelineBrainSpine())
                 .build();
     }
     
     @Bean
     @StepScope
-    public ItemStreamReader<MSK_ImpactTimelineBrainSpine> readerDarwinTimlineBrainSpine(){
+    public ItemStreamReader<MSK_ImpactTimelineBrainSpine> readerDarwinTimelineBrainSpine(){
         return new MSK_ImpactTimelineBrainSpineReader();
     }
     
     @Bean
     @StepScope
-    public ItemProcessor processorDarwinTimlineBrainSpine(){
+    public ItemProcessor processorDarwinTimelineBrainSpine(){
         return new MSK_ImpactTimelineBrainSpineCompositeProcessor();
     }
     
     @Bean
     @StepScope
-    public ItemStreamWriter<String> writerDarwinTimlineBrainSpine(){
+    public ItemStreamWriter<String> writerDarwinTimelineBrainSpine(){
         return new MSK_ImpactTimelineBrainSpineCompositeWriter();
     }
     
