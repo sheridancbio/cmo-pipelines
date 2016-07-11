@@ -22,30 +22,30 @@ public class MSK_ImpactTimelineBrainSpineCompositeProcessor extends CompositeIte
     List<String> record = new ArrayList<>();
     
     @Autowired
-    private MSK_ImpactTimelineBrainSpineStatusProcessor processor1;
+    private MSK_ImpactTimelineBrainSpineStatusProcessor statusProcessor;
     
     @Autowired
-    private MSK_ImpactTimelineBrainSpineSpecimenProcessor processor2;
+    private MSK_ImpactTimelineBrainSpineSpecimenProcessor specimenProcessor;
     
     @Autowired
-    private MSK_ImpactTimelineBrainSpineTreatmentProcessor processor3;
+    private MSK_ImpactTimelineBrainSpineTreatmentProcessor treatmentProcessor;
     
     @Autowired
-    MSK_ImpactTimelineBrainSpineImagingProcessor processor4;
+    MSK_ImpactTimelineBrainSpineImagingProcessor imagingProcessor;
     
     @Autowired
-    MSK_ImpactTimelineBrainSpineSurgeryProcessor processor5;
+    MSK_ImpactTimelineBrainSpineSurgeryProcessor surgeryProcessor;
     
     CompositeItemProcessor compProcessor = new CompositeItemProcessor();
     
     @Override
     public String process(MSK_ImpactTimelineBrainSpine darwinTimelineBrainSpine) throws Exception{
         delegates.clear();
-        delegates.add(processor1);
-        delegates.add(processor2);
-        delegates.add(processor3);
-        delegates.add(processor4);
-        delegates.add(processor5);
+        delegates.add(statusProcessor);
+        delegates.add(specimenProcessor);
+        delegates.add(treatmentProcessor);
+        delegates.add(imagingProcessor);
+        delegates.add(surgeryProcessor);
         TimelineBrainSpineComposite composite = new TimelineBrainSpineComposite(darwinTimelineBrainSpine);
         compProcessor.setDelegates(delegates);
         compProcessor.process(composite);
