@@ -88,7 +88,7 @@ public class BatchConfiguration {
     
     @Bean
     @StepScope
-    public ItemStreamReader<MSK_ImpactPatientDemographics> readerDarwinPatientDemographics(){
+    public static ItemStreamReader<MSK_ImpactPatientDemographics> readerDarwinPatientDemographics(){
         return new MSK_ImpactPatientDemographicsReader();
     }
     
@@ -102,7 +102,7 @@ public class BatchConfiguration {
     
     @Bean
     @StepScope
-    public ItemStreamWriter<String> writerDarwinPatientDemographics()
+    public static ItemStreamWriter<String> writerDarwinPatientDemographics()
     {
         return new MSK_ImpactPatientDemographicsWriter();
     }
@@ -119,19 +119,19 @@ public class BatchConfiguration {
     
     @Bean
     @StepScope
-    public ItemStreamReader<MSK_ImpactTimelineBrainSpine> readerDarwinTimelineBrainSpine(){
+    public static ItemStreamReader<MSK_ImpactTimelineBrainSpine> readerDarwinTimelineBrainSpine(){
         return new MSK_ImpactTimelineBrainSpineReader();
     }
     
     @Bean
     @StepScope
-    public ItemProcessor processorDarwinTimelineBrainSpine(){
+    public static ItemProcessor processorDarwinTimelineBrainSpine(){
         return new MSK_ImpactTimelineBrainSpineCompositeProcessor();
     }
     
     @Bean
     @StepScope
-    public ItemStreamWriter<String> writerDarwinTimelineBrainSpine(){
+    public static ItemStreamWriter<String> writerDarwinTimelineBrainSpine(){
         return new MSK_ImpactTimelineBrainSpineCompositeWriter();
     }
     
@@ -147,18 +147,18 @@ public class BatchConfiguration {
     
     @Bean
     @StepScope
-    public ItemStreamReader<MSK_ImpactPatientIcdoRecord> readerDarwinPatientICDORecord(){
+    public static ItemStreamReader<MSK_ImpactPatientIcdoRecord> readerDarwinPatientICDORecord(){
         return new MSK_ImpactPatientIcdoReader();
     }
     
     @Bean
-    public MSK_ImpactPatientIcdoProcessor processorDarwinPatientICDORecrod(){
+    public static MSK_ImpactPatientIcdoProcessor processorDarwinPatientICDORecrod(){
         return new MSK_ImpactPatientIcdoProcessor();
     }
     
     @Bean
     @StepScope
-    public ItemStreamWriter<String> writerDarwinPatientICDORecord(){
+    public static ItemStreamWriter<String> writerDarwinPatientICDORecord(){
         return new MSK_ImpactPatientIcdoWriter();
     }
     
@@ -174,7 +174,7 @@ public class BatchConfiguration {
     
     @Bean
     @StepScope
-    public ItemStreamReader<MSK_ImpactClinicalBrainSpine> readerDarwinClinicalBrainSpine(){
+    public static ItemStreamReader<MSK_ImpactClinicalBrainSpine> readerDarwinClinicalBrainSpine(){
         return new MSK_ImpactClinicalBrainSpineReader();
     }
     
@@ -185,7 +185,7 @@ public class BatchConfiguration {
     
     @Bean
     @StepScope
-    public ItemStreamWriter<String> writerDarwinClinicalBrainSpine(){
+    public static ItemStreamWriter<String> writerDarwinClinicalBrainSpine(){
         return new MSK_ImpactClinicalBrainSpineWriter();
     }
     
