@@ -32,10 +32,7 @@
 
 package org.cbioportal.cmo.pipelines.darwin;
 
-import org.cbioportal.cmo.pipelines.darwin.model.MSK_ImpactPatientDemographics;
-import org.cbioportal.cmo.pipelines.darwin.model.MSK_ImpactPatientIcdoRecord;
-import org.cbioportal.cmo.pipelines.darwin.model.MSK_ImpactTimelineBrainSpine;
-import org.cbioportal.cmo.pipelines.darwin.model.MSK_ImpactClinicalBrainSpine;
+import org.cbioportal.cmo.pipelines.darwin.model.*;
 
 import java.util.*;
 import org.springframework.batch.core.*;
@@ -128,7 +125,7 @@ public class BatchConfiguration {
     
     @Bean
     @StepScope
-    public MSK_ImpactTimelineBrainSpineCompositeWriter writerDarwinTimelineBrainSpine(){
+    public ItemStreamWriter<TimelineBrainSpineComposite> writerDarwinTimelineBrainSpine(){
         return new MSK_ImpactTimelineBrainSpineCompositeWriter();
     }
     
