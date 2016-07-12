@@ -31,10 +31,10 @@ public class MSK_ImpactTimelineBrainSpineCompositeProcessor implements ItemProce
     private MSK_ImpactTimelineBrainSpineTreatmentProcessor treatmentProcessor;
     
     @Autowired
-    MSK_ImpactTimelineBrainSpineImagingProcessor imagingProcessor;
+    private MSK_ImpactTimelineBrainSpineImagingProcessor imagingProcessor;
     
     @Autowired
-    MSK_ImpactTimelineBrainSpineSurgeryProcessor surgeryProcessor;
+    private MSK_ImpactTimelineBrainSpineSurgeryProcessor surgeryProcessor;
     
     CompositeItemProcessor compProcessor = new CompositeItemProcessor();
     
