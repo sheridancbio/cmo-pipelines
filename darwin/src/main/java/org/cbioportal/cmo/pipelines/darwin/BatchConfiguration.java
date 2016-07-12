@@ -104,7 +104,7 @@ public class BatchConfiguration {
     @Bean
     public Step stepDarwinTimelineBrainSpine(){
         return stepBuilderFactory.get("stepDTBS")
-                .<MSK_ImpactTimelineBrainSpine, String> chunk(10)
+                .<MSK_ImpactTimelineBrainSpine, TimelineBrainSpineComposite> chunk(10)
                 .reader(readerDarwinTimelineBrainSpine())
                 .processor(processorDarwinTimelineBrainSpine())
                 .writer(writerDarwinTimelineBrainSpine())
@@ -119,7 +119,7 @@ public class BatchConfiguration {
     
     @Bean
     @StepScope
-    public ItemProcessor processorDarwinTimelineBrainSpine(){
+    public MSK_ImpactTimelineBrainSpineCompositeProcessor processorDarwinTimelineBrainSpine(){
         return new MSK_ImpactTimelineBrainSpineCompositeProcessor();
     }
     
