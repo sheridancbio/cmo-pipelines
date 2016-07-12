@@ -128,7 +128,7 @@ public class BatchConfiguration {
     
     @Bean
     @StepScope
-    public ItemStreamWriter<String> writerDarwinTimelineBrainSpine(){
+    public MSK_ImpactTimelineBrainSpineCompositeWriter writerDarwinTimelineBrainSpine(){
         return new MSK_ImpactTimelineBrainSpineCompositeWriter();
     }
     

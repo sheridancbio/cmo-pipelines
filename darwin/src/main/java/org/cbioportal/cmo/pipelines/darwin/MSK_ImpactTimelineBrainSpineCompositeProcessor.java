@@ -17,7 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
  *
  * @author jake
  */
-public class MSK_ImpactTimelineBrainSpineCompositeProcessor implements ItemProcessor<MSK_ImpactTimelineBrainSpine, String>{
+public class MSK_ImpactTimelineBrainSpineCompositeProcessor implements ItemProcessor<MSK_ImpactTimelineBrainSpine, TimelineBrainSpineComposite>{
     List<ItemProcessor> delegates = new ArrayList<>();
     List<String> record = new ArrayList<>();
     
@@ -39,7 +39,7 @@ public class MSK_ImpactTimelineBrainSpineCompositeProcessor implements ItemProce
     CompositeItemProcessor compProcessor = new CompositeItemProcessor();
     
     @Override
-    public String process(MSK_ImpactTimelineBrainSpine darwinTimelineBrainSpine) throws Exception{
+    public TimelineBrainSpineComposite process(MSK_ImpactTimelineBrainSpine darwinTimelineBrainSpine) throws Exception{
         delegates.clear();
         delegates.add(statusProcessor);
         delegates.add(specimenProcessor);
@@ -49,6 +49,6 @@ public class MSK_ImpactTimelineBrainSpineCompositeProcessor implements ItemProce
         TimelineBrainSpineComposite composite = new TimelineBrainSpineComposite(darwinTimelineBrainSpine);
         compProcessor.setDelegates(delegates);
         compProcessor.process(composite);
-        return StringUtils.join(composite.getJointRecord(), "\n");
+        return composite;
     }
 }

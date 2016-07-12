@@ -5,6 +5,8 @@
  */
 package org.cbioportal.cmo.pipelines.darwin;
 
+import org.cbioportal.cmo.pipelines.darwin.model.TimelineBrainSpineComposite;
+
 import java.io.File;
 import org.springframework.batch.item.*;
 
@@ -17,7 +19,7 @@ import org.springframework.batch.item.support.CompositeItemWriter;
  *
  * @author jake
  */
-public class MSK_ImpactTimelineBrainSpineCompositeWriter implements ItemStreamWriter<String>{
+public class MSK_ImpactTimelineBrainSpineCompositeWriter implements ItemStreamWriter<TimelineBrainSpineComposite>{
     
     private final FlatFileItemWriter<String> flatFileItemWriter = new FlatFileItemWriter<>();
     
@@ -88,7 +90,7 @@ public class MSK_ImpactTimelineBrainSpineCompositeWriter implements ItemStreamWr
     public void update(ExecutionContext executionContext) throws ItemStreamException{}
     
     @Override
-    public void write(List<? extends String> items) throws Exception{
+    public void write(List<? extends TimelineBrainSpineComposite> items) throws Exception{
         delegates.clear();
         delegates.add(statusWriter);
         delegates.add(specimenWriter);
