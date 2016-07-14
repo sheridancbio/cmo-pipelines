@@ -32,12 +32,9 @@ public class MSK_ImpactTimelineBrainSpineTreatmentWriter implements ItemStreamWr
     private final FlatFileItemWriter<String> flatFileItemWriter = new FlatFileItemWriter<>();
     private String stagingFile;
     
-    public void setStagingFile(String file){
-        this.stagingFile = file;
-    }
-    
     @Override
     public void open(ExecutionContext executionContext) throws ItemStreamException{
+        stagingFile = stagingDirectory + File.separator + datasetFilename;
         PassThroughLineAggregator aggr = new PassThroughLineAggregator();
         flatFileItemWriter.setLineAggregator(aggr);
         flatFileItemWriter.setHeaderCallback(new FlatFileHeaderCallback(){
