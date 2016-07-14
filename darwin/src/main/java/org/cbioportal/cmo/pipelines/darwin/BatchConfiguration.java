@@ -41,6 +41,7 @@ import org.springframework.batch.core.configuration.annotation.*;
 import org.springframework.context.annotation.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.batch.core.configuration.annotation.StepScope;
+import org.springframework.beans.factory.annotation.Value;
 /**
  *
  * @author jake
@@ -53,6 +54,9 @@ public class BatchConfiguration {
     public static final String STUDYID_JOB = "studyIDJob";
       
     private final List<ItemProcessor> delegates = new ArrayList<>();
+    
+    @Value("${darwin.chunk_size}")
+    private Integer chunkSize;
     
     @Autowired
     public JobBuilderFactory jobBuilderFactory;
@@ -73,7 +77,7 @@ public class BatchConfiguration {
     @Bean
     public Step stepDarwinPatientDemographics(){
         return stepBuilderFactory.get("stepDPD")
-                .<MSK_ImpactPatientDemographics, String> chunk(10)
+                .<MSK_ImpactPatientDemographics, String> chunk(chunkSize)
                 .reader(readerDarwinPatientDemographics())
                 .processor(processorDarwinPatientDemographics())
                 .writer(writerDarwinPatientDemographics())
@@ -104,7 +108,7 @@ public class BatchConfiguration {
     @Bean
     public Step stepDarwinTimelineBrainSpine(){
         return stepBuilderFactory.get("stepDTBS")
-                .<MSK_ImpactTimelineBrainSpine, TimelineBrainSpineComposite> chunk(10)
+                .<MSK_ImpactTimelineBrainSpine, TimelineBrainSpineComposite> chunk(chunkSize)
                 .reader(readerDarwinTimelineBrainSpine())
                 .processor(processorDarwinTimelineBrainSpine())
                 .writer(writerDarwinTimelineBrainSpine())
@@ -132,7 +136,7 @@ public class BatchConfiguration {
     @Bean
     public Step stepDPIR(){
         return stepBuilderFactory.get("stepDPIR")
-                .<MSK_ImpactPatientIcdoRecord, String> chunk(10)
+                .<MSK_ImpactPatientIcdoRecord, String> chunk(chunkSize)
                 .reader(readerDarwinPatientICDORecord())
                 .processor(processorDarwinPatientICDORecrod())
                 .writer(writerDarwinPatientICDORecord())
@@ -159,7 +163,7 @@ public class BatchConfiguration {
     @Bean
     public Step stepDarwinClinicalBrainSpine(){
         return stepBuilderFactory.get("stepDCBS")
-                .<MSK_ImpactClinicalBrainSpine, String> chunk(10)
+                .<MSK_ImpactClinicalBrainSpine, String> chunk(chunkSize)
                 .reader(readerDarwinClinicalBrainSpine())
                 .processor(processorDarwinClinicalBrainSpine())
                 .writer(writerDarwinClinicalBrainSpine())

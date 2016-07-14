@@ -12,6 +12,7 @@ darwin.username=
 darwin.password=
 
 #Darwin properties
+darwin.chunk_size=10
 darwin.demographics_view=DEMOGRAPHICS_V
 darwin.demographics_filename=data_clinical_supp_darwin_demographics.txt
 darwin.icdo_view=ICDO_V
