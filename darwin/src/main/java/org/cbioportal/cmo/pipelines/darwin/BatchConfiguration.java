@@ -67,7 +67,7 @@ public class BatchConfiguration {
     
     @Autowired
     public StepBuilderFactory stepBuilderFactory;
-    
+    /*
     MSK_ImpactTimelineBrainSpineStatusProcessor statusProcessor = new MSK_ImpactTimelineBrainSpineStatusProcessor();
     MSK_ImpactTimelineBrainSpineSpecimenProcessor specimenProcessor = new MSK_ImpactTimelineBrainSpineSpecimenProcessor();
     MSK_ImpactTimelineBrainSpineTreatmentProcessor treatmentProcessor = new MSK_ImpactTimelineBrainSpineTreatmentProcessor();
@@ -79,7 +79,7 @@ public class BatchConfiguration {
     MSK_ImpactTimelineBrainSpineTreatmentWriter treatmentWriter = new MSK_ImpactTimelineBrainSpineTreatmentWriter();
     MSK_ImpactTimelineBrainSpineImagingWriter imagingWriter = new MSK_ImpactTimelineBrainSpineImagingWriter();
     MSK_ImpactTimelineBrainSpineSurgeryWriter surgeryWriter = new MSK_ImpactTimelineBrainSpineSurgeryWriter();
-    
+    */
     @Bean
     public static PropertySourcesPlaceholderConfigurer propertyConfigInDev() {
         return new PropertySourcesPlaceholderConfigurer();
@@ -146,11 +146,11 @@ public class BatchConfiguration {
     @Bean
     @StepScope
     public CompositeItemProcessor processorDarwinTimelineBrainSpine(){
-        processorDelegates.add(statusProcessor);
-        processorDelegates.add(specimenProcessor);
-        processorDelegates.add(treatmentProcessor);
-        processorDelegates.add(imagingProcessor);
-        processorDelegates.add(surgeryProcessor);
+        processorDelegates.add(new MSK_ImpactTimelineBrainSpineStatusProcessor());
+        processorDelegates.add(new MSK_ImpactTimelineBrainSpineSpecimenProcessor());
+        processorDelegates.add(new MSK_ImpactTimelineBrainSpineTreatmentProcessor());
+        processorDelegates.add(new MSK_ImpactTimelineBrainSpineImagingProcessor());
+        processorDelegates.add(new MSK_ImpactTimelineBrainSpineSurgeryProcessor());
         CompositeItemProcessor processor = new CompositeItemProcessor<>();
         processor.setDelegates(processorDelegates);
         return processor;
@@ -159,11 +159,11 @@ public class BatchConfiguration {
     @Bean
     @StepScope
     public CompositeItemWriter<TimelineBrainSpineComposite> writerDarwinTimelineBrainSpine(){
-        writerDelegates.add(statusWriter);
-        writerDelegates.add(specimenWriter);
-        writerDelegates.add(treatmentWriter);
-        writerDelegates.add(imagingWriter);
-        writerDelegates.add(surgeryWriter);
+        writerDelegates.add(new MSK_ImpactTimelineBrainSpineStatusWriter());
+        writerDelegates.add(new MSK_ImpactTimelineBrainSpineSpecimenWriter());
+        writerDelegates.add(new MSK_ImpactTimelineBrainSpineTreatmentWriter());
+        writerDelegates.add(new MSK_ImpactTimelineBrainSpineImagingWriter());
+        writerDelegates.add(new MSK_ImpactTimelineBrainSpineSurgeryWriter());
         CompositeItemWriter writer = new CompositeItemWriter<>();
         writer.setDelegates(writerDelegates);
         return writer;

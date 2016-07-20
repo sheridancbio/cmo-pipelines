@@ -44,7 +44,7 @@ public class DarwinConfiguration {
     public static PropertySourcesPlaceholderConfigurer propertyConfigInDev() {
         return new PropertySourcesPlaceholderConfigurer();
     }
-    
+    /*
     @Bean
     public static MSK_ImpactTimelineBrainSpineStatusProcessor statusProcessor(){
         return new MSK_ImpactTimelineBrainSpineStatusProcessor();
@@ -69,7 +69,7 @@ public class DarwinConfiguration {
     public static MSK_ImpactTimelineBrainSpineImagingProcessor imagingProcessor(){
         return new MSK_ImpactTimelineBrainSpineImagingProcessor();
     }
-    
+    */
         
     @Bean
     public SQLQueryFactory darwinQueryFactory() throws SQLException{
