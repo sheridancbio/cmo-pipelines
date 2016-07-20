@@ -82,7 +82,7 @@ public class MSK_ImpactPatientDemographicsReader implements ItemStreamReader<MSK
                 $(qDPD.getVITAL_STATUS())))
                 .from($(qDPD),$(qDPIR))
                 .where($(qDPIR.getDMP_ID_ICDO()).eq($(qDPD.getDMP_ID_DEMO())))
-                .where($(qDPIR.getTM_DX_YEAR()).isEmpty())
+                .where($(qDPIR.getTM_DX_YEAR()).isNull())
                 .fetch());
 
         return darwinDemographicsResults;
