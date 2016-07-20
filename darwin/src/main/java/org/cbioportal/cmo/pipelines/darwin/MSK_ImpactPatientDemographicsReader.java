@@ -52,23 +52,12 @@ public class MSK_ImpactPatientDemographicsReader implements ItemStreamReader<MSK
         MSK_ImpactPatientDemographics qDPD = alias(MSK_ImpactPatientDemographics.class, patientDemographicsView);
         MSK_ImpactPatientIcdoRecord qDPIR = alias(MSK_ImpactPatientIcdoRecord.class, patientIcdoView);
         List<MSK_ImpactPatientDemographics> darwinDemographicsResults = darwinQueryFactory.selectDistinct(Projections.constructor(MSK_ImpactPatientDemographics.class,
-                $(qDPD.getPT_ID_DEMO()),
                 $(qDPD.getDMP_ID_DEMO()),
                 $(qDPD.getGENDER()),
                 $(qDPD.getRACE()),
                 $(qDPD.getRELIGION()),
-                $(qDPD.getAGE_AT_DATE_OF_DEATH_IN_DAYS()),
-                $(qDPD.getDEATH_SOURCE_DESCRIPTION()),
                 $(qDPD.getVITAL_STATUS()),
-                $(qDPD.getPT_COUNTRY()),
-                $(qDPD.getPT_STATE()),
-                $(qDPD.getPT_ZIP3_CD()),
                 $(qDPD.getPT_BIRTH_YEAR()),
-                $(qDPD.getPT_SEX_DESC()),
-                $(qDPD.getPT_VITAL_STATUS()),
-                $(qDPD.getPT_MARITAL_STS_DESC()),
-                $(qDPD.getPT_DEATH_YEAR()),
-                $(qDPD.getPT_MRN_CREATE_YEAR()),
                 $(qDPIR.getTM_DX_YEAR())))
                 .from($(qDPD))
                 .join($(qDPIR))
