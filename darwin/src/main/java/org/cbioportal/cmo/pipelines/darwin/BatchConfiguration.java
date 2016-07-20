@@ -62,6 +62,9 @@ public class BatchConfiguration {
     @Value("${darwin.chunk_size}")
     private Integer chunkSize;
     
+    @Value("#{jobParameters[stagingDirectory]}")
+    private String stagingDirectory;
+    
     @Autowired
     public JobBuilderFactory jobBuilderFactory;
     
@@ -159,11 +162,11 @@ public class BatchConfiguration {
     @Bean
     @StepScope
     public CompositeItemWriter<TimelineBrainSpineComposite> writerDarwinTimelineBrainSpine(){
-        writerDelegates.add(new MSK_ImpactTimelineBrainSpineStatusWriter());
-        writerDelegates.add(new MSK_ImpactTimelineBrainSpineSpecimenWriter());
-        writerDelegates.add(new MSK_ImpactTimelineBrainSpineTreatmentWriter());
-        writerDelegates.add(new MSK_ImpactTimelineBrainSpineImagingWriter());
-        writerDelegates.add(new MSK_ImpactTimelineBrainSpineSurgeryWriter());
+        writerDelegates.add(new MSK_ImpactTimelineBrainSpineStatusWriter(stagingDirectory));
+        writerDelegates.add(new MSK_ImpactTimelineBrainSpineSpecimenWriter(stagingDirectory));
+        writerDelegates.add(new MSK_ImpactTimelineBrainSpineTreatmentWriter(stagingDirectory));
+        writerDelegates.add(new MSK_ImpactTimelineBrainSpineImagingWriter(stagingDirectory));
+        writerDelegates.add(new MSK_ImpactTimelineBrainSpineSurgeryWriter(stagingDirectory));
         CompositeItemWriter writer = new CompositeItemWriter<>();
         writer.setDelegates(writerDelegates);
         return writer;
