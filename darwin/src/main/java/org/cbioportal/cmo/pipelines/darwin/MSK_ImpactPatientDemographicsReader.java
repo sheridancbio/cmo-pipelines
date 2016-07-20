@@ -74,7 +74,7 @@ public class MSK_ImpactPatientDemographicsReader implements ItemStreamReader<MSK
                 .join($(qDPIR))
                 .on($(qDPD.getDMP_ID_DEMO()).eq($(qDPIR.getDMP_ID_ICDO())))
                 .fetch();
-        darwinDemographicsResults.addAll(darwinQueryFactory.selectDistinct(Projections.constructor(MSK_ImpactPatientDemographics.class,
+        /*darwinDemographicsResults.addAll(darwinQueryFactory.selectDistinct(Projections.constructor(MSK_ImpactPatientDemographics.class,
                 $(qDPD.getDMP_ID_DEMO()),
                 $(qDPD.getGENDER()),
                 $(qDPD.getRACE()),
@@ -84,7 +84,8 @@ public class MSK_ImpactPatientDemographicsReader implements ItemStreamReader<MSK
                 .where($(qDPIR.getDMP_ID_ICDO()).eq($(qDPD.getDMP_ID_DEMO())))
                 .where($(qDPIR.getTM_DX_YEAR()).isNull())
                 .fetch());
-        log.info("Imported " + darwinDemographicsIDs.size() + " records from Demographics View.");
+        */
+        log.info("Imported " + darwinDemographicsResults.size() + " records from Demographics View.");
         return darwinDemographicsResults;
     }
     
