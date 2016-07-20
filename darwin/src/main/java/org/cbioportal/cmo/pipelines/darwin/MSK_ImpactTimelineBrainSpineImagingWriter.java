@@ -22,14 +22,12 @@ import org.apache.commons.lang.StringUtils;
  */
 public class MSK_ImpactTimelineBrainSpineImagingWriter implements ItemStreamWriter<TimelineBrainSpineComposite>{
     
+    @Value("#{jobParameters[stagingDirectory]}")
     private String stagingDirectory;
+    
     private List<String> writeList = new ArrayList<>();
     private final FlatFileItemWriter<String> flatFileItemWriter = new FlatFileItemWriter<>();
     private String stagingFile;
-    
-    public MSK_ImpactTimelineBrainSpineImagingWriter(String stagingDirectory){
-        this.stagingDirectory = stagingDirectory;
-    }
     
     @Override
     public void open(ExecutionContext executionContext) throws ItemStreamException{

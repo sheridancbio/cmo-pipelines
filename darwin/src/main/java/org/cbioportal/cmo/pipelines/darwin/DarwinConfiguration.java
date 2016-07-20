@@ -40,9 +40,7 @@ public class DarwinConfiguration {
     @Value("${darwin.schema}")
     private String schema;
     
-    @Value("#{jobParameters[stagingDirectory]}")
-    private String stagingDirectory;
-    
+    /*
     @Bean
     public static PropertySourcesPlaceholderConfigurer propertyConfigInDev() {
         return new PropertySourcesPlaceholderConfigurer();
@@ -72,7 +70,7 @@ public class DarwinConfiguration {
     public MSK_ImpactTimelineBrainSpineTreatmentWriter treatmentWriter(){
         return new MSK_ImpactTimelineBrainSpineTreatmentWriter(stagingDirectory);
     }
-    /*
+    
     @Bean
     public static MSK_ImpactTimelineBrainSpineStatusProcessor statusProcessor(){
         return new MSK_ImpactTimelineBrainSpineStatusProcessor();

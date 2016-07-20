@@ -67,7 +67,7 @@ public class BatchConfiguration {
     
     @Autowired
     public StepBuilderFactory stepBuilderFactory;
-    
+    /*
     @Autowired
     public MSK_ImpactTimelineBrainSpineStatusWriter statusWriter;
     
@@ -82,7 +82,7 @@ public class BatchConfiguration {
     
     @Autowired
     public MSK_ImpactTimelineBrainSpineTreatmentWriter treatmentWriter;
-    /*
+    
     MSK_ImpactTimelineBrainSpineStatusProcessor statusProcessor = new MSK_ImpactTimelineBrainSpineStatusProcessor();
     MSK_ImpactTimelineBrainSpineSpecimenProcessor specimenProcessor = new MSK_ImpactTimelineBrainSpineSpecimenProcessor();
     MSK_ImpactTimelineBrainSpineTreatmentProcessor treatmentProcessor = new MSK_ImpactTimelineBrainSpineTreatmentProcessor();
@@ -174,11 +174,11 @@ public class BatchConfiguration {
     @Bean
     @StepScope
     public CompositeItemWriter<TimelineBrainSpineComposite> writerDarwinTimelineBrainSpine(){
-        writerDelegates.add(statusWriter);
-        writerDelegates.add(surgeryWriter);
-        writerDelegates.add(imagingWriter);
-        writerDelegates.add(specimenWriter);
-        writerDelegates.add(treatmentWriter);
+        writerDelegates.add(new MSK_ImpactTimelineBrainSpineStatusWriter());
+        writerDelegates.add(new MSK_ImpactTimelineBrainSpineSurgeryWriter());
+        writerDelegates.add(new MSK_ImpactTimelineBrainSpineImagingWriter());
+        writerDelegates.add(new MSK_ImpactTimelineBrainSpineSpecimenWriter());
+        writerDelegates.add(new MSK_ImpactTimelineBrainSpineTreatmentWriter());
         CompositeItemWriter writer = new CompositeItemWriter<>();
         writer.setDelegates(writerDelegates);
         return writer;
