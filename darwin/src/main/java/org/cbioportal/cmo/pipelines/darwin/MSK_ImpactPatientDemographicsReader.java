@@ -51,7 +51,7 @@ public class MSK_ImpactPatientDemographicsReader implements ItemStreamReader<MSK
         log.info("Start of Darwin Patient Demographics View Import...");
         MSK_ImpactPatientDemographics qDPD = alias(MSK_ImpactPatientDemographics.class, patientDemographicsView);
         MSK_ImpactPatientIcdoRecord qDPIR = alias(MSK_ImpactPatientIcdoRecord.class, patientIcdoView);
-        List<MSK_ImpactPatientDemographics> darwinDemographicsResults = darwinQueryFactory.select(Projections.constructor(MSK_ImpactPatientDemographics.class,
+        List<MSK_ImpactPatientDemographics> darwinDemographicsResults = darwinQueryFactory.selectDistinct(Projections.constructor(MSK_ImpactPatientDemographics.class,
                 $(qDPD.getPT_ID_DEMO()),
                 $(qDPD.getDMP_ID_DEMO()),
                 $(qDPD.getGENDER()),
@@ -74,7 +74,7 @@ public class MSK_ImpactPatientDemographicsReader implements ItemStreamReader<MSK
                 .join($(qDPIR))
                 .on($(qDPD.getDMP_ID_DEMO()).eq($(qDPIR.getDMP_ID_ICDO())))
                 .fetch();
-        darwinDemographicsResults.addAll(darwinQueryFactory.select(Projections.constructor(MSK_ImpactPatientDemographics.class,
+        darwinDemographicsResults.addAll(darwinQueryFactory.selectDistinct(Projections.constructor(MSK_ImpactPatientDemographics.class,
                 $(qDPD.getDMP_ID_DEMO()),
                 $(qDPD.getGENDER()),
                 $(qDPD.getRACE()),
@@ -84,7 +84,7 @@ public class MSK_ImpactPatientDemographicsReader implements ItemStreamReader<MSK
                 .where($(qDPIR.getDMP_ID_ICDO()).eq($(qDPD.getDMP_ID_DEMO())))
                 .where($(qDPIR.getTM_DX_YEAR()).isNull())
                 .fetch());
-
+        log.info("Imported " + darwinDemographicsIDs.size() + " records from Demographics View.");
         return darwinDemographicsResults;
     }
     
@@ -124,7 +124,7 @@ public class MSK_ImpactPatientDemographicsReader implements ItemStreamReader<MSK
             return darwinDemographicsResults.remove(0);
         }
         */
-        log.info("Imported " + darwinDemographicsIDs.size() + " records from Demographics View.");
+        
         if(!darwinDemographicsResults.isEmpty()){
             return darwinDemographicsResults.remove(0);
         }
