@@ -62,14 +62,26 @@ public class BatchConfiguration {
     @Value("${darwin.chunk_size}")
     private Integer chunkSize;
     
-    @Value("#{jobParameters[stagingDirectory]}")
-    private String stagingDirectory;
-    
     @Autowired
     public JobBuilderFactory jobBuilderFactory;
     
     @Autowired
     public StepBuilderFactory stepBuilderFactory;
+    
+    @Autowired
+    public MSK_ImpactTimelineBrainSpineStatusWriter statusWriter;
+    
+    @Autowired
+    public MSK_ImpactTimelineBrainSpineSurgeryWriter surgeryWriter;
+    
+    @Autowired
+    public MSK_ImpactTimelineBrainSpineImagingWriter imagingWriter;
+    
+    @Autowired
+    public MSK_ImpactTimelineBrainSpineSpecimenWriter specimenWriter;
+    
+    @Autowired
+    public MSK_ImpactTimelineBrainSpineTreatmentWriter treatmentWriter;
     /*
     MSK_ImpactTimelineBrainSpineStatusProcessor statusProcessor = new MSK_ImpactTimelineBrainSpineStatusProcessor();
     MSK_ImpactTimelineBrainSpineSpecimenProcessor specimenProcessor = new MSK_ImpactTimelineBrainSpineSpecimenProcessor();
@@ -162,11 +174,11 @@ public class BatchConfiguration {
     @Bean
     @StepScope
     public CompositeItemWriter<TimelineBrainSpineComposite> writerDarwinTimelineBrainSpine(){
-        writerDelegates.add(new MSK_ImpactTimelineBrainSpineStatusWriter(stagingDirectory));
-        writerDelegates.add(new MSK_ImpactTimelineBrainSpineSpecimenWriter(stagingDirectory));
-        writerDelegates.add(new MSK_ImpactTimelineBrainSpineTreatmentWriter(stagingDirectory));
-        writerDelegates.add(new MSK_ImpactTimelineBrainSpineImagingWriter(stagingDirectory));
-        writerDelegates.add(new MSK_ImpactTimelineBrainSpineSurgeryWriter(stagingDirectory));
+        writerDelegates.add(statusWriter);
+        writerDelegates.add(surgeryWriter);
+        writerDelegates.add(imagingWriter);
+        writerDelegates.add(specimenWriter);
+        writerDelegates.add(treatmentWriter);
         CompositeItemWriter writer = new CompositeItemWriter<>();
         writer.setDelegates(writerDelegates);
         return writer;
