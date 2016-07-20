@@ -32,7 +32,7 @@ public class MSK_ImpactPatientIcdoRecord {
     private String FACILITY_FROM_DESC;
     private String TM_FACILITY_TO;
     private String FACILITY_TO_DESC;
-    private String TM_DX_YEAR;
+    private Integer TM_DX_YEAR;
     private String AGE_AT_TM_DX_DATE_IN_DAYS;
     private String TM_SITE_CD;
     private String TM_SITE_DESC;
@@ -214,7 +214,7 @@ public class MSK_ImpactPatientIcdoRecord {
             String FACILITY_FROM_DESC,
             String TM_FACILITY_TO,
             String FACILITY_TO_DESC,
-            String TM_DX_YEAR,
+            Integer TM_DX_YEAR,
             String AGE_AT_TM_DX_DATE_IN_DAYS,
             String TM_SITE_CD,
             String TM_SITE_DESC,
@@ -392,7 +392,7 @@ public class MSK_ImpactPatientIcdoRecord {
         this.FACILITY_FROM_DESC = FACILITY_FROM_DESC != null ? FACILITY_FROM_DESC : "N/A";
         this.TM_FACILITY_TO = TM_FACILITY_TO != null ? TM_FACILITY_TO : "N/A";
         this.FACILITY_TO_DESC = FACILITY_TO_DESC != null ? FACILITY_TO_DESC : "N/A";
-        this.TM_DX_YEAR = TM_DX_YEAR != null ? TM_DX_YEAR : "N/A";
+        this.TM_DX_YEAR = TM_DX_YEAR != null ? TM_DX_YEAR : 0;
         this.AGE_AT_TM_DX_DATE_IN_DAYS = AGE_AT_TM_DX_DATE_IN_DAYS != null ? AGE_AT_TM_DX_DATE_IN_DAYS : "N/A";
         this.TM_SITE_CD = TM_SITE_CD != null ? TM_SITE_CD : "N/A";
         this.TM_SITE_DESC = TM_SITE_DESC != null ? TM_SITE_DESC : "N/A";
@@ -712,12 +712,12 @@ public class MSK_ImpactPatientIcdoRecord {
         this.FACILITY_TO_DESC = FACILITY_TO_DESC != null ? FACILITY_TO_DESC : "N/A";
     }
 
-    public String getTM_DX_YEAR() {
+    public Integer getTM_DX_YEAR() {
         return TM_DX_YEAR;
     }
 
-    public void setTM_DX_YEAR(String TM_DX_YEAR) {
-        this.TM_DX_YEAR = TM_DX_YEAR != null ? TM_DX_YEAR : "N/A";
+    public void setTM_DX_YEAR(Integer TM_DX_YEAR) {
+        this.TM_DX_YEAR = TM_DX_YEAR != null ? TM_DX_YEAR : 0;
     }
 
     public String getAGE_AT_TM_DX_DATE_IN_DAYS() {
