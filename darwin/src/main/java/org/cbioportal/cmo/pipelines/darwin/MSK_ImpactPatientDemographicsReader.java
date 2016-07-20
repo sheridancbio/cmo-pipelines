@@ -20,6 +20,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.apache.log4j.Logger;
 
 import java.util.*;
+import static com.querydsl.core.alias.Alias.$;
+import static com.querydsl.core.alias.Alias.alias;
 /**
  *
  * @author jake
@@ -67,11 +69,10 @@ public class MSK_ImpactPatientDemographicsReader implements ItemStreamReader<MSK
                 $(qDPD.getPT_MARITAL_STS_DESC()),
                 $(qDPD.getPT_DEATH_YEAR()),
                 $(qDPD.getPT_MRN_CREATE_YEAR()),
-                $(qDPIR.getTUMOR_YEAR())))
+                $(qDPIR.getTM_DX_YEAR())))
                 .from($(qDPD))
                 .join($(qDPIR))
                 .on($(qDPD.getDMP_ID_DEMO()).eq($(qDPIR.getDMP_ID_ICDO())))
-                .orderBy($(qDPIR.getTUMOR_YEAR()).asc())
                 .fetch();
         darwinDemographicsResults.addAll(darwinQueryFactory.select(Projections.constructor(MSK_ImpactPatientDemographics.class,
                 $(qDPD.getDMP_ID_DEMO()),
@@ -79,8 +80,9 @@ public class MSK_ImpactPatientDemographicsReader implements ItemStreamReader<MSK
                 $(qDPD.getRACE()),
                 $(qDPD.getRELIGION()),
                 $(qDPD.getVITAL_STATUS())))
-                .from($(qDPD))
-                .orderBy($(qDPD.getDMP_ID_DEMO()).asc())
+                .from($(qDPD),$(qDPIR))
+                .where($(qDPIR.getDMP_ID_ICDO()).eq($(qDPD.getDMP_ID_DEMO())))
+                .where($(qDPIR.getTM_DX_YEAR()).isEmpty())
                 .fetch());
 
         return darwinDemographicsResults;
@@ -94,6 +96,7 @@ public class MSK_ImpactPatientDemographicsReader implements ItemStreamReader<MSK
     
     @Override
     public MSK_ImpactPatientDemographics read() throws Exception{
+        /*
         if(!darwinDemographicsResults.isEmpty()){
             //This logic flow is to ensure one record for each patient as multiple tumor years may exist for each ID
             if (!darwinDemographicsIDs.isEmpty()) {
@@ -120,7 +123,11 @@ public class MSK_ImpactPatientDemographicsReader implements ItemStreamReader<MSK
             darwinDemographicsIDs.add(darwinDemographicsResults.get(0).getDMP_ID_DEMO());
             return darwinDemographicsResults.remove(0);
         }
+        */
         log.info("Imported " + darwinDemographicsIDs.size() + " records from Demographics View.");
+        if(!darwinDemographicsResults.isEmpty()){
+            return darwinDemographicsResults.remove(0);
+        }
         return null;
     }
 }

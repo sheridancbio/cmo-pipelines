@@ -31,7 +31,7 @@ public class MSK_ImpactPatientDemographics {
     private String PT_MARITAL_STS_DESC;
     private String PT_DEATH_YEAR;
     private String PT_MRN_CREATE_YEAR;
-    private Integer TUMOR_YEAR;
+    private Integer TM_DX_YEAR;
     private Map<String, Object> additionalProperties = new HashMap<>();
 
     public MSK_ImpactPatientDemographics() {
@@ -40,7 +40,7 @@ public class MSK_ImpactPatientDemographics {
     public MSK_ImpactPatientDemographics(String PT_ID_DEMO, String DMP_ID_DEMO, String GENDER,
             String RACE, String RELIGION, String AGE_AT_DATE_OF_DEATH_IN_DAYS, String DEATH_SOURCE_DESCRIPTION, String VITAL_STATUS,
             String PT_COUNTRY, String PT_STATE, String PT_ZIP3_CD, Integer PT_BIRTH_YEAR, String PT_SEX_DESC,
-            String PT_VITAL_STATUS, String PT_MARITAL_STS_DESC, String PT_DEATH_YEAR, String PT_MRN_CREATE_YEAR, Integer TUMOR_YEAR) {
+            String PT_VITAL_STATUS, String PT_MARITAL_STS_DESC, String PT_DEATH_YEAR, String PT_MRN_CREATE_YEAR, Integer TM_DX_YEAR) {
         this.PT_ID_DEMO = PT_ID_DEMO != null ? PT_ID_DEMO : "N/A";
         this.DMP_ID_DEMO = DMP_ID_DEMO != null ? DMP_ID_DEMO : "N/A";
         this.GENDER = GENDER != null ? GENDER : "N/A";
@@ -58,7 +58,7 @@ public class MSK_ImpactPatientDemographics {
         this.PT_MARITAL_STS_DESC = PT_MARITAL_STS_DESC != null ? PT_MARITAL_STS_DESC : "N/A";
         this.PT_DEATH_YEAR = PT_DEATH_YEAR != null ? PT_DEATH_YEAR : "N/A";
         this.PT_MRN_CREATE_YEAR = PT_MRN_CREATE_YEAR != null ? PT_MRN_CREATE_YEAR : "N/A";
-        this.TUMOR_YEAR = TUMOR_YEAR != null ? TUMOR_YEAR : 0;
+        this.TM_DX_YEAR = TM_DX_YEAR != null ? TM_DX_YEAR : 0;
     }
     
     public MSK_ImpactPatientDemographics(String DMP_ID_DEMO, String GENDER, String RACE, String RELIGION, String VITAL_STATUS){
@@ -67,21 +67,21 @@ public class MSK_ImpactPatientDemographics {
         this.RACE = RACE != null ? RACE : "N/A";
         this.RELIGION = RELIGION != null ? RELIGION : "N/A";
         this.VITAL_STATUS = VITAL_STATUS != null ? VITAL_STATUS : "N/A";
-        this.TUMOR_YEAR = 0;
+        this.TM_DX_YEAR = 0;
         this.PT_BIRTH_YEAR = 0;
     }
     
-    public Integer getTUMOR_YEAR() {
-        return TUMOR_YEAR;
+    public Integer getTM_DX_YEAR() {
+        return TM_DX_YEAR;
     }
 
-    public void setTUMOR_YEAR(Integer TUMOR_YEAR) {
-        this.TUMOR_YEAR = TUMOR_YEAR != null ? TUMOR_YEAR : 0;
+    public void setTM_DX_YEAR(Integer TM_DX_YEAR) {
+        this.TM_DX_YEAR = TM_DX_YEAR != null ? TM_DX_YEAR : 0;
     }
     
     public String getAGE_AT_DIAGNOSIS(){
-        if(this.PT_BIRTH_YEAR>0 && this.TUMOR_YEAR>0 && this.TUMOR_YEAR>this.PT_BIRTH_YEAR){
-                Integer i = this.TUMOR_YEAR - this.PT_BIRTH_YEAR;
+        if(this.PT_BIRTH_YEAR>0 && this.TM_DX_YEAR>0 && this.TM_DX_YEAR>this.PT_BIRTH_YEAR){
+                Integer i = this.TM_DX_YEAR - this.PT_BIRTH_YEAR;
                 return i.toString();
         }
         else{
