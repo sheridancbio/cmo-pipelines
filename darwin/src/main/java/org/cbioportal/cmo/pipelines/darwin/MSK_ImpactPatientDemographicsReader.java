@@ -51,7 +51,7 @@ public class MSK_ImpactPatientDemographicsReader implements ItemStreamReader<MSK
         log.info("Start of Darwin Patient Demographics View Import...");
         MSK_ImpactPatientDemographics qDPD = alias(MSK_ImpactPatientDemographics.class, patientDemographicsView);
         MSK_ImpactPatientIcdoRecord qDPIR = alias(MSK_ImpactPatientIcdoRecord.class, patientIcdoView);
-        List<MSK_ImpactPatientDemographics> darwinDemographicsResults = darwinQueryFactory.selectDistinct(Projections.constructor(MSK_ImpactPatientDemographics.class,
+        List<MSK_ImpactPatientDemographics> darwinDemographicsResults = darwinQueryFactory.select(Projections.constructor(MSK_ImpactPatientDemographics.class,
                 $(qDPD.getDMP_ID_DEMO()),
                 $(qDPD.getGENDER()),
                 $(qDPD.getRACE()),
@@ -59,9 +59,9 @@ public class MSK_ImpactPatientDemographicsReader implements ItemStreamReader<MSK
                 $(qDPD.getVITAL_STATUS()),
                 $(qDPD.getPT_BIRTH_YEAR()),
                 $(qDPIR.getTM_DX_YEAR())))
-                .from($(qDPD))
-                .join($(qDPIR))
-                .on($(qDPD.getDMP_ID_DEMO()).eq($(qDPIR.getDMP_ID_ICDO())))
+                .from($(qDPD),$(qDPIR))
+                .where($(qDPD.getDMP_ID_DEMO()).eq($(qDPIR.getDMP_ID_ICDO())))
+                .groupBy($(qDPD.getDMP_ID_DEMO()))
                 .fetch();
         /*darwinDemographicsResults.addAll(darwinQueryFactory.selectDistinct(Projections.constructor(MSK_ImpactPatientDemographics.class,
                 $(qDPD.getDMP_ID_DEMO()),
