@@ -8,8 +8,6 @@ package org.cbioportal.cmo.pipelines.darwin;
 import org.cbioportal.cmo.pipelines.darwin.model.MSK_ImpactPatientDemographics;
 import org.cbioportal.cmo.pipelines.darwin.model.MSK_ImpactPatientIcdoRecord;
 
-import static com.querydsl.core.alias.Alias.$;
-import static com.querydsl.core.alias.Alias.alias;
 import com.querydsl.core.types.Projections;
 import com.querydsl.sql.SQLQueryFactory;
 
@@ -38,6 +36,7 @@ public class MSK_ImpactPatientDemographicsReader implements ItemStreamReader<MSK
     
     private List<MSK_ImpactPatientDemographics> darwinDemographicsResults;
     private List<String> darwinDemographicsIDs = new ArrayList<>();
+    private Integer missingTM_DX_YEAR = 0;
     
     Logger log = Logger.getLogger(MSK_ImpactPatientDemographicsReader.class);
     
@@ -51,7 +50,7 @@ public class MSK_ImpactPatientDemographicsReader implements ItemStreamReader<MSK
         log.info("Start of Darwin Patient Demographics View Import...");
         MSK_ImpactPatientDemographics qDPD = alias(MSK_ImpactPatientDemographics.class, patientDemographicsView);
         MSK_ImpactPatientIcdoRecord qDPIR = alias(MSK_ImpactPatientIcdoRecord.class, patientIcdoView);
-        List<MSK_ImpactPatientDemographics> darwinDemographicsResults = darwinQueryFactory.select(Projections.constructor(MSK_ImpactPatientDemographics.class,
+        List<MSK_ImpactPatientDemographics> darwinDemographicsResults = darwinQueryFactory.selectDistinct(Projections.constructor(MSK_ImpactPatientDemographics.class,
                 $(qDPD.getDMP_ID_DEMO()),
                 $(qDPD.getGENDER()),
                 $(qDPD.getRACE()),
@@ -59,22 +58,12 @@ public class MSK_ImpactPatientDemographicsReader implements ItemStreamReader<MSK
                 $(qDPD.getVITAL_STATUS()),
                 $(qDPD.getPT_BIRTH_YEAR()),
                 $(qDPIR.getTM_DX_YEAR())))
-                .from($(qDPD),$(qDPIR))
-                .where($(qDPD.getDMP_ID_DEMO()).eq($(qDPIR.getDMP_ID_ICDO())))
-                .groupBy($(qDPD.getDMP_ID_DEMO()))
+                .from($(qDPD))
+                .join($(qDPIR))
+                .on($(qDPD.getDMP_ID_DEMO()).eq($(qDPIR.getDMP_ID_ICDO())))
+                .orderBy($(qDPIR.getTM_DX_YEAR()).desc())
                 .fetch();
-        /*darwinDemographicsResults.addAll(darwinQueryFactory.selectDistinct(Projections.constructor(MSK_ImpactPatientDemographics.class,
-                $(qDPD.getDMP_ID_DEMO()),
-                $(qDPD.getGENDER()),
-                $(qDPD.getRACE()),
-                $(qDPD.getRELIGION()),
-                $(qDPD.getVITAL_STATUS())))
-                .from($(qDPD),$(qDPIR))
-                .where($(qDPIR.getDMP_ID_ICDO()).eq($(qDPD.getDMP_ID_DEMO())))
-                .where($(qDPIR.getTM_DX_YEAR()).isNull())
-                .fetch());
-        */
-        log.info("Imported " + darwinDemographicsResults.size() + " records from Demographics View.");
+        
         return darwinDemographicsResults;
     }
     
@@ -86,7 +75,7 @@ public class MSK_ImpactPatientDemographicsReader implements ItemStreamReader<MSK
     
     @Override
     public MSK_ImpactPatientDemographics read() throws Exception{
-        /*
+        
         if(!darwinDemographicsResults.isEmpty()){
             //This logic flow is to ensure one record for each patient as multiple tumor years may exist for each ID
             if (!darwinDemographicsIDs.isEmpty()) {
@@ -97,6 +86,7 @@ public class MSK_ImpactPatientDemographicsReader implements ItemStreamReader<MSK
                         //Check for end of imports
                         if (darwinDemographicsResults.isEmpty()) {
                             log.info("Imported " + darwinDemographicsIDs.size() + " records from Demographics View.");
+                            log.info(missingTM_DX_YEAR + " records missing TM_DX_YEAR!");
                             return null;
                         } 
                         //Checks if the new ID has been processed yet
@@ -106,18 +96,21 @@ public class MSK_ImpactPatientDemographicsReader implements ItemStreamReader<MSK
                     }
                 }
                 //Pop off to processor and add new ID to list
+                if(darwinDemographicsResults.get(0).getTM_DX_YEAR().equals(0)){
+                    missingTM_DX_YEAR++;
+                }
                 darwinDemographicsIDs.add(darwinDemographicsResults.get(0).getDMP_ID_DEMO());
                 return darwinDemographicsResults.remove(0);
             }
             //Pop off to processor and add new ID to list
+            if(darwinDemographicsResults.get(0).getTM_DX_YEAR().equals(0)){
+                missingTM_DX_YEAR++;
+            }
             darwinDemographicsIDs.add(darwinDemographicsResults.get(0).getDMP_ID_DEMO());
             return darwinDemographicsResults.remove(0);
         }
-        */
-        
-        if(!darwinDemographicsResults.isEmpty()){
-            return darwinDemographicsResults.remove(0);
-        }
+        log.info("Imported " + darwinDemographicsIDs.size() + " records from Demographics View.");
+        log.info(missingTM_DX_YEAR + " records missing TM_DX_YEAR!");
         return null;
     }
 }
