@@ -21,11 +21,9 @@ import org.apache.commons.lang.StringUtils;
  * @author jake
  */
 public class MSK_ImpactTimelineBrainSpineImagingWriter implements ItemStreamWriter<TimelineBrainSpineComposite>{
+    
     @Value("#{jobParameters[stagingDirectory]}")
     private String stagingDirectory;
-    
-    @Value("${darwin.timeline_bs_status}")
-    private String datasetFilename;
     
     private List<String> writeList = new ArrayList<>();
     private final FlatFileItemWriter<String> flatFileItemWriter = new FlatFileItemWriter<>();
@@ -33,7 +31,7 @@ public class MSK_ImpactTimelineBrainSpineImagingWriter implements ItemStreamWrit
     
     @Override
     public void open(ExecutionContext executionContext) throws ItemStreamException{
-        stagingFile = stagingDirectory + File.separator + datasetFilename;
+        stagingFile = stagingDirectory + File.separator + "data_timeline_diagnostics_caisis_gbm.txt";
         PassThroughLineAggregator aggr = new PassThroughLineAggregator();
         flatFileItemWriter.setLineAggregator(aggr);
         flatFileItemWriter.setHeaderCallback(new FlatFileHeaderCallback(){

@@ -40,36 +40,6 @@ public class DarwinConfiguration {
     @Value("${darwin.schema}")
     private String schema;
     
-    @Bean
-    public static PropertySourcesPlaceholderConfigurer propertyConfigInDev() {
-        return new PropertySourcesPlaceholderConfigurer();
-    }
-    
-    @Bean
-    public static MSK_ImpactTimelineBrainSpineStatusProcessor statusProcessor(){
-        return new MSK_ImpactTimelineBrainSpineStatusProcessor();
-    }
-    
-    @Bean
-    public static MSK_ImpactTimelineBrainSpineSpecimenProcessor specimenProcessor(){
-        return new MSK_ImpactTimelineBrainSpineSpecimenProcessor();
-    }
-    
-    @Bean
-    public static MSK_ImpactTimelineBrainSpineSurgeryProcessor surgeryProcessor(){
-        return new MSK_ImpactTimelineBrainSpineSurgeryProcessor();
-    }
-    
-    @Bean
-    public static MSK_ImpactTimelineBrainSpineTreatmentProcessor treatmentProcessor(){
-        return new MSK_ImpactTimelineBrainSpineTreatmentProcessor();
-    }
-    
-    @Bean
-    public static MSK_ImpactTimelineBrainSpineImagingProcessor imagingProcessor(){
-        return new MSK_ImpactTimelineBrainSpineImagingProcessor();
-    }
-    
         
     @Bean
     public SQLQueryFactory darwinQueryFactory() throws SQLException{

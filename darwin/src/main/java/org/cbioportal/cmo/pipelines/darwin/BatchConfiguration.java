@@ -57,7 +57,7 @@ public class BatchConfiguration {
     public static final String STUDYID_JOB = "studyIDJob";
       
     private final List<ItemProcessor> processorDelegates = new ArrayList<>();
-    private final List<ItemStreamWriter> writerDelegates = new ArrayList<>();
+    
     
     @Value("${darwin.chunk_size}")
     private Integer chunkSize;
@@ -67,18 +67,6 @@ public class BatchConfiguration {
     
     @Autowired
     public StepBuilderFactory stepBuilderFactory;
-    
-    MSK_ImpactTimelineBrainSpineStatusProcessor statusProcessor = new MSK_ImpactTimelineBrainSpineStatusProcessor();
-    MSK_ImpactTimelineBrainSpineSpecimenProcessor specimenProcessor = new MSK_ImpactTimelineBrainSpineSpecimenProcessor();
-    MSK_ImpactTimelineBrainSpineTreatmentProcessor treatmentProcessor = new MSK_ImpactTimelineBrainSpineTreatmentProcessor();
-    MSK_ImpactTimelineBrainSpineImagingProcessor imagingProcessor = new MSK_ImpactTimelineBrainSpineImagingProcessor();
-    MSK_ImpactTimelineBrainSpineSurgeryProcessor surgeryProcessor = new MSK_ImpactTimelineBrainSpineSurgeryProcessor();
-    
-    MSK_ImpactTimelineBrainSpineStatusWriter statusWriter = new MSK_ImpactTimelineBrainSpineStatusWriter();
-    MSK_ImpactTimelineBrainSpineSpecimenWriter specimenWriter = new MSK_ImpactTimelineBrainSpineSpecimenWriter();
-    MSK_ImpactTimelineBrainSpineTreatmentWriter treatmentWriter = new MSK_ImpactTimelineBrainSpineTreatmentWriter();
-    MSK_ImpactTimelineBrainSpineImagingWriter imagingWriter = new MSK_ImpactTimelineBrainSpineImagingWriter();
-    MSK_ImpactTimelineBrainSpineSurgeryWriter surgeryWriter = new MSK_ImpactTimelineBrainSpineSurgeryWriter();
     
     @Bean
     public static PropertySourcesPlaceholderConfigurer propertyConfigInDev() {
@@ -146,11 +134,12 @@ public class BatchConfiguration {
     @Bean
     @StepScope
     public CompositeItemProcessor processorDarwinTimelineBrainSpine(){
-        processorDelegates.add(statusProcessor);
-        processorDelegates.add(specimenProcessor);
-        processorDelegates.add(treatmentProcessor);
-        processorDelegates.add(imagingProcessor);
-        processorDelegates.add(surgeryProcessor);
+        
+        processorDelegates.add(new MSK_ImpactTimelineBrainSpineStatusProcessor());
+        processorDelegates.add(new MSK_ImpactTimelineBrainSpineSpecimenProcessor());
+        processorDelegates.add(new MSK_ImpactTimelineBrainSpineTreatmentProcessor());
+        processorDelegates.add(new MSK_ImpactTimelineBrainSpineImagingProcessor());
+        processorDelegates.add(new MSK_ImpactTimelineBrainSpineSurgeryProcessor());
         CompositeItemProcessor processor = new CompositeItemProcessor<>();
         processor.setDelegates(processorDelegates);
         return processor;
@@ -158,12 +147,43 @@ public class BatchConfiguration {
     
     @Bean
     @StepScope
+    public ItemStreamWriter<TimelineBrainSpineComposite> statusWriter(){
+        return new MSK_ImpactTimelineBrainSpineStatusWriter();
+    }
+    
+    @Bean
+    @StepScope
+    public ItemStreamWriter<TimelineBrainSpineComposite> specimenWriter(){
+        return new MSK_ImpactTimelineBrainSpineSpecimenWriter();
+    }
+    
+    @Bean
+    @StepScope
+    public ItemStreamWriter<TimelineBrainSpineComposite> surgeryWriter(){
+        return new MSK_ImpactTimelineBrainSpineSurgeryWriter();
+    }
+    
+    @Bean
+    @StepScope
+    public ItemStreamWriter<TimelineBrainSpineComposite> treatmentWriter(){
+        return new MSK_ImpactTimelineBrainSpineTreatmentWriter();
+    }
+    
+    @Bean
+    @StepScope
+    public ItemStreamWriter<TimelineBrainSpineComposite> imagingWriter(){
+        return new MSK_ImpactTimelineBrainSpineImagingWriter();
+    }
+    
+    @Bean
+    @StepScope
     public CompositeItemWriter<TimelineBrainSpineComposite> writerDarwinTimelineBrainSpine(){
-        writerDelegates.add(statusWriter);
-        writerDelegates.add(specimenWriter);
-        writerDelegates.add(treatmentWriter);
-        writerDelegates.add(imagingWriter);
-        writerDelegates.add(surgeryWriter);
+        List<ItemStreamWriter> writerDelegates = new ArrayList<>();
+        writerDelegates.add(statusWriter());
+        writerDelegates.add(surgeryWriter());
+        writerDelegates.add(imagingWriter());
+        writerDelegates.add(specimenWriter());
+        writerDelegates.add(treatmentWriter());
         CompositeItemWriter writer = new CompositeItemWriter<>();
         writer.setDelegates(writerDelegates);
         return writer;
@@ -174,7 +194,7 @@ public class BatchConfiguration {
         return stepBuilderFactory.get("stepDPIR")
                 .<MSK_ImpactPatientIcdoRecord, String> chunk(chunkSize)
                 .reader(readerDarwinPatientICDORecord())
-                .processor(processorDarwinPatientICDORecrod())
+                .processor(processorDarwinPatientICDORecord())
                 .writer(writerDarwinPatientICDORecord())
                 .build();
     }
@@ -186,7 +206,7 @@ public class BatchConfiguration {
     }
     
     @Bean
-    public MSK_ImpactPatientIcdoProcessor processorDarwinPatientICDORecrod(){
+    public MSK_ImpactPatientIcdoProcessor processorDarwinPatientICDORecord(){
         return new MSK_ImpactPatientIcdoProcessor();
     }
     
