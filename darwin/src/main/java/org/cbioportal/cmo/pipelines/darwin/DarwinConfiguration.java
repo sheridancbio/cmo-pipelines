@@ -40,62 +40,6 @@ public class DarwinConfiguration {
     @Value("${darwin.schema}")
     private String schema;
     
-    /*
-    @Bean
-    public static PropertySourcesPlaceholderConfigurer propertyConfigInDev() {
-        return new PropertySourcesPlaceholderConfigurer();
-    }
-    
-    @Bean
-    public MSK_ImpactTimelineBrainSpineStatusWriter statusWriter(){
-        return new MSK_ImpactTimelineBrainSpineStatusWriter(stagingDirectory);
-    }
-    
-    @Bean
-    public MSK_ImpactTimelineBrainSpineSpecimenWriter specimenWriter(){
-        return new MSK_ImpactTimelineBrainSpineSpecimenWriter(stagingDirectory);
-    }
-    
-    @Bean
-    public MSK_ImpactTimelineBrainSpineImagingWriter imagingWriter(){
-        return new MSK_ImpactTimelineBrainSpineImagingWriter(stagingDirectory);
-    }
-    
-    @Bean
-    public MSK_ImpactTimelineBrainSpineSurgeryWriter surgeryWriter(){
-        return new MSK_ImpactTimelineBrainSpineSurgeryWriter(stagingDirectory);
-    }
-    
-    @Bean
-    public MSK_ImpactTimelineBrainSpineTreatmentWriter treatmentWriter(){
-        return new MSK_ImpactTimelineBrainSpineTreatmentWriter(stagingDirectory);
-    }
-    
-    @Bean
-    public static MSK_ImpactTimelineBrainSpineStatusProcessor statusProcessor(){
-        return new MSK_ImpactTimelineBrainSpineStatusProcessor();
-    }
-    
-    @Bean
-    public static MSK_ImpactTimelineBrainSpineSpecimenProcessor specimenProcessor(){
-        return new MSK_ImpactTimelineBrainSpineSpecimenProcessor();
-    }
-    
-    @Bean
-    public static MSK_ImpactTimelineBrainSpineSurgeryProcessor surgeryProcessor(){
-        return new MSK_ImpactTimelineBrainSpineSurgeryProcessor();
-    }
-    
-    @Bean
-    public static MSK_ImpactTimelineBrainSpineTreatmentProcessor treatmentProcessor(){
-        return new MSK_ImpactTimelineBrainSpineTreatmentProcessor();
-    }
-    
-    @Bean
-    public static MSK_ImpactTimelineBrainSpineImagingProcessor imagingProcessor(){
-        return new MSK_ImpactTimelineBrainSpineImagingProcessor();
-    }
-    */
         
     @Bean
     public SQLQueryFactory darwinQueryFactory() throws SQLException{

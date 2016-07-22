@@ -67,34 +67,7 @@ public class BatchConfiguration {
     
     @Autowired
     public StepBuilderFactory stepBuilderFactory;
-    /*
-    @Autowired
-    public MSK_ImpactTimelineBrainSpineStatusWriter statusWriter;
     
-    @Autowired
-    public MSK_ImpactTimelineBrainSpineSurgeryWriter surgeryWriter;
-    
-    @Autowired
-    public MSK_ImpactTimelineBrainSpineImagingWriter imagingWriter;
-    
-    @Autowired
-    public MSK_ImpactTimelineBrainSpineSpecimenWriter specimenWriter;
-    
-    @Autowired
-    public MSK_ImpactTimelineBrainSpineTreatmentWriter treatmentWriter;
-    
-    MSK_ImpactTimelineBrainSpineStatusProcessor statusProcessor = new MSK_ImpactTimelineBrainSpineStatusProcessor();
-    MSK_ImpactTimelineBrainSpineSpecimenProcessor specimenProcessor = new MSK_ImpactTimelineBrainSpineSpecimenProcessor();
-    MSK_ImpactTimelineBrainSpineTreatmentProcessor treatmentProcessor = new MSK_ImpactTimelineBrainSpineTreatmentProcessor();
-    MSK_ImpactTimelineBrainSpineImagingProcessor imagingProcessor = new MSK_ImpactTimelineBrainSpineImagingProcessor();
-    MSK_ImpactTimelineBrainSpineSurgeryProcessor surgeryProcessor = new MSK_ImpactTimelineBrainSpineSurgeryProcessor();
-    
-    MSK_ImpactTimelineBrainSpineStatusWriter statusWriter = new MSK_ImpactTimelineBrainSpineStatusWriter();
-    MSK_ImpactTimelineBrainSpineSpecimenWriter specimenWriter = new MSK_ImpactTimelineBrainSpineSpecimenWriter();
-    MSK_ImpactTimelineBrainSpineTreatmentWriter treatmentWriter = new MSK_ImpactTimelineBrainSpineTreatmentWriter();
-    MSK_ImpactTimelineBrainSpineImagingWriter imagingWriter = new MSK_ImpactTimelineBrainSpineImagingWriter();
-    MSK_ImpactTimelineBrainSpineSurgeryWriter surgeryWriter = new MSK_ImpactTimelineBrainSpineSurgeryWriter();
-    */
     @Bean
     public static PropertySourcesPlaceholderConfigurer propertyConfigInDev() {
         return new PropertySourcesPlaceholderConfigurer();
