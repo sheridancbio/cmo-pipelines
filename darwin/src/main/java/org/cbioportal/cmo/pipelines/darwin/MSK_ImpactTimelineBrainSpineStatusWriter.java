@@ -15,15 +15,10 @@ import org.springframework.beans.factory.annotation.Value;
 import java.io.*;
 import java.util.*;
 import org.apache.commons.lang.StringUtils;
-import org.springframework.batch.core.configuration.annotation.StepScope;
-import org.springframework.stereotype.Component;
-
 /**
  *
  * @author jake
  */
-@Component
-@StepScope
 public class MSK_ImpactTimelineBrainSpineStatusWriter implements ItemStreamWriter<TimelineBrainSpineComposite>{
     
     @Value("#{jobParameters[stagingDirectory]}")
