@@ -57,7 +57,7 @@ public class BatchConfiguration {
     public static final String STUDYID_JOB = "studyIDJob";
       
     private final List<ItemProcessor> processorDelegates = new ArrayList<>();
-    private final List<ItemStreamWriter> writerDelegates = new ArrayList<>();
+    
     
     @Value("${darwin.chunk_size}")
     private Integer chunkSize;
@@ -161,6 +161,7 @@ public class BatchConfiguration {
     @Bean
     @StepScope
     public CompositeItemProcessor processorDarwinTimelineBrainSpine(){
+        
         processorDelegates.add(new MSK_ImpactTimelineBrainSpineStatusProcessor());
         processorDelegates.add(new MSK_ImpactTimelineBrainSpineSpecimenProcessor());
         processorDelegates.add(new MSK_ImpactTimelineBrainSpineTreatmentProcessor());
@@ -174,6 +175,7 @@ public class BatchConfiguration {
     @Bean
     @StepScope
     public CompositeItemWriter<TimelineBrainSpineComposite> writerDarwinTimelineBrainSpine(){
+        List<ItemStreamWriter> writerDelegates = new ArrayList<>();
         writerDelegates.add(new MSK_ImpactTimelineBrainSpineStatusWriter());
         writerDelegates.add(new MSK_ImpactTimelineBrainSpineSurgeryWriter());
         writerDelegates.add(new MSK_ImpactTimelineBrainSpineImagingWriter());
