@@ -63,7 +63,16 @@ public class MSK_ImpactPatientDemographicsReader implements ItemStreamReader<MSK
                 .on($(qDPD.getDMP_ID_DEMO()).eq($(qDPIR.getDMP_ID_ICDO())))
                 .orderBy($(qDPIR.getTM_DX_YEAR()).asc())
                 .fetch();
-        
+        darwinDemographicsResults.addAll(darwinQueryFactory.select(Projections.constructor(MSK_ImpactPatientDemographics.class,
+                $(qDPD.getDMP_ID_DEMO()),
+                $(qDPD.getGENDER()),
+                $(qDPD.getRACE()),
+                $(qDPD.getRELIGION()),
+                $(qDPD.getVITAL_STATUS()),
+                $(qDPD.getPT_BIRTH_YEAR())))
+                .from($(qDPD))
+                .orderBy($(qDPIR.getTM_DX_YEAR()).asc())
+                .fetch());
         return darwinDemographicsResults;
     }
     

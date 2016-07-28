@@ -70,6 +70,15 @@ public class MSK_ImpactPatientDemographics {
         this.TM_DX_YEAR = TM_DX_YEAR != null ? TM_DX_YEAR : 0;
         this.PT_BIRTH_YEAR = PT_BIRTH_YEAR != null ? PT_BIRTH_YEAR : 0;
     }
+    public MSK_ImpactPatientDemographics(String DMP_ID_DEMO, String GENDER, String RACE, String RELIGION, String VITAL_STATUS, Integer PT_BIRTH_YEAR){
+        this.DMP_ID_DEMO = DMP_ID_DEMO != null ? DMP_ID_DEMO : "N/A";
+        this.GENDER = GENDER != null ? GENDER : "N/A";
+        this.RACE = RACE != null ? RACE : "N/A";
+        this.RELIGION = RELIGION != null ? RELIGION : "N/A";
+        this.VITAL_STATUS = VITAL_STATUS != null ? VITAL_STATUS : "N/A";
+        this.TM_DX_YEAR = TM_DX_YEAR = 0;
+        this.PT_BIRTH_YEAR = PT_BIRTH_YEAR != null ? PT_BIRTH_YEAR : 0;
+    }
     
     public Integer getTM_DX_YEAR() {
         return TM_DX_YEAR;
