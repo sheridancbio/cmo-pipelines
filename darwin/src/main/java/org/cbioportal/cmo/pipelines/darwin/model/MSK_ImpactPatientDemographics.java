@@ -69,6 +69,7 @@ public class MSK_ImpactPatientDemographics {
         this.VITAL_STATUS = VITAL_STATUS != null ? VITAL_STATUS : "NA";
         this.TM_DX_YEAR = TM_DX_YEAR != null ? TM_DX_YEAR : 0;
         this.PT_BIRTH_YEAR = PT_BIRTH_YEAR != null ? PT_BIRTH_YEAR : 0;
+        this.AGE_AT_DATE_OF_DEATH_IN_DAYS = AGE_AT_DEATH_IN_DAYS != null ? AGE_AT_DEATH_IN_DAYS : 0;
     }
     public MSK_ImpactPatientDemographics(String DMP_ID_DEMO, String GENDER, String RACE, String RELIGION, String VITAL_STATUS, Integer PT_BIRTH_YEAR, Integer AGE_AT_DEATH_IN_DAYS){
         this.DMP_ID_DEMO = DMP_ID_DEMO != null ? DMP_ID_DEMO : "NA";
@@ -78,6 +79,7 @@ public class MSK_ImpactPatientDemographics {
         this.VITAL_STATUS = VITAL_STATUS != null ? VITAL_STATUS : "NA";
         this.TM_DX_YEAR = TM_DX_YEAR = 0;
         this.PT_BIRTH_YEAR = PT_BIRTH_YEAR != null ? PT_BIRTH_YEAR : 0;
+        this.AGE_AT_DATE_OF_DEATH_IN_DAYS = AGE_AT_DEATH_IN_DAYS != null ? AGE_AT_DEATH_IN_DAYS : 0;
     }
     
     public Integer getTM_DX_YEAR() {
