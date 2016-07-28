@@ -19,7 +19,7 @@ public class MSK_ImpactPatientDemographics {
     private String GENDER;
     private String RACE;
     private String RELIGION;
-    private String AGE_AT_DATE_OF_DEATH_IN_DAYS;
+    private Integer AGE_AT_DATE_OF_DEATH_IN_DAYS;
     private String DEATH_SOURCE_DESCRIPTION;
     private String VITAL_STATUS;
     private String PT_COUNTRY;
@@ -38,7 +38,7 @@ public class MSK_ImpactPatientDemographics {
     }
 
     public MSK_ImpactPatientDemographics(String PT_ID_DEMO, String DMP_ID_DEMO, String GENDER,
-            String RACE, String RELIGION, String AGE_AT_DATE_OF_DEATH_IN_DAYS, String DEATH_SOURCE_DESCRIPTION, String VITAL_STATUS,
+            String RACE, String RELIGION, Integer AGE_AT_DATE_OF_DEATH_IN_DAYS, String DEATH_SOURCE_DESCRIPTION, String VITAL_STATUS,
             String PT_COUNTRY, String PT_STATE, String PT_ZIP3_CD, Integer PT_BIRTH_YEAR, String PT_SEX_DESC,
             String PT_VITAL_STATUS, String PT_MARITAL_STS_DESC, String PT_DEATH_YEAR, String PT_MRN_CREATE_YEAR, Integer TM_DX_YEAR) {
         this.PT_ID_DEMO = PT_ID_DEMO != null ? PT_ID_DEMO : "NA";
@@ -46,7 +46,7 @@ public class MSK_ImpactPatientDemographics {
         this.GENDER = GENDER != null ? GENDER : "NA";
         this.RACE = RACE != null ? RACE : "NA";
         this.RELIGION = RELIGION != null ? RELIGION : "NA";
-        this.AGE_AT_DATE_OF_DEATH_IN_DAYS = AGE_AT_DATE_OF_DEATH_IN_DAYS != null ? AGE_AT_DATE_OF_DEATH_IN_DAYS : "NA";
+        this.AGE_AT_DATE_OF_DEATH_IN_DAYS = AGE_AT_DATE_OF_DEATH_IN_DAYS != null ? AGE_AT_DATE_OF_DEATH_IN_DAYS : 0;
         this.DEATH_SOURCE_DESCRIPTION = DEATH_SOURCE_DESCRIPTION != null ? DEATH_SOURCE_DESCRIPTION : "NA";
         this.VITAL_STATUS = VITAL_STATUS != null ? VITAL_STATUS : "NA";
         this.PT_COUNTRY = PT_COUNTRY != null ? PT_COUNTRY : "NA";
@@ -61,7 +61,7 @@ public class MSK_ImpactPatientDemographics {
         this.TM_DX_YEAR = TM_DX_YEAR != null ? TM_DX_YEAR : 0;
     }
     
-    public MSK_ImpactPatientDemographics(String DMP_ID_DEMO, String GENDER, String RACE, String RELIGION, String VITAL_STATUS, Integer PT_BIRTH_YEAR, Integer TM_DX_YEAR){
+    public MSK_ImpactPatientDemographics(String DMP_ID_DEMO, String GENDER, String RACE, String RELIGION, String VITAL_STATUS, Integer PT_BIRTH_YEAR, Integer TM_DX_YEAR, Integer AGE_AT_DEATH_IN_DAYS){
         this.DMP_ID_DEMO = DMP_ID_DEMO != null ? DMP_ID_DEMO : "NA";
         this.GENDER = GENDER != null ? GENDER : "NA";
         this.RACE = RACE != null ? RACE : "NA";
@@ -70,7 +70,7 @@ public class MSK_ImpactPatientDemographics {
         this.TM_DX_YEAR = TM_DX_YEAR != null ? TM_DX_YEAR : 0;
         this.PT_BIRTH_YEAR = PT_BIRTH_YEAR != null ? PT_BIRTH_YEAR : 0;
     }
-    public MSK_ImpactPatientDemographics(String DMP_ID_DEMO, String GENDER, String RACE, String RELIGION, String VITAL_STATUS, Integer PT_BIRTH_YEAR){
+    public MSK_ImpactPatientDemographics(String DMP_ID_DEMO, String GENDER, String RACE, String RELIGION, String VITAL_STATUS, Integer PT_BIRTH_YEAR, Integer AGE_AT_DEATH_IN_DAYS){
         this.DMP_ID_DEMO = DMP_ID_DEMO != null ? DMP_ID_DEMO : "NA";
         this.GENDER = GENDER != null ? GENDER : "NA";
         this.RACE = RACE != null ? RACE : "NA";
@@ -144,12 +144,12 @@ public class MSK_ImpactPatientDemographics {
         this.RELIGION = RELIGION != null ? RELIGION : "NA";
     }
 
-    public String getAGE_AT_DATE_OF_DEATH_IN_DAYS() {
+    public Integer getAGE_AT_DATE_OF_DEATH_IN_DAYS() {
         return AGE_AT_DATE_OF_DEATH_IN_DAYS;
     }
 
-    public void setAGE_AT_DATE_OF_DEATH_IN_DAYS(String AGE_AT_DATE_OF_DEATH_IN_DAYS) {
-        this.AGE_AT_DATE_OF_DEATH_IN_DAYS = AGE_AT_DATE_OF_DEATH_IN_DAYS != null ? AGE_AT_DATE_OF_DEATH_IN_DAYS : "NA";
+    public void setAGE_AT_DATE_OF_DEATH_IN_DAYS(Integer AGE_AT_DATE_OF_DEATH_IN_DAYS) {
+        this.AGE_AT_DATE_OF_DEATH_IN_DAYS = AGE_AT_DATE_OF_DEATH_IN_DAYS != null ? AGE_AT_DATE_OF_DEATH_IN_DAYS : 0;
     }
 
     public String getDEATH_SOURCE_DESCRIPTION() {
@@ -242,6 +242,10 @@ public class MSK_ImpactPatientDemographics {
     //Note: update 2016 yearly because lazy
     public String getDARWIN_PATIENT_AGE(){
         if(this.PT_BIRTH_YEAR>0){
+            if(this.AGE_AT_DATE_OF_DEATH_IN_DAYS>0){
+                Integer i = this.AGE_AT_DATE_OF_DEATH_IN_DAYS/365;
+                return i.toString();
+            }
             Integer i = currentYear-this.PT_BIRTH_YEAR;
             //Age > 90 is considered identifying
             if (i < 90) {
