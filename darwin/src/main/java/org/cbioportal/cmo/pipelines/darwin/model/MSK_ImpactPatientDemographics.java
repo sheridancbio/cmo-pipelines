@@ -41,41 +41,41 @@ public class MSK_ImpactPatientDemographics {
             String RACE, String RELIGION, String AGE_AT_DATE_OF_DEATH_IN_DAYS, String DEATH_SOURCE_DESCRIPTION, String VITAL_STATUS,
             String PT_COUNTRY, String PT_STATE, String PT_ZIP3_CD, Integer PT_BIRTH_YEAR, String PT_SEX_DESC,
             String PT_VITAL_STATUS, String PT_MARITAL_STS_DESC, String PT_DEATH_YEAR, String PT_MRN_CREATE_YEAR, Integer TM_DX_YEAR) {
-        this.PT_ID_DEMO = PT_ID_DEMO != null ? PT_ID_DEMO : "N/A";
-        this.DMP_ID_DEMO = DMP_ID_DEMO != null ? DMP_ID_DEMO : "N/A";
-        this.GENDER = GENDER != null ? GENDER : "N/A";
-        this.RACE = RACE != null ? RACE : "N/A";
-        this.RELIGION = RELIGION != null ? RELIGION : "N/A";
-        this.AGE_AT_DATE_OF_DEATH_IN_DAYS = AGE_AT_DATE_OF_DEATH_IN_DAYS != null ? AGE_AT_DATE_OF_DEATH_IN_DAYS : "N/A";
-        this.DEATH_SOURCE_DESCRIPTION = DEATH_SOURCE_DESCRIPTION != null ? DEATH_SOURCE_DESCRIPTION : "N/A";
-        this.VITAL_STATUS = VITAL_STATUS != null ? VITAL_STATUS : "N/A";
-        this.PT_COUNTRY = PT_COUNTRY != null ? PT_COUNTRY : "N/A";
-        this.PT_STATE = PT_STATE != null ? PT_STATE : "N/A";
-        this.PT_ZIP3_CD = PT_ZIP3_CD != null ? PT_ZIP3_CD : "N/A";
+        this.PT_ID_DEMO = PT_ID_DEMO != null ? PT_ID_DEMO : "NA";
+        this.DMP_ID_DEMO = DMP_ID_DEMO != null ? DMP_ID_DEMO : "NA";
+        this.GENDER = GENDER != null ? GENDER : "NA";
+        this.RACE = RACE != null ? RACE : "NA";
+        this.RELIGION = RELIGION != null ? RELIGION : "NA";
+        this.AGE_AT_DATE_OF_DEATH_IN_DAYS = AGE_AT_DATE_OF_DEATH_IN_DAYS != null ? AGE_AT_DATE_OF_DEATH_IN_DAYS : "NA";
+        this.DEATH_SOURCE_DESCRIPTION = DEATH_SOURCE_DESCRIPTION != null ? DEATH_SOURCE_DESCRIPTION : "NA";
+        this.VITAL_STATUS = VITAL_STATUS != null ? VITAL_STATUS : "NA";
+        this.PT_COUNTRY = PT_COUNTRY != null ? PT_COUNTRY : "NA";
+        this.PT_STATE = PT_STATE != null ? PT_STATE : "NA";
+        this.PT_ZIP3_CD = PT_ZIP3_CD != null ? PT_ZIP3_CD : "NA";
         this.PT_BIRTH_YEAR = PT_BIRTH_YEAR != null ? PT_BIRTH_YEAR : 0;
-        this.PT_SEX_DESC = PT_SEX_DESC != null ? PT_SEX_DESC : "N/A";
-        this.PT_VITAL_STATUS = PT_VITAL_STATUS != null ? PT_VITAL_STATUS : "N/A";
-        this.PT_MARITAL_STS_DESC = PT_MARITAL_STS_DESC != null ? PT_MARITAL_STS_DESC : "N/A";
-        this.PT_DEATH_YEAR = PT_DEATH_YEAR != null ? PT_DEATH_YEAR : "N/A";
-        this.PT_MRN_CREATE_YEAR = PT_MRN_CREATE_YEAR != null ? PT_MRN_CREATE_YEAR : "N/A";
+        this.PT_SEX_DESC = PT_SEX_DESC != null ? PT_SEX_DESC : "NA";
+        this.PT_VITAL_STATUS = PT_VITAL_STATUS != null ? PT_VITAL_STATUS : "NA";
+        this.PT_MARITAL_STS_DESC = PT_MARITAL_STS_DESC != null ? PT_MARITAL_STS_DESC : "NA";
+        this.PT_DEATH_YEAR = PT_DEATH_YEAR != null ? PT_DEATH_YEAR : "NA";
+        this.PT_MRN_CREATE_YEAR = PT_MRN_CREATE_YEAR != null ? PT_MRN_CREATE_YEAR : "NA";
         this.TM_DX_YEAR = TM_DX_YEAR != null ? TM_DX_YEAR : 0;
     }
     
     public MSK_ImpactPatientDemographics(String DMP_ID_DEMO, String GENDER, String RACE, String RELIGION, String VITAL_STATUS, Integer PT_BIRTH_YEAR, Integer TM_DX_YEAR){
-        this.DMP_ID_DEMO = DMP_ID_DEMO != null ? DMP_ID_DEMO : "N/A";
-        this.GENDER = GENDER != null ? GENDER : "N/A";
-        this.RACE = RACE != null ? RACE : "N/A";
-        this.RELIGION = RELIGION != null ? RELIGION : "N/A";
-        this.VITAL_STATUS = VITAL_STATUS != null ? VITAL_STATUS : "N/A";
+        this.DMP_ID_DEMO = DMP_ID_DEMO != null ? DMP_ID_DEMO : "NA";
+        this.GENDER = GENDER != null ? GENDER : "NA";
+        this.RACE = RACE != null ? RACE : "NA";
+        this.RELIGION = RELIGION != null ? RELIGION : "NA";
+        this.VITAL_STATUS = VITAL_STATUS != null ? VITAL_STATUS : "NA";
         this.TM_DX_YEAR = TM_DX_YEAR != null ? TM_DX_YEAR : 0;
         this.PT_BIRTH_YEAR = PT_BIRTH_YEAR != null ? PT_BIRTH_YEAR : 0;
     }
     public MSK_ImpactPatientDemographics(String DMP_ID_DEMO, String GENDER, String RACE, String RELIGION, String VITAL_STATUS, Integer PT_BIRTH_YEAR){
-        this.DMP_ID_DEMO = DMP_ID_DEMO != null ? DMP_ID_DEMO : "N/A";
-        this.GENDER = GENDER != null ? GENDER : "N/A";
-        this.RACE = RACE != null ? RACE : "N/A";
-        this.RELIGION = RELIGION != null ? RELIGION : "N/A";
-        this.VITAL_STATUS = VITAL_STATUS != null ? VITAL_STATUS : "N/A";
+        this.DMP_ID_DEMO = DMP_ID_DEMO != null ? DMP_ID_DEMO : "NA";
+        this.GENDER = GENDER != null ? GENDER : "NA";
+        this.RACE = RACE != null ? RACE : "NA";
+        this.RELIGION = RELIGION != null ? RELIGION : "NA";
+        this.VITAL_STATUS = VITAL_STATUS != null ? VITAL_STATUS : "NA";
         this.TM_DX_YEAR = TM_DX_YEAR = 0;
         this.PT_BIRTH_YEAR = PT_BIRTH_YEAR != null ? PT_BIRTH_YEAR : 0;
     }
@@ -91,16 +91,16 @@ public class MSK_ImpactPatientDemographics {
     public String getAGE_AT_DIAGNOSIS(){
         if(this.PT_BIRTH_YEAR>0 && this.TM_DX_YEAR>0 && this.TM_DX_YEAR>this.PT_BIRTH_YEAR){
                 Integer i = this.TM_DX_YEAR - this.PT_BIRTH_YEAR;
-                //Age > 80 is considered identifying
-                if(i<80){
+                //Age > 90 is considered identifying
+                if(i<90){
                     return i.toString();
                 }
                 else{
-                    return "N/A";
+                    return "NA";
                 }
         }
         else{
-            return "N/A";
+            return "NA";
         }
     }
 
@@ -109,7 +109,7 @@ public class MSK_ImpactPatientDemographics {
     }
 
     public void setPT_ID_DEMO(String PT_ID_DEMO) {
-        this.PT_ID_DEMO = PT_ID_DEMO != null ? PT_ID_DEMO : "N/A";
+        this.PT_ID_DEMO = PT_ID_DEMO != null ? PT_ID_DEMO : "NA";
     }
 
     public String getDMP_ID_DEMO() {
@@ -117,7 +117,7 @@ public class MSK_ImpactPatientDemographics {
     }
 
     public void setDMP_ID_DEMO(String DMP_ID_DEMO) {
-        this.DMP_ID_DEMO = DMP_ID_DEMO != null ? DMP_ID_DEMO : "N/A";
+        this.DMP_ID_DEMO = DMP_ID_DEMO != null ? DMP_ID_DEMO : "NA";
     }
 
     public String getGENDER() {
@@ -125,7 +125,7 @@ public class MSK_ImpactPatientDemographics {
     }
 
     public void setGENDER(String GENDER) {
-        this.GENDER = GENDER != null ? GENDER : "N/A";
+        this.GENDER = GENDER != null ? GENDER : "NA";
     }
 
     public String getRACE() {
@@ -133,7 +133,7 @@ public class MSK_ImpactPatientDemographics {
     }
 
     public void setRACE(String RACE) {
-        this.RACE = RACE != null ? RACE : "N/A";
+        this.RACE = RACE != null ? RACE : "NA";
     }
 
     public String getRELIGION() {
@@ -141,7 +141,7 @@ public class MSK_ImpactPatientDemographics {
     }
 
     public void setRELIGION(String RELIGION) {
-        this.RELIGION = RELIGION != null ? RELIGION : "N/A";
+        this.RELIGION = RELIGION != null ? RELIGION : "NA";
     }
 
     public String getAGE_AT_DATE_OF_DEATH_IN_DAYS() {
@@ -149,7 +149,7 @@ public class MSK_ImpactPatientDemographics {
     }
 
     public void setAGE_AT_DATE_OF_DEATH_IN_DAYS(String AGE_AT_DATE_OF_DEATH_IN_DAYS) {
-        this.AGE_AT_DATE_OF_DEATH_IN_DAYS = AGE_AT_DATE_OF_DEATH_IN_DAYS != null ? AGE_AT_DATE_OF_DEATH_IN_DAYS : "N/A";
+        this.AGE_AT_DATE_OF_DEATH_IN_DAYS = AGE_AT_DATE_OF_DEATH_IN_DAYS != null ? AGE_AT_DATE_OF_DEATH_IN_DAYS : "NA";
     }
 
     public String getDEATH_SOURCE_DESCRIPTION() {
@@ -157,7 +157,7 @@ public class MSK_ImpactPatientDemographics {
     }
 
     public void setDEATH_SOURCE_DESCRIPTION(String DEATH_SOURCE_DESCRIPTION) {
-        this.DEATH_SOURCE_DESCRIPTION = DEATH_SOURCE_DESCRIPTION != null ? DEATH_SOURCE_DESCRIPTION : "N/A";
+        this.DEATH_SOURCE_DESCRIPTION = DEATH_SOURCE_DESCRIPTION != null ? DEATH_SOURCE_DESCRIPTION : "NA";
     }
     
     public String getVITAL_STATUS(){
@@ -165,7 +165,7 @@ public class MSK_ImpactPatientDemographics {
     }
     
     public void setVITAL_STATUS(){
-        this.VITAL_STATUS = VITAL_STATUS != null ? VITAL_STATUS : "N/A";
+        this.VITAL_STATUS = VITAL_STATUS != null ? VITAL_STATUS : "NA";
     }
 
     public String getPT_COUNTRY() {
@@ -173,7 +173,7 @@ public class MSK_ImpactPatientDemographics {
     }
 
     public void setPT_COUNTRY(String PT_COUNTRY) {
-        this.PT_COUNTRY = PT_COUNTRY != null ? PT_COUNTRY : "N/A";
+        this.PT_COUNTRY = PT_COUNTRY != null ? PT_COUNTRY : "NA";
     }
 
     public String getPT_STATE() {
@@ -181,7 +181,7 @@ public class MSK_ImpactPatientDemographics {
     }
 
     public void setPT_STATE(String PT_STATE) {
-        this.PT_STATE = PT_STATE != null ? PT_STATE : "N/A";
+        this.PT_STATE = PT_STATE != null ? PT_STATE : "NA";
     }
 
     public String getPT_ZIP3_CD() {
@@ -189,7 +189,7 @@ public class MSK_ImpactPatientDemographics {
     }
 
     public void setPT_ZIP3_CD(String PT_ZIP3_CD) {
-        this.PT_ZIP3_CD = PT_ZIP3_CD != null ? PT_ZIP3_CD : "N/A";
+        this.PT_ZIP3_CD = PT_ZIP3_CD != null ? PT_ZIP3_CD : "NA";
     }
 
     public Integer getPT_BIRTH_YEAR() {
@@ -205,7 +205,7 @@ public class MSK_ImpactPatientDemographics {
     }
 
     public void setPT_SEX_DESC(String PT_SEX_DESC) {
-        this.PT_SEX_DESC = PT_SEX_DESC != null ? PT_SEX_DESC : "N/A";
+        this.PT_SEX_DESC = PT_SEX_DESC != null ? PT_SEX_DESC : "NA";
     }
 
     public String getPT_VITAL_STATUS() {
@@ -213,7 +213,7 @@ public class MSK_ImpactPatientDemographics {
     }
 
     public void setPT_VITAL_STATUS(String PT_VITAL_STATUS) {
-        this.PT_VITAL_STATUS = PT_VITAL_STATUS != null ? PT_VITAL_STATUS : "N/A";
+        this.PT_VITAL_STATUS = PT_VITAL_STATUS != null ? PT_VITAL_STATUS : "NA";
     }
 
     public String getPT_MARITAL_STS_DESC() {
@@ -221,7 +221,7 @@ public class MSK_ImpactPatientDemographics {
     }
 
     public void setPT_MARITAL_STS_DESC(String PT_MARITAL_STS_DESC) {
-        this.PT_MARITAL_STS_DESC = PT_MARITAL_STS_DESC != null ? PT_MARITAL_STS_DESC : "N/A";
+        this.PT_MARITAL_STS_DESC = PT_MARITAL_STS_DESC != null ? PT_MARITAL_STS_DESC : "NA";
     }
 
     public String getPT_DEATH_YEAR() {
@@ -229,7 +229,7 @@ public class MSK_ImpactPatientDemographics {
     }
 
     public void setPT_DEATH_YEAR(String PT_DEATH_YEAR) {
-        this.PT_DEATH_YEAR = PT_DEATH_YEAR != null ? PT_DEATH_YEAR : "N/A";
+        this.PT_DEATH_YEAR = PT_DEATH_YEAR != null ? PT_DEATH_YEAR : "NA";
     }
 
     public String getPT_MRN_CREATE_YEAR() {
@@ -237,21 +237,21 @@ public class MSK_ImpactPatientDemographics {
     }
 
     public void setPT_MRN_CREATE_YEAR(String PT_MRN_CREATE_YEAR) {
-        this.PT_MRN_CREATE_YEAR = PT_MRN_CREATE_YEAR != null ? PT_MRN_CREATE_YEAR : "N/A";
+        this.PT_MRN_CREATE_YEAR = PT_MRN_CREATE_YEAR != null ? PT_MRN_CREATE_YEAR : "NA";
     }
     //Note: update 2016 yearly because lazy
     public String getDARWIN_PATIENT_AGE(){
         if(this.PT_BIRTH_YEAR>0){
             Integer i = currentYear-this.PT_BIRTH_YEAR;
-            //Age > 80 is considered identifying
-            if (i < 80) {
+            //Age > 90 is considered identifying
+            if (i < 90) {
                 return i.toString();
             } else {
-                return "N/A";
+                return "NA";
             }
         }
         else{
-            return "N/A";
+            return "NA";
         }
     }
 
