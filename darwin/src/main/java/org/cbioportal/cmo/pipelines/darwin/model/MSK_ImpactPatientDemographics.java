@@ -13,7 +13,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * @author jake
  */
 public class MSK_ImpactPatientDemographics {
-    private final Integer currentYear = Calendar.YEAR;
+    private final Integer currentYear = Calendar.getInstance().get(1);
     private String PT_ID_DEMO;
     private String DMP_ID_DEMO;
     private String GENDER;
