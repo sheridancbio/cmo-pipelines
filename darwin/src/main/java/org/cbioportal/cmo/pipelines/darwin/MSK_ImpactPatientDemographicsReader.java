@@ -57,7 +57,7 @@ public class MSK_ImpactPatientDemographicsReader implements ItemStreamReader<MSK
                 $(qDPD.getRELIGION()),
                 $(qDPD.getVITAL_STATUS()),
                 $(qDPD.getPT_BIRTH_YEAR()),
-                $(qDPD.getAGE_AT_DATE_OF_DEATH_IN_DAYS()),
+                $(qDPD.getPT_DEATH_YEAR()),
                 $(qDPIR.getTM_DX_YEAR())))
                 .from($(qDPD))
                 .join($(qDPIR))
@@ -71,7 +71,7 @@ public class MSK_ImpactPatientDemographicsReader implements ItemStreamReader<MSK
                 $(qDPD.getRELIGION()),
                 $(qDPD.getVITAL_STATUS()),
                 $(qDPD.getPT_BIRTH_YEAR()),
-                $(qDPD.getAGE_AT_DATE_OF_DEATH_IN_DAYS())))
+                $(qDPD.getPT_DEATH_YEAR())))
                 .from($(qDPD))
                 .fetch());
         return darwinDemographicsResults;
