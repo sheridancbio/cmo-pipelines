@@ -71,13 +71,13 @@ public class MSK_ImpactPatientDemographics {
         this.PT_BIRTH_YEAR = PT_BIRTH_YEAR != null ? PT_BIRTH_YEAR : 0;
         this.PT_DEATH_YEAR = PT_DEATH_YEAR != null ? PT_DEATH_YEAR : 0;
     }
-    public MSK_ImpactPatientDemographics(String DMP_ID_DEMO, String GENDER, String RACE, String RELIGION, String VITAL_STATUS, Integer PT_DEATH_YEAR, Integer PT_BIRTH_YEAR){
+    public MSK_ImpactPatientDemographics(String DMP_ID_DEMO, String GENDER, String RACE, String RELIGION, String VITAL_STATUS, Integer PT_BIRTH_YEAR, Integer PT_DEATH_YEAR){
         this.DMP_ID_DEMO = DMP_ID_DEMO != null ? DMP_ID_DEMO : "NA";
         this.GENDER = GENDER != null ? GENDER : "NA";
         this.RACE = RACE != null ? RACE : "NA";
         this.RELIGION = RELIGION != null ? RELIGION : "NA";
         this.VITAL_STATUS = VITAL_STATUS != null ? VITAL_STATUS : "NA";
-        this.TM_DX_YEAR = TM_DX_YEAR = 0;
+        this.TM_DX_YEAR = 0;
         this.PT_BIRTH_YEAR = PT_BIRTH_YEAR != null ? PT_BIRTH_YEAR : 0;
         this.PT_DEATH_YEAR = PT_DEATH_YEAR != null ? PT_DEATH_YEAR : 0;
     }
@@ -245,7 +245,10 @@ public class MSK_ImpactPatientDemographics {
     public String getDARWIN_PATIENT_AGE(){
         if(this.PT_BIRTH_YEAR>0){
             if(this.PT_DEATH_YEAR>0){
-                Integer i = currentYear-this.PT_DEATH_YEAR;
+                Integer i = this.PT_DEATH_YEAR-this.PT_BIRTH_YEAR;
+                if (i >= 90){
+                    return "90";
+                }
                 return i.toString();
             }
             Integer i = currentYear-this.PT_BIRTH_YEAR;
@@ -253,7 +256,7 @@ public class MSK_ImpactPatientDemographics {
             if (i < 90) {
                 return i.toString();
             } else {
-                return "NA";
+                return "90";
             }
         }
         else{
