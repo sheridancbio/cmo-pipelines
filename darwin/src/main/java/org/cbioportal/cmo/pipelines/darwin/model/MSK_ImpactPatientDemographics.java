@@ -13,7 +13,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * @author jake
  */
 public class MSK_ImpactPatientDemographics {
-
+    private final Integer currentYear = Calendar.YEAR;
     private String PT_ID_DEMO;
     private String DMP_ID_DEMO;
     private String GENDER;
@@ -82,7 +82,13 @@ public class MSK_ImpactPatientDemographics {
     public String getAGE_AT_DIAGNOSIS(){
         if(this.PT_BIRTH_YEAR>0 && this.TM_DX_YEAR>0 && this.TM_DX_YEAR>this.PT_BIRTH_YEAR){
                 Integer i = this.TM_DX_YEAR - this.PT_BIRTH_YEAR;
-                return i.toString();
+                //Age > 80 is considered identifying
+                if(i<80){
+                    return i.toString();
+                }
+                else{
+                    return "N/A";
+                }
         }
         else{
             return "N/A";
@@ -227,9 +233,9 @@ public class MSK_ImpactPatientDemographics {
     //Note: update 2016 yearly because lazy
     public String getDARWIN_PATIENT_AGE(){
         if(this.PT_BIRTH_YEAR>0){
-            Integer i = 2016-this.PT_BIRTH_YEAR;
-            //Age > 90 is considered identifying
-            if (i < 90) {
+            Integer i = currentYear-this.PT_BIRTH_YEAR;
+            //Age > 80 is considered identifying
+            if (i < 80) {
                 return i.toString();
             } else {
                 return "N/A";
