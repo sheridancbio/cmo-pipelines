@@ -106,14 +106,14 @@ public class MSK_ImpactPatientDemographicsReader implements ItemStreamReader<MSK
                     }
                 }
                 //Pop off to processor and add new ID to list
-                if(darwinDemographicsResults.get(0).getTM_DX_YEAR().equals(0)){
+                if(darwinDemographicsResults.get(0).getTM_DX_YEAR().equals(-1)){
                     missingTM_DX_YEAR++;
                 }
                 darwinDemographicsIDs.add(darwinDemographicsResults.get(0).getDMP_ID_DEMO());
                 return darwinDemographicsResults.remove(0);
             }
             //Pop off to processor and add new ID to list
-            if(darwinDemographicsResults.get(0).getTM_DX_YEAR().equals(0)){
+            if(darwinDemographicsResults.get(0).getTM_DX_YEAR().equals(-1)){
                 missingTM_DX_YEAR++;
             }
             darwinDemographicsIDs.add(darwinDemographicsResults.get(0).getDMP_ID_DEMO());

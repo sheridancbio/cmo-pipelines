@@ -46,19 +46,19 @@ public class MSK_ImpactPatientDemographics {
         this.GENDER = GENDER != null ? GENDER : "NA";
         this.RACE = RACE != null ? RACE : "NA";
         this.RELIGION = RELIGION != null ? RELIGION : "NA";
-        this.AGE_AT_DATE_OF_DEATH_IN_DAYS = AGE_AT_DATE_OF_DEATH_IN_DAYS != null ? AGE_AT_DATE_OF_DEATH_IN_DAYS : 0;
+        this.AGE_AT_DATE_OF_DEATH_IN_DAYS = AGE_AT_DATE_OF_DEATH_IN_DAYS != null ? AGE_AT_DATE_OF_DEATH_IN_DAYS : -1;
         this.DEATH_SOURCE_DESCRIPTION = DEATH_SOURCE_DESCRIPTION != null ? DEATH_SOURCE_DESCRIPTION : "NA";
         this.VITAL_STATUS = VITAL_STATUS != null ? VITAL_STATUS : "NA";
         this.PT_COUNTRY = PT_COUNTRY != null ? PT_COUNTRY : "NA";
         this.PT_STATE = PT_STATE != null ? PT_STATE : "NA";
         this.PT_ZIP3_CD = PT_ZIP3_CD != null ? PT_ZIP3_CD : "NA";
-        this.PT_BIRTH_YEAR = PT_BIRTH_YEAR != null ? PT_BIRTH_YEAR : 0;
+        this.PT_BIRTH_YEAR = PT_BIRTH_YEAR != null ? PT_BIRTH_YEAR : -1;
         this.PT_SEX_DESC = PT_SEX_DESC != null ? PT_SEX_DESC : "NA";
         this.PT_VITAL_STATUS = PT_VITAL_STATUS != null ? PT_VITAL_STATUS : "NA";
         this.PT_MARITAL_STS_DESC = PT_MARITAL_STS_DESC != null ? PT_MARITAL_STS_DESC : "NA";
-        this.PT_DEATH_YEAR = PT_DEATH_YEAR != null ? PT_DEATH_YEAR : 0;
+        this.PT_DEATH_YEAR = PT_DEATH_YEAR != null ? PT_DEATH_YEAR : -1;
         this.PT_MRN_CREATE_YEAR = PT_MRN_CREATE_YEAR != null ? PT_MRN_CREATE_YEAR : "NA";
-        this.TM_DX_YEAR = TM_DX_YEAR != null ? TM_DX_YEAR : 0;
+        this.TM_DX_YEAR = TM_DX_YEAR != null ? TM_DX_YEAR : -1;
     }
     
     public MSK_ImpactPatientDemographics(String DMP_ID_DEMO, String GENDER, String RACE, String RELIGION, String VITAL_STATUS, Integer PT_BIRTH_YEAR, Integer PT_DEATH_YEAR, Integer TM_DX_YEAR){
@@ -67,9 +67,9 @@ public class MSK_ImpactPatientDemographics {
         this.RACE = RACE != null ? RACE : "NA";
         this.RELIGION = RELIGION != null ? RELIGION : "NA";
         this.VITAL_STATUS = VITAL_STATUS != null ? VITAL_STATUS : "NA";
-        this.TM_DX_YEAR = TM_DX_YEAR != null ? TM_DX_YEAR : 0;
-        this.PT_BIRTH_YEAR = PT_BIRTH_YEAR != null ? PT_BIRTH_YEAR : 0;
-        this.PT_DEATH_YEAR = PT_DEATH_YEAR != null ? PT_DEATH_YEAR : 0;
+        this.TM_DX_YEAR = TM_DX_YEAR != null ? TM_DX_YEAR : -1;
+        this.PT_BIRTH_YEAR = PT_BIRTH_YEAR != null ? PT_BIRTH_YEAR : -1;
+        this.PT_DEATH_YEAR = PT_DEATH_YEAR != null ? PT_DEATH_YEAR : -1;
     }
     public MSK_ImpactPatientDemographics(String DMP_ID_DEMO, String GENDER, String RACE, String RELIGION, String VITAL_STATUS, Integer PT_BIRTH_YEAR, Integer PT_DEATH_YEAR){
         this.DMP_ID_DEMO = DMP_ID_DEMO != null ? DMP_ID_DEMO : "NA";
@@ -77,9 +77,9 @@ public class MSK_ImpactPatientDemographics {
         this.RACE = RACE != null ? RACE : "NA";
         this.RELIGION = RELIGION != null ? RELIGION : "NA";
         this.VITAL_STATUS = VITAL_STATUS != null ? VITAL_STATUS : "NA";
-        this.TM_DX_YEAR = 0;
-        this.PT_BIRTH_YEAR = PT_BIRTH_YEAR != null ? PT_BIRTH_YEAR : 0;
-        this.PT_DEATH_YEAR = PT_DEATH_YEAR != null ? PT_DEATH_YEAR : 0;
+        this.TM_DX_YEAR = -1;
+        this.PT_BIRTH_YEAR = PT_BIRTH_YEAR != null ? PT_BIRTH_YEAR : -1;
+        this.PT_DEATH_YEAR = PT_DEATH_YEAR != null ? PT_DEATH_YEAR : -1;
     }
     
     public Integer getTM_DX_YEAR() {
@@ -87,11 +87,11 @@ public class MSK_ImpactPatientDemographics {
     }
 
     public void setTM_DX_YEAR(Integer TM_DX_YEAR) {
-        this.TM_DX_YEAR = TM_DX_YEAR != null ? TM_DX_YEAR : 0;
+        this.TM_DX_YEAR = TM_DX_YEAR != null ? TM_DX_YEAR : -1;
     }
     
     public String getAGE_AT_DIAGNOSIS(){
-        if(this.PT_BIRTH_YEAR>0 && this.TM_DX_YEAR>0 && this.TM_DX_YEAR>this.PT_BIRTH_YEAR){
+        if(this.PT_BIRTH_YEAR>-1 && this.TM_DX_YEAR>-1 && this.TM_DX_YEAR>this.PT_BIRTH_YEAR){
                 Integer i = this.TM_DX_YEAR - this.PT_BIRTH_YEAR;
                 //Age > 90 is considered identifying
                 if(i<90){
@@ -151,7 +151,7 @@ public class MSK_ImpactPatientDemographics {
     }
 
     public void setAGE_AT_DATE_OF_DEATH_IN_DAYS(Integer AGE_AT_DATE_OF_DEATH_IN_DAYS) {
-        this.AGE_AT_DATE_OF_DEATH_IN_DAYS = AGE_AT_DATE_OF_DEATH_IN_DAYS != null ? AGE_AT_DATE_OF_DEATH_IN_DAYS : 0;
+        this.AGE_AT_DATE_OF_DEATH_IN_DAYS = AGE_AT_DATE_OF_DEATH_IN_DAYS != null ? AGE_AT_DATE_OF_DEATH_IN_DAYS : -1;
     }
 
     public String getDEATH_SOURCE_DESCRIPTION() {
@@ -199,7 +199,7 @@ public class MSK_ImpactPatientDemographics {
     }
 
     public void setPT_BIRTH_YEAR(Integer PT_BIRTH_YEAR) {
-        this.PT_BIRTH_YEAR = PT_BIRTH_YEAR != null ? PT_BIRTH_YEAR : 0;
+        this.PT_BIRTH_YEAR = PT_BIRTH_YEAR != null ? PT_BIRTH_YEAR : -1;
     }
 
     public String getPT_SEX_DESC() {
@@ -231,7 +231,7 @@ public class MSK_ImpactPatientDemographics {
     }
 
     public void setPT_DEATH_YEAR(Integer PT_DEATH_YEAR) {
-        this.PT_DEATH_YEAR = PT_DEATH_YEAR != null ? PT_DEATH_YEAR : 0;
+        this.PT_DEATH_YEAR = PT_DEATH_YEAR != null ? PT_DEATH_YEAR : -1;
     }
 
     public String getPT_MRN_CREATE_YEAR() {
@@ -241,11 +241,11 @@ public class MSK_ImpactPatientDemographics {
     public void setPT_MRN_CREATE_YEAR(String PT_MRN_CREATE_YEAR) {
         this.PT_MRN_CREATE_YEAR = PT_MRN_CREATE_YEAR != null ? PT_MRN_CREATE_YEAR : "NA";
     }
-    //Note: update 2016 yearly because lazy
     public String getDARWIN_PATIENT_AGE(){
-        if(this.PT_BIRTH_YEAR>0){
-            if(this.PT_DEATH_YEAR>0){
+        if(this.PT_BIRTH_YEAR>-1){
+            if(this.PT_DEATH_YEAR>-1){
                 Integer i = this.PT_DEATH_YEAR-this.PT_BIRTH_YEAR;
+                //Age > 90 is considered identifying
                 if (i >= 90){
                     return "90";
                 }
@@ -253,11 +253,10 @@ public class MSK_ImpactPatientDemographics {
             }
             Integer i = currentYear-this.PT_BIRTH_YEAR;
             //Age > 90 is considered identifying
-            if (i < 90) {
-                return i.toString();
-            } else {
+            if (i >= 90) {
                 return "90";
             }
+            return i.toString();
         }
         else{
             return "NA";
