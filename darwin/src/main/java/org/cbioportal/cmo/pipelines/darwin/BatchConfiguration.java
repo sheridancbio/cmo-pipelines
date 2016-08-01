@@ -54,7 +54,6 @@ import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
 public class BatchConfiguration {
     
     public static final String MSK_IMPACT_JOB = "msk_ImpactJob";
-    public static final String STUDYID_JOB = "studyIDJob";
       
     private final List<ItemProcessor> processorDelegates = new ArrayList<>();
     
