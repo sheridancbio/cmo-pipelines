@@ -56,7 +56,7 @@ public class MSK_ImpactTimelineBrainSpineStatusWriter implements ItemStreamWrite
     public void write(List<? extends TimelineBrainSpineComposite> items) throws Exception{
         writeList.clear();
         for (TimelineBrainSpineComposite result : items) {
-            if (!result.getStatusResult().equals("0")) {
+            if (!result.getStatusResult().equals("NO RESULT")) {
                 writeList.add(result.getStatusResult());
             }
         }
