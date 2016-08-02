@@ -22,7 +22,7 @@ public class TimelineBrainSpineComposite {
     private String surgeryResult;
     private MSK_ImpactTimelineBrainSpine record;
     
-    private static final String NO_RESULT = "NO RESULT";
+    public static final String NO_RESULT = "NO RESULT";
 
     public TimelineBrainSpineComposite(MSK_ImpactTimelineBrainSpine record){
         this.statusResult = NO_RESULT;
