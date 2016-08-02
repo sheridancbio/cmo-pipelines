@@ -325,10 +325,10 @@ public class MSK_ImpactTimelineBrainSpine {
         fieldNames.add("DMP_PATIENT_ID_ALL_BRAINSPINETMLN");
         fieldNames.add("START_DATE");
         fieldNames.add("EVENT_TYPE");
-        fieldNames.add("SOURCE");
         fieldNames.add("SPECIMEN_REFERENCE_NUMBER");
         fieldNames.add("SPECIMEN_SITE");
         fieldNames.add("SPECIMEN_TYPE");
+        fieldNames.add("SOURCE");
         
         return fieldNames;
     }
@@ -337,10 +337,10 @@ public class MSK_ImpactTimelineBrainSpine {
         fieldNames.add("PATIENT_ID");
         fieldNames.add("START_DATE");
         fieldNames.add("EVENT_TYPE");
-        fieldNames.add("SOURCE");
         fieldNames.add("SPECIMEN_REFERENCE_NUMBER");
         fieldNames.add("SPECIMEN_SITE");
         fieldNames.add("SPECIMEN_TYPE");
+        fieldNames.add("SOURCE");
         
         return fieldNames;
     }
