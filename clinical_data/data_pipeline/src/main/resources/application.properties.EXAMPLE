@@ -1,0 +1,4 @@
+spring.batch.job.enabled=false
+redcap_url=
+mapping_token=
+chunk=10

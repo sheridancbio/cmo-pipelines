@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <name>MSKCC CMO Clinical Data Pipeline Master</name>
+  <description>Clinical Data Pipeline</description>
+  <artifactId>clinical_data</artifactId>
+  <version>0.1.0</version>
+  <groupId>org.cbioportal.cmo.clinical.data.pipeline</groupId>
+  <parent>
+    <groupId>org.cbioportal.cmo.pipelines</groupId>
+    <artifactId>master</artifactId>
+    <version>0.1.0</version>
+  </parent>
+  <packaging>pom</packaging>
+
+  <modules>
+ 	<module>data_source</module> 
+ 	<module>data_pipeline</module> 
+  </modules>
+    
+</project>

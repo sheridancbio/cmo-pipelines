@@ -1,0 +1,6 @@
+/gdd/target/
+/cvr/target/
+/clinical_data/data_pipeline/target/
+/clinical_data/data_source/target/
+**/.DS_Store
+**/src/main/resources/application.properties
