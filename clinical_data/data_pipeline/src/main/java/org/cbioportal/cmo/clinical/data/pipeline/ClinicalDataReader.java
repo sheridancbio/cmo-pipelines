@@ -33,11 +33,12 @@ package org.cbioportal.cmo.clinical.data.pipeline;
 
 import java.util.*;
 import org.apache.log4j.Logger;
-import org.cbioportal.cmo.clinical.data.source.ClinicalDataSource;
+import org.cbioportal.cmo.clinical.data.source.*;
 import org.springframework.batch.item.ExecutionContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.batch.item.ItemStreamException;
 import org.springframework.batch.item.ItemStreamReader;
+import org.springframework.beans.factory.annotation.Value;
 
 /**
  *
@@ -46,17 +47,22 @@ import org.springframework.batch.item.ItemStreamReader;
 public class ClinicalDataReader implements ItemStreamReader<Map<String, String>> {    
     
     @Autowired
-    public ClinicalDataSource clinicalDataSource;
+    public ClinicalDataSource clinicalDataSource;    
+    @Autowired
+    public MetadataManager metadataManager;
     
-    
+    @Value("#{jobParameters[clinical_data_project]}")
+    private String project;       
+        
     private final Logger log = Logger.getLogger(ClinicalDataReader.class);
     
     public List<Map<String, String>> records = new ArrayList<>();        
     
     @Override
-    public void open(ExecutionContext ec) throws ItemStreamException {           
-        ec.put("sampleHeader", clinicalDataSource.getSampleHeader());
-        ec.put("patientHeader", clinicalDataSource.getPatientHeader());
+    public void open(ExecutionContext ec) throws ItemStreamException {   
+        ec.put("sampleHeader", metadataManager.getFullHeader(clinicalDataSource.getSampleHeader()));
+        ec.put("patientHeader", metadataManager.getFullHeader(clinicalDataSource.getPatientHeader()));
+        ec.put("timelineExists", clinicalDataSource.timelineDataExists());
         records = clinicalDataSource.getClinicalData();         
     }
 

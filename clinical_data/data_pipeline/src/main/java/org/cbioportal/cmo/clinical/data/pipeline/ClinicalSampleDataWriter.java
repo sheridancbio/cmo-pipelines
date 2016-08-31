@@ -55,10 +55,10 @@ public class ClinicalSampleDataWriter implements ItemStreamWriter<ClinicalDataCo
     @Value("#{jobParameters[directory]}")
     private String directory;
     
-    @Value("#{jobParameters[clinical-data-project]}")
+    @Value("#{jobParameters[clinical_data_project]}")
     private String project;    
     
-    private String outputFilename = "data_clinical_sample_" + project + ".txt";
+    private String outputFilename = "data_clinical_sample_";
     
     private Path stagingFile;
     
@@ -71,7 +71,7 @@ public class ClinicalSampleDataWriter implements ItemStreamWriter<ClinicalDataCo
     
     @Override
     public void open(ExecutionContext ec) throws ItemStreamException {
-        stagingFile = Paths.get(directory).resolve(outputFilename);        
+        stagingFile = Paths.get(directory).resolve(outputFilename + project + ".txt");        
         sampleHeader = (Map<String, List<String>>)ec.get("sampleHeader");
         patientHeader = (Map<String, List<String>>)ec.get("patientHeader");
         
@@ -114,5 +114,4 @@ public class ClinicalSampleDataWriter implements ItemStreamWriter<ClinicalDataCo
         int pidIndex = patientHeader.get("header").indexOf("PATIENT_ID");
         return sampleMetadata.remove(sidIndex) + "\t" + patientMetadata.get(pidIndex) + "\t" + StringUtils.join(sampleMetadata, "\t");        
     }
-    
 }

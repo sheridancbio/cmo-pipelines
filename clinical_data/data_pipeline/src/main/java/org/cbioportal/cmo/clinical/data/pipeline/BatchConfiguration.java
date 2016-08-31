@@ -63,20 +63,9 @@ public class BatchConfiguration {
     
     @Value("${chunk}")
     private String chunk;      
-    
-    @Bean
-    public JobExecutionDecider timelineDecider() {
-        return new JobExecutionDecider() {
-            @Override
-            public FlowExecutionStatus decide(JobExecution jobExecution, StepExecution stepExecution) {
-                if (timelineExists()) {
-                    return new FlowExecutionStatus("YES");
-                }
-                log.info("No project specified to generate timeline data for - skipping.");
-                return new FlowExecutionStatus("NO");
-            }            
-        };
-    }    
+	
+    @Autowired
+    public ClinicalDataSource clinicalDataSource;    
 
     @Autowired
     public JobBuilderFactory jobBuilderFactory;
@@ -84,8 +73,19 @@ public class BatchConfiguration {
     @Autowired
     public StepBuilderFactory stepBuilderFactory;
     
-    @Autowired
-    public ClinicalDataSource clinicalDataSource;    
+    @Bean
+    public JobExecutionDecider timelineDecider() {
+        return new JobExecutionDecider() {
+            @Override
+            public FlowExecutionStatus decide(JobExecution jobExecution, StepExecution stepExecution) {
+                if ((boolean)stepExecution.getExecutionContext().get("timelineExists")) {
+                    return new FlowExecutionStatus("YES");
+                }
+                log.info("No project specified to generate timeline data for - skipping.");
+                return new FlowExecutionStatus("NO");
+            }            
+        };
+    }    
     
    @Bean
     public Job clinicalDataJob() {
@@ -94,6 +94,9 @@ public class BatchConfiguration {
                 .next(timelineDecider())
                 .on("YES")
                 .to(timelineDataStep())
+                .from(timelineDecider())
+                .on("NO")
+                .end()
                 .end()
                 .build();
     }
@@ -116,24 +119,7 @@ public class BatchConfiguration {
                 .processor(timelineProcessor())
                 .writer(timelineWriter())
                 .build();
-    }
-    
-    @Bean
-    public Step start() {
-        return stepBuilderFactory.get("start")
-                .tasklet(new Tasklet() {
-                    @Override
-                    public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
-                        log.info("Starting step decision..");
-                        return RepeatStatus.FINISHED;
-                    }
-                })
-                .build();
     }    
-    
-    public boolean timelineExists() {
-        return clinicalDataSource.timelineDataExists();
-    }
     
     @Bean
     @StepScope
@@ -158,6 +144,7 @@ public class BatchConfiguration {
     }
     
     @Bean
+    @StepScope
     public CompositeItemWriter<ClinicalDataComposite> clinicalDatawriter() {
         CompositeItemWriter writer = new CompositeItemWriter();
         List<ItemWriter> delegates = new ArrayList<>();
@@ -194,7 +181,6 @@ public class BatchConfiguration {
         ClinicalPatientDataWriter patientWriter = new ClinicalPatientDataWriter();
         return patientWriter;
     }
-    
     
     // timeline processor / writers
     @Bean

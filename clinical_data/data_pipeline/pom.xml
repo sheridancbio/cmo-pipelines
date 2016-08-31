@@ -5,7 +5,7 @@
   <artifactId>data_pipeline</artifactId>
   <version>0.1.0</version>
   <parent>
-    <groupId>org.cbioportal.cmo.pipelines</groupId>
+  	<groupId>org.cbioportal.cmo.clinical.data.pipeline</groupId>
     <artifactId>clinical_data</artifactId>
     <version>0.1.0</version>
   </parent>

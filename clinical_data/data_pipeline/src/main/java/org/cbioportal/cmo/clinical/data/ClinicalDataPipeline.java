@@ -52,8 +52,7 @@ public class ClinicalDataPipeline {
     {
         Options gnuOptions = new Options();
         gnuOptions.addOption("h", "help", false, "shows this help document and quits.")
-            .addOption("p", "clinical-data-project", true, "Clinical Project Name")
-            .addOption("m", "metadata-project", true, "Clinical Metadata Project")
+            .addOption("p", "clinical_data_project", true, "Clinical Project Name")
             .addOption("d", "directory", true, "Output directory");
 
         return gnuOptions;
@@ -66,15 +65,14 @@ public class ClinicalDataPipeline {
         System.exit(exitStatus);
     }
 
-    private static void launchJob(String[] args, String project, String directory, String template) throws Exception
+    private static void launchJob(String[] args, String project, String directory) throws Exception
     {
         SpringApplication app = new SpringApplication(ClinicalDataPipeline.class);      
         ConfigurableApplicationContext ctx = app.run(args);
         JobLauncher jobLauncher = ctx.getBean(JobLauncher.class);
         JobParameters jobParameters = new JobParametersBuilder()
-                .addString("project", project)
+                .addString("clinical_data_project", project)
                 .addString("directory", directory)
-                .addString("template", template)
                     .toJobParameters();  
              
             Job clinicalDataJob = ctx.getBean(BatchConfiguration.CLINICAL_DATA_JOB, Job.class);       
@@ -89,10 +87,9 @@ public class ClinicalDataPipeline {
         CommandLine commandLine = parser.parse(gnuOptions, args);
         if (commandLine.hasOption("h") ||
             !commandLine.hasOption("directory") ||
-            !commandLine.hasOption("metadata-project") ||
-            !commandLine.hasOption("clinical-data-project")) {
+            !commandLine.hasOption("clinical_data_project")) {
             help(gnuOptions, 0);
         }
-        launchJob(args, commandLine.getOptionValue("clinical-data-project"), commandLine.getOptionValue("directory"), commandLine.getOptionValue("metadata-project"));                  
+        launchJob(args, commandLine.getOptionValue("clinical_data_project"), commandLine.getOptionValue("directory"));
     }    
 }

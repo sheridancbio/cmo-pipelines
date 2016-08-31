@@ -8,7 +8,6 @@ package org.cbioportal.cmo.clinical.data.pipeline;
 import java.util.List;
 import java.util.Map;
 import org.springframework.batch.item.ItemProcessor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 
 /**

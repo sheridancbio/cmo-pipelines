@@ -55,10 +55,10 @@ public class ClinicalPatientDataWriter implements ItemStreamWriter<ClinicalDataC
     @Value("#{jobParameters[directory]}")
     private String directory;
     
-    @Value("#{jobParameters[clinical-data-project]}")
+    @Value("#{jobParameters[clinical_data_project]}")
     private String project;    
     
-    private String outputFilename = "data_clinical_sample_" + project + ".txt";
+    private String outputFilename = "data_clinical_patient_";
         
     private Path stagingFile;
     
@@ -70,7 +70,7 @@ public class ClinicalPatientDataWriter implements ItemStreamWriter<ClinicalDataC
     
     @Override
     public void open(ExecutionContext ec) throws ItemStreamException {
-        stagingFile = Paths.get(directory).resolve(outputFilename);        
+        stagingFile = Paths.get(directory).resolve(outputFilename + project + ".txt");  
         header = (Map<String, List<String>>) ec.get("patientHeader");
         
         PassThroughLineAggregator aggr = new PassThroughLineAggregator();

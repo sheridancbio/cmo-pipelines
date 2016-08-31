@@ -33,11 +33,12 @@ package org.cbioportal.cmo.clinical.data.pipeline;
 
 import java.util.*;
 import org.apache.log4j.Logger;
-import org.cbioportal.cmo.clinical.data.source.ClinicalDataSource;
+import org.cbioportal.cmo.clinical.data.source.*;
 import org.springframework.batch.item.ExecutionContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.batch.item.ItemStreamException;
 import org.springframework.batch.item.ItemStreamReader;
+import org.springframework.beans.factory.annotation.Value;
 
 /**
  *
@@ -46,7 +47,9 @@ import org.springframework.batch.item.ItemStreamReader;
 public class TimelineReader implements ItemStreamReader<Map<String, String>> {    
     
     @Autowired
-    public ClinicalDataSource clinicalDataSource;   
+    public ClinicalDataSource clinicalDataSource;       
+    @Autowired
+    public MetadataManager metadataManager;    
     
     private final Logger log = Logger.getLogger(ClinicalDataReader.class);
     
@@ -54,7 +57,7 @@ public class TimelineReader implements ItemStreamReader<Map<String, String>> {
     
     @Override
     public void open(ExecutionContext ec) throws ItemStreamException {                                
-        ec.put("combinedHeader", clinicalDataSource.getTimelineHeader());
+        ec.put("combinedHeader", metadataManager.getFullHeader(clinicalDataSource.getTimelineHeader()));
         records = clinicalDataSource.getTimelineData();                
     }
 

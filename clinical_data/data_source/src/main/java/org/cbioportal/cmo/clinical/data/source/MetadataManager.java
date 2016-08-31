@@ -39,11 +39,7 @@ import java.util.Map;
  * @author heinsz
  */
 
-public interface ClinicalDataSource {           
-    List<Map<String, String>> getClinicalData();        
-    List<String> getSampleHeader();    
-    List<String> getPatientHeader();          
-    List<String> getTimelineHeader();    
-    List<Map<String, String>> getTimelineData();        
-    boolean timelineDataExists();    
+public interface MetadataManager {            
+    MetadataManager metadataManager();    
+    Map<String, List<String>> getFullHeader(List<String> header);
 }

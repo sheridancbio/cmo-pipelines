@@ -38,18 +38,12 @@ import org.cbioportal.cmo.clinical.data.source.ClinicalDataSource;
 
 import java.util.*;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.springframework.context.annotation.*;
+import org.springframework.http.*;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.web.client.RestTemplate;
 import org.apache.log4j.Logger;
 import org.springframework.batch.core.configuration.annotation.StepScope;
-import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  *
@@ -61,7 +55,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 @Configuration
 @StepScope
-public class RedcapImpl implements ClinicalDataSource {
+public class ClinicalDataSourceRedcapImpl implements ClinicalDataSource {
     
     @Value("${redcap_url}")
     private String redcapUrl;        
@@ -69,32 +63,25 @@ public class RedcapImpl implements ClinicalDataSource {
     @Value("${mapping_token}")
     private String mappingToken;        
     
-    @Value("#{jobParameters[clinical-data-project]}")
+    @Value("#{jobParameters[clinical_data_project]}")
     private String project;
     
-    @Value("#{jobParameters[metadata-project]}")
+    @Value("${metadata_project}")
     private String metadataProject;
           
-    private Map<String, String> tokens;
+    private Map<String, String> tokens = new HashMap<>();
     private String timeline;
     private List<Map<String, String>> records;
     private List<Map<String, String>> timelineRecords;
     
-    private Map<String, List<String>> sampleHeader;
-    private Map<String, List<String>> patientHeader;
-    private Map<String, List<String>> combinedHeader;    
+    private List<String> sampleHeader;
+    private List<String> patientHeader;
+    private List<String> combinedHeader;    
     
-     private final Logger log = Logger.getLogger(RedcapImpl.class);
-    
-     @Bean
-     @StepScope
-     @Override
-    public RedcapImpl clinicalDataSource() {
-        return this;
-    }
+     private final Logger log = Logger.getLogger(ClinicalDataSourceRedcapImpl.class);
     
     @Override
-    public Map<String, List<String>> getSampleHeader() {
+    public List<String> getSampleHeader() {
         if (tokens.isEmpty()) {
             fillTokens();
         }
@@ -105,7 +92,7 @@ public class RedcapImpl implements ClinicalDataSource {
     }
     
     @Override
-    public Map<String, List<String>> getPatientHeader() {
+    public List<String> getPatientHeader() {
         if (tokens.isEmpty()) {
             fillTokens();
         }        
@@ -114,9 +101,9 @@ public class RedcapImpl implements ClinicalDataSource {
         }
         return patientHeader;    
     }
-    
+
     @Override
-    public Map<String, List<String>> getTimelineHeader() {
+    public List<String> getTimelineHeader() {
         if (tokens.isEmpty()) {
             fillTokens();
         }        
@@ -135,7 +122,7 @@ public class RedcapImpl implements ClinicalDataSource {
             records = getClinicalData(false);
         }
         return records;            
-    }           
+    }     
     
     @Override
     public List<Map<String, String>> getTimelineData() {
@@ -146,7 +133,7 @@ public class RedcapImpl implements ClinicalDataSource {
             timelineRecords = getClinicalData(true);
         }
         return timelineRecords;            
-    }    
+    }   
     
     @Override
     public boolean timelineDataExists() {
@@ -154,18 +141,6 @@ public class RedcapImpl implements ClinicalDataSource {
             fillTokens();
         }     
         return timeline != null;
-    }
-    
-    private void getRedcapData(boolean timelineData) {
-        if (tokens.isEmpty()) {
-            fillTokens();
-        }        
-        if(timelineData) {
-            timelineRecords = getClinicalData(timelineData);
-        }   
-        else {
-            records = getClinicalData(timelineData);   
-        }                       
     }
     
     private void getClinicalHeaderData() {
@@ -282,35 +257,19 @@ public class RedcapImpl implements ClinicalDataSource {
         return responses;
     }   
 
-    private Map<String, List<String>> makeHeader(Map<RedcapProjectAttribute, RedcapAttributeMetadata> attributeMap) {
-        Map headerMap = new HashMap<>();
-        List<String> displayNames = new ArrayList<>();
-        List<String> descriptions = new ArrayList<>();
-        List<String> datatypes = new ArrayList<>();
-        List<String> priorities = new ArrayList<>();
-        List<String> header = new ArrayList<>();
-        
+    private List<String> makeHeader(Map<RedcapProjectAttribute, RedcapAttributeMetadata> attributeMap) {
+        List<String> header = new ArrayList<>();        
         for (Map.Entry<RedcapProjectAttribute, RedcapAttributeMetadata> entry : attributeMap.entrySet()) {
-            displayNames.add(entry.getValue().getDisplayName());
-            descriptions.add(entry.getValue().getDescriptions());
-            datatypes.add(entry.getValue().getDatatype());
-            priorities.add(entry.getValue().getPriority());
             header.add(entry.getValue().getNormalizedColumnHeader());
-        }
+        }        
         
-        headerMap.put("display_names", displayNames);
-        headerMap.put("descriptions", descriptions);
-        headerMap.put("datatypes", datatypes);
-        headerMap.put("priorities", priorities);
-        headerMap.put("header", header);
-        
-        return headerMap;
+        return header;
     }    
     
     private void fillTokens() {
         RestTemplate restTemplate = new RestTemplate();
         
-        log.info("Getting attribute metadatas...");
+        log.info("Getting tokens...");
         
         LinkedMultiValueMap<String, String> uriVariables = new LinkedMultiValueMap<>();
         uriVariables.add("token", mappingToken);

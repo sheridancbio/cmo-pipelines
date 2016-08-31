@@ -11,7 +11,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.batch.item.ExecutionContext;
 import org.springframework.batch.item.ItemStreamException;
@@ -30,10 +29,10 @@ public class TimelineWriter  implements ItemStreamWriter<String> {
     @Value("#{jobParameters[directory]}")
     private String directory;
 
-    @Value("#{jobParameters[clinical-data-project]}")
+    @Value("#{jobParameters[clinical_data_project]}")
     private String project;    
     
-    private String outputFilename = "data_timeline_" + project + ".txt";
+    private String outputFilename = "data_timeline_";
     
     private Path stagingFile;
     
@@ -43,7 +42,7 @@ public class TimelineWriter  implements ItemStreamWriter<String> {
     
     @Override
     public void open(ExecutionContext ec) throws ItemStreamException {
-        stagingFile = Paths.get(directory).resolve(outputFilename);        
+        stagingFile = Paths.get(directory).resolve(outputFilename + project + ".txt");        
         combinedHeader = (Map<String, List<String>>) ec.get("combinedHeader");
         
         PassThroughLineAggregator aggr = new PassThroughLineAggregator();
