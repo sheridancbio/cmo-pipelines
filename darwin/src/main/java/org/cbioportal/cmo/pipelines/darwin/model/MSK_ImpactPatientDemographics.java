@@ -33,6 +33,7 @@ public class MSK_ImpactPatientDemographics {
     private Integer PT_DEATH_YEAR;
     private String PT_MRN_CREATE_YEAR;
     private Integer TM_DX_YEAR;
+    private String OS_STATUS;
     private Map<String, Object> additionalProperties = new HashMap<>();
 
     public MSK_ImpactPatientDemographics() {
@@ -60,6 +61,7 @@ public class MSK_ImpactPatientDemographics {
         this.PT_DEATH_YEAR = PT_DEATH_YEAR != null ? PT_DEATH_YEAR : -1;
         this.PT_MRN_CREATE_YEAR =  StringUtils.isNotEmpty(PT_MRN_CREATE_YEAR) ? PT_MRN_CREATE_YEAR : "NA";
         this.TM_DX_YEAR = TM_DX_YEAR != null ? TM_DX_YEAR : -1;
+        this.OS_STATUS = this.VITAL_STATUS;
     }
     
     public MSK_ImpactPatientDemographics(String DMP_ID_DEMO, String GENDER, String RACE, String RELIGION, String VITAL_STATUS, Integer PT_BIRTH_YEAR, Integer PT_DEATH_YEAR, Integer TM_DX_YEAR){
@@ -71,6 +73,7 @@ public class MSK_ImpactPatientDemographics {
         this.TM_DX_YEAR = TM_DX_YEAR != null ? TM_DX_YEAR : -1;
         this.PT_BIRTH_YEAR = PT_BIRTH_YEAR != null ? PT_BIRTH_YEAR : -1;
         this.PT_DEATH_YEAR = PT_DEATH_YEAR != null ? PT_DEATH_YEAR : -1;
+        this.OS_STATUS = this.VITAL_STATUS;
     }
     public MSK_ImpactPatientDemographics(String DMP_ID_DEMO, String GENDER, String RACE, String RELIGION, String VITAL_STATUS, Integer PT_BIRTH_YEAR, Integer PT_DEATH_YEAR){
         this.DMP_ID_DEMO =  StringUtils.isNotEmpty(DMP_ID_DEMO) ? DMP_ID_DEMO : "NA";
@@ -81,6 +84,7 @@ public class MSK_ImpactPatientDemographics {
         this.TM_DX_YEAR = -1;
         this.PT_BIRTH_YEAR = PT_BIRTH_YEAR != null ? PT_BIRTH_YEAR : -1;
         this.PT_DEATH_YEAR = PT_DEATH_YEAR != null ? PT_DEATH_YEAR : -1;
+        this.OS_STATUS = this.VITAL_STATUS;
     }
     
     public Integer getTM_DX_YEAR() {
@@ -242,6 +246,15 @@ public class MSK_ImpactPatientDemographics {
     public void setPT_MRN_CREATE_YEAR(String PT_MRN_CREATE_YEAR) {
         this.PT_MRN_CREATE_YEAR =  StringUtils.isNotEmpty(PT_MRN_CREATE_YEAR) ? PT_MRN_CREATE_YEAR : "NA";
     }
+    
+    public String getOS_STATUS(){
+        return OS_STATUS;
+    }
+    
+    public void setOS_STATUS(String OS_STATUS) {
+        this.OS_STATUS = StringUtils.isNotEmpty(OS_STATUS) ? OS_STATUS : "NA";
+    }
+    
     public String getDARWIN_PATIENT_AGE(){
         if(this.PT_BIRTH_YEAR>-1){
             if(this.PT_DEATH_YEAR>-1){
@@ -278,6 +291,7 @@ public class MSK_ImpactPatientDemographics {
         fieldNames.add("GENDER");
         fieldNames.add("VITAL_STATUS");
         fieldNames.add("AGE_AT_DIAGNOSIS");
+        fieldNames.add("OS_STATUS");
 
         return fieldNames;
 
@@ -291,6 +305,7 @@ public class MSK_ImpactPatientDemographics {
         fieldNames.add("DARWIN_SEX");
         fieldNames.add("DARWIN_VITAL_STATUS");
         fieldNames.add("DARWIN_AGE_AT_DIAGNOSIS");
+        fieldNames.add("OS_STATUS");
 
         return fieldNames;
 
