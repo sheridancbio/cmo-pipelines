@@ -22,7 +22,6 @@ public class MSK_ImpactPatientDemographics {
     private String RELIGION;
     private Integer AGE_AT_DATE_OF_DEATH_IN_DAYS;
     private String DEATH_SOURCE_DESCRIPTION;
-    private String VITAL_STATUS;
     private String PT_COUNTRY;
     private String PT_STATE;
     private String PT_ZIP3_CD;
@@ -40,7 +39,7 @@ public class MSK_ImpactPatientDemographics {
     }
 
     public MSK_ImpactPatientDemographics(String PT_ID_DEMO, String DMP_ID_DEMO, String GENDER,
-            String RACE, String RELIGION, Integer AGE_AT_DATE_OF_DEATH_IN_DAYS, String DEATH_SOURCE_DESCRIPTION, String VITAL_STATUS,
+            String RACE, String RELIGION, Integer AGE_AT_DATE_OF_DEATH_IN_DAYS, String DEATH_SOURCE_DESCRIPTION,
             String PT_COUNTRY, String PT_STATE, String PT_ZIP3_CD, Integer PT_BIRTH_YEAR, String PT_SEX_DESC,
             String PT_VITAL_STATUS, String PT_MARITAL_STS_DESC, Integer PT_DEATH_YEAR, String PT_MRN_CREATE_YEAR, Integer TM_DX_YEAR) {
         this.PT_ID_DEMO =  StringUtils.isNotEmpty(PT_ID_DEMO) ? PT_ID_DEMO : "NA";
@@ -50,7 +49,6 @@ public class MSK_ImpactPatientDemographics {
         this.RELIGION =  StringUtils.isNotEmpty(RELIGION) ? RELIGION : "NA";
         this.AGE_AT_DATE_OF_DEATH_IN_DAYS = AGE_AT_DATE_OF_DEATH_IN_DAYS != null ? AGE_AT_DATE_OF_DEATH_IN_DAYS : -1;
         this.DEATH_SOURCE_DESCRIPTION =  StringUtils.isNotEmpty(DEATH_SOURCE_DESCRIPTION) ? DEATH_SOURCE_DESCRIPTION : "NA";
-        this.VITAL_STATUS =  StringUtils.isNotEmpty(VITAL_STATUS) ? VITAL_STATUS : "NA";
         this.PT_COUNTRY =  StringUtils.isNotEmpty(PT_COUNTRY) ? PT_COUNTRY : "NA";
         this.PT_STATE =  StringUtils.isNotEmpty(PT_STATE) ? PT_STATE : "NA";
         this.PT_ZIP3_CD =  StringUtils.isNotEmpty(PT_ZIP3_CD) ? PT_ZIP3_CD : "NA";
@@ -61,30 +59,30 @@ public class MSK_ImpactPatientDemographics {
         this.PT_DEATH_YEAR = PT_DEATH_YEAR != null ? PT_DEATH_YEAR : -1;
         this.PT_MRN_CREATE_YEAR =  StringUtils.isNotEmpty(PT_MRN_CREATE_YEAR) ? PT_MRN_CREATE_YEAR : "NA";
         this.TM_DX_YEAR = TM_DX_YEAR != null ? TM_DX_YEAR : -1;
-        this.OS_STATUS = this.VITAL_STATUS;
+        this.OS_STATUS = this.PT_VITAL_STATUS;
     }
     
-    public MSK_ImpactPatientDemographics(String DMP_ID_DEMO, String GENDER, String RACE, String RELIGION, String VITAL_STATUS, Integer PT_BIRTH_YEAR, Integer PT_DEATH_YEAR, Integer TM_DX_YEAR){
+    public MSK_ImpactPatientDemographics(String DMP_ID_DEMO, String GENDER, String RACE, String RELIGION, String PT_VITAL_STATUS, Integer PT_BIRTH_YEAR, Integer PT_DEATH_YEAR, Integer TM_DX_YEAR){
         this.DMP_ID_DEMO =  StringUtils.isNotEmpty(DMP_ID_DEMO) ? DMP_ID_DEMO : "NA";
         this.GENDER =  StringUtils.isNotEmpty(GENDER) ? GENDER : "NA";
         this.RACE =  StringUtils.isNotEmpty(RACE) ? RACE : "NA";
         this.RELIGION =  StringUtils.isNotEmpty(RELIGION) ? RELIGION : "NA";
-        this.VITAL_STATUS =  StringUtils.isNotEmpty(VITAL_STATUS) ? VITAL_STATUS : "NA";
+        this.PT_VITAL_STATUS =  StringUtils.isNotEmpty(PT_VITAL_STATUS) ? PT_VITAL_STATUS : "NA";
         this.TM_DX_YEAR = TM_DX_YEAR != null ? TM_DX_YEAR : -1;
         this.PT_BIRTH_YEAR = PT_BIRTH_YEAR != null ? PT_BIRTH_YEAR : -1;
         this.PT_DEATH_YEAR = PT_DEATH_YEAR != null ? PT_DEATH_YEAR : -1;
-        this.OS_STATUS = this.VITAL_STATUS;
+        this.OS_STATUS = this.PT_VITAL_STATUS;
     }
-    public MSK_ImpactPatientDemographics(String DMP_ID_DEMO, String GENDER, String RACE, String RELIGION, String VITAL_STATUS, Integer PT_BIRTH_YEAR, Integer PT_DEATH_YEAR){
+    public MSK_ImpactPatientDemographics(String DMP_ID_DEMO, String GENDER, String RACE, String RELIGION, String PT_VITAL_STATUS, Integer PT_BIRTH_YEAR, Integer PT_DEATH_YEAR){
         this.DMP_ID_DEMO =  StringUtils.isNotEmpty(DMP_ID_DEMO) ? DMP_ID_DEMO : "NA";
         this.GENDER =  StringUtils.isNotEmpty(GENDER) ? GENDER : "NA";
         this.RACE =  StringUtils.isNotEmpty(RACE) ? RACE : "NA";
         this.RELIGION =  StringUtils.isNotEmpty(RELIGION) ? RELIGION : "NA";
-        this.VITAL_STATUS =  StringUtils.isNotEmpty(VITAL_STATUS) ? VITAL_STATUS : "NA";
+        this.PT_VITAL_STATUS =  StringUtils.isNotEmpty(PT_VITAL_STATUS) ? PT_VITAL_STATUS : "NA";
         this.TM_DX_YEAR = -1;
         this.PT_BIRTH_YEAR = PT_BIRTH_YEAR != null ? PT_BIRTH_YEAR : -1;
         this.PT_DEATH_YEAR = PT_DEATH_YEAR != null ? PT_DEATH_YEAR : -1;
-        this.OS_STATUS = this.VITAL_STATUS;
+        this.OS_STATUS = this.PT_VITAL_STATUS;
     }
     
     public Integer getTM_DX_YEAR() {
@@ -165,14 +163,6 @@ public class MSK_ImpactPatientDemographics {
 
     public void setDEATH_SOURCE_DESCRIPTION(String DEATH_SOURCE_DESCRIPTION) {
         this.DEATH_SOURCE_DESCRIPTION =  StringUtils.isNotEmpty(DEATH_SOURCE_DESCRIPTION) ? DEATH_SOURCE_DESCRIPTION : "NA";
-    }
-    
-    public String getVITAL_STATUS(){
-        return VITAL_STATUS;
-    }
-    
-    public void setVITAL_STATUS(){
-        this.VITAL_STATUS =  StringUtils.isNotEmpty(VITAL_STATUS) ? VITAL_STATUS : "NA";
     }
 
     public String getPT_COUNTRY() {
@@ -289,7 +279,7 @@ public class MSK_ImpactPatientDemographics {
         fieldNames.add("RACE");
         fieldNames.add("RELIGION");
         fieldNames.add("GENDER");
-        fieldNames.add("VITAL_STATUS");
+        fieldNames.add("PT_VITAL_STATUS");
         fieldNames.add("AGE_AT_DIAGNOSIS");
         fieldNames.add("OS_STATUS");
 

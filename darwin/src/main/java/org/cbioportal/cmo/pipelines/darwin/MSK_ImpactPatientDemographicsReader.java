@@ -55,7 +55,7 @@ public class MSK_ImpactPatientDemographicsReader implements ItemStreamReader<MSK
                 $(qDPD.getGENDER()),
                 $(qDPD.getRACE()),
                 $(qDPD.getRELIGION()),
-                $(qDPD.getVITAL_STATUS()),
+                $(qDPD.getPT_VITAL_STATUS()),
                 $(qDPD.getPT_BIRTH_YEAR()),
                 $(qDPD.getPT_DEATH_YEAR()),
                 $(qDPIR.getTM_DX_YEAR())))
@@ -69,7 +69,7 @@ public class MSK_ImpactPatientDemographicsReader implements ItemStreamReader<MSK
                 $(qDPD.getGENDER()),
                 $(qDPD.getRACE()),
                 $(qDPD.getRELIGION()),
-                $(qDPD.getVITAL_STATUS()),
+                $(qDPD.getPT_VITAL_STATUS()),
                 $(qDPD.getPT_BIRTH_YEAR()),
                 $(qDPD.getPT_DEATH_YEAR())))
                 .from($(qDPD))
