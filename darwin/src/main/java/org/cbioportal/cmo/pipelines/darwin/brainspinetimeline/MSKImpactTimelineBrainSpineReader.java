@@ -1,11 +1,37 @@
 /*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+ * Copyright (c) 2016 Memorial Sloan-Kettering Cancer Center.
+ *
+ * This library is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS
+ * FOR A PARTICULAR PURPOSE. The software and documentation provided hereunder
+ * is on an "as is" basis, and Memorial Sloan-Kettering Cancer Center has no
+ * obligations to provide maintenance, support, updates, enhancements or
+ * modifications. In no event shall Memorial Sloan-Kettering Cancer Center be
+ * liable to any party for direct, indirect, special, incidental or
+ * consequential damages, including lost profits, arising out of the use of this
+ * software and its documentation, even if Memorial Sloan-Kettering Cancer
+ * Center has been advised of the possibility of such damage.
  */
-package org.cbioportal.cmo.pipelines.darwin;
 
-import org.cbioportal.cmo.pipelines.darwin.model.MSK_ImpactTimelineBrainSpine;
+/*
+ * This file is part of cBioPortal CMO-Pipelines.
+ *
+ * cBioPortal is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+package org.cbioportal.cmo.pipelines.darwin.brainspinetimeline;
+
+import org.cbioportal.cmo.pipelines.darwin.model.MSKImpactBrainSpineTimeline;
 
 import com.querydsl.core.types.Projections;
 import com.querydsl.sql.SQLQueryFactory;
@@ -17,22 +43,21 @@ import org.springframework.transaction.annotation.Transactional;
 import org.apache.log4j.Logger;
 
 import java.util.*;
-import static com.querydsl.core.alias.Alias.$;
-import static com.querydsl.core.alias.Alias.alias;
+import static com.querydsl.core.alias.Alias.*;
 /**
  *
  * @author jake
  */
-public class MSK_ImpactTimelineBrainSpineReader implements ItemStreamReader<MSK_ImpactTimelineBrainSpine>{
+public class MSKImpactTimelineBrainSpineReader implements ItemStreamReader<MSKImpactBrainSpineTimeline>{
     @Value("${darwin.timeline_view}")
     private String timelineBrainSpineView;
     
     @Autowired
     SQLQueryFactory darwinQueryFactory;
     
-    private List<MSK_ImpactTimelineBrainSpine> darwinTimelineResults;
+    private List<MSKImpactBrainSpineTimeline> darwinTimelineResults;
     
-    Logger log = Logger.getLogger(MSK_ImpactTimelineBrainSpineReader.class);
+    Logger log = Logger.getLogger(MSKImpactTimelineBrainSpineReader.class);
     
     @Override
     public void open(ExecutionContext executionContext) throws ItemStreamException{
@@ -40,10 +65,10 @@ public class MSK_ImpactTimelineBrainSpineReader implements ItemStreamReader<MSK_
     }
     
     @Transactional
-    private List<MSK_ImpactTimelineBrainSpine> getDarwinTimelineResults(){
+    private List<MSKImpactBrainSpineTimeline> getDarwinTimelineResults(){
         log.info("Start of Darwin Timeline Brain Spine View import...");
-        MSK_ImpactTimelineBrainSpine qDTR = alias(MSK_ImpactTimelineBrainSpine.class, timelineBrainSpineView);
-        List<MSK_ImpactTimelineBrainSpine> darwinTimelineResults = darwinQueryFactory.select(Projections.constructor(MSK_ImpactTimelineBrainSpine.class, $(qDTR.getDMT_PATIENT_ID_BRAINSPINETMLN()),
+        MSKImpactBrainSpineTimeline qDTR = alias(MSKImpactBrainSpineTimeline.class, timelineBrainSpineView);
+        List<MSKImpactBrainSpineTimeline> darwinTimelineResults = darwinQueryFactory.select(Projections.constructor(MSKImpactBrainSpineTimeline.class, $(qDTR.getDMT_PATIENT_ID_BRAINSPINETMLN()),
                         $(qDTR.getDMP_PATIENT_ID_MIN_BRAINSPINETMLN()),
                         $(qDTR.getDMP_PATIENT_ID_MAX_BRAINSPINETMLN()), $(qDTR.getDMP_PATIENT_ID_COUNT_BRAINSPINETMLN()),
                         $(qDTR.getDMP_PATIENT_ID_ALL_BRAINSPINETMLN()), $(qDTR.getSTART_DATE()), $(qDTR.getSTOP_DATE()),
@@ -68,7 +93,7 @@ public class MSK_ImpactTimelineBrainSpineReader implements ItemStreamReader<MSK_
     public void close() throws ItemStreamException{}
     
     @Override
-    public MSK_ImpactTimelineBrainSpine read() throws Exception{
+    public MSKImpactBrainSpineTimeline read() throws Exception{
         if(!darwinTimelineResults.isEmpty()){
             return darwinTimelineResults.remove(0);
         }

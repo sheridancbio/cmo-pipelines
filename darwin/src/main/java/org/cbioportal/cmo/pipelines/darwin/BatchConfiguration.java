@@ -32,6 +32,11 @@
 
 package org.cbioportal.cmo.pipelines.darwin;
 
+import org.cbioportal.cmo.pipelines.darwin.brainspineclinical.*;
+import org.cbioportal.cmo.pipelines.darwin.brainspinetimeline.*;
+import org.cbioportal.cmo.pipelines.darwin.demographics.*;
+import org.cbioportal.cmo.pipelines.darwin.melanomaclinical.*;
+import org.cbioportal.cmo.pipelines.darwin.melanomatimeline.*;
 import org.cbioportal.cmo.pipelines.darwin.model.*;
 
 import java.util.*;
@@ -51,9 +56,11 @@ import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
  */
 @Configuration
 @EnableBatchProcessing
+@ComponentScan(basePackages="org.cbioportal.cmo.clinical.data.source")
 public class BatchConfiguration {
     
-    public static final String MSK_IMPACT_JOB = "msk_ImpactJob";
+    public static final String MSK_IMPACT_JOB = "msk_ImpactJob";    
+    public static final String MELANOMA_JOB = "melanomaJob";
       
     private final List<ItemProcessor> processorDelegates = new ArrayList<>();
     
@@ -66,7 +73,7 @@ public class BatchConfiguration {
     
     @Autowired
     public StepBuilderFactory stepBuilderFactory;
-    
+
     @Bean
     public static PropertySourcesPlaceholderConfigurer propertyConfigInDev() {
         return new PropertySourcesPlaceholderConfigurer();
@@ -78,15 +85,22 @@ public class BatchConfiguration {
         return jobBuilderFactory.get(MSK_IMPACT_JOB)
                 .start(stepDarwinPatientDemographics())
                 .next(stepDarwinTimelineBrainSpine())
-                //.next(stepDPIR())
                 .next(stepDarwinClinicalBrainSpine())
                 .build();
     }
     
     @Bean
+    public Job melanomaJob(){
+        return jobBuilderFactory.get(MELANOMA_JOB)
+                .start(melanomaClinicalStep())
+                .next(melanomaTimelineStep())
+                .build();
+    }
+    
+    @Bean
     public Step stepDarwinPatientDemographics(){
-        return stepBuilderFactory.get("stepDPD")
-                .<MSK_ImpactPatientDemographics, String> chunk(chunkSize)
+        return stepBuilderFactory.get("stepDarwinPatientDemographics")
+                .<MSKImpactPatientDemographics, String> chunk(chunkSize)
                 .reader(readerDarwinPatientDemographics())
                 .processor(processorDarwinPatientDemographics())
                 .writer(writerDarwinPatientDemographics())
@@ -94,51 +108,81 @@ public class BatchConfiguration {
     }
     
     @Bean
+    public Step stepDarwinTimelineBrainSpine(){
+        return stepBuilderFactory.get("stepDarwinTimelineBrainSpine")
+                .<MSKImpactBrainSpineTimeline, MSKImpactBrainSpineCompositeTimeline> chunk(chunkSize)
+                .reader(readerDarwinTimelineBrainSpine())
+                .processor(processorDarwinTimelineBrainSpine())
+                .writer(writerDarwinTimelineBrainSpine())
+                .build();
+    }   
+    
+    @Bean
+    public Step stepDarwinClinicalBrainSpine(){
+        return stepBuilderFactory.get("stepDarwinClinicalBrainSpine")
+                .<MSKImpactBrainSpineClinical, String> chunk(chunkSize)
+                .reader(readerDarwinClinicalBrainSpine())
+                .processor(processorDarwinClinicalBrainSpine())
+                .writer(writerDarwinClinicalBrainSpine())
+                .build();
+    } 
+    
+    @Bean
+    public Step melanomaClinicalStep() {
+        return stepBuilderFactory.get("melanomaClinicalStep")
+                .<MelanomaClinicalRecord, String> chunk(chunkSize)
+                .reader(melanomaClinicalReader())
+                .processor(melanomaClinicalProcessor())
+                .writer(melanomaClinicalWriter())
+                .build();
+    }
+    
+    @Bean
+    public Step melanomaTimelineStep() {
+        return stepBuilderFactory.get("melanomaTimelineStep")
+                .<MelanomaTimelineRecord, String> chunk(chunkSize)
+                .reader(melanomaTimelineReader())
+                .processor(melanomaTimelineProcessor())
+                .writer(melanomaTimelineWriter())
+               .build();
+    }    
+    
+    @Bean
     @StepScope
-    public ItemStreamReader<MSK_ImpactPatientDemographics> readerDarwinPatientDemographics(){
-        return new MSK_ImpactPatientDemographicsReader();
+    public ItemStreamReader<MSKImpactPatientDemographics> readerDarwinPatientDemographics(){
+        return new MSKImpactPatientDemographicsReader();
     }
     
     
     
     @Bean
-    public MSK_ImpactPatientDemographicsProcessor processorDarwinPatientDemographics()
+    public MSKImpactPatientDemographicsProcessor processorDarwinPatientDemographics()
     {
-        return new MSK_ImpactPatientDemographicsProcessor();
+        return new MSKImpactPatientDemographicsProcessor();
     }
     
     @Bean
     @StepScope
     public ItemStreamWriter<String> writerDarwinPatientDemographics()
     {
-        return new MSK_ImpactPatientDemographicsWriter();
-    }
-    
-    @Bean
-    public Step stepDarwinTimelineBrainSpine(){
-        return stepBuilderFactory.get("stepDTBS")
-                .<MSK_ImpactTimelineBrainSpine, TimelineBrainSpineComposite> chunk(chunkSize)
-                .reader(readerDarwinTimelineBrainSpine())
-                .processor(processorDarwinTimelineBrainSpine())
-                .writer(writerDarwinTimelineBrainSpine())
-                .build();
+        return new MSKImpactPatientDemographicsWriter();
     }
     
     @Bean
     @StepScope
-    public ItemStreamReader<MSK_ImpactTimelineBrainSpine> readerDarwinTimelineBrainSpine(){
-        return new MSK_ImpactTimelineBrainSpineReader();
+    public ItemStreamReader<MSKImpactBrainSpineTimeline> readerDarwinTimelineBrainSpine(){
+        return new MSKImpactTimelineBrainSpineReader();
     }
     
     @Bean
     @StepScope
     public CompositeItemProcessor processorDarwinTimelineBrainSpine(){
         
-        processorDelegates.add(new MSK_ImpactTimelineBrainSpineStatusProcessor());
-        processorDelegates.add(new MSK_ImpactTimelineBrainSpineSpecimenProcessor());
-        processorDelegates.add(new MSK_ImpactTimelineBrainSpineTreatmentProcessor());
-        processorDelegates.add(new MSK_ImpactTimelineBrainSpineImagingProcessor());
-        processorDelegates.add(new MSK_ImpactTimelineBrainSpineSurgeryProcessor());
+        processorDelegates.add(new MSKImpactTimelineBrainSpineStatusProcessor());
+        processorDelegates.add(new MSKImpactTimelineBrainSpineSpecimenProcessor());
+        processorDelegates.add(new MSKImpactTimelineBrainSpineTreatmentProcessor());
+        processorDelegates.add(new MSKImpactTimelineBrainSpineImagingProcessor());
+        processorDelegates.add(new MSKImpactTimelineBrainSpineSurgeryProcessor());
         CompositeItemProcessor processor = new CompositeItemProcessor<>();
         processor.setDelegates(processorDelegates);
         return processor;
@@ -146,37 +190,37 @@ public class BatchConfiguration {
     
     @Bean
     @StepScope
-    public ItemStreamWriter<TimelineBrainSpineComposite> statusWriter(){
-        return new MSK_ImpactTimelineBrainSpineStatusWriter();
+    public ItemStreamWriter<MSKImpactBrainSpineCompositeTimeline> statusWriter(){
+        return new MSKImpactTimelineBrainSpineStatusWriter();
     }
     
     @Bean
     @StepScope
-    public ItemStreamWriter<TimelineBrainSpineComposite> specimenWriter(){
-        return new MSK_ImpactTimelineBrainSpineSpecimenWriter();
+    public ItemStreamWriter<MSKImpactBrainSpineCompositeTimeline> specimenWriter(){
+        return new MSKImpactTimelineBrainSpineSpecimenWriter();
     }
     
     @Bean
     @StepScope
-    public ItemStreamWriter<TimelineBrainSpineComposite> surgeryWriter(){
-        return new MSK_ImpactTimelineBrainSpineSurgeryWriter();
+    public ItemStreamWriter<MSKImpactBrainSpineCompositeTimeline> surgeryWriter(){
+        return new MSKImpactTimelineBrainSpineSurgeryWriter();
     }
     
     @Bean
     @StepScope
-    public ItemStreamWriter<TimelineBrainSpineComposite> treatmentWriter(){
-        return new MSK_ImpactTimelineBrainSpineTreatmentWriter();
+    public ItemStreamWriter<MSKImpactBrainSpineCompositeTimeline> treatmentWriter(){
+        return new MSKImpactTimelineBrainSpineTreatmentWriter();
     }
     
     @Bean
     @StepScope
-    public ItemStreamWriter<TimelineBrainSpineComposite> imagingWriter(){
-        return new MSK_ImpactTimelineBrainSpineImagingWriter();
+    public ItemStreamWriter<MSKImpactBrainSpineCompositeTimeline> imagingWriter(){
+        return new MSKImpactTimelineBrainSpineImagingWriter();
     }
     
     @Bean
     @StepScope
-    public CompositeItemWriter<TimelineBrainSpineComposite> writerDarwinTimelineBrainSpine(){
+    public CompositeItemWriter<MSKImpactBrainSpineCompositeTimeline> writerDarwinTimelineBrainSpine(){
         List<ItemStreamWriter> writerDelegates = new ArrayList<>();
         writerDelegates.add(statusWriter());
         writerDelegates.add(surgeryWriter());
@@ -186,60 +230,59 @@ public class BatchConfiguration {
         CompositeItemWriter writer = new CompositeItemWriter<>();
         writer.setDelegates(writerDelegates);
         return writer;
+    }    
+        
+    @Bean
+    @StepScope
+    public ItemStreamReader<MSKImpactBrainSpineClinical> readerDarwinClinicalBrainSpine(){
+        return new MSKImpactBrainSpineClinicalReader();
     }
     
     @Bean
-    public Step stepDPIR(){
-        return stepBuilderFactory.get("stepDPIR")
-                .<MSK_ImpactPatientIcdoRecord, String> chunk(chunkSize)
-                .reader(readerDarwinPatientICDORecord())
-                .processor(processorDarwinPatientICDORecord())
-                .writer(writerDarwinPatientICDORecord())
-                .build();
+    public MSKImpactBrainSpineClinicalProcessor processorDarwinClinicalBrainSpine(){
+        return new MSKImpactBrainSpineClinicalProcessor();
     }
     
     @Bean
     @StepScope
-    public ItemStreamReader<MSK_ImpactPatientIcdoRecord> readerDarwinPatientICDORecord(){
-        return new MSK_ImpactPatientIcdoReader();
-    }
-    
-    @Bean
-    public MSK_ImpactPatientIcdoProcessor processorDarwinPatientICDORecord(){
-        return new MSK_ImpactPatientIcdoProcessor();
+    public MSKImpactBrainSpineClinicalWriter writerDarwinClinicalBrainSpine(){
+        return new MSKImpactBrainSpineClinicalWriter();
     }
     
     @Bean
     @StepScope
-    public ItemStreamWriter<String> writerDarwinPatientICDORecord(){
-        return new MSK_ImpactPatientIcdoWriter();
-    }
-    
-    @Bean
-    public Step stepDarwinClinicalBrainSpine(){
-        return stepBuilderFactory.get("stepDCBS")
-                .<MSK_ImpactClinicalBrainSpine, String> chunk(chunkSize)
-                .reader(readerDarwinClinicalBrainSpine())
-                .processor(processorDarwinClinicalBrainSpine())
-                .writer(writerDarwinClinicalBrainSpine())
-                .build();
+    public MelanomaClinicalReader melanomaClinicalReader(){
+        return new MelanomaClinicalReader();
     }
     
     @Bean
     @StepScope
-    public ItemStreamReader<MSK_ImpactClinicalBrainSpine> readerDarwinClinicalBrainSpine(){
-        return new MSK_ImpactClinicalBrainSpineReader();
-    }
+    public MelanomaClinicalProcessor melanomaClinicalProcessor(){
+        return new MelanomaClinicalProcessor();
+    }    
     
     @Bean
-    public MSK_ImpactClinicalBrainSpineProcessor processorDarwinClinicalBrainSpine(){
-        return new MSK_ImpactClinicalBrainSpineProcessor();
+    @StepScope
+    public MelanomaClinicalWriter melanomaClinicalWriter(){
+        return new MelanomaClinicalWriter();
+    }   
+	
+    @Bean
+    @StepScope
+    public MelanomaTimelineReader melanomaTimelineReader(){
+        return new MelanomaTimelineReader();
     }
     
     @Bean
     @StepScope
-    public MSK_ImpactClinicalBrainSpineWriter writerDarwinClinicalBrainSpine(){
-        return new MSK_ImpactClinicalBrainSpineWriter();
-    }
+    public MelanomaTimelineProcessor melanomaTimelineProcessor(){
+        return new MelanomaTimelineProcessor();
+    }    
+    
+    @Bean
+    @StepScope
+    public MelanomaTimelineWriter melanomaTimelineWriter(){
+        return new MelanomaTimelineWriter();
+    }      
     
 }

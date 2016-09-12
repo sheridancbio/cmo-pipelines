@@ -1,8 +1,34 @@
 /*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+ * Copyright (c) 2016 Memorial Sloan-Kettering Cancer Center.
+ *
+ * This library is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS
+ * FOR A PARTICULAR PURPOSE. The software and documentation provided hereunder
+ * is on an "as is" basis, and Memorial Sloan-Kettering Cancer Center has no
+ * obligations to provide maintenance, support, updates, enhancements or
+ * modifications. In no event shall Memorial Sloan-Kettering Cancer Center be
+ * liable to any party for direct, indirect, special, incidental or
+ * consequential damages, including lost profits, arising out of the use of this
+ * software and its documentation, even if Memorial Sloan-Kettering Cancer
+ * Center has been advised of the possibility of such damage.
  */
+
+/*
+ * This file is part of cBioPortal CMO-Pipelines.
+ *
+ * cBioPortal is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
 package org.cbioportal.cmo.pipelines.darwin.model;
 
 import org.apache.commons.lang.StringUtils;
@@ -13,7 +39,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  *
  * @author jake
  */
-public class MSK_ImpactPatientDemographics {
+public class MSKImpactPatientDemographics {
     private final Integer currentYear = Calendar.getInstance().get(1);
     private String PT_ID_DEMO;
     private String DMP_ID_DEMO;
@@ -35,10 +61,10 @@ public class MSK_ImpactPatientDemographics {
     private String OS_STATUS;
     private Map<String, Object> additionalProperties = new HashMap<>();
 
-    public MSK_ImpactPatientDemographics() {
+    public MSKImpactPatientDemographics() {
     }
 
-    public MSK_ImpactPatientDemographics(String PT_ID_DEMO, String DMP_ID_DEMO, String GENDER,
+    public MSKImpactPatientDemographics(String PT_ID_DEMO, String DMP_ID_DEMO, String GENDER,
             String RACE, String RELIGION, Integer AGE_AT_DATE_OF_DEATH_IN_DAYS, String DEATH_SOURCE_DESCRIPTION,
             String PT_COUNTRY, String PT_STATE, String PT_ZIP3_CD, Integer PT_BIRTH_YEAR, String PT_SEX_DESC,
             String PT_VITAL_STATUS, String PT_MARITAL_STS_DESC, Integer PT_DEATH_YEAR, String PT_MRN_CREATE_YEAR, Integer TM_DX_YEAR) {
@@ -62,7 +88,7 @@ public class MSK_ImpactPatientDemographics {
         this.OS_STATUS = this.PT_VITAL_STATUS;
     }
     
-    public MSK_ImpactPatientDemographics(String DMP_ID_DEMO, String GENDER, String RACE, String RELIGION, String PT_VITAL_STATUS, Integer PT_BIRTH_YEAR, Integer PT_DEATH_YEAR, Integer TM_DX_YEAR){
+    public MSKImpactPatientDemographics(String DMP_ID_DEMO, String GENDER, String RACE, String RELIGION, String PT_VITAL_STATUS, Integer PT_BIRTH_YEAR, Integer PT_DEATH_YEAR, Integer TM_DX_YEAR){
         this.DMP_ID_DEMO =  StringUtils.isNotEmpty(DMP_ID_DEMO) ? DMP_ID_DEMO : "NA";
         this.GENDER =  StringUtils.isNotEmpty(GENDER) ? GENDER : "NA";
         this.RACE =  StringUtils.isNotEmpty(RACE) ? RACE : "NA";
@@ -73,7 +99,7 @@ public class MSK_ImpactPatientDemographics {
         this.PT_DEATH_YEAR = PT_DEATH_YEAR != null ? PT_DEATH_YEAR : -1;
         this.OS_STATUS = this.PT_VITAL_STATUS;
     }
-    public MSK_ImpactPatientDemographics(String DMP_ID_DEMO, String GENDER, String RACE, String RELIGION, String PT_VITAL_STATUS, Integer PT_BIRTH_YEAR, Integer PT_DEATH_YEAR){
+    public MSKImpactPatientDemographics(String DMP_ID_DEMO, String GENDER, String RACE, String RELIGION, String PT_VITAL_STATUS, Integer PT_BIRTH_YEAR, Integer PT_DEATH_YEAR){
         this.DMP_ID_DEMO =  StringUtils.isNotEmpty(DMP_ID_DEMO) ? DMP_ID_DEMO : "NA";
         this.GENDER =  StringUtils.isNotEmpty(GENDER) ? GENDER : "NA";
         this.RACE =  StringUtils.isNotEmpty(RACE) ? RACE : "NA";

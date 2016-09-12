@@ -88,5 +88,10 @@
             <artifactId>db2jcc4</artifactId>
             <version>4.19.26</version>
         </dependency>
+        <dependency>
+            <groupId>org.cbioportal.cmo.clinical.data.source</groupId>
+            <artifactId>data_source</artifactId>
+            <version>0.1.0</version>
+        </dependency>
     </dependencies>
 </project>

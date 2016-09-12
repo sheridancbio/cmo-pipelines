@@ -1,8 +1,34 @@
 /*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+ * Copyright (c) 2016 Memorial Sloan-Kettering Cancer Center.
+ *
+ * This library is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS
+ * FOR A PARTICULAR PURPOSE. The software and documentation provided hereunder
+ * is on an "as is" basis, and Memorial Sloan-Kettering Cancer Center has no
+ * obligations to provide maintenance, support, updates, enhancements or
+ * modifications. In no event shall Memorial Sloan-Kettering Cancer Center be
+ * liable to any party for direct, indirect, special, incidental or
+ * consequential damages, including lost profits, arising out of the use of this
+ * software and its documentation, even if Memorial Sloan-Kettering Cancer
+ * Center has been advised of the possibility of such damage.
  */
+
+/*
+ * This file is part of cBioPortal CMO-Pipelines.
+ *
+ * cBioPortal is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
 package org.cbioportal.cmo.pipelines;
 
 import org.cbioportal.cmo.pipelines.darwin.BatchConfiguration;
@@ -40,25 +66,28 @@ public class DarwinPipeline {
     
     private static void launchJob(String[] args, String stagingDirectory, String studyID) throws Exception{
         SpringApplication app = new SpringApplication(DarwinPipeline.class);
-        
+
         ConfigurableApplicationContext ctx = app.run(args);
         JobLauncher jobLauncher = ctx.getBean(JobLauncher.class);
        
-        Job darwinJob;
+        Job job;
         JobParameters jobParameters = new JobParametersBuilder()
                 .addString("stagingDirectory", stagingDirectory)
                 .addString("studyID", studyID)
                 .toJobParameters();
         switch (studyID) {
             case "msk-impact":
-                darwinJob = ctx.getBean(BatchConfiguration.MSK_IMPACT_JOB, Job.class);
+                job = ctx.getBean(BatchConfiguration.MSK_IMPACT_JOB, Job.class);
                 break;
+            case "melanoma":
+                job = ctx.getBean(BatchConfiguration.MELANOMA_JOB, Job.class);
+				break;
             default:
-                darwinJob = null;
+                job = null;
                 break;
         }
-        if(darwinJob!=null){
-            JobExecution jobExecution = jobLauncher.run(darwinJob, jobParameters);
+        if(job!=null){
+            JobExecution jobExecution = jobLauncher.run(job, jobParameters);
         }
         else{
             log.fatal("Failed to start DarwinPipeline");
