@@ -20,7 +20,11 @@ public class MSK_ImpactClinicalBrainSpineProcessor implements ItemProcessor<MSK_
     public String process(final MSK_ImpactClinicalBrainSpine darwinClinicalBrainSpine) throws Exception{
         List<String> record = new ArrayList<>();
         for(String field : new MSK_ImpactClinicalBrainSpine().getFieldNames()){
-            record.add(darwinClinicalBrainSpine.getClass().getMethod("get"+field).invoke(darwinClinicalBrainSpine).toString());
+			String value = darwinClinicalBrainSpine.getClass().getMethod("get"+field).invoke(darwinClinicalBrainSpine).toString();
+			if (field.equals("OS_STATUS") && value.equals("LIVING")) {
+				value = "ALIVE";
+			}
+			record.add(value);
         }
         
         return StringUtils.join(record, "\t");
