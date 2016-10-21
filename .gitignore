@@ -4,3 +4,5 @@
 /clinical_data/data_source/target/
 **/.DS_Store
 **/src/main/resources/application.properties
+/redcap/data_pipeline/target/
+/redcap/data_source/target/
