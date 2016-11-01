@@ -7,7 +7,7 @@
     <version>0.1.0</version>
     
     <parent>
-        <groupId>org.cbioportal.cmo.pipelines</groupId>
+        <groupId>org.mskcc.cmo.ks</groupId>
         <artifactId>master</artifactId>
         <version>0.1.0</version>
     </parent>
@@ -89,7 +89,7 @@
             <version>4.19.26</version>
         </dependency>
         <dependency>
-            <groupId>org.cbioportal.cmo.clinical.data.source</groupId>
+            <groupId>org.mskcc.cmo.ks.redcap.source</groupId>
             <artifactId>data_source</artifactId>
             <version>0.1.0</version>
         </dependency>
