@@ -349,8 +349,8 @@ public class MSK_ImpactTimelineBrainSpine {
         List<String> fieldNames = new ArrayList<>();
         fieldNames.add("DMP_PATIENT_ID_ALL_BRAINSPINETMLN");
         fieldNames.add("START_DATE");
+        fieldNames.add("STOP_DATE");        
         fieldNames.add("EVENT_TYPE");
-        fieldNames.add("STOP_DATE");
         fieldNames.add("TREATMENT_TYPE");
         fieldNames.add("SUBTYPE");
         fieldNames.add("AGENT");
@@ -363,8 +363,8 @@ public class MSK_ImpactTimelineBrainSpine {
         List<String> fieldNames = new ArrayList<>();
         fieldNames.add("PATIENT_ID");
         fieldNames.add("START_DATE");
+        fieldNames.add("STOP_DATE");        
         fieldNames.add("EVENT_TYPE");
-        fieldNames.add("STOP_DATE");
         fieldNames.add("TREATMENT_TYPE");
         fieldNames.add("SUBTYPE");
         fieldNames.add("AGENT");
