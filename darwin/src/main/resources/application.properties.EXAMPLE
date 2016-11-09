@@ -14,7 +14,13 @@ darwin.password=
 #Darwin properties
 darwin.chunk_size=10
 darwin.demographics_view=DEMOGRAPHICS_V
+darwin.skcm_mskcc_2015_chant_staging_path_current=MEL_STAGING_PATH_CURR_V
+darwin.skcm_mskcc_2015_chant_general=MEL_GENERAL_V
+darwin.skcm_mskcc_2015_chant_primary=MEL_PRIMARY_V
+darwin.skcm_mskcc_2015_chant_systemic_tx=MEL_SYSTEMIC_TX_V
 darwin.demographics_filename=data_clinical_supp_darwin_demographics.txt
+darwin.skcm_mskcc_2015_chant_clinical_filename=data_clinical_supp_darwin_skcm_mskcc_2015_chant.txt
+darwin.skcm_mskcc_2015_chant_timeline_filename=data_timeline_skcm_mskcc_2015_chant_txt
 darwin.icdo_view=ICDO_V
 darwin.icdo_filename=darwinIcdoRecords.txt
 darwin.timeline_view=DMT_TIMELINE_BRAINSPINE_V
@@ -26,4 +32,7 @@ darwin.timeline_bs_surgery=data_timeline_surgery_caisis_gbm.txt
 darwin.clinical_view=DMT_CLINICAL_BRAINSPINE_V
 darwin.clinical_filename=data_clinical_supp_caisis_gbm.txt
 
-#NOTE: runs with two settings, -stage [stagingDirectory] -study [StudyID(msk-impact for default]
+# For redcap metadata clinical attributes header generation
+metadata_project=
+
+#NOTE: runs with two settings, -d </path/to/output_directory> -s [Cancer Study ID (mskimpact for default)]
