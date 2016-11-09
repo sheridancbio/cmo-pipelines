@@ -6,3 +6,5 @@
 **/src/main/resources/application.properties
 /redcap/data_pipeline/target/
 /redcap/data_source/target/
+/redcap/redcap_source/target/
+/redcap/redcap_pipeline/target/

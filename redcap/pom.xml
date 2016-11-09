@@ -14,8 +14,8 @@
   <packaging>pom</packaging>
 
   <modules>
- 	<module>data_source</module> 
- 	<module>data_pipeline</module> 
+    <module>redcap_source</module> 
+    <module>redcap_pipeline</module> 
   </modules>
     
 </project>
