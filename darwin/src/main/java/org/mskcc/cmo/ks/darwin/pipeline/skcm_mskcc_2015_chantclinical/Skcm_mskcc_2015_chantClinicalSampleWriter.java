@@ -31,7 +31,7 @@
 */
 package org.mskcc.cmo.ks.darwin.pipeline.skcm_mskcc_2015_chantclinical;
 
-import org.mskcc.cmo.ks.darwin.pipeline.model.Skcm_mskcc_2015_chantClinicalRecord;
+import org.mskcc.cmo.ks.darwin.pipeline.model.*;
 import org.mskcc.cmo.ks.redcap.source.MetadataManager;
 import org.springframework.batch.item.*;
 import org.springframework.batch.item.file.*;
@@ -49,12 +49,12 @@ import org.apache.commons.lang.StringUtils;
  *
  * @author heinsz
  */
-public class Skcm_mskcc_2015_chantClinicalWriter implements ItemStreamWriter<String> {
+public class Skcm_mskcc_2015_chantClinicalSampleWriter implements ItemStreamWriter<Skcm_mskcc_2015_chantClinicalCompositeRecord> {
     
     @Value("#{jobParameters[outputDirectory]}")
-    private String outputDirectory;    
+    private String stagingDirectory;    
     
-    @Value("${darwin.skcm_mskcc_2015_chant_clinical_filename}")
+    @Value("${darwin.skcm_mskcc_2015_chant_clinical_sample_filename}")
     private String filename;    
     
     @Autowired
@@ -79,7 +79,7 @@ public class Skcm_mskcc_2015_chantClinicalWriter implements ItemStreamWriter<Str
                 writer.write( getMetaLine(fullHeader.get("header"), fullHeader).replace("\n", "") + "\n");
             }
         });
-        stagingFile = Paths.get(outputDirectory).resolve(filename).toString();
+        stagingFile = Paths.get(stagingDirectory).resolve(filename).toString();
         flatFileItemWriter.setResource(new FileSystemResource(stagingFile));
         flatFileItemWriter.open(executionContext);
     }
@@ -93,18 +93,27 @@ public class Skcm_mskcc_2015_chantClinicalWriter implements ItemStreamWriter<Str
     }
     
     @Override
-    public void write(List<? extends String> items) throws Exception {
+    public void write(List<? extends Skcm_mskcc_2015_chantClinicalCompositeRecord> items) throws Exception {
         List<String> writeList = new ArrayList<>();
-        for (String result : items) {
-            writeList.add(result.replace("\n", ""));
+        for (Skcm_mskcc_2015_chantClinicalCompositeRecord result : items) {
+            String sampleLine = result.getSampleRecord();
+            writeList.add(sampleLine.replace("\n", ""));
         }
         
         flatFileItemWriter.write(writeList);
     }
     
     private String getMetaLine(List<String> metaData, Map<String, List<String>> header) {
-        int pidIndex = header.get("header").indexOf("PATIENT_ID");
-        return metaData.remove(pidIndex) + "\t" + StringUtils.join(metaData, "\t");        
+        List<String> attributeTypes = header.get("attribute_types");
+        List<String> header_values = header.get("header");
+        List<String> metaDataToWrite = new ArrayList<>();
+        for (int i = 0; i < metaData.size(); i++) {
+            if (attributeTypes.get(i).equals("SAMPLE") || header_values.get(i).equals("PATIENT_ID")) {
+                metaDataToWrite.add(metaData.get(i));
+            }
+        }
+        
+        return StringUtils.join(metaDataToWrite, "\t");        
     }
     
 }

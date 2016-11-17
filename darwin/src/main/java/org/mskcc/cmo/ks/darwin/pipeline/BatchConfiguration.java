@@ -42,18 +42,11 @@ import org.mskcc.cmo.ks.darwin.pipeline.mskimpactbrainspinetimeline.MskimpactTim
 import org.mskcc.cmo.ks.darwin.pipeline.mskimpactdemographics.MskimpactPatientDemographicsProcessor;
 import org.mskcc.cmo.ks.darwin.pipeline.mskimpactdemographics.MskimpactPatientDemographicsWriter;
 import org.mskcc.cmo.ks.darwin.pipeline.mskimpactdemographics.MskimpactPatientDemographicsReader;
-import org.mskcc.cmo.ks.darwin.pipeline.model.MskimpactPatientDemographics;
-import org.mskcc.cmo.ks.darwin.pipeline.model.Skcm_mskcc_2015_chantTimelineRecord;
-import org.mskcc.cmo.ks.darwin.pipeline.model.Skcm_mskcc_2015_chantClinicalRecord;
-import org.mskcc.cmo.ks.darwin.pipeline.model.MskimpactBrainSpineCompositeTimeline;
-import org.mskcc.cmo.ks.darwin.pipeline.model.MskimpactBrainSpineClinical;
-import org.mskcc.cmo.ks.darwin.pipeline.model.MskimpactBrainSpineTimeline;
+import org.mskcc.cmo.ks.darwin.pipeline.model.*;
 import org.mskcc.cmo.ks.darwin.pipeline.skcm_mskcc_2015_chanttimeline.Skcm_mskcc_2015_chantTimelineWriter;
 import org.mskcc.cmo.ks.darwin.pipeline.skcm_mskcc_2015_chanttimeline.Skcm_mskcc_2015_chantTimelineReader;
 import org.mskcc.cmo.ks.darwin.pipeline.skcm_mskcc_2015_chanttimeline.Skcm_mskcc_2015_chantTimelineProcessor;
-import org.mskcc.cmo.ks.darwin.pipeline.skcm_mskcc_2015_chantclinical.Skcm_mskcc_2015_chantClinicalReader;
-import org.mskcc.cmo.ks.darwin.pipeline.skcm_mskcc_2015_chantclinical.Skcm_mskcc_2015_chantClinicalWriter;
-import org.mskcc.cmo.ks.darwin.pipeline.skcm_mskcc_2015_chantclinical.Skcm_mskcc_2015_chantClinicalProcessor;
+import org.mskcc.cmo.ks.darwin.pipeline.skcm_mskcc_2015_chantclinical.*;
 
 import java.util.*;
 import org.springframework.batch.core.*;
@@ -157,8 +150,8 @@ public class BatchConfiguration {
         return stepBuilderFactory.get("skcm_mskcc_2015_chantClinicalStep")
                 .<Skcm_mskcc_2015_chantClinicalRecord, String> chunk(chunkSize)
                 .reader(skcm_mskcc_2015_chantClinicalReader())
-                .processor(skcm_mskcc_2015_chantClinicalProcessor())
-                .writer(skcm_mskcc_2015_chantClinicalWriter())
+                .processor(skcm_mskcc_2015_chantClinicalCompositeProcessor())
+                .writer(skcm_mskcc_2015_chantClinicalCompositeWriter())
                 .build();
     }
     
@@ -282,14 +275,48 @@ public class BatchConfiguration {
     
     @Bean
     @StepScope
-    public Skcm_mskcc_2015_chantClinicalProcessor skcm_mskcc_2015_chantClinicalProcessor(){
-        return new Skcm_mskcc_2015_chantClinicalProcessor();
+    public Skcm_mskcc_2015_chantClinicalSampleProcessor skcm_mskcc_2015_chantClinicalSampleProcessor() {
+        return new Skcm_mskcc_2015_chantClinicalSampleProcessor();
+    }
+    
+    @Bean
+    @StepScope
+    public Skcm_mskcc_2015_chantClinicalPatientProcessor skcm_mskcc_2015_chantClinicalPatientProcessor() {
+        return new Skcm_mskcc_2015_chantClinicalPatientProcessor();
+    }
+    
+    @Bean
+    @StepScope
+    public CompositeItemProcessor skcm_mskcc_2015_chantClinicalCompositeProcessor(){
+        List<ItemProcessor> processorDelegates = new ArrayList<>();
+        processorDelegates.add(skcm_mskcc_2015_chantClinicalSampleProcessor());
+        processorDelegates.add(skcm_mskcc_2015_chantClinicalPatientProcessor());
+        CompositeItemProcessor processor = new CompositeItemProcessor<>();
+        processor.setDelegates(processorDelegates);        
+        return processor;
+    }
+    
+    @Bean
+    @StepScope
+    public Skcm_mskcc_2015_chantClinicalSampleWriter skcm_mskcc_2015_chantClinicalSampleWriter() {
+        return new Skcm_mskcc_2015_chantClinicalSampleWriter();
+    }
+    
+    @Bean
+    @StepScope
+    public Skcm_mskcc_2015_chantClinicalPatientWriter skcm_mskcc_2015_chantClinicalPatientWriter() {
+        return new Skcm_mskcc_2015_chantClinicalPatientWriter();
     }    
     
     @Bean
     @StepScope
-    public Skcm_mskcc_2015_chantClinicalWriter skcm_mskcc_2015_chantClinicalWriter(){
-        return new Skcm_mskcc_2015_chantClinicalWriter();
+    public CompositeItemWriter<Skcm_mskcc_2015_chantClinicalCompositeRecord> skcm_mskcc_2015_chantClinicalCompositeWriter(){
+        List<ItemStreamWriter> writerDelegates = new ArrayList<>();
+        writerDelegates.add(skcm_mskcc_2015_chantClinicalSampleWriter());
+        writerDelegates.add(skcm_mskcc_2015_chantClinicalPatientWriter());
+        CompositeItemWriter writer = new CompositeItemWriter<>();
+        writer.setDelegates(writerDelegates);
+        return writer;
     }   
 	
     @Bean
@@ -308,6 +335,6 @@ public class BatchConfiguration {
     @StepScope
     public Skcm_mskcc_2015_chantTimelineWriter skcm_mskcc_2015_chantTimelineWriter(){
         return new Skcm_mskcc_2015_chantTimelineWriter();
-    }      
+    }
     
 }
