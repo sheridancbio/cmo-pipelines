@@ -46,8 +46,8 @@ import org.apache.commons.lang.StringUtils;
  * @author jake
  */
 public class MskimpactBrainSpineClinicalWriter implements ItemStreamWriter<String>{
-    @Value("#{jobParameters[stagingDirectory]}")
-    private String stagingDirectory;
+    @Value("#{jobParameters[outputDirectory]}")
+    private String outputDirectory;
     
     @Value("${darwin.clinical_filename}")
     private String datasetFilename;
@@ -66,7 +66,7 @@ public class MskimpactBrainSpineClinicalWriter implements ItemStreamWriter<Strin
                 writer.write(StringUtils.join(new MskimpactBrainSpineClinical().getHeaders(), "\t"));
             }
         });
-        stagingFile = stagingDirectory + File.separator + datasetFilename;
+        stagingFile = outputDirectory + File.separator + datasetFilename;
         flatFileItemWriter.setResource(new FileSystemResource(stagingFile));
         flatFileItemWriter.open(executionContext);
     }

@@ -31,8 +31,7 @@
 */
 package org.mskcc.cmo.ks.darwin.pipeline.mskimpactdemographics;
 
-import org.mskcc.cmo.ks.darwin.pipeline.model.MskimpactPatientDemographics;
-import org.mskcc.cmo.ks.darwin.pipeline.model.MskimpactPatientIcdoRecord;
+import org.mskcc.cmo.ks.darwin.pipeline.model.*;
 
 import com.querydsl.core.types.Projections;
 import com.querydsl.sql.SQLQueryFactory;
@@ -46,20 +45,6 @@ import org.apache.log4j.Logger;
 import java.util.*;
 import static com.querydsl.core.alias.Alias.$;
 import static com.querydsl.core.alias.Alias.alias;
-import static com.querydsl.core.alias.Alias.$;
-import static com.querydsl.core.alias.Alias.alias;
-import static com.querydsl.core.alias.Alias.$;
-import static com.querydsl.core.alias.Alias.alias;
-import static com.querydsl.core.alias.Alias.$;
-import static com.querydsl.core.alias.Alias.alias;
-import static com.querydsl.core.alias.Alias.$;
-import static com.querydsl.core.alias.Alias.alias;
-import static com.querydsl.core.alias.Alias.$;
-import static com.querydsl.core.alias.Alias.alias;
-import static com.querydsl.core.alias.Alias.$;
-import static com.querydsl.core.alias.Alias.alias;
-import static com.querydsl.core.alias.Alias.$;
-import static com.querydsl.core.alias.Alias.alias;
 /**
  *
  * @author jake
@@ -70,6 +55,9 @@ public class MskimpactPatientDemographicsReader implements ItemStreamReader<Mski
     
     @Value("${darwin.icdo_view}")
     private String patientIcdoView;
+    
+    @Value("${darwin.latest_activity_view}")
+    private String latestActivityView;
     
     @Autowired
     SQLQueryFactory darwinQueryFactory;
@@ -88,21 +76,27 @@ public class MskimpactPatientDemographicsReader implements ItemStreamReader<Mski
     @Transactional
     private List<MskimpactPatientDemographics> getDarwinDemographicsResults(){
         log.info("Start of Darwin Patient Demographics View Import...");
-        MskimpactPatientDemographics qMSKImpactPatientDemographics = alias(MskimpactPatientDemographics.class, patientDemographicsView);
-        MskimpactPatientIcdoRecord MSKImpactPatientIcdoRecord = alias(MskimpactPatientIcdoRecord.class, patientIcdoView);
+        MskimpactPatientDemographics qMskImpactPatientDemographics = alias(MskimpactPatientDemographics.class, patientDemographicsView);
+        MskimpactPatientIcdoRecord qMskImpactPatientIcdoRecord = alias(MskimpactPatientIcdoRecord.class, patientIcdoView);
+        MskimpactLatestActivity qMskImpactLatestActivity = alias(MskimpactLatestActivity.class, latestActivityView);
         List<MskimpactPatientDemographics> darwinDemographicsResults = darwinQueryFactory.selectDistinct(Projections.constructor(MskimpactPatientDemographics.class,
-                $(qMSKImpactPatientDemographics.getDMP_ID_DEMO()),
-                $(qMSKImpactPatientDemographics.getGENDER()),
-                $(qMSKImpactPatientDemographics.getRACE()),
-                $(qMSKImpactPatientDemographics.getRELIGION()),
-                $(qMSKImpactPatientDemographics.getPT_VITAL_STATUS()),
-                $(qMSKImpactPatientDemographics.getPT_BIRTH_YEAR()),
-                $(qMSKImpactPatientDemographics.getPT_DEATH_YEAR()),
-                $(MSKImpactPatientIcdoRecord.getTM_DX_YEAR())))
-                .from($(qMSKImpactPatientDemographics))
-                .fullJoin($(MSKImpactPatientIcdoRecord))
-                .on($(qMSKImpactPatientDemographics.getDMP_ID_DEMO()).eq($(MSKImpactPatientIcdoRecord.getDMP_ID_ICDO())))
-                .orderBy($(MSKImpactPatientIcdoRecord.getTM_DX_YEAR()).asc())
+                $(qMskImpactPatientDemographics.getDMP_ID_DEMO()),
+                $(qMskImpactPatientDemographics.getGENDER()),
+                $(qMskImpactPatientDemographics.getRACE()),
+                $(qMskImpactPatientDemographics.getRELIGION()),
+                $(qMskImpactPatientDemographics.getPT_VITAL_STATUS()),
+                $(qMskImpactPatientDemographics.getPT_BIRTH_YEAR()),
+                $(qMskImpactPatientDemographics.getPT_DEATH_YEAR()),
+                $(qMskImpactPatientIcdoRecord.getTM_DX_YEAR()),
+                $(qMskImpactLatestActivity.getAGE_AT_LAST_KNOWN_ALIVE_YEAR_IN_DAYS()),
+                $(qMskImpactPatientIcdoRecord.getAGE_AT_TM_DX_DATE_IN_DAYS()),
+                $(qMskImpactPatientDemographics.getAGE_AT_DATE_OF_DEATH_IN_DAYS())))
+                .from($(qMskImpactPatientDemographics))
+                .fullJoin($(qMskImpactPatientIcdoRecord))
+                .on($(qMskImpactPatientDemographics.getDMP_ID_DEMO()).eq($(qMskImpactPatientIcdoRecord.getDMP_ID_ICDO())))
+                .fullJoin($(qMskImpactLatestActivity))
+                .on($(qMskImpactPatientDemographics.getDMP_ID_DEMO()).eq($(qMskImpactLatestActivity.getDMP_ID_PLA())))
+                .orderBy($(qMskImpactPatientIcdoRecord.getTM_DX_YEAR()).asc())
                 .fetch();
         return darwinDemographicsResults;
     }

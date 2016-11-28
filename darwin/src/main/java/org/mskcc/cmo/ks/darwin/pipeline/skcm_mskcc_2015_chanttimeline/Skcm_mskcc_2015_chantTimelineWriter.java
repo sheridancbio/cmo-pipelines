@@ -52,8 +52,8 @@ import org.mskcc.cmo.ks.darwin.pipeline.model.Skcm_mskcc_2015_chantTimelineAdjuv
  */
 public class Skcm_mskcc_2015_chantTimelineWriter implements ItemStreamWriter<String> {
     
-    @Value("#{jobParameters[stagingDirectory]}")
-    private String stagingDirectory;
+    @Value("#{jobParameters[outputDirectory]}")
+    private String outputDirectory;
     
     @Value("${darwin.skcm_mskcc_2015_chant_timeline_filename}")
     private String filename;    
@@ -72,7 +72,7 @@ public class Skcm_mskcc_2015_chantTimelineWriter implements ItemStreamWriter<Str
                 writer.write(StringUtils.join(new Skcm_mskcc_2015_chantTimelineAdjuvantTx().getFieldNames(), "\t"));
             }
         });
-        stagingFile = Paths.get(stagingDirectory).resolve(filename).toString();
+        stagingFile = Paths.get(outputDirectory).resolve(filename).toString();
         flatFileItemWriter.setResource(new FileSystemResource(stagingFile));
         flatFileItemWriter.open(executionContext);        
     }

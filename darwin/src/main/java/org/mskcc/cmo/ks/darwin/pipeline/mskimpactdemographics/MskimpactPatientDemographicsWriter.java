@@ -47,8 +47,8 @@ import org.apache.commons.lang.StringUtils;
  * @author jake
  */
 public class MskimpactPatientDemographicsWriter implements ItemStreamWriter<String>{
-    @Value("#{jobParameters[stagingDirectory]}")
-    private String stagingDirectory;
+    @Value("#{jobParameters[outputDirectory]}")
+    private String outputDirectory;
     
     @Value("${darwin.demographics_filename}")
     private String datasetFilename;
@@ -67,7 +67,7 @@ public class MskimpactPatientDemographicsWriter implements ItemStreamWriter<Stri
                 writer.write(StringUtils.join(new MskimpactPatientDemographics().getHeaders(), "\t"));
             }
         });
-        stagingFile = stagingDirectory + File.separator + datasetFilename;
+        stagingFile = outputDirectory + File.separator + datasetFilename;
         flatFileItemWriter.setResource(new FileSystemResource(stagingFile));
         flatFileItemWriter.open(executionContext);
     }

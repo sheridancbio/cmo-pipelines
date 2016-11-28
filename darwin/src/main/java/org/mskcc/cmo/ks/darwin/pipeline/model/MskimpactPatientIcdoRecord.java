@@ -60,7 +60,7 @@ public class MskimpactPatientIcdoRecord {
     private String TM_FACILITY_TO;
     private String FACILITY_TO_DESC;
     private Integer TM_DX_YEAR;
-    private String AGE_AT_TM_DX_DATE_IN_DAYS;
+    private Integer AGE_AT_TM_DX_DATE_IN_DAYS;
     private String TM_SITE_CD;
     private String TM_SITE_DESC;
     private String TM_LATERALITY_CD;
@@ -217,6 +217,8 @@ public class MskimpactPatientIcdoRecord {
     private String TM_AJCC; 
     private String TM_AJCC_DESC;
     private String TM_MSK_STG;
+    private Integer AGE_AT_LAST_KNOWN_ALIVE_IN_DAYS;
+    private Integer AGE_AT_DATE_OF_DEATH_IN_DAYS;
     
     public MskimpactPatientIcdoRecord(){}
     
@@ -242,7 +244,7 @@ public class MskimpactPatientIcdoRecord {
             String TM_FACILITY_TO,
             String FACILITY_TO_DESC,
             Integer TM_DX_YEAR,
-            String AGE_AT_TM_DX_DATE_IN_DAYS,
+            Integer AGE_AT_TM_DX_DATE_IN_DAYS,
             String TM_SITE_CD,
             String TM_SITE_DESC,
             String TM_LATERALITY_CD,
@@ -420,7 +422,7 @@ public class MskimpactPatientIcdoRecord {
         this.TM_FACILITY_TO =  StringUtils.isNotEmpty(TM_FACILITY_TO) ? TM_FACILITY_TO : "NA";
         this.FACILITY_TO_DESC =  StringUtils.isNotEmpty(FACILITY_TO_DESC) ? FACILITY_TO_DESC : "NA";
         this.TM_DX_YEAR = TM_DX_YEAR != null ? TM_DX_YEAR : 0;
-        this.AGE_AT_TM_DX_DATE_IN_DAYS =  StringUtils.isNotEmpty(AGE_AT_TM_DX_DATE_IN_DAYS) ? AGE_AT_TM_DX_DATE_IN_DAYS : "NA";
+        this.AGE_AT_TM_DX_DATE_IN_DAYS =  AGE_AT_TM_DX_DATE_IN_DAYS != null ? AGE_AT_TM_DX_DATE_IN_DAYS : -1;
         this.TM_SITE_CD =  StringUtils.isNotEmpty(TM_SITE_CD) ? TM_SITE_CD : "NA";
         this.TM_SITE_DESC =  StringUtils.isNotEmpty(TM_SITE_DESC) ? TM_SITE_DESC : "NA";
         this.TM_LATERALITY_CD =  StringUtils.isNotEmpty(TM_LATERALITY_CD) ? TM_LATERALITY_CD : "NA";
@@ -747,12 +749,12 @@ public class MskimpactPatientIcdoRecord {
         this.TM_DX_YEAR = TM_DX_YEAR != null ? TM_DX_YEAR : 0;
     }
 
-    public String getAGE_AT_TM_DX_DATE_IN_DAYS() {
+    public Integer getAGE_AT_TM_DX_DATE_IN_DAYS() {
         return AGE_AT_TM_DX_DATE_IN_DAYS;
     }
 
-    public void setAGE_AT_TM_DX_DATE_IN_DAYS(String AGE_AT_TM_DX_DATE_IN_DAYS) {
-        this.AGE_AT_TM_DX_DATE_IN_DAYS =  StringUtils.isNotEmpty(AGE_AT_TM_DX_DATE_IN_DAYS) ? AGE_AT_TM_DX_DATE_IN_DAYS : "NA";
+    public void setAGE_AT_TM_DX_DATE_IN_DAYS(Integer AGE_AT_TM_DX_DATE_IN_DAYS) {
+        this.AGE_AT_TM_DX_DATE_IN_DAYS =  AGE_AT_TM_DX_DATE_IN_DAYS != null ? AGE_AT_TM_DX_DATE_IN_DAYS : -1;
     }
 
     public String getTM_SITE_CD() {
@@ -2002,6 +2004,22 @@ public class MskimpactPatientIcdoRecord {
     public void setTM_MSK_STG(String TM_MSK_STG) {
         this.TM_MSK_STG =  StringUtils.isNotEmpty(TM_MSK_STG) ? TM_MSK_STG : "NA";
     }
+    
+    public Integer getAGE_AT_LAST_KNOWN_ALIVE_IN_DAYS() {
+        return AGE_AT_LAST_KNOWN_ALIVE_IN_DAYS;
+    }
+    
+    public void setAGE_AT_LAST_KNOWN_ALIVE_IN_DAYS(Integer AGE_AT_LAST_KNOWN_ALIVE_IN_DAYS) {
+        this.AGE_AT_LAST_KNOWN_ALIVE_IN_DAYS = AGE_AT_LAST_KNOWN_ALIVE_IN_DAYS;
+    }
+    
+    public Integer getAGE_AT_DATE_OF_DEATH_IN_DAYS() {
+        return AGE_AT_DATE_OF_DEATH_IN_DAYS;
+    }
+    
+    public void setAGE_AT_DATE_OF_DEATH_IN_DAYS(Integer AGE_AT_DATE_OF_DEATH_IN_DAYS) {
+        this.AGE_AT_DATE_OF_DEATH_IN_DAYS = AGE_AT_DATE_OF_DEATH_IN_DAYS;
+    }    
     
     @Override
     public String toString(){
