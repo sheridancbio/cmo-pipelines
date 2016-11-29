@@ -21,7 +21,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "study_id",    
     "api_token",
     "stable_id",
-    "id_mapping_complete"
+    "my_first_instrument_complete"
 })
 public class RedcapToken {
 
@@ -31,8 +31,8 @@ public class RedcapToken {
     private String apiToken;
     @JsonProperty("stable_id")
     private String stableId;
-    @JsonProperty("id_mapping_complete")
-    private String idMappingComplete;
+    @JsonProperty("my_first_instrument_complete")
+    private String myFirstInstrumentComplete;
     @JsonIgnore
     private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
@@ -45,17 +45,16 @@ public class RedcapToken {
 
     /**
     * 
-    * @param recordId
     * @param studyId
     * @param apiToken
     * @param stableId
-    * @param idMappingComplete
+    * @param myFirstInstrumentComplete
     */
-    public RedcapToken(String studyId, String apiToken, String stableId, String idMappingComplete) {
+    public RedcapToken(String studyId, String apiToken, String stableId, String myFirstInstrumentComplete) {
         this.studyId = studyId;
         this.apiToken = apiToken;
         this.stableId = stableId;
-        this.idMappingComplete = idMappingComplete;
+        this.myFirstInstrumentComplete = myFirstInstrumentComplete;
     }
     
     /**
@@ -90,7 +89,7 @@ public class RedcapToken {
 
     /**
     * 
-    * @param token
+    * @param apiToken
     * The api_token
     */
     @JsonProperty("api_token")
@@ -121,21 +120,21 @@ public class RedcapToken {
     /**
     * 
     * @return
-    * The idMappingComplete
+    * The myFirstInstrumentComplete
     */
-    @JsonProperty("id_mapping_complete")
-    public String getIdMappingComplete() {
-        return idMappingComplete;
+    @JsonProperty("my_first_instrument_complete")
+    public String getMyFirstInstrumentComplete() {
+        return myFirstInstrumentComplete;
     }
 
     /**
     * 
-    * @param idMappingComplete
-    * The id_mapping_complete
+    * @param myFirstInstrumentComplete
+    * The my_first_instrument_complete
     */
-    @JsonProperty("id_mapping_complete")
-    public void setIdMappingComplete(String idMappingComplete) {
-        this.idMappingComplete = idMappingComplete;
+    @JsonProperty("my_first_instrument_complete")
+    public void setMyFirstInstrumentComplete(String myFirstInstrumentComplete) {
+        this.myFirstInstrumentComplete = myFirstInstrumentComplete;
     }
 
     @JsonAnyGetter

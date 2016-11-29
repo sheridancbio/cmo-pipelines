@@ -12,10 +12,8 @@
     <version>0.1.0</version>
   </parent>
   <packaging>pom</packaging>
-
   <modules>
     <module>redcap_source</module> 
     <module>redcap_pipeline</module> 
   </modules>
-    
 </project>
