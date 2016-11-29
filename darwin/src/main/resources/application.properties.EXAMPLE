@@ -14,6 +14,7 @@ darwin.password=
 #Darwin properties
 darwin.chunk_size=10
 darwin.demographics_view=DEMOGRAPHICS_V
+darwin.latest_activity_view=LATEST_ACTIVITY_V
 darwin.skcm_mskcc_2015_chant_staging_path_current=MEL_STAGING_PATH_CURR_V
 darwin.skcm_mskcc_2015_chant_general=MEL_GENERAL_V
 darwin.skcm_mskcc_2015_chant_primary=MEL_PRIMARY_V

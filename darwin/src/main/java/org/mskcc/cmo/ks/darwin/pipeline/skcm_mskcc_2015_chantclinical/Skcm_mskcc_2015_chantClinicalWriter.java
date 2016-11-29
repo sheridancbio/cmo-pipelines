@@ -51,8 +51,8 @@ import org.apache.commons.lang.StringUtils;
  */
 public class Skcm_mskcc_2015_chantClinicalWriter implements ItemStreamWriter<String> {
     
-    @Value("#{jobParameters[stagingDirectory]}")
-    private String stagingDirectory;    
+    @Value("#{jobParameters[outputDirectory]}")
+    private String outputDirectory;    
     
     @Value("${darwin.skcm_mskcc_2015_chant_clinical_filename}")
     private String filename;    
@@ -79,7 +79,7 @@ public class Skcm_mskcc_2015_chantClinicalWriter implements ItemStreamWriter<Str
                 writer.write( getMetaLine(fullHeader.get("header"), fullHeader).replace("\n", "") + "\n");
             }
         });
-        stagingFile = Paths.get(stagingDirectory).resolve(filename).toString();
+        stagingFile = Paths.get(outputDirectory).resolve(filename).toString();
         flatFileItemWriter.setResource(new FileSystemResource(stagingFile));
         flatFileItemWriter.open(executionContext);
     }
