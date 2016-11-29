@@ -30,9 +30,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-package org.cbioportal.cmo.pipelines;
+package org.mskcc.cmo.ks;
 
-import org.cbioportal.cmo.pipelines.crdb.BatchConfiguration;
+import org.mskcc.cmo.ks.crdb.BatchConfiguration;
 
 import org.apache.commons.cli.*;
 import org.springframework.boot.SpringApplication;

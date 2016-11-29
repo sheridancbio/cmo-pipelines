@@ -29,7 +29,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-package org.cbioportal.cmo.pipelines.crdb.model;
+package org.mskcc.cmo.ks.crdb.model;
 
 import java.util.*;
 
@@ -94,6 +94,7 @@ public class CRDBDataset {
     private String TREATMENT_END_DAYS;
     private String OFF_STUDY_DAYS;
     private String COMMENTS;
+    private String PARTA_CONSENTED;
     private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
 /**
@@ -1534,6 +1535,20 @@ public CRDBDataset(String DMP_ID, String CONSENT_DATE_DAYS, String PRIM_DISEASE_
     public String toString() {
         return ToStringBuilder.reflectionToString(this);
     }
+
+    /**
+     * @return the PARTA_CONSENTED
+     */
+    public String getPARTA_CONSENTED() {
+        return PARTA_CONSENTED;
+    }
+
+    /**
+     * @param PARTA_CONSENTED the PARTA_CONSENTED to set
+     */
+    public void setPARTA_CONSENTED(String PARTA_CONSENTED) {
+        this.PARTA_CONSENTED = PARTA_CONSENTED;
+    }
     
     /**
      * Returns the field names in CRDBDataset without additional properties.
@@ -1541,11 +1556,59 @@ public CRDBDataset(String DMP_ID, String CONSENT_DATE_DAYS, String PRIM_DISEASE_
      */    
     public List<String> getFieldNames() {
         List<String> fieldNames = new ArrayList<>();
-        for (String field : toString().substring(toString().indexOf("[")+1,toString().indexOf("]")).split(",")) {
-            if (!field.startsWith("additionalProperties")) {
-                fieldNames.add(field.split("=")[0]);                
-            }
-        }
+        fieldNames.add("DMP_ID");
+        fieldNames.add("CONSENT_DATE_DAYS");
+        fieldNames.add("PRIM_DISEASE_12245");
+        fieldNames.add("INITIAL_SX_DAYS");
+        fieldNames.add("INITIAL_DX_DAYS");
+        fieldNames.add("FIRST_METASTASIS_DAYS");
+        fieldNames.add("INIT_DX_STATUS_ID");
+        fieldNames.add("INIT_DX_STATUS");
+        fieldNames.add("INIT_DX_STATUS_DAYS");
+        fieldNames.add("INIT_DX_STAGING_DSCRP");
+        fieldNames.add("INIT_DX_STAGE");
+        fieldNames.add("INIT_DX_STAGE_DSCRP");
+        fieldNames.add("INIT_DX_GRADE");
+        fieldNames.add("INIT_DX_GRADE_DSCRP");
+        fieldNames.add("INIT_DX_T_STAGE");
+        fieldNames.add("INIT_DX_T_STAGE_DSCRP");
+        fieldNames.add("INIT_DX_N_STAGE");
+        fieldNames.add("INIT_DX_N_STAGE_DSCRP");
+        fieldNames.add("INIT_DX_M_STAGE");
+        fieldNames.add("INIT_DX_M_STAGE_DSCRP");
+        fieldNames.add("INIT_DX_HIST");
+        fieldNames.add("INIT_DX_SUB_HIST");
+        fieldNames.add("INIT_DX_SUB_SUB_HIST");
+        fieldNames.add("INIT_DX_SUB_SUB_SUB_HIST");
+        fieldNames.add("INIT_DX_SITE");
+        fieldNames.add("INIT_DX_SUB_SITE");
+        fieldNames.add("INIT_DX_SUB_SUB_SITE");
+        fieldNames.add("ENROLL_DX_STATUS_ID");
+        fieldNames.add("ENROLL_DX_STATUS");
+        fieldNames.add("ENROLL_DX_STATUS_DAYS");
+        fieldNames.add("ENROLL_DX_STAGING_DSCRP");
+        fieldNames.add("ENROLL_DX_STAGE");
+        fieldNames.add("ENROLL_DX_STAGE_DSCRP");
+        fieldNames.add("ENROLL_DX_GRADE");
+        fieldNames.add("ENROLL_DX_GRADE_DSCRP");
+        fieldNames.add("ENROLL_DX_T_STAGE");
+        fieldNames.add("ENROLL_DX_T_STAGE_DSCRP");
+        fieldNames.add("ENROLL_DX_N_STAGE");
+        fieldNames.add("ENROLL_DX_N_STAGE_DSCRP");
+        fieldNames.add("ENROLL_DX_M_STAGE");
+        fieldNames.add("ENROLL_DX_M_STAGE_DSCRP");
+        fieldNames.add("ENROLL_DX_HIST");
+        fieldNames.add("ENROLL_DX_SUB_HIST");
+        fieldNames.add("ENROLL_DX_SUB_SUB_HIST");
+        fieldNames.add("ENROLL_DX_SUB_SUB_SUB_HIST");
+        fieldNames.add("ENROLL_DX_SITE");
+        fieldNames.add("ENROLL_DX_SUB_SITE");
+        fieldNames.add("ENROLL_DX_SUB_SUB_SITE");
+        fieldNames.add("SURVIVAL_STATUS");
+        fieldNames.add("TREATMENT_END_DAYS");
+        fieldNames.add("OFF_STUDY_DAYS");
+        fieldNames.add("COMMENTS");
+        fieldNames.add("PARTA_CONSENTED");
         return fieldNames;
     }
     
@@ -1561,4 +1624,5 @@ public CRDBDataset(String DMP_ID, String CONSENT_DATE_DAYS, String PRIM_DISEASE_
         this.additionalProperties.put(name, value);
         return this;
     }
+
 }
