@@ -13,7 +13,6 @@
     <module>gdd</module>
     <module>crdb</module>
     <module>darwin</module>
-    <module>foundation</module>
     <module>redcap</module>
   </modules>
 
