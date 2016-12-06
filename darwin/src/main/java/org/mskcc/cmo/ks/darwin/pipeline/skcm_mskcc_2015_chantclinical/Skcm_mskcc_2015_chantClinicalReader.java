@@ -62,10 +62,13 @@ public class Skcm_mskcc_2015_chantClinicalReader implements ItemStreamReader<Skc
     private String generalView;     
     
     @Value("${darwin.skcm_mskcc_2015_chant.impact_view}")
-    private String impactView;         
+    private String impactView;
+    
+    @Value("${darwin.skcm_mskcc_2015_chant.metastat_sites_view}")
+    private String metastatSitesView;      
     
     @Autowired
-    SQLQueryFactory darwinQueryFactory;    
+    SQLQueryFactory darwinQueryFactory;
     
     Logger log = Logger.getLogger(MskimpactPatientDemographicsReader.class);
     
@@ -103,6 +106,7 @@ public class Skcm_mskcc_2015_chantClinicalReader implements ItemStreamReader<Skc
         Skcm_mskcc_2015_chantClinicalRecord qPrimaryView = alias(Skcm_mskcc_2015_chantClinicalRecord.class, primaryView);      
         Skcm_mskcc_2015_chantClinicalRecord qGeneralView = alias(Skcm_mskcc_2015_chantClinicalRecord.class, generalView);
         Skcm_mskcc_2015_chantClinicalRecord qImpactView = alias(Skcm_mskcc_2015_chantClinicalRecord.class, impactView);
+        Skcm_mskcc_2015_chantClinicalRecord qMetastatSitesView = alias(Skcm_mskcc_2015_chantClinicalRecord.class, metastatSitesView);        
         
         List<Skcm_mskcc_2015_chantClinicalRecord> darwinMelanomaRecords = darwinQueryFactory.selectDistinct(Projections.constructor(Skcm_mskcc_2015_chantClinicalRecord.class,
                 $(qStagingPathCurrentView.getMELSPC_PTID()),
@@ -171,7 +175,11 @@ public class Skcm_mskcc_2015_chantClinicalReader implements ItemStreamReader<Skc
                 $(qImpactView.getMELI_PROCEDURE_YEAR()),
                 $(qImpactView.getMELI_TUMOR_TYPE()),
                 $(qImpactView.getMELI_PRIMARY_SITE()),
-                $(qImpactView.getMELI_MET_SITE())))
+                $(qImpactView.getMELI_MET_SITE()),
+                $(qMetastatSitesView.getMELMS_PTID()),
+                $(qMetastatSitesView.getMELMS_SITE_TYPE_DESC()),
+                $(qMetastatSitesView.getMELMS_SITE_DESC()),
+                $(qMetastatSitesView.getMELMS_SITE_YEAR())))
                 .from($(qStagingPathCurrentView))
                 .fullJoin($(qPrimaryView))
                 .on($(qStagingPathCurrentView.getMELSPC_PTID()).eq($(qPrimaryView.getMELP_PTID())))
@@ -179,6 +187,8 @@ public class Skcm_mskcc_2015_chantClinicalReader implements ItemStreamReader<Skc
                 .on($(qStagingPathCurrentView.getMELSPC_PTID()).eq($(qGeneralView.getMELG_PTID())).or($(qPrimaryView.getMELP_PTID()).eq($(qGeneralView.getMELG_PTID()))))
                 .fullJoin($(qImpactView))
                 .on($(qStagingPathCurrentView.getMELSPC_PTID()).eq($(qImpactView.getMELI_PTID())).or($(qPrimaryView.getMELP_PTID()).eq($(qImpactView.getMELI_PTID())).or($(qGeneralView.getMELG_PTID()).eq($(qImpactView.getMELI_PTID())))))
+                .fullJoin($(qMetastatSitesView))
+                .on($(qGeneralView.getMELG_PTID()).eq($(qMetastatSitesView.getMELMS_PTID())).or($(qPrimaryView.getMELP_PTID()).eq($(qMetastatSitesView.getMELMS_PTID()))).or($(qStagingPathCurrentView.getMELSPC_PTID()).eq($(qMetastatSitesView.getMELMS_PTID()))))
                 .fetch();
         return darwinMelanomaRecords;
     }
@@ -188,14 +198,14 @@ public class Skcm_mskcc_2015_chantClinicalReader implements ItemStreamReader<Skc
         List<Skcm_mskcc_2015_chantClinicalRecord> combinedRecords = new ArrayList<>();
         
         for (Skcm_mskcc_2015_chantClinicalRecord record : records) {
-            if (!recordMap.containsKey(record.getPATIENT_ID())) {
-                recordMap.put(record.getPATIENT_ID(), record);
+            if (!recordMap.containsKey(record.getSAMPLE_ID())) {
+                recordMap.put(record.getSAMPLE_ID(), record);
             }
             else {
-                Skcm_mskcc_2015_chantClinicalRecord existingRecord = recordMap.get(record.getPATIENT_ID());
-                recordMap.put(record.getPATIENT_ID(), combineRecords(existingRecord, record));
+                Skcm_mskcc_2015_chantClinicalRecord existingRecord = recordMap.get(record.getSAMPLE_ID());
+                recordMap.put(record.getSAMPLE_ID(), combineRecords(existingRecord, record));
             }
-        }        
+        }
         combinedRecords.addAll(recordMap.values());
         return combinedRecords;
     }
@@ -203,7 +213,7 @@ public class Skcm_mskcc_2015_chantClinicalReader implements ItemStreamReader<Skc
     private Skcm_mskcc_2015_chantClinicalRecord combineRecords(Skcm_mskcc_2015_chantClinicalRecord record1, Skcm_mskcc_2015_chantClinicalRecord record2) {
         Skcm_mskcc_2015_chantClinicalRecord combined = new Skcm_mskcc_2015_chantClinicalRecord();
         try {
-            for (String field : combined.getFieldNames()) {
+            for (String field : combined.getAllVariables()) {
                     Method fieldGetter = combined.getClass().getMethod("get" + field);
                     List<String> values = new ArrayList();
                     values.add((String) fieldGetter.invoke(record1));

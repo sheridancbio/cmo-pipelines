@@ -31,33 +31,44 @@
 */
 package org.mskcc.cmo.ks.darwin.pipeline.skcm_mskcc_2015_chantclinical;
 
-import org.mskcc.cmo.ks.darwin.pipeline.model.Skcm_mskcc_2015_chantClinicalRecord;
+import org.mskcc.cmo.ks.darwin.pipeline.model.*;
 
 import java.util.*;
 import org.apache.commons.lang.StringUtils;
+import org.mskcc.cmo.ks.redcap.source.*;
 import org.springframework.batch.item.ItemProcessor;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  *
  * @author heinsz
  */
-public class Skcm_mskcc_2015_chantClinicalProcessor implements ItemProcessor<Skcm_mskcc_2015_chantClinicalRecord, String> {
-    
+public class Skcm_mskcc_2015_chantClinicalSampleProcessor implements ItemProcessor<Skcm_mskcc_2015_chantClinicalRecord, Skcm_mskcc_2015_chantClinicalCompositeRecord> {
+    @Autowired
+    public MetadataManager metadataManager;
+    @Autowired
+     public ClinicalDataSource clinicalDataSource;
     @Override
-    public String process(final Skcm_mskcc_2015_chantClinicalRecord melanomaClinicalRecord) throws Exception{
+    public Skcm_mskcc_2015_chantClinicalCompositeRecord process(final Skcm_mskcc_2015_chantClinicalRecord melanomaClinicalRecord) throws Exception{
+        List<String> header =  melanomaClinicalRecord.getFieldNames();
+        Map<String, List<String>> fullHeader = metadataManager.getFullHeader(header);              
+        
         List<String> record = new ArrayList<>();
         for (String field : melanomaClinicalRecord.getFieldNames()) {
             String value = melanomaClinicalRecord.getClass().getMethod("get" + field).invoke(melanomaClinicalRecord).toString();
             Set<String> uniqueValues = new HashSet(Arrays.asList(value.split("\\|")));            
             List<String> values = Arrays.asList(value.split("\\|"));
-            if (uniqueValues.size() == 1) {
-                record.add(values.get(0));
+            if (fullHeader.get("attribute_types").get(header.indexOf(field)).equals("SAMPLE") || field.equals("PATIENT_ID")) {
+                if (uniqueValues.size() == 1) {
+                    record.add(values.get(0));
+                }
+                else {
+                    record.add(value);
+                 }            
             }
-            else {
-                record.add(value);
-             }
         }
-        
-        return StringUtils.join(record, "\t");
+        Skcm_mskcc_2015_chantClinicalCompositeRecord compositeRecord = new Skcm_mskcc_2015_chantClinicalCompositeRecord(melanomaClinicalRecord);
+        compositeRecord.setSampleRecord(StringUtils.join(record, "\t"));
+        return compositeRecord;
     }
 }

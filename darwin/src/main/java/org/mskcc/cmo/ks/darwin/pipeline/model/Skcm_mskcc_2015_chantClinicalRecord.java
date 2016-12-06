@@ -112,6 +112,10 @@ public class Skcm_mskcc_2015_chantClinicalRecord {
     private String meliTumorType;
     private String meliPrimarySite;
     private String meliMetSite;
+    private String melmsPtid;
+    private String melmsSiteTypeDesc;
+    private String melmsSiteDesc;
+    private String melmsSiteYear;
     
     
     private Map<String, Object> additionalProperties;    
@@ -184,7 +188,11 @@ public class Skcm_mskcc_2015_chantClinicalRecord {
             String meliProcedureYear,
             String meliTumorType,
             String meliPrimarySite,
-            String meliMetSite) {
+            String meliMetSite,
+            String melmsPtid,
+            String melmsSiteTypeDesc,
+            String melmsSiteDesc,
+            String melmsSiteYear) {
 this.melspcPtid = StringUtils.isNotEmpty(melspcPtid) ? melspcPtid : "NA";
 this.melspcStageYear = StringUtils.isNotEmpty(melspcStageYear) ? melspcStageYear : "NA";
 this.melspcStgGrpName = StringUtils.isNotEmpty(melspcStgGrpName) ? melspcStgGrpName : "NA";
@@ -252,14 +260,15 @@ this.meliProcedureYear = StringUtils.isNotEmpty(meliProcedureYear) ? meliProcedu
 this.meliTumorType = StringUtils.isNotEmpty(meliTumorType) ? meliTumorType : "NA";
 this.meliPrimarySite = StringUtils.isNotEmpty(meliPrimarySite) ? meliPrimarySite : "NA";
 this.meliMetSite = StringUtils.isNotEmpty(meliMetSite) ? meliMetSite : "NA";
+this.melmsPtid = StringUtils.isNotEmpty(melmsPtid) ? melmsPtid : "NA";
+this.melmsSiteTypeDesc = StringUtils.isNotEmpty(melmsSiteTypeDesc) ? melmsSiteTypeDesc : "NA";
+this.melmsSiteDesc = StringUtils.isNotEmpty(melmsSiteDesc) ? melmsSiteDesc : "NA";
+this.melmsSiteYear = StringUtils.isNotEmpty(melmsSiteYear) ? melmsSiteYear : "NA";
     }
     
     public String getPATIENT_ID() {
         if (patientId != null) {
             return patientId;
-        }
-        else if (!meliPtid.equals("NA")) {
-            return meliPtid;
         }
         else if (!melspcPtid.equals("NA")) {
             return melspcPtid;
@@ -267,8 +276,11 @@ this.meliMetSite = StringUtils.isNotEmpty(meliMetSite) ? meliMetSite : "NA";
         else if (!melgPtid.equals("NA")) {
             return melgPtid;
         }        
-        else {
+        else if (!melpPtid.equals("NA")) {
             return melpPtid;
+        }
+        else {
+            return melmsPtid;
         }
     }
     
@@ -277,9 +289,15 @@ this.meliMetSite = StringUtils.isNotEmpty(meliMetSite) ? meliMetSite : "NA";
     }
     
     public String getSAMPLE_ID() {
-        if (patientId != null) {
-            return patientId;
+        if (sampleId != null) {
+            return sampleId;
         }
+        else if (!meliDmpSampleId.equals("NA")) {
+            return meliDmpSampleId;
+        }        
+        else if (!melpPrimSeq.equals("NA")) {
+            return melpPtid + "_" + melpPrimSeq;
+        }        
         else if (!melspcPtid.equals("NA")) {
             return melspcPtid;
         }
@@ -287,7 +305,7 @@ this.meliMetSite = StringUtils.isNotEmpty(meliMetSite) ? meliMetSite : "NA";
             return melgPtid;
         }
         else {
-            return melpPtid;
+            return melmsPtid;
         }
     }
     
@@ -831,6 +849,38 @@ this.meliMetSite = StringUtils.isNotEmpty(meliMetSite) ? meliMetSite : "NA";
         this.meliMetSite = meliMetSite;
     }
     
+    public String getMELMS_PTID() {
+        return melmsPtid;
+    }
+    
+    public void setMELMS_PTID(String melmsPtid) {
+        this.melmsPtid = melmsPtid;
+    }
+    
+    public String getMELMS_SITE_TYPE_DESC() {
+        return melmsSiteTypeDesc;
+    }
+    
+    public void setMELMS_SITE_TYPE_DESC(String melmsSiteTypeDesc) {
+        this.melmsSiteTypeDesc = melmsSiteTypeDesc;
+    }
+    
+    public String getMELMS_SITE_DESC() {
+        return melmsSiteDesc;
+    }
+    
+    public void setMELMS_SITE_DESC(String melmsSiteDesc) {
+        this.melmsSiteDesc = melmsSiteDesc;
+    }
+
+    public String getMELMS_SITE_YEAR() {
+        return melmsSiteYear;
+    }
+    
+    public void setMELMS_SITE_YEAR(String melmsSiteYear) {
+        this.melmsSiteYear = melmsSiteYear;
+    }    
+    
     @Override
     public String toString() {
         return ToStringBuilder.reflectionToString(this);
@@ -901,7 +951,21 @@ this.meliMetSite = StringUtils.isNotEmpty(meliMetSite) ? meliMetSite : "NA";
         fieldNames.add("MELI_TUMOR_TYPE");
         fieldNames.add("MELI_PRIMARY_SITE");
         fieldNames.add("MELI_MET_SITE");
+        fieldNames.add("MELMS_SITE_TYPE_DESC");
+        fieldNames.add("MELMS_SITE_DESC");
+        fieldNames.add("MELMS_SITE_YEAR");
 
+        return fieldNames;
+    }
+    
+    public List<String> getAllVariables() {
+        List<String> fieldNames = getFieldNames();
+        fieldNames.add("MELSPC_PTID");
+        fieldNames.add("MELP_PTID");
+        fieldNames.add("MELG_PTID");
+        fieldNames.add("MELI_PTID");
+        fieldNames.add("MELMS_PTID");
+        
         return fieldNames;
     }
     
