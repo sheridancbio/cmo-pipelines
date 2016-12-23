@@ -286,7 +286,7 @@ public class MskimpactPatientDemographics {
     }
     
     public String getOS_STATUS(){
-        return OS_STATUS.trim();
+        return OS_STATUS.trim().equals("ALIVE") ? "LIVING" : "DECEASED";
     }
     
     public void setOS_STATUS(String OS_STATUS) {
@@ -294,14 +294,14 @@ public class MskimpactPatientDemographics {
     }
     
     public String getOS_MONTHS() {
-        if (getOS_STATUS().equals("ALIVE")) {
+        if (getOS_STATUS().equals("LIVING")) {
             if (AGE_AT_LAST_KNOWN_ALIVE_IN_DAYS != null && AGE_AT_TM_DX_DATE_IN_DAYS != null) {
-                return String.valueOf((AGE_AT_LAST_KNOWN_ALIVE_IN_DAYS - AGE_AT_TM_DX_DATE_IN_DAYS) / 30);
+                return String.format("%.3f", (AGE_AT_LAST_KNOWN_ALIVE_IN_DAYS - AGE_AT_TM_DX_DATE_IN_DAYS) / 30.4167);
             }            
         }
         else {
             if (AGE_AT_DATE_OF_DEATH_IN_DAYS != null && AGE_AT_TM_DX_DATE_IN_DAYS != null) {
-                return String.valueOf((AGE_AT_DATE_OF_DEATH_IN_DAYS - AGE_AT_TM_DX_DATE_IN_DAYS) / 30);
+                return String.format("%.3f", (AGE_AT_DATE_OF_DEATH_IN_DAYS - AGE_AT_TM_DX_DATE_IN_DAYS) / 30.4167);
             }            
         }
         return "NA";
