@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Memorial Sloan-Kettering Cancer Center.
+ * Copyright (c) 2016 - 2017 Memorial Sloan-Kettering Cancer Center.
  *
  * This library is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS
@@ -29,7 +29,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
- 
+
 package org.cbioportal.cmo.pipelines.cvr.variants;
 
 import java.util.*;
@@ -47,17 +47,17 @@ import org.springframework.web.client.RestTemplate;
  * @author heinsz
  */
 
-public class CVRVariantsReader implements ItemStreamReader<CVRVariants>{
-    
+public class CVRVariantsReader implements ItemStreamReader<CVRVariants> {
+
     @Value("#{jobParameters[sessionId]}")
     private String sessionId;
-        
+
     @Value("${dmp.server_name}")
-    private String dmpServerName;    
-    
+    private String dmpServerName;
+
     @Value("${dmp.tokens.retrieve_variants}")
     private String dmpRetreiveVariants;
-    
+
     private String dmpUrl;
     private List<CVRVariants> cvrVariants = new ArrayList<CVRVariants>();
 
@@ -66,31 +66,31 @@ public class CVRVariantsReader implements ItemStreamReader<CVRVariants>{
     public void open(ExecutionContext ec) throws ItemStreamException {
         dmpUrl = dmpServerName + dmpRetreiveVariants + "/" + sessionId + "/0";
         RestTemplate restTemplate = new RestTemplate();
-        HttpEntity<LinkedMultiValueMap<String, Object>> requestEntity = getRequestEntity();        
+        HttpEntity<LinkedMultiValueMap<String, Object>> requestEntity = getRequestEntity();
         ResponseEntity<CVRVariants> responseEntity = restTemplate.exchange(dmpUrl, HttpMethod.GET, requestEntity, CVRVariants.class);
         cvrVariants.add(responseEntity.getBody());
     }
 
     @Override
-    public void update(ExecutionContext ec) throws ItemStreamException {}
+    public void update(ExecutionContext ec) throws ItemStreamException {
+    }
 
     @Override
-    public void close() throws ItemStreamException {}
+    public void close() throws ItemStreamException {
+    }
 
     // The cvrVariants list will never have more than 1 CVRVariants object in it to process
     @Override
     public CVRVariants read() throws Exception {
-        if (!cvrVariants.isEmpty()) {            
-            return cvrVariants.remove(0);         
+        if (!cvrVariants.isEmpty()) {
+            return cvrVariants.remove(0);
         }
         return null;
     }
-    
-    private HttpEntity getRequestEntity()
-    {  
+
+    private HttpEntity getRequestEntity() {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
         return new HttpEntity<Object>(headers);
     }
-    
 }

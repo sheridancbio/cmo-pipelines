@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Memorial Sloan-Kettering Cancer Center.
+ * Copyright (c) 2016 - 2017 Memorial Sloan-Kettering Cancer Center.
  *
  * This library is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS
@@ -32,29 +32,27 @@
 
 package org.cbioportal.cmo.pipelines.cvr.clinical;
 
-import org.cbioportal.cmo.pipelines.cvr.model.*;
-
 import java.util.*;
 import org.apache.commons.lang.StringUtils;
+import org.cbioportal.cmo.pipelines.cvr.model.*;
 import org.springframework.batch.item.ItemProcessor;
 
 /**
  *
  * @author heinsz
  */
-public class CVRClinicalDataProcessor implements ItemProcessor<CVRClinicalRecord, CompositeClinicalRecord>{
-    
+public class CVRClinicalDataProcessor implements ItemProcessor<CVRClinicalRecord, CompositeClinicalRecord> {
+
     @Override
-    public CompositeClinicalRecord process(CVRClinicalRecord i) throws Exception {              
+    public CompositeClinicalRecord process(CVRClinicalRecord i) throws Exception {
         List<String> record = new ArrayList<>();
-        for(String field : i.getFieldNames()) {
+        for (String field : i.getFieldNames()) {
             record.add(i.getClass().getMethod("get" + field).invoke(i, null).toString().replace("\r\n", " ").replace("\r", " ").replace("\n", " ").replace("\t", " "));
-        }  
-        CompositeClinicalRecord compRecord = new CompositeClinicalRecord();
-        if(!i.getIsNew().isEmpty()){
-            compRecord.setNewClinicalRecord(StringUtils.join(record, "\t").trim());
         }
-        else{
+        CompositeClinicalRecord compRecord = new CompositeClinicalRecord();
+        if (!i.getIsNew().isEmpty()) {
+            compRecord.setNewClinicalRecord(StringUtils.join(record, "\t").trim());
+        } else {
             compRecord.setOldClinicalRecord(StringUtils.join(record, "\t").trim());
         }
         return compRecord;

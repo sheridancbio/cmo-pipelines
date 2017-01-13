@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Memorial Sloan-Kettering Cancer Center.
+ * Copyright (c) 2016 - 2017 Memorial Sloan-Kettering Cancer Center.
  *
  * This library is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS
@@ -32,12 +32,11 @@
 
 package org.cbioportal.cmo.pipelines.cvr.cna;
 
-import org.cbioportal.cmo.pipelines.cvr.model.CompositeCnaRecord;
-
+import java.nio.file.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.nio.file.*;
 import org.cbioportal.cmo.pipelines.cvr.CVRUtilities;
+import org.cbioportal.cmo.pipelines.cvr.model.CompositeCnaRecord;
 import org.springframework.batch.item.ExecutionContext;
 import org.springframework.batch.item.ItemStreamException;
 import org.springframework.batch.item.ItemStreamWriter;
@@ -52,13 +51,13 @@ import org.springframework.core.io.FileSystemResource;
  * @author jake-rose
  */
 public class CVRNewCnaDataWriter implements ItemStreamWriter<CompositeCnaRecord> {
-    
+
     @Value("${tmpdir}")
     private String stagingDirectory;
-    
+
     @Autowired
     public CVRUtilities cvrUtilities;
-    
+
     private String stagingFile;
     private FlatFileItemWriter<String> flatFileItemWriter = new FlatFileItemWriter<String>();
 
@@ -66,16 +65,15 @@ public class CVRNewCnaDataWriter implements ItemStreamWriter<CompositeCnaRecord>
     @Override
     public void open(ExecutionContext ec) throws ItemStreamException {
         stagingFile = Paths.get(stagingDirectory).resolve(cvrUtilities.CNA_FILE).toString();
-                
         PassThroughLineAggregator aggr = new PassThroughLineAggregator();
-        flatFileItemWriter.setLineAggregator(aggr);  
-        flatFileItemWriter.setResource( new FileSystemResource(stagingFile));
+        flatFileItemWriter.setLineAggregator(aggr);
+        flatFileItemWriter.setResource(new FileSystemResource(stagingFile));
         flatFileItemWriter.open(ec);
-
     }
 
     @Override
-    public void update(ExecutionContext ec) throws ItemStreamException {}
+    public void update(ExecutionContext ec) throws ItemStreamException {
+    }
 
     @Override
     public void close() throws ItemStreamException {
@@ -85,11 +83,11 @@ public class CVRNewCnaDataWriter implements ItemStreamWriter<CompositeCnaRecord>
     @Override
     public void write(List<? extends CompositeCnaRecord> records) throws Exception {
         List<String> items = new ArrayList<>();
-        for(CompositeCnaRecord record : records){
-            if(record.getNewCnaRecord() != null){
+        for (CompositeCnaRecord record : records) {
+            if (record.getNewCnaRecord() != null) {
                 items.add(record.getNewCnaRecord());
             }
         }
-    }    
-    
+    }
+
 }

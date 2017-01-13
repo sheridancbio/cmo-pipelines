@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Memorial Sloan-Kettering Cancer Center.
+ * Copyright (c) 2016 - 2017 Memorial Sloan-Kettering Cancer Center.
  *
  * This library is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS
@@ -32,24 +32,24 @@
 
 package org.cbioportal.cmo.pipelines.cvr;
 
-import org.cbioportal.cmo.pipelines.cvr.variants.*;
-import org.cbioportal.cmo.pipelines.cvr.mutation.*;
+import java.util.*;
 import org.cbioportal.cmo.pipelines.cvr.clinical.*;
-import org.cbioportal.cmo.pipelines.cvr.sv.*;
-import org.cbioportal.cmo.pipelines.cvr.seg.*;
 import org.cbioportal.cmo.pipelines.cvr.cna.*;
 import org.cbioportal.cmo.pipelines.cvr.fusion.*;
 import org.cbioportal.cmo.pipelines.cvr.model.*;
+import org.cbioportal.cmo.pipelines.cvr.mutation.*;
+import org.cbioportal.cmo.pipelines.cvr.seg.*;
+import org.cbioportal.cmo.pipelines.cvr.sv.*;
+import org.cbioportal.cmo.pipelines.cvr.variants.*;
 import org.cbioportal.models.*;
-import java.util.*;
-import org.springframework.batch.item.support.CompositeItemWriter;
 import org.springframework.batch.core.*;
-import org.springframework.batch.item.*;
 import org.springframework.batch.core.configuration.annotation.*;
-import org.springframework.context.annotation.*;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.batch.core.configuration.annotation.StepScope;
+import org.springframework.batch.item.*;
+import org.springframework.batch.item.support.CompositeItemWriter;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.*;
 
 /**
  * @author heinsz
@@ -57,13 +57,12 @@ import org.springframework.beans.factory.annotation.Value;
 @Configuration
 @EnableBatchProcessing
 @ComponentScan(basePackages="org.cbioportal.annotator")
-public class BatchConfiguration
-{
-    public static final String CVR_JOB = "cvrJob";    
+public class BatchConfiguration {
+    public static final String CVR_JOB = "cvrJob";
     public static final String JSON_JOB = "jsonJob";
     public static final String GML_JOB = "gmlJob";
     public static final String GML_JSON_JOB = "gmlJsonJob";
-    
+
     @Autowired
     public JobBuilderFactory jobBuilderFactory;
 
@@ -71,21 +70,19 @@ public class BatchConfiguration
     public StepBuilderFactory stepBuilderFactory;
 
     @Value("${chunk}")
-    private String chunk;    
-    
+    private String chunk;
+
     @Bean
-    public Job gmlJob()
-    {
+    public Job gmlJob() {
         return jobBuilderFactory.get(GML_JOB)
                 .start(gmlJsonStep())
                 .next(gmlClinicalStep())
-                .next(gmlMutationStep())                
+                .next(gmlMutationStep())
                 .build();
     }
-    
+
     @Bean
-    public Job jsonJob()
-    {
+    public Job jsonJob() {
         return jobBuilderFactory.get(JSON_JOB)
                 .start(clinicalStep())
                 .next(mutationStep())
@@ -98,37 +95,34 @@ public class BatchConfiguration
     }
 
     @Bean
-    public Job cvrJob()
-    {
+    public Job cvrJob() {
         return jobBuilderFactory.get(CVR_JOB)
-            .start(cvrJsonStep())
-            .next(clinicalStep())
-            .next(mutationStep())
-            .next(unfilteredMutationStep())
-            .next(cnaStep())
-            .next(svStep())
-            .next(fusionStep())
-            .next(segStep())
-            .build();
+                .start(cvrJsonStep())
+                .next(clinicalStep())
+                .next(mutationStep())
+                .next(unfilteredMutationStep())
+                .next(cnaStep())
+                .next(svStep())
+                .next(fusionStep())
+                .next(segStep())
+                .build();
     }
-    
+
     @Bean
-    public Job gmlJsonJob()
-    {
+    public Job gmlJsonJob() {
         return jobBuilderFactory.get(GML_JSON_JOB)
                 .start(gmlMutationStep())
                 .next(gmlClinicalStep())
                 .build();
     }
-    
+
     @Bean
     public GMLClinicalStepListener gmlClinicalStepListener() {
         return new GMLClinicalStepListener();
     }
-    
+
     @Bean
-    public Step gmlJsonStep()
-    {
+    public Step gmlJsonStep() {
         return stepBuilderFactory.get("gmlJsonStep")
                 .<GMLVariant, String> chunk(Integer.parseInt(chunk))
                 .reader(gmlJsonReader())
@@ -136,10 +130,9 @@ public class BatchConfiguration
                 .writer(gmlJsonWriter())
                 .build();
     }
-    
+
     @Bean
-    public Step gmlMutationStep()
-    {
+    public Step gmlMutationStep() {
         return stepBuilderFactory.get("gmlMAFStep")
                 .<AnnotatedRecord, String> chunk(Integer.parseInt(chunk))
                 .reader(gmlMutationReader())
@@ -147,217 +140,193 @@ public class BatchConfiguration
                 .writer(gmlMutationDataWriter())
                 .build();
     }
-    
+
     @Bean
-    public Step gmlClinicalStep()
-    {
+    public Step gmlClinicalStep() {
         return stepBuilderFactory.get("gmlClinicalStep")
                 .listener(gmlClinicalStepListener())
                 .<CVRClinicalRecord, CompositeClinicalRecord> chunk(Integer.parseInt(chunk))
                 .reader(gmlClinicalDataReader())
                 .processor(clinicalDataProcessor())
                 .writer(allClinicalDataWriter())
-                .build();   
+                .build();
     }
-    
+
     @Bean
-    public Step cvrJsonStep()
-    {
+    public Step cvrJsonStep() {
         return stepBuilderFactory.get("cvrJsonStep")
-            .<CVRVariants, String> chunk(Integer.parseInt(chunk))
-            .reader(cvrJsonreader())
-            .processor(cvrJsonprocessor())
-            .writer(cvrJsonwriter())
-            .build();
+                .<CVRVariants, String> chunk(Integer.parseInt(chunk))
+                .reader(cvrJsonreader())
+                .processor(cvrJsonprocessor())
+                .writer(cvrJsonwriter())
+                .build();
     }
-    
+
     @Bean
-    public Step clinicalStep()
-    {
+    public Step clinicalStep() {
         return stepBuilderFactory.get("clinicalStep")
-            .<CVRClinicalRecord, CompositeClinicalRecord> chunk(Integer.parseInt(chunk))
-            .reader(clinicalDataReader())
-            .processor(clinicalDataProcessor())
-            .writer(compositeClinicalDataWriter())
-            .build();
+                .<CVRClinicalRecord, CompositeClinicalRecord> chunk(Integer.parseInt(chunk))
+                .reader(clinicalDataReader())
+                .processor(clinicalDataProcessor())
+                .writer(compositeClinicalDataWriter())
+                .build();
     }
-    
+
     @Bean
-    public Step mutationStep()
-    {
+    public Step mutationStep() {
         return stepBuilderFactory.get("mutationStep")
-            .<AnnotatedRecord, String> chunk(Integer.parseInt(chunk))
-            .reader(mutationDataReader())
-            .processor(mutationDataProcessor())
-            .writer(mutationDataWriter())
-            .build();
+                .<AnnotatedRecord, String> chunk(Integer.parseInt(chunk))
+                .reader(mutationDataReader())
+                .processor(mutationDataProcessor())
+                .writer(mutationDataWriter())
+                .build();
     }
-    
+
     @Bean
-    public Step unfilteredMutationStep()
-    {
+    public Step unfilteredMutationStep() {
         return stepBuilderFactory.get("unfilteredMutationStep")
-            .<AnnotatedRecord, String> chunk(Integer.parseInt(chunk))
-            .reader(unfilteredMutationDataReader())
-            .processor(mutationDataProcessor())
-            .writer(unfilteredMutationDataWriter())
-            .build();
+                .<AnnotatedRecord, String> chunk(Integer.parseInt(chunk))
+                .reader(unfilteredMutationDataReader())
+                .processor(mutationDataProcessor())
+                .writer(unfilteredMutationDataWriter())
+                .build();
     }
-    
+
     @Bean
-    public Step cnaStep()
-    {
+    public Step cnaStep() {
         return stepBuilderFactory.get("cnaStep")
-            .<CompositeCnaRecord, CompositeCnaRecord> chunk(Integer.parseInt(chunk))
-            .reader(cnaDataReader())
-            .processor(cnaDataProcessor())
-            .writer(compositeCnaDataWriter())
-            .build();
+                .<CompositeCnaRecord, CompositeCnaRecord> chunk(Integer.parseInt(chunk))
+                .reader(cnaDataReader())
+                .processor(cnaDataProcessor())
+                .writer(compositeCnaDataWriter())
+                .build();
     }
-    
+
     @Bean
-    public Step svStep()
-    {
+    public Step svStep() {
         return stepBuilderFactory.get("svStep")
-            .<CVRSvRecord, CompositeSvRecord> chunk(Integer.parseInt(chunk))
-            .reader(svDataReader())
-            .processor(svDataProcessor())
-            .writer(compositeSvDataWriter())
-            .build();
+                .<CVRSvRecord, CompositeSvRecord> chunk(Integer.parseInt(chunk))
+                .reader(svDataReader())
+                .processor(svDataProcessor())
+                .writer(compositeSvDataWriter())
+                .build();
     }
-    
+
     @Bean
-    public Step fusionStep()
-    {
+    public Step fusionStep() {
         return stepBuilderFactory.get("fusionStep")
-            .<CVRFusionRecord, String> chunk(Integer.parseInt(chunk))
-            .reader(fusionDataReader())
-            .processor(fusionDataProcessor())
-            .writer(fusionDataWriter())
-            .build();
-    }    
-    
+                .<CVRFusionRecord, String> chunk(Integer.parseInt(chunk))
+                .reader(fusionDataReader())
+                .processor(fusionDataProcessor())
+                .writer(fusionDataWriter())
+                .build();
+    }
+
     @Bean
-    public Step segStep()
-    {
+    public Step segStep() {
         return stepBuilderFactory.get("segStep")
-            .<CVRSegRecord, CompositeSegRecord> chunk(Integer.parseInt(chunk))
-            .reader(segDataReader())
-            .processor(segDataProcessor())
-            .writer(compositeSegDataWriter())
-            .build();
+                .<CVRSegRecord, CompositeSegRecord> chunk(Integer.parseInt(chunk))
+                .reader(segDataReader())
+                .processor(segDataProcessor())
+                .writer(compositeSegDataWriter())
+                .build();
     }
 
     //Reader to get json data for GML
     @Bean
     @StepScope
-    public ItemStreamReader<GMLVariant> gmlJsonReader()
-    {
+    public ItemStreamReader<GMLVariant> gmlJsonReader() {
         return new GMLVariantsReader();
     }
     //Processor to data into proper format
     @Bean
     @StepScope
-    public GMLVariantsProcessor gmlJsonProcessor()
-    {
+    public GMLVariantsProcessor gmlJsonProcessor() {
         return new GMLVariantsProcessor();
     }
     //Write json writer
     @Bean
     @StepScope
-    public ItemStreamWriter<String> gmlJsonWriter()
-    {
+    public ItemStreamWriter<String> gmlJsonWriter() {
         return new GMLVariantsWriter();
     }
-    
+
     @Bean
     @StepScope
-    public ItemStreamReader<AnnotatedRecord> gmlMutationReader()
-    {
+    public ItemStreamReader<AnnotatedRecord> gmlMutationReader() {
         return new GMLMutationDataReader();
     }
-    
+
     @Bean
     @StepScope
-    public CVRMutationDataProcessor gmlMutationProcessor()
-    {
+    public CVRMutationDataProcessor gmlMutationProcessor() {
         return new CVRMutationDataProcessor();
     }
-    
+
     @Bean
     @StepScope
-    public CVRMutationDataWriter gmlMutationDataWriter()
-    {
+    public CVRMutationDataWriter gmlMutationDataWriter() {
         return new CVRMutationDataWriter();
-    }    
-    
+    }
+
     @Bean
     @StepScope
-    public ItemStreamReader<CVRClinicalRecord> gmlClinicalDataReader()
-    {
+    public ItemStreamReader<CVRClinicalRecord> gmlClinicalDataReader() {
         return new GMLClinicalDataReader();
     }
-    
+
     // Reader to get json data from CVR
     @Bean
     @StepScope
-    public ItemStreamReader<CVRVariants> cvrJsonreader()
-    {
+    public ItemStreamReader<CVRVariants> cvrJsonreader() {
         return new CVRVariantsReader();
     }
 
     // Processor for processing the json data from CVR
     @Bean
     @StepScope
-    public CVRVariantsProcessor cvrJsonprocessor()
-    {
+    public CVRVariantsProcessor cvrJsonprocessor() {
         return new CVRVariantsProcessor();
     }
 
     // Writer for writing out json from CVR to file
     @Bean
     @StepScope
-    public ItemStreamWriter<String> cvrJsonwriter()
-    {
+    public ItemStreamWriter<String> cvrJsonwriter() {
         return new CVRVariantsWriter();
-    } 
-    
+    }
+
     // Reader to read json file generated by step1
-    
+
     @Bean
     @StepScope
-    public ItemStreamReader<CVRClinicalRecord> clinicalDataReader()
-    {
+    public ItemStreamReader<CVRClinicalRecord> clinicalDataReader() {
         return new CVRClinicalDataReader();
     }
- 
+
     // Processor for clinical data
     @Bean
     @StepScope
-    public CVRClinicalDataProcessor clinicalDataProcessor()
-    {
+    public CVRClinicalDataProcessor clinicalDataProcessor() {
         return new CVRClinicalDataProcessor();
     }
 
     // Writer for writing clinical data
     @Bean
     @StepScope
-    public ItemStreamWriter<CompositeClinicalRecord> allClinicalDataWriter()
-    {        
+    public ItemStreamWriter<CompositeClinicalRecord> allClinicalDataWriter() {
         return new CVRClinicalDataWriter();
     }
 
     @Bean
     @StepScope
-    public ItemStreamWriter<CompositeClinicalRecord> newClinicalDataWriter()
-    {
+    public ItemStreamWriter<CompositeClinicalRecord> newClinicalDataWriter() {
         return new CVRNewClinicalDataWriter();
     }
 
     @Bean
     @StepScope
-    public CompositeItemWriter<CompositeClinicalRecord> compositeClinicalDataWriter()
-    {
+    public CompositeItemWriter<CompositeClinicalRecord> compositeClinicalDataWriter() {
         List<ItemStreamWriter> writerDelegates = new ArrayList<>();
         writerDelegates.add(newClinicalDataWriter());
         writerDelegates.add(allClinicalDataWriter());
@@ -365,80 +334,70 @@ public class BatchConfiguration
         writer.setDelegates(writerDelegates);
         return writer;
     }
-    
+
     // Reader to read json file generated by step1
     @Bean
     @StepScope
-    public ItemStreamReader<AnnotatedRecord> mutationDataReader()
-    {
+    public ItemStreamReader<AnnotatedRecord> mutationDataReader() {
         return new CVRMutationDataReader();
     }
-    
+
     // Processor for mutation data
     @Bean
     @StepScope
-    public CVRMutationDataProcessor mutationDataProcessor()
-    {
+    public CVRMutationDataProcessor mutationDataProcessor() {
         return new CVRMutationDataProcessor();
     }
-    
+
     @Bean
     @StepScope
-    public CVRMutationDataWriter mutationDataWriter()
-    {
+    public CVRMutationDataWriter mutationDataWriter() {
         return new CVRMutationDataWriter();
     }
-    
+
     // Reader to read json file generated by step1
     @Bean
     @StepScope
-    public ItemStreamReader<AnnotatedRecord> unfilteredMutationDataReader()
-    {
+    public ItemStreamReader<AnnotatedRecord> unfilteredMutationDataReader() {
         return new CVRUnfilteredMutationDataReader();
-    }  
-    
+    }
+
     @Bean
     @StepScope
-    public CVRUnfilteredMutationDataWriter unfilteredMutationDataWriter()
-    {
+    public CVRUnfilteredMutationDataWriter unfilteredMutationDataWriter() {
         return new CVRUnfilteredMutationDataWriter();
-    }       
-    
+    }
+
     // Reader to read json file generated by step1
     @Bean
     @StepScope
-    public ItemStreamReader<CompositeCnaRecord> cnaDataReader()
-    {
+    public ItemStreamReader<CompositeCnaRecord> cnaDataReader() {
         return new CVRCnaDataReader();
     }
-    
+
     // Processor for unfiltered mutation data
     @Bean
     @StepScope
-    public CVRCnaDataProcessor cnaDataProcessor()
-    {
+    public CVRCnaDataProcessor cnaDataProcessor() {
         return new CVRCnaDataProcessor();
     }
-    
+
     // Writer for writing cna data
     @Bean
     @StepScope
-    public ItemStreamWriter<CompositeCnaRecord> cnaDataWriter()
-    {        
+    public ItemStreamWriter<CompositeCnaRecord> cnaDataWriter() {
         return new CVRCnaDataWriter();
     }
 
     @Bean
     @StepScope
-    public ItemStreamWriter<CompositeCnaRecord> newCnaDataWriter()
-    {
+    public ItemStreamWriter<CompositeCnaRecord> newCnaDataWriter() {
         return new CVRNewCnaDataWriter();
     }
 
     @Bean
     @StepScope
-    public CompositeItemWriter<CompositeCnaRecord> compositeCnaDataWriter()
-    {
+    public CompositeItemWriter<CompositeCnaRecord> compositeCnaDataWriter() {
         List<ItemStreamWriter> writerDelegates = new ArrayList<>();
         writerDelegates.add(newCnaDataWriter());
         writerDelegates.add(cnaDataWriter());
@@ -446,42 +405,37 @@ public class BatchConfiguration
         writer.setDelegates(writerDelegates);
         return writer;
     }
-    
+
     // Reader to read json file generated by step1
     @Bean
     @StepScope
-    public ItemStreamReader<CVRSvRecord> svDataReader()
-    {
+    public ItemStreamReader<CVRSvRecord> svDataReader() {
         return new CVRSvDataReader();
     }
-    
+
     // Processor for unfiltered mutation data
     @Bean
     @StepScope
-    public CVRSvDataProcessor svDataProcessor()
-    {
+    public CVRSvDataProcessor svDataProcessor() {
         return new CVRSvDataProcessor();
     }
-    
+
     // Writer for writing unfiltered mutation data
     @Bean
     @StepScope
-    public ItemStreamWriter<CompositeSvRecord> allSvDataWriter()
-    {        
+    public ItemStreamWriter<CompositeSvRecord> allSvDataWriter() {
         return new CVRSvDataWriter();
     }
-    
+
     @Bean
     @StepScope
-    public ItemStreamWriter<CompositeSvRecord> newSvDataWriter()
-    {
+    public ItemStreamWriter<CompositeSvRecord> newSvDataWriter() {
         return new CVRNewSvDataWriter();
     }
 
     @Bean
     @StepScope
-    public CompositeItemWriter<CompositeSvRecord> compositeSvDataWriter()
-    {
+    public CompositeItemWriter<CompositeSvRecord> compositeSvDataWriter() {
         List<ItemStreamWriter> writerDelegates = new ArrayList<>();
         writerDelegates.add(newSvDataWriter());
         writerDelegates.add(allSvDataWriter());
@@ -489,65 +443,60 @@ public class BatchConfiguration
         writer.setDelegates(writerDelegates);
         return writer;
     }
-    
+
     @Bean
     @StepScope
     public ItemStreamReader<CVRFusionRecord> fusionDataReader() {
         return new CVRFusionDataReader();
     }
- 
+
     @Bean
     @StepScope
     public CVRFusionDataProcessor fusionDataProcessor() {
         return new CVRFusionDataProcessor();
     }
-    
+
     @Bean
     @StepScope
     public ItemStreamWriter<String> fusionDataWriter() {
         return new CVRFusionDataWriter();
     }
-    
+
     // Reader to read json file generated by step1
     @Bean
     @StepScope
-    public ItemStreamReader<CVRSegRecord> segDataReader()
-    {
+    public ItemStreamReader<CVRSegRecord> segDataReader() {
         return new CVRSegDataReader();
     }
-    
+
     // Processor for segment data
     @Bean
     @StepScope
-    public CVRSegDataProcessor segDataProcessor()
-    {
+    public CVRSegDataProcessor segDataProcessor() {
         return new CVRSegDataProcessor();
     }
-    
+
     // Writer for writing segment data
     @Bean
     @StepScope
-    public ItemStreamWriter<CompositeSegRecord> allSegDataWriter()
-    {        
+    public ItemStreamWriter<CompositeSegRecord> allSegDataWriter() {
         return new CVRSegDataWriter();
-    } 
+    }
 
     @Bean
     @StepScope
-    public ItemStreamWriter<CompositeSegRecord> newSegDataWriter()
-    {
+    public ItemStreamWriter<CompositeSegRecord> newSegDataWriter() {
         return new CVRNewSegDataWriter();
     }
 
     @Bean
     @StepScope
-    public CompositeItemWriter<CompositeSegRecord> compositeSegDataWriter()
-    {
+    public CompositeItemWriter<CompositeSegRecord> compositeSegDataWriter() {
         List<ItemStreamWriter> writerDelegates = new ArrayList<>();
         writerDelegates.add(newSegDataWriter());
         writerDelegates.add(allSegDataWriter());
         CompositeItemWriter writer = new CompositeItemWriter<>();
         writer.setDelegates(writerDelegates);
         return writer;
-    }  
+    }
 }

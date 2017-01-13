@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Memorial Sloan-Kettering Cancer Center.
+ * Copyright (c) 2016 - 2017 Memorial Sloan-Kettering Cancer Center.
  *
  * This library is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS
@@ -32,6 +32,7 @@
 
 package org.cbioportal.cmo.pipelines.cvr;
 
+import org.apache.log4j.Logger;
 import org.cbioportal.cmo.pipelines.cvr.model.CVRSession;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -43,7 +44,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.web.client.RestTemplate;
-import org.apache.log4j.Logger;
 
 /**
  *
@@ -52,10 +52,10 @@ import org.apache.log4j.Logger;
 
 @Configuration
 public class SessionConfiguration {
-    
+
     @Value("${dmp.server_name}")
     private String dmpServerName;
-    
+
     @Value("${dmp.gml_server_name}")
     private String gmlServerName;
 
@@ -67,60 +67,55 @@ public class SessionConfiguration {
 
     @Value("${dmp.tokens.create_session}")
     private String dmpCreateSession;
-    
+
     @Value("${dmp.tokens.create_gml_session}")
     private String gmlCreateSession;
-    
+
     Logger log = Logger.getLogger(SessionConfiguration.class);
-    
+
     public final static String SESSION_ID = "cvrSessionId";
     public final static String GML_SESSION = "gmlSessionId";
-    
-    /* 
+
+    /*
     * FULL URL: server_name/create_session/user_name/password/TYPE
     * The TYPE can be 0 or 1, 0 is de-identified, 1 is identified (for clinical information)
     * for CVR fetch for the portal, use 0
     */
     private String dmpUrl;
     private String gmlUrl;
-    
+
     // Gets the sessionId from CVR
     @Bean
     public String cvrSessionId() {
-        try{
+        try {
             dmpUrl = dmpServerName + dmpCreateSession + "/" + dmpUserName + "/" + dmpPassword + "/0";
             RestTemplate restTemplate = new RestTemplate();
-            HttpEntity<LinkedMultiValueMap<String, Object>> requestEntity = getRequestEntity();        
-            ResponseEntity<CVRSession> responseEntity = restTemplate.exchange(dmpUrl, HttpMethod.POST, requestEntity, CVRSession.class);  
+            HttpEntity<LinkedMultiValueMap<String, Object>> requestEntity = getRequestEntity();
+            ResponseEntity<CVRSession> responseEntity = restTemplate.exchange(dmpUrl, HttpMethod.POST, requestEntity, CVRSession.class);
             return responseEntity.getBody().getSessionId();
-        }
-        catch(Exception e){
+        } catch (Exception e) {
             log.error("Unable to secure connection");
             return "NA";
         }
     }
-    
+
     @Bean
-    public String gmlSessionId(){
-        try{
+    public String gmlSessionId() {
+        try {
             gmlUrl = gmlServerName + gmlCreateSession + "/" + dmpUserName + "/" + dmpPassword + "/0";
             RestTemplate restTemplate = new RestTemplate();
             HttpEntity<LinkedMultiValueMap<String, Object>> requestEntity = getRequestEntity();
             ResponseEntity<CVRSession> responseEntity = restTemplate.exchange(gmlUrl, HttpMethod.POST, requestEntity, CVRSession.class);
             return responseEntity.getBody().getSessionId();
-        }
-        catch(Exception e){
+        } catch (Exception e) {
             log.error("Unable to secure connection");
             return "NA";
         }
     }
-    
-    private HttpEntity getRequestEntity()
-    {  
+
+    private HttpEntity getRequestEntity() {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
         return new HttpEntity<Object>(headers);
     }
-    
-    
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Memorial Sloan-Kettering Cancer Center.
+ * Copyright (c) 2016 - 2017 Memorial Sloan-Kettering Cancer Center.
  *
  * This library is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS
@@ -34,25 +34,25 @@ package org.cbioportal.cmo.pipelines.cvr.variants;
 
 import java.util.List;
 import org.cbioportal.cmo.pipelines.cvr.CVRUtilities;
-import org.springframework.core.io.*;
 import org.springframework.batch.item.*;
 import org.springframework.batch.item.file.*;
 import org.springframework.batch.item.file.transform.PassThroughLineAggregator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.*;
 
 /**
  *
  * @author heinsz
  */
 public class CVRVariantsWriter implements ItemStreamWriter<String> {
-    
+
     @Value("#{jobParameters[stagingDirectory]}")
     private String stagingDirectory;
-    
+
     @Autowired
     public CVRUtilities cvrUtilities;
-    
+
     private String stagingFile;
     private FlatFileItemWriter<String> flatFileItemWriter = new FlatFileItemWriter<String>();
 
@@ -61,20 +61,18 @@ public class CVRVariantsWriter implements ItemStreamWriter<String> {
     public void open(ExecutionContext ec) throws ItemStreamException {
         if (stagingDirectory.endsWith("/")) {
             stagingFile = stagingDirectory + cvrUtilities.CVR_FILE;
-        }
-        else {
+        } else {
             stagingFile = stagingDirectory + "/" + cvrUtilities.CVR_FILE;
         }
-        
-        
         PassThroughLineAggregator aggr = new PassThroughLineAggregator();
         flatFileItemWriter.setLineAggregator(aggr);
-        flatFileItemWriter.setResource( new FileSystemResource(stagingFile));
-        flatFileItemWriter.open(ec);        
+        flatFileItemWriter.setResource(new FileSystemResource(stagingFile));
+        flatFileItemWriter.open(ec);
     }
 
     @Override
-    public void update(ExecutionContext ec) throws ItemStreamException {}
+    public void update(ExecutionContext ec) throws ItemStreamException {
+    }
 
     @Override
     public void close() throws ItemStreamException {
@@ -82,8 +80,7 @@ public class CVRVariantsWriter implements ItemStreamWriter<String> {
     }
 
     @Override
-    public void write(List<? extends String> items) throws Exception {        
+    public void write(List<? extends String> items) throws Exception {
          flatFileItemWriter.write(items);
     }
-    
 }

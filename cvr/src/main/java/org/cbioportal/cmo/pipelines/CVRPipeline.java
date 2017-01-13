@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Memorial Sloan-Kettering Cancer Center.
+ * Copyright (c) 2016 - 2017 Memorial Sloan-Kettering Cancer Center.
  *
  * This library is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS
@@ -37,24 +37,22 @@ package org.cbioportal.cmo.pipelines;
  * @author heinsz
  */
 
+import org.apache.commons.cli.*;
+import org.apache.log4j.Logger;
 import org.cbioportal.cmo.pipelines.cvr.BatchConfiguration;
 import org.cbioportal.cmo.pipelines.cvr.SessionConfiguration;
-
-import org.apache.commons.cli.*;
+import org.springframework.batch.core.*;
+import org.springframework.batch.core.launch.JobLauncher;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ConfigurableApplicationContext;
-import org.springframework.batch.core.*;
-import org.springframework.batch.core.launch.JobLauncher;
-import org.apache.log4j.Logger;
 
 @SpringBootApplication
 public class CVRPipeline {
-    
+
     private static Logger log = Logger.getLogger(CVRPipeline.class);
-    
-    private static Options getOptions(String[] args)
-    {
+
+    private static Options getOptions(String[] args) {
         Options gnuOptions = new Options();
         gnuOptions.addOption("h", "help", false, "shows this help document and quits.")
             .addOption("d", "directory", true, "The staging directory")
@@ -65,15 +63,13 @@ public class CVRPipeline {
         return gnuOptions;
     }
 
-    private static void help(Options gnuOptions, int exitStatus)
-    {
+    private static void help(Options gnuOptions, int exitStatus) {
         HelpFormatter helpFormatter = new HelpFormatter();
         helpFormatter.printHelp("CVRPipeline", gnuOptions);
         System.exit(exitStatus);
     }
 
-    private static void launchJob(String[] args, String directory, Boolean json, Boolean gml, Boolean gmljson, Boolean skipSeg) throws Exception
-    {
+    private static void launchJob(String[] args, String directory, Boolean json, Boolean gml, Boolean gmljson, Boolean skipSeg) throws Exception {
         SpringApplication app = new SpringApplication(CVRPipeline.class);
         ConfigurableApplicationContext ctx= app.run(args);
         JobLauncher jobLauncher = ctx.getBean(JobLauncher.class);
@@ -82,41 +78,36 @@ public class CVRPipeline {
         // Job description gotten from the BatchConfiguration
         if (json) {
             cvrJob = ctx.getBean(BatchConfiguration.JSON_JOB, Job.class);
-        } else if(gml){
+        } else if (gml) {
             // SessionID is gotten from a spring bean in the SessionConfiguration and passed through here as a param
             jobParameters = new JobParametersBuilder()
                     .addString("sessionId", ctx.getBean(SessionConfiguration.GML_SESSION, String.class))
                     .addString("stagingDirectory", directory)
-                    .toJobParameters();            
+                    .toJobParameters();
             cvrJob = ctx.getBean(BatchConfiguration.GML_JOB, Job.class);
-        }else if(gmljson){
+        } else if (gmljson){
             cvrJob = ctx.getBean(BatchConfiguration.GML_JSON_JOB, Job.class);
-        }else{
+        } else {
             // SessionID is gotten from a spring bean in the SessionConfiguration and passed through here as a param
             jobParameters = new JobParametersBuilder()
                     .addString("sessionId", ctx.getBean(SessionConfiguration.SESSION_ID, String.class))
                     .addString("stagingDirectory", directory)
                     .addString("skipSeg", skipSeg.toString())
-                    .toJobParameters();             
+                    .toJobParameters();
             cvrJob = ctx.getBean(BatchConfiguration.CVR_JOB, Job.class);
         }
-
         // Run it!
         JobExecution jobExeuction = jobLauncher.run(cvrJob, jobParameters);
-        
         log.info("Shutting down CVR Pipeline");
     }
-    
-    public static void main(String[] args) throws Exception
-    {
+
+    public static void main(String[] args) throws Exception {
         Options gnuOptions = CVRPipeline.getOptions(args);
         CommandLineParser parser = new GnuParser();
         CommandLine commandLine = parser.parse(gnuOptions, args);
-        if (commandLine.hasOption("h") ||
-            !commandLine.hasOption("d")) {
+        if (commandLine.hasOption("h") || !commandLine.hasOption("d")) {
             help(gnuOptions, 0);
         }
         launchJob(args, commandLine.getOptionValue("d"), commandLine.hasOption("j"), commandLine.hasOption("g"), commandLine.hasOption("m"), commandLine.hasOption("s"));
     }
-    
 }

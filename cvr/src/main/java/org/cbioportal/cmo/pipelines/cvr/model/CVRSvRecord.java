@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Memorial Sloan-Kettering Cancer Center.
+ * Copyright (c) 2016 - 2017 Memorial Sloan-Kettering Cancer Center.
  *
  * This library is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS
@@ -29,6 +29,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+
 package org.cbioportal.cmo.pipelines.cvr.model;
 
 import java.util.ArrayList;
@@ -42,7 +43,7 @@ import org.springframework.batch.core.configuration.annotation.StepScope;
 
 @StepScope
 public class CVRSvRecord {
-    
+
     private String sampleId;
     private String annotation;
     private String breakpoint_type;
@@ -73,8 +74,9 @@ public class CVRSvRecord {
     private String variant_status_name;
     private String isNew;
 
-    public CVRSvRecord() {}
-    
+    public CVRSvRecord() {
+    }
+
     public CVRSvRecord(CVRSvVariant variant, String sampleId) {
         this.sampleId = sampleId;
         this.annotation = variant.getAnnotation();
@@ -108,225 +110,227 @@ public class CVRSvRecord {
     public String getSampleId(){
         return sampleId != null ? this.sampleId : "";
     }
+
     public void setSampleId(String sampleId){
         this.sampleId = sampleId;
     }
-    
+
     public String getAnnotation(){
         return annotation != null ? this.annotation : "";
     }
+
     public void setAnnotation(String annotation){
         this.annotation = annotation;
     }
-    
-    
+
     public String getBreakpoint_Type(){
         return this.breakpoint_type != null ? this.breakpoint_type : "";
     }
+
     public void setBreakpoint_Type(String breakpoint_type){
         this.breakpoint_type = breakpoint_type;
     }
-    
-    
+
     public String getComments(){
         return this.comments != null ? this.comments : "";
     }
+
     public void setComments(String comments){
         this.comments = comments;
     }
-    
-    
+
     public String getConfidence_Class(){
         return this.confidence_class != null ? this.confidence_class : "";
     }
+
     public void setConfidence_Class(String confidence_class){
         this.confidence_class = confidence_class;
     }
-    
-    
+
     public String getConn_Type(){
         return this.conn_type != null ? this.conn_type : "";
     }
+
     public void setConn_Type(String conn_type){
         this.conn_type = conn_type;
     }
-    
-    
+
     public String getConnection_Type(){
         return this.connection_type != null ? this.connection_type : "";
     }
+
     public void setConnection_Type(String connection_type){
         this.connection_type = connection_type;
     }
-    
-    
+
     public String getEvent_Info(){
         return this.event_info != null ? this.event_info : "";
     }
+
     public void setEvent_Info(String event_info){
         this.event_info = event_info;
     }
-    
-    
+
     public String getMapq(){
         return this.mapq != null ? this.mapq : "";
     }
+
     public void setMapq(String mapq){
         this.mapq = mapq;
     }
-    
-    
+
     public String getNormal_Read_Count(){
         return this.normal_read_count != null ? this.normal_read_count : "";
     }
+
     public void setNormal_Read_Count(String normal_read_count){
         this.normal_read_count = normal_read_count;
     }
-    
-    
+
     public String getNormal_Variant_Count(){
         return this.normal_variant_count != null ? normal_variant_count : "";
     }
+
     public void setNormal_Variant_Count(String normal_variant_count){
         this.normal_variant_count = normal_variant_count;
     }
-    
-    
+
     public String getPaired_End_Read_Support(){
         return this.paired_end_read_support != null ? this.paired_end_read_support : "";
     }
+
     public void setPaired_End_Read_Support(String pairedEndReadSupport){
         this.paired_end_read_support = pairedEndReadSupport;
     }
-    
-    
+
     public String getSite1_Chrom(){
         return this.site1_chrom != null ? this.site1_chrom : "";
     }
+
     public void setSite1_Chrom(String site1Chrom){
         this.site1_chrom = site1Chrom;
     }
-    
-    
+
     public String getSite1_Desc(){
         return this.site1_desc != null ? this.site1_desc : "";
     }
+
     public void setSite1_Desc(String site1Desc){
         this.site1_desc = site1Desc;
     }
-    
-    
+
     public String getSite1_Gene(){
         return this.site1_gene != null ? this.site1_gene : "";
     }
+
     public void setSite1_Gene(String site1Gene){
         this.site1_gene = site1Gene;
     }
-    
-    
+
     public String getSite1_Pos(){
         return this.site1_pos != null ? this.site1_pos : "";
     }
+
     public void setSite1_Pos(String site1Pos){
         this.site1_pos = site1Pos;
     }
-    
-    
+
     public String getSite2_Chrom(){
         return this.site2_chrom != null ? this.site2_chrom : "";
     }
+
     public void setSite2_Chrom(String site2Chrom){
         this.site2_chrom = site2Chrom;
     }
-    
-    
+
     public String getSite2_Desc(){
         return this.site2_desc != null ? this.site2_desc : "";
     }
+
     public void setSite2_Desc(String site2Desc){
         this.site2_desc = site2Desc;
     }
-    
-    
+
     public String getSite2_Gene(){
         return this.site2_gene != null ? this.site2_gene : "";
     }
+
     public void setSite2_Gene(String site2Gene){
         this.site2_gene = site2Gene;
     }
-    
-    
+
     public String getSite2_Pos(){
         return this.site2_pos != null ? this.site2_pos : "";
     }
+
     public void setSite2_Pos(String site2Pos){
         this.site2_pos = site2Pos;
     }
-    
-    
+
     public String getSplit_Read_Support(){
         return this.split_read_support != null ? this.split_read_support : "";
     }
+
     public void setSplit_Read_Support(String splitReadSupport){
         this.split_read_support = splitReadSupport;
     }
-    
-    
+
     public String getSv_Class_Name(){
         return this.sv_class_name != null ? this.sv_class_name : "";
     }
+
     public void setSv_Class_Name(String svClassName){
         this.sv_class_name = svClassName;
     }
-    
-    
+
     public String getSv_Desc(){
         return this.sv_desc != null ? this.sv_desc : "";
     }
+
     public void setSv_Desc(String svDesc){
         this.sv_desc = svDesc;
     }
-    
-    
+
     public String getSv_Length(){
         return this.sv_length != null ? this.sv_length : "";
     }
+
     public void setSv_Length(String svLength){
         this.sv_length = svLength;
     }
-    
-    
+
     public String getSv_VariantId(){
         return this.sv_variant_id != null ? this.sv_variant_id : "";
     }
+
     public void setSv_VariantId(String svVariantId){
         this.sv_variant_id = svVariantId;
     }
-    
-    
+
     public String getTumor_Read_Count(){
         return this.tumor_read_count != null ? this.tumor_read_count : "";
     }
+
     public void setTumor_Read_Count(String tumorReadCount){
         this.tumor_read_count = tumorReadCount;
     }
-    
-    
+
     public String getTumor_Variant_Count(){
         return this.tumor_variant_count != null ? this.tumor_variant_count : "";
     }
+
     public void setTumor_Variant_Count(String tumorVariantCount){
         this.tumor_variant_count = tumorVariantCount;
     }
-    
-    
+
     public String getVariant_Status_Name(){
         return variant_status_name != null ? this.variant_status_name : "";
     }
+
     public void setVariant_Status_Name(String variantStatusName){
         this.variant_status_name = variantStatusName;
     }
-    
+
     public void setIsNew(String isNew){
         this.isNew = isNew;
     }
@@ -337,7 +341,6 @@ public class CVRSvRecord {
 
     public static List<String> getFieldNames() {
         List<String> fieldNames = new ArrayList<String>();
-        
         fieldNames.add("SampleId");
         fieldNames.add("Annotation");
         fieldNames.add("Breakpoint_Type");
@@ -368,5 +371,4 @@ public class CVRSvRecord {
         fieldNames.add("Variant_Status_Name");
         return fieldNames;
     }
-    
 }

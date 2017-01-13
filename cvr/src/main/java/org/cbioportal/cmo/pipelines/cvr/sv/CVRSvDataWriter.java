@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Memorial Sloan-Kettering Cancer Center.
+ * Copyright (c) 2016 - 2017 Memorial Sloan-Kettering Cancer Center.
  *
  * This library is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS
@@ -34,8 +34,8 @@ package org.cbioportal.cmo.pipelines.cvr.sv;
 
 import java.io.IOException;
 import java.io.Writer;
-import java.util.*;
 import java.nio.file.*;
+import java.util.*;
 import org.apache.commons.lang.StringUtils;
 import org.cbioportal.cmo.pipelines.cvr.CVRUtilities;
 import org.cbioportal.cmo.pipelines.cvr.model.CVRSvRecord;
@@ -54,37 +54,37 @@ import org.springframework.core.io.FileSystemResource;
  *
  * @author heinsz
  */
-public class CVRSvDataWriter implements ItemStreamWriter<CompositeSvRecord>{
-    
+public class CVRSvDataWriter implements ItemStreamWriter<CompositeSvRecord> {
+
     @Value("#{jobParameters[stagingDirectory]}")
     private String stagingDirectory;
-    
+
     @Autowired
     public CVRUtilities cvrUtilities;
-    
+
     private String stagingFile;
     private FlatFileItemWriter<String> flatFileItemWriter = new FlatFileItemWriter<String>();
 
     // Set up the writer and print the json from CVR to a file
     @Override
     public void open(ExecutionContext ec) throws ItemStreamException {
-        stagingFile = Paths.get(stagingDirectory).resolve(cvrUtilities.SV_FILE).toString();        
-        
+        stagingFile = Paths.get(stagingDirectory).resolve(cvrUtilities.SV_FILE).toString();
         PassThroughLineAggregator aggr = new PassThroughLineAggregator();
         flatFileItemWriter.setLineAggregator(aggr);
         flatFileItemWriter.setHeaderCallback(new FlatFileHeaderCallback() {
             @Override
             public void writeHeader(Writer writer) throws IOException {
                 writer.write(StringUtils.join(CVRSvRecord.getFieldNames(), "\t"));
-            }                
-        });        
-        flatFileItemWriter.setResource( new FileSystemResource(stagingFile));
+            }
+        });
+        flatFileItemWriter.setResource(new FileSystemResource(stagingFile));
         flatFileItemWriter.open(ec);
 
     }
 
     @Override
-    public void update(ExecutionContext ec) throws ItemStreamException {}
+    public void update(ExecutionContext ec) throws ItemStreamException {
+    }
 
     @Override
     public void close() throws ItemStreamException {
@@ -94,15 +94,13 @@ public class CVRSvDataWriter implements ItemStreamWriter<CompositeSvRecord>{
     @Override
     public void write(List<? extends CompositeSvRecord> items) throws Exception {
         List<String> writeList = new ArrayList<>();
-        for(CompositeSvRecord item : items){
-            if(item.getNewSvRecord() != null){
+        for (CompositeSvRecord item : items) {
+            if (item.getNewSvRecord() != null) {
                 writeList.add(item.getNewSvRecord());
-            }
-            else{
+            } else {
                 writeList.add(item.getOldSvRecord());
             }
         }
         flatFileItemWriter.write(writeList);
     }
-    
 }

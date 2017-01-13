@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Memorial Sloan-Kettering Cancer Center.
+ * Copyright (c) 2016 - 2017 Memorial Sloan-Kettering Cancer Center.
  *
  * This library is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS
@@ -53,40 +53,35 @@ import org.springframework.core.io.FileSystemResource;
  * @author heinsz
  */
 public class CVRMutationDataWriter implements ItemStreamWriter<String> {
-    
+
     @Value("#{jobParameters[stagingDirectory]}")
     private String stagingDirectory;
-    
+
     @Value("#{stepExecutionContext['commentLines']}")
     private List<String> commentLines;
-    
+
     @Value("#{stepExecutionContext['mutation_header']}")
     private List<String> header;
-    
+
     @Autowired
     public CVRUtilities constants;
-    
+
     private String stagingFile;
     private FlatFileItemWriter<String> flatFileItemWriter = new FlatFileItemWriter<String>();
-    
 
     // Set up the writer and print the json from CVR to a file
     @Override
     public void open(ExecutionContext ec) throws ItemStreamException {
         if (stagingDirectory.endsWith("/")) {
             stagingFile = stagingDirectory + constants.MUTATION_FILE;
-        }
-        else {
+        } else {
             stagingFile = stagingDirectory + "/" + constants.MUTATION_FILE;
         }
-        
-        
         PassThroughLineAggregator aggr = new PassThroughLineAggregator();
         flatFileItemWriter.setLineAggregator(aggr);
         flatFileItemWriter.setHeaderCallback(new FlatFileHeaderCallback() {
             @Override
-            public void writeHeader(Writer writer) throws IOException { 
-                
+            public void writeHeader(Writer writer) throws IOException {
                 // first write out the comment lines, then write the actual header
                 if  (commentLines != null) {
                     for (String comment : commentLines) {
@@ -97,25 +92,24 @@ public class CVRMutationDataWriter implements ItemStreamWriter<String> {
                             }
                         }
                         writer.write(comment + "\n");
-                    }                
+                    }
+                } else {
+                    String comment = "#sequenced_samples:";
+                    for (String id : constants.getAllIds()) {
+                        comment = comment + " " + id;
+                    }
+                    writer.write(comment + "\n");
                 }
-				else {
-					String comment = "#sequenced_samples:";
-					for (String id : constants.getAllIds()) {
-						comment = comment + " " + id;
-					}
-                        writer.write(comment + "\n");
-				}
                 writer.write(StringUtils.join(header , "\t"));
-            }                
-        });         
-        flatFileItemWriter.setResource( new FileSystemResource(stagingFile));
+            }
+        });
+        flatFileItemWriter.setResource(new FileSystemResource(stagingFile));
         flatFileItemWriter.open(ec);
-
     }
 
     @Override
-    public void update(ExecutionContext ec) throws ItemStreamException {}
+    public void update(ExecutionContext ec) throws ItemStreamException {
+    }
 
     @Override
     public void close() throws ItemStreamException {
@@ -125,10 +119,9 @@ public class CVRMutationDataWriter implements ItemStreamWriter<String> {
     @Override
     public void write(List<? extends String> items) throws Exception {
         List<String> writeList = new ArrayList<>();
-        for(String item : items){
+        for (String item : items) {
             writeList.add(item);
         }
         flatFileItemWriter.write(writeList);
     }
-    
 }

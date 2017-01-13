@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Memorial Sloan-Kettering Cancer Center.
+ * Copyright (c) 2016 - 2017 Memorial Sloan-Kettering Cancer Center.
  *
  * This library is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS
@@ -34,8 +34,8 @@ package org.cbioportal.cmo.pipelines.cvr.seg;
 
 import java.io.IOException;
 import java.io.Writer;
-import java.util.*;
 import java.nio.file.*;
+import java.util.*;
 import org.apache.commons.lang.StringUtils;
 import org.cbioportal.cmo.pipelines.cvr.CVRUtilities;
 import org.cbioportal.cmo.pipelines.cvr.model.CVRSegRecord;
@@ -55,55 +55,51 @@ import org.springframework.core.io.FileSystemResource;
  * @author jake-rose
  */
 
-
-
 public class CVRSegDataWriter implements ItemStreamWriter<CompositeSegRecord> {
     @Value("#{jobParameters[stagingDirectory]}")
     private String stagingDirectory;
-    
+
     private String stagingFile;
-    
+
     @Autowired
     public CVRUtilities cvrUtilities;
-    
+
     private FlatFileItemWriter<String> flatFileItemWriter = new FlatFileItemWriter<>();
-    
+
     @Override
-    public void open(ExecutionContext ec) throws ItemStreamException{
+    public void open(ExecutionContext ec) throws ItemStreamException {
         stagingFile = Paths.get(stagingDirectory).resolve(cvrUtilities.SEG_FILE).toString();
-        
         PassThroughLineAggregator aggr = new PassThroughLineAggregator();
         flatFileItemWriter.setLineAggregator(aggr);
-        flatFileItemWriter.setHeaderCallback(new FlatFileHeaderCallback(){
+        flatFileItemWriter.setHeaderCallback(new FlatFileHeaderCallback() {
            @Override
-           public void writeHeader(Writer writer) throws IOException{
+           public void writeHeader(Writer writer) throws IOException {
                writer.write(StringUtils.join(CVRSegRecord.getHeaderNames(),"\t"));
            }
         });
-        flatFileItemWriter.setResource( new FileSystemResource(stagingFile));
+        flatFileItemWriter.setResource(new FileSystemResource(stagingFile));
         flatFileItemWriter.open(ec);
     }
-    
+
     @Override
-    public void update(ExecutionContext ec) throws ItemStreamException{}
-    
+    public void update(ExecutionContext ec) throws ItemStreamException {
+    }
+
     @Override
-    public void close() throws ItemStreamException{
+    public void close() throws ItemStreamException {
         flatFileItemWriter.close();
     }
-    
+
     @Override
     public void write(List<? extends CompositeSegRecord> items) throws Exception {
         List<String> writeList = new ArrayList<>();
-        for(CompositeSegRecord item : items){
-            if(item.getNewSegRecord() != null){
+        for (CompositeSegRecord item : items) {
+            if (item.getNewSegRecord() != null) {
                 writeList.add(item.getNewSegRecord());
-            }
-            else{
+            } else {
                 writeList.add(item.getOldSegRecord());
             }
         }
         flatFileItemWriter.write(writeList);
     }
-    
 }

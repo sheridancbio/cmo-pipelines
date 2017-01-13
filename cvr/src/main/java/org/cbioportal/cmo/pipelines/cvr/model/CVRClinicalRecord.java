@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Memorial Sloan-Kettering Cancer Center.
+ * Copyright (c) 2016 - 2017 Memorial Sloan-Kettering Cancer Center.
  *
  * This library is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS
@@ -39,7 +39,7 @@ import java.util.*;
  * @author heinsz
  */
 public class CVRClinicalRecord {
-    
+
     private String sampleId;
     private String patientId;
     private String cancerType;
@@ -65,7 +65,7 @@ public class CVRClinicalRecord {
     private String isNew;
 
     private final String DEFAULT_SAMPLE_CLASS = "Tumor";
-    
+
     public CVRClinicalRecord(CVRMetaData metaData) {
         this.sampleId = metaData.getDmpSampleId();
         this.patientId = metaData.getDmpPatientId();
@@ -90,6 +90,7 @@ public class CVRClinicalRecord {
         this.institute = metaData.getOutsideInstitute();
         this.somaticStatus = metaData.getSomaticStatus();
     }
+
     public CVRClinicalRecord(GMLMetaData metaData) {
         this.sampleId = metaData.getDmpSampleId();
         this.patientId = metaData.getDmpPatientId();
@@ -113,21 +114,22 @@ public class CVRClinicalRecord {
         this.msiType = "";
         this.institute = "";
     }
-    
-    public CVRClinicalRecord() {};
-     
+
+    public CVRClinicalRecord() {
+    }
+
     public String getSAMPLE_ID() {
         return this.sampleId != null ? this.sampleId : "";
     }
-    
+
     public void setSAMPLE_ID(String sampleId) {
         this.sampleId = sampleId;
     }
-    
+
     public String getPATIENT_ID() {
         return this.patientId != null ? this.patientId : "";
     }
-    
+
     public void setPATIENT_ID(String patientId) {
         this.patientId = patientId;
     }
@@ -135,15 +137,15 @@ public class CVRClinicalRecord {
     public String getCANCER_TYPE() {
         return this.cancerType != null ? this.cancerType : "";
     }
-    
+
     public void setCANCER_TYPE(String cancerType) {
         this.cancerType = cancerType;
     }
-    
+
     public String getSAMPLE_TYPE() {
         return this.sampleType != null ? this.sampleType : "";
     }
-    
+
     public void setSAMPLE_TYPE(String sampleType) {
         this.sampleType = sampleType;
     }
@@ -151,15 +153,15 @@ public class CVRClinicalRecord {
     public String getSAMPLE_CLASS() {
         return this.sampleClass != null ? this.sampleClass : "";
     }
-    
+
     public void setSAMPLE_CLASS(String sampleClass) {
         this.sampleClass = sampleClass;
     }
-    
+
     public String getMETASTATIC_SITE() {
         return this.metastaticSite != null ? this.metastaticSite : "";
     }
-    
+
     public void setMETASTATIC_SITE(String metastaticSite) {
         this.metastaticSite = metastaticSite;
     }
@@ -167,31 +169,31 @@ public class CVRClinicalRecord {
     public String getPRIMARY_SITE() {
         return this.primarySite != null ? this.primarySite : "";
     }
-    
+
     public void setPRIMARY_SITE(String primarySite) {
         this.primarySite = primarySite;
     }
-    
+
     public String getCANCER_TYPE_DETAILED() {
         return this.cancerTypeDetailed != null ? this.cancerTypeDetailed : "";
     }
-    
+
     public void setCANCER_TYPE_DETAILED(String cancerTypeDetailed) {
         this.cancerTypeDetailed = cancerTypeDetailed;
     }
-    
+
     public String getGENE_PANEL() {
         return this.genePanel != null ? this.genePanel : "";
     }
-    
+
     public void setGENE_PANEL(String genePanel) {
         this.genePanel = genePanel;
     }
-    
+
     public String getOTHER_SAMPLE_ID() {
         return this.otherSampleId != null ? this.otherSampleId : "";
     }
-    
+
     public void setOTHER_SAMPLE_ID(String otherSampleId) {
         this.otherSampleId = otherSampleId;
     }
@@ -199,128 +201,127 @@ public class CVRClinicalRecord {
     public String getOTHER_PATIENT_ID() {
         return this.otherPatientId != null ? this.otherPatientId : "";
     }
-    
+
     public void setOTHER_PATIENT_ID(String otherPatientId) {
         this.otherPatientId = otherPatientId;
     }
-    
+
     public String getSEX() {
         return this.sex != null ? this.sex : "";
     }
-    
+
     public void setSEX(String sex) {
         this.sex = sex;
     }
-    
+
     public String getSO_COMMENTS() {
         return this.soComments != null ? this.soComments : "";
     }
-    
+
     public void setSO_COMMENTS(String soComments) {
         this.soComments = soComments;
     }
-    
+
     public String getSAMPLE_COVERAGE() {
         return this.sampleCoverage != null ? this.sampleCoverage : "";
     }
-    
+
     public void setSAMPLE_COVERAGE(String sampleCoverage) {
         this.sampleCoverage = sampleCoverage;
     }
-    
+
     public String getTUMOR_PURITY() {
         return this.tumorPurity != null ? this.tumorPurity : "";
     }
-    
+
     public void setTUMOR_PURITY(String tumorPurity) {
         this.tumorPurity = tumorPurity;
     }
-    
+
     public String getONCOTREE_CODE() {
         return this.oncotreeCode != null ? this.oncotreeCode : "";
     }
-    
+
     public void setONCOTREE_CODE(String oncotreeCode) {
         this.oncotreeCode = oncotreeCode;
     }
-    
-    public String get12_245_PARTC_CONSENTED(){
+
+    public String get12_245_PARTC_CONSENTED() {
         return this.partCConsented != null ? this.partCConsented : "";
     }
-    
-    public void set12_245_PARTC_CONSENTED(String partCConsented){
+
+    public void set12_245_PARTC_CONSENTED(String partCConsented) {
         this.partCConsented = partCConsented;
     }
-    
-    public String getMSI_COMMENT(){
+
+    public String getMSI_COMMENT() {
         return this.msiComment != null ? this.msiComment : "";
     }
-    
-    public void setMSI_COMMENT(String msiComment){
+
+    public void setMSI_COMMENT(String msiComment) {
         this.msiComment = msiComment;
     }
 
-    public String getMSI_SCORE(){
+    public String getMSI_SCORE() {
         return this.msiScore != null ? this.msiScore : "";
     }
-    
-    public void setMSI_SCORE(String msiScore){
+
+    public void setMSI_SCORE(String msiScore) {
         this.msiScore = msiScore;
     }
 
-    public String getMSI_TYPE(){
+    public String getMSI_TYPE() {
         return this.msiType != null ? this.msiType : "";
     }
-    
-    public void setMSI_TYPE(String msiType){
+
+    public void setMSI_TYPE(String msiType) {
         this.msiType = msiType;
     }
-    
-    public String getINSTITUTE(){
-		// Assume MSKCC if not specified or -, the field from CVR is 'outside_institute'
-		if (this.institute != null) {
-			return this.institute.equals("-") ? "MSKCC" : this.institute;
-		}
+
+    public String getINSTITUTE() {
+        // Assume MSKCC if not specified or -, the field from CVR is 'outside_institute'
+        if (this.institute != null) {
+            return this.institute.equals("-") ? "MSKCC" : this.institute;
+        }
         return "MSKCC";
     }
-    
-    public void setINSTITUTE(String institute){
+
+    public void setINSTITUTE(String institute) {
         this.institute = institute;
     }
-    
+
     public String getSOMATIC_STATUS() {
         return somaticStatus != null ? somaticStatus : "";
     }
-    
+
     public void setSOMATIC_STATUS(String somaticStatus) {
         this.somaticStatus = somaticStatus;
     }
-    
-    public void setIsNew(String isNew){
+
+    public void setIsNew(String isNew) {
         this.isNew = isNew;
     }
 
-    public String getIsNew(){
+    public String getIsNew() {
         return this.isNew != null ? this.isNew : "";
     }
-    
+
     private String resolveSampleType(Integer isMetastasis) {
-        if(isMetastasis != null)
+        if (isMetastasis != null)
             return isMetastasis == 0 ? "Primary" : "Metastasis";
         return "";
-            
+
     }
-    
+
     private String resolveSex(Integer sex) {
         if (sex != null) {
             return sex == 0 ? "Female" : "Male";
         }
         return "NA";
     }
-    
+
     public static List<String> getFieldNames() {
         List<String> fieldNames = new ArrayList<String>();
-        
         fieldNames.add("SAMPLE_ID");
         fieldNames.add("PATIENT_ID");
         fieldNames.add("CANCER_TYPE");
@@ -343,7 +344,6 @@ public class CVRClinicalRecord {
         fieldNames.add("MSI_TYPE");
         fieldNames.add("INSTITUTE");
         fieldNames.add("SOMATIC_STATUS");
-                            
         return fieldNames;
     }
 }

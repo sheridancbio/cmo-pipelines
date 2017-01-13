@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Memorial Sloan-Kettering Cancer Center.
+ * Copyright (c) 2016 - 2017 Memorial Sloan-Kettering Cancer Center.
  *
  * This library is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS
@@ -43,22 +43,20 @@ import org.cbioportal.cmo.pipelines.cvr.model.CVRSegRecord;
 import org.cbioportal.cmo.pipelines.cvr.model.CompositeSegRecord;
 import org.springframework.batch.item.ItemProcessor;
 
-public class CVRSegDataProcessor implements ItemProcessor<CVRSegRecord, CompositeSegRecord>{
-    
+public class CVRSegDataProcessor implements ItemProcessor<CVRSegRecord, CompositeSegRecord> {
+
     @Override
-    public CompositeSegRecord process(CVRSegRecord i) throws Exception{
+    public CompositeSegRecord process(CVRSegRecord i) throws Exception {
         List<String> record = new ArrayList<>();
-        for(String field : i.getFieldNames()){
+        for (String field : i.getFieldNames()) {
             record.add(i.getClass().getMethod("get" + field).invoke(i, null).toString().replace("\r\n"," ").replace("\r", " ").replace("\n", " ").replace("\t", " "));
         }
         CompositeSegRecord compRecord = new CompositeSegRecord();
-        if(!i.getIsNew().isEmpty()){
+        if (!i.getIsNew().isEmpty()) {
             compRecord.setNewSegRecord(StringUtils.join(record, "\t").trim());
-        }
-        else{
+        } else {
             compRecord.setOldSegRecord(StringUtils.join(record, "\t").trim());
         }
         return compRecord;
     }
-    
 }

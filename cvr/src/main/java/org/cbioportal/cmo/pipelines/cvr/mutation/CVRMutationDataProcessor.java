@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Memorial Sloan-Kettering Cancer Center.
+ * Copyright (c) 2016 - 2017 Memorial Sloan-Kettering Cancer Center.
  *
  * This library is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS
@@ -42,21 +42,20 @@ import org.springframework.beans.factory.annotation.Value;
  *
  * @author heinsz
  */
-public class CVRMutationDataProcessor implements ItemProcessor<AnnotatedRecord, String>{
-	@Value("#{stepExecutionContext['mutation_header']}")
-	private List<String> header;
+public class CVRMutationDataProcessor implements ItemProcessor<AnnotatedRecord, String> {
+    @Value("#{stepExecutionContext['mutation_header']}")
+    private List<String> header;
 
     @Override
-    public String process(AnnotatedRecord i) throws Exception {      
+    public String process(AnnotatedRecord i) throws Exception {
         List<String> record = new ArrayList<String>();
-        for(String field : header) {
+        for (String field : header) {
             try {
                 record.add(i.getClass().getMethod("get" + field, null).invoke(i, null).toString().replace("\r\n", " ").replace("\r", " ").replace("\n", " ").replace("\t", " "));
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 record.add(i.getAdditionalProperties().get(field).replace("\r\n", " ").replace("\r", " ").replace("\n", " ").replace("\t", " "));
-            }           
+            }
         }
         return StringUtils.join(record, "\t");
-    }          
+    }
 }

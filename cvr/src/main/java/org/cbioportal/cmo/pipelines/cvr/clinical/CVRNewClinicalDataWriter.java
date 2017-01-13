@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Memorial Sloan-Kettering Cancer Center.
+ * Copyright (c) 2016 - 2017 Memorial Sloan-Kettering Cancer Center.
  *
  * This library is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS
@@ -32,19 +32,16 @@
 
 package org.cbioportal.cmo.pipelines.cvr.clinical;
 
+import java.io.*;
 import java.nio.file.*;
-import org.springframework.core.io.*;
+import java.util.*;
+import org.apache.commons.lang.StringUtils;
+import org.cbioportal.cmo.pipelines.cvr.CVRUtilities;
 import org.springframework.batch.item.*;
 import org.springframework.batch.item.file.*;
 import org.springframework.batch.item.file.transform.PassThroughLineAggregator;
 import org.springframework.beans.factory.annotation.Value;
-
-import java.io.*;
-import java.util.*;
-
-import org.apache.commons.lang.StringUtils;
-import org.cbioportal.cmo.pipelines.cvr.CVRUtilities;
-
+import org.springframework.core.io.*;
 import org.cbioportal.cmo.pipelines.cvr.model.CVRClinicalRecord;
 import org.cbioportal.cmo.pipelines.cvr.model.CompositeClinicalRecord;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -54,13 +51,13 @@ import org.springframework.beans.factory.annotation.Autowired;
  * @author jake-rose
  */
 public class CVRNewClinicalDataWriter implements ItemStreamWriter<CompositeClinicalRecord> {
-    
+
     @Value("${tmpdir}")
     private String stagingDirectory;
-    
+
     @Autowired
     public CVRUtilities cvrUtilities;
-    
+
     private String stagingFile;
     private FlatFileItemWriter<String> flatFileItemWriter = new FlatFileItemWriter<String>();
 
@@ -68,22 +65,21 @@ public class CVRNewClinicalDataWriter implements ItemStreamWriter<CompositeClini
     @Override
     public void open(ExecutionContext ec) throws ItemStreamException {
         stagingFile = Paths.get(stagingDirectory).resolve(cvrUtilities.CLINICAL_FILE).toString();
-        
         PassThroughLineAggregator aggr = new PassThroughLineAggregator();
         flatFileItemWriter.setLineAggregator(aggr);
         flatFileItemWriter.setHeaderCallback(new FlatFileHeaderCallback() {
             @Override
             public void writeHeader(Writer writer) throws IOException {
                 writer.write(StringUtils.join(CVRClinicalRecord.getFieldNames(), "\t"));
-            }                
-        });        
-        flatFileItemWriter.setResource( new FileSystemResource(stagingFile));
+            }
+        });
+        flatFileItemWriter.setResource(new FileSystemResource(stagingFile));
         flatFileItemWriter.open(ec);
-
     }
 
     @Override
-    public void update(ExecutionContext ec) throws ItemStreamException {}
+    public void update(ExecutionContext ec) throws ItemStreamException {
+    }
 
     @Override
     public void close() throws ItemStreamException {
@@ -93,12 +89,11 @@ public class CVRNewClinicalDataWriter implements ItemStreamWriter<CompositeClini
     @Override
     public void write(List<? extends CompositeClinicalRecord> items) throws Exception {
         List<String> writeList = new ArrayList<>();
-        for(CompositeClinicalRecord item : items){
-            if(item.getNewClinicalRecord() != null){
+        for (CompositeClinicalRecord item : items) {
+            if (item.getNewClinicalRecord() != null) {
                 writeList.add(item.getNewClinicalRecord());
             }
         }
         flatFileItemWriter.write(writeList);
     }
-    
 }

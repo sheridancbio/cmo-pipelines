@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Memorial Sloan-Kettering Cancer Center.
+ * Copyright (c) 2016 - 2017 Memorial Sloan-Kettering Cancer Center.
  *
  * This library is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS
@@ -29,6 +29,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+
 package org.cbioportal.cmo.pipelines.cvr.model;
 
 /**
@@ -36,15 +37,15 @@ package org.cbioportal.cmo.pipelines.cvr.model;
  * @author heinsz
  */
 
-import java.util.HashMap;
-import java.util.Map;
-import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import java.util.HashMap;
+import java.util.Map;
+import javax.annotation.Generated;
 import org.apache.commons.lang.builder.ToStringBuilder;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -63,13 +64,14 @@ public class CVRVariants {
     private Integer sampleCount;
     @JsonIgnore
     private Map<String, Object> additionalProperties = new HashMap<String, Object>();
-    
+
     /**
     * No args constructor for use in serialization
-    * 
+    *
     */
-    public CVRVariants() {}
-    
+    public CVRVariants() {
+    }
+
     /**
     *
     *@param disclaimer
@@ -81,7 +83,7 @@ public class CVRVariants {
         this.results = results;
         this.sampleCount = sampleCount;
     }
-    
+
     /**
     *
     *@return
@@ -89,7 +91,7 @@ public class CVRVariants {
     */
     @JsonProperty("disclaimer")
     public String getDisclaimer() {
-            return disclaimer;
+        return disclaimer;
     }
 
     /**
@@ -99,9 +101,9 @@ public class CVRVariants {
     */
     @JsonProperty("disclaimer")
     public void setDisclaimer(String disclaimer) {
-            this.disclaimer = disclaimer;
+        this.disclaimer = disclaimer;
     }
-    
+
     /**
     *
     *@return
@@ -121,7 +123,7 @@ public class CVRVariants {
     public void setResults(HashMap<String, CVRResult> results) {
         this.results = results;
     }
-    
+
      /**
     *
     *@return
@@ -141,25 +143,25 @@ public class CVRVariants {
     public void setSampleCount(Integer sampleCount) {
         this.sampleCount = sampleCount;
     }
-    
+
     @Override
     public String toString() {
         return ToStringBuilder.reflectionToString(this);
     }
-    
+
     @JsonAnyGetter
     public Map<String, Object> getAdditionalProperties() {
         return this.additionalProperties;
     }
-    
+
     @JsonAnySetter
     public void setAdditionalProperty(String name, Object value) {
         this.additionalProperties.put(name, value);
     }
-    
+
     public CVRVariants withAdditionalProperty(String name, Object value) {
         this.additionalProperties.put(name, value);
         return this;
-    }    
+    }
 
 }
