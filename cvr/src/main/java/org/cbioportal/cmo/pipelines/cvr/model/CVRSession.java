@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Memorial Sloan-Kettering Cancer Center.
+ * Copyright (c) 2016 - 2017 Memorial Sloan-Kettering Cancer Center.
  *
  * This library is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS
@@ -29,6 +29,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+
 package org.cbioportal.cmo.pipelines.cvr.model;
 
 /**
@@ -36,15 +37,15 @@ package org.cbioportal.cmo.pipelines.cvr.model;
  * @author heinsz
  */
 
-import java.util.HashMap;
-import java.util.Map;
-import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import java.util.HashMap;
+import java.util.Map;
+import javax.annotation.Generated;
 import org.apache.commons.lang.builder.ToStringBuilder;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -66,17 +67,16 @@ public class CVRSession {
     private String disclaimer;
     @JsonIgnore
     private Map<String, Object> additionalProperties = new HashMap<String, Object>();
- 
+
     /**
     * No args constructor for use in serialization
-    * 
+    *
     */
     public CVRSession() {
-        
     }
 
     /**
-    * 
+    *
     * @param sessionId
     * @param timeCreated
     * @param timeExpired
@@ -88,9 +88,9 @@ public class CVRSession {
         this.timeExpired = timeExpired;
         this.disclaimer = disclaimer;
     }
-    
+
     /**
-    * 
+    *
     * @return
     * The sessionId
     */
@@ -100,7 +100,7 @@ public class CVRSession {
     }
 
     /**
-    * 
+    *
     * @param sessionId
     * The sample_id
     */
@@ -108,9 +108,9 @@ public class CVRSession {
     public void setSampleId(String sessionId) {
         this.sessionId = sessionId;
     }
-    
+
     /**
-    * 
+    *
     * @return
     * The timeCreated
     */
@@ -120,7 +120,7 @@ public class CVRSession {
     }
 
     /**
-    * 
+    *
     * @param timeCreated
     * The time_created
     */
@@ -128,9 +128,9 @@ public class CVRSession {
     public void setTimeCreated(String timeCreated) {
         this.timeCreated = timeCreated;
     }
-    
+
     /**
-    * 
+    *
     * @return
     * The timeExpired
     */
@@ -140,7 +140,7 @@ public class CVRSession {
     }
 
     /**
-    * 
+    *
     * @param timeExpired
     * The time_expired
     */
@@ -148,9 +148,9 @@ public class CVRSession {
     public void setTimeExpired(String timeExpired) {
         this.timeExpired = timeExpired;
     }
-    
+
     /**
-    * 
+    *
     * @return
     * The disclaimer
     */
@@ -160,7 +160,7 @@ public class CVRSession {
     }
 
     /**
-    * 
+    *
     * @param disclaimer
     * The disclaimer
     */
@@ -173,17 +173,17 @@ public class CVRSession {
     public String toString() {
         return ToStringBuilder.reflectionToString(this);
     }
-    
+
     @JsonAnyGetter
     public Map<String, Object> getAdditionalProperties() {
         return this.additionalProperties;
     }
-    
+
     @JsonAnySetter
     public void setAdditionalProperty(String name, Object value) {
         this.additionalProperties.put(name, value);
     }
-    
+
     public CVRSession withAdditionalProperty(String name, Object value) {
         this.additionalProperties.put(name, value);
         return this;

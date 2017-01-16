@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Memorial Sloan-Kettering Cancer Center.
+ * Copyright (c) 2016 - 2017 Memorial Sloan-Kettering Cancer Center.
  *
  * This library is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS
@@ -33,7 +33,6 @@
 package org.cbioportal.cmo.pipelines.cvr.mutation;
 
 import org.cbioportal.models.MutationRecord;
-
 import java.util.*;
 import org.springframework.batch.item.file.mapping.FieldSetMapper;
 import org.springframework.batch.item.file.transform.FieldSet;
@@ -45,27 +44,23 @@ import org.apache.log4j.Logger;
  * @author heinsz
  */
 public class CVRMutationFieldSetMapper implements  FieldSetMapper<MutationRecord> {
-    Logger log = Logger.getLogger(CVRMutationFieldSetMapper.class);    
+    Logger log = Logger.getLogger(CVRMutationFieldSetMapper.class);
     @Override
     public MutationRecord mapFieldSet(FieldSet fs) throws BindException {
         MutationRecord record = new MutationRecord();
         Set<String> names = new HashSet(Arrays.asList(fs.getNames()));
         names.addAll(record.getHeader());
-        for (String field : names)
-        {            
-            try {                
-                record.getClass().getMethod("set" + field, String.class).invoke(record, fs.readRawString(field));                
-            }
-            catch(Exception e) {
+        for (String field : names) {
+            try {
+                record.getClass().getMethod("set" + field, String.class).invoke(record, fs.readRawString(field));
+            } catch (Exception e) {
                 if (e.getClass().equals(NoSuchMethodException.class)) {
                     record.addAdditionalProperty(field, fs.readRawString(field));
-                }
-                else {
+                } else {
                     log.error("Something went wrong reading field " + field);
                 }
             }
-         }       
-        
+         }
         return record;
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Memorial Sloan-Kettering Cancer Center.
+ * Copyright (c) 2016 - 2017 Memorial Sloan-Kettering Cancer Center.
  *
  * This library is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS
@@ -32,10 +32,9 @@
 
 package org.cbioportal.cmo.pipelines.cvr.cna;
 
-import org.cbioportal.cmo.pipelines.cvr.model.*;
-
 import java.util.*;
 import org.apache.commons.collections.map.MultiKeyMap;
+import org.cbioportal.cmo.pipelines.cvr.model.*;
 import org.springframework.batch.item.ItemProcessor;
 
 /**

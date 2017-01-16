@@ -1,28 +1,55 @@
 /*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+ * Copyright (c) 2016 - 2017 Memorial Sloan-Kettering Cancer Center.
+ *
+ * This library is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS
+ * FOR A PARTICULAR PURPOSE. The software and documentation provided hereunder
+ * is on an "as is" basis, and Memorial Sloan-Kettering Cancer Center has no
+ * obligations to provide maintenance, support, updates, enhancements or
+ * modifications. In no event shall Memorial Sloan-Kettering Cancer Center be
+ * liable to any party for direct, indirect, special, incidental or
+ * consequential damages, including lost profits, arising out of the use of this
+ * software and its documentation, even if Memorial Sloan-Kettering Cancer
+ * Center has been advised of the possibility of such damage.
  */
+
+/*
+ * This file is part of cBioPortal CMO-Pipelines.
+ *
+ * cBioPortal is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 package org.cbioportal.cmo.pipelines.cvr.cna;
 
 import java.io.*;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.*;
+import org.apache.commons.collections.map.MultiKeyMap;
+import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
+import org.cbioportal.cmo.pipelines.cvr.CVRUtilities;
+import org.cbioportal.cmo.pipelines.cvr.model.CVRCnvIntragenicVariant;
+import org.cbioportal.cmo.pipelines.cvr.model.CVRCnvVariant;
 import org.cbioportal.cmo.pipelines.cvr.model.CVRData;
 import org.cbioportal.cmo.pipelines.cvr.model.CVRMergedResult;
-import org.cbioportal.cmo.pipelines.cvr.model.CVRCnvVariant;
-import org.cbioportal.cmo.pipelines.cvr.model.CVRCnvIntragenicVariant;
 import org.cbioportal.cmo.pipelines.cvr.model.CompositeCnaRecord;
 import org.springframework.batch.item.ExecutionContext;
 import org.springframework.batch.item.ItemStreamException;
 import org.springframework.batch.item.ItemStreamReader;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.apache.commons.collections.map.MultiKeyMap;
-import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
-import org.cbioportal.cmo.pipelines.cvr.CVRUtilities;
 
 /**
  *
@@ -31,38 +58,35 @@ import org.cbioportal.cmo.pipelines.cvr.CVRUtilities;
 public class CVRCnaDataReader implements ItemStreamReader<CompositeCnaRecord>{
     @Value("#{jobParameters[stagingDirectory]}")
     private String stagingDirectory;
-    
+
     @Autowired
     public CVRUtilities cvrUtilities;
-    
+
     Logger log = Logger.getLogger(CVRCnaDataReader.class);
-    
+
     private CVRData cvrData;
     private String genePanel;
     private List<String> geneSymbols;
     private MultiKeyMap newCnaData = new MultiKeyMap();
-    private MultiKeyMap cnaMap = new MultiKeyMap();    
+    private MultiKeyMap cnaMap = new MultiKeyMap();
     private Set<String> genes = new HashSet<>();
     private Set<String> samples = new HashSet<>();
     private Set<String> newSamples = new HashSet<>();
-    
+
     private List<CompositeCnaRecord> cnaRecords = new ArrayList<>();
 
     @Override
     public void open(ExecutionContext ec) throws ItemStreamException {
         try {
-            if(ec.get("cvrData") == null) {
+            if (ec.get("cvrData") == null) {
                 cvrData = cvrUtilities.readJson(Paths.get(stagingDirectory).resolve(cvrUtilities.CVR_FILE).toString());
-            }
-            else {
+            } else {
                 cvrData = (CVRData)ec.get("cvrData");
             }
-        }
-        catch (IOException e)
-        {
+        } catch (IOException e) {
             throw new ItemStreamException("Failure to read " + stagingDirectory + "/" + cvrUtilities.CVR_FILE);
         }
-                                       
+
         for (CVRMergedResult result : cvrData.getResults()) {
             String sampleId = result.getMetaData().getDmpSampleId();
             samples.add(sampleId);
@@ -76,36 +100,35 @@ public class CVRCnaDataReader implements ItemStreamReader<CompositeCnaRecord>{
                 }
             }
             List<CVRCnvIntragenicVariant> intragenicVariants = result.getCnvIntragenicVariants();
-            for (CVRCnvIntragenicVariant variant : intragenicVariants){
+            for (CVRCnvIntragenicVariant variant : intragenicVariants) {
                 genes.add(variant.getGeneId());
                 cnaMap.put(variant.getGeneId(), sampleId, "-1.5");
                 newCnaData.put(variant.getGeneId(), sampleId, "-1.5");
             }
-            try{
+            try {
                 cvrUtilities.importGenePanel(stagingDirectory + File.separator + cvrUtilities.GENE_PANEL);
-            }
-            catch(Exception e){
+            } catch (Exception e) {
                 throw new ItemStreamException("Failure to read " + stagingDirectory + File.separator + cvrUtilities.GENE_PANEL);
             }
             geneSymbols = cvrUtilities.getGeneSymbols();
-            for(String gene : geneSymbols){
+            for (String gene : geneSymbols) {
                 genes.add(gene);
             }
         }
-        
         // CNA data is processed on a gene per row basis, making it very different from the other data types.
         // This also means we can't exactly model it with a java class easily. For now, process CNA data as strings.
         processExistingCnaFile();
         makeNewRecordsList();
         makeRecordsList();
-        
     }
 
     @Override
-    public void update(ExecutionContext ec) throws ItemStreamException {}
+    public void update(ExecutionContext ec) throws ItemStreamException {
+    }
 
     @Override
-    public void close() throws ItemStreamException {}
+    public void close() throws ItemStreamException {
+    }
 
     @Override
     public CompositeCnaRecord read() throws Exception {
@@ -113,8 +136,8 @@ public class CVRCnaDataReader implements ItemStreamReader<CompositeCnaRecord>{
             return cnaRecords.remove(0);
         }
         return null;
-    }   
-    
+    }
+
     private String resolveGeneFoldChange(Double geneFoldChange) {
         if (geneFoldChange > 0) {
             return "2";
@@ -124,7 +147,7 @@ public class CVRCnaDataReader implements ItemStreamReader<CompositeCnaRecord>{
         }
         return "0";
     }
-    
+
     private void makeRecordsList() {
         cnaRecords.add(new CompositeCnaRecord("",cvrUtilities.CNA_HEADER_HUGO_SYMBOL + "\t" + StringUtils.join(samples,"\t")));
         for (String gene : genes) {
@@ -140,7 +163,7 @@ public class CVRCnaDataReader implements ItemStreamReader<CompositeCnaRecord>{
             cnaRecords.add(new CompositeCnaRecord("", line));
         }
     }
-    
+
     private void makeNewRecordsList() {
         cnaRecords.add(new CompositeCnaRecord(cvrUtilities.CNA_HEADER_HUGO_SYMBOL + "\t" + StringUtils.join(newSamples,"\t"), ""));
         for (String gene : genes) {
@@ -162,9 +185,9 @@ public class CVRCnaDataReader implements ItemStreamReader<CompositeCnaRecord>{
             BufferedReader reader = new BufferedReader(new FileReader(stagingDirectory + "/" + cvrUtilities.CNA_FILE));
             List<String> header = Arrays.asList(reader.readLine().split("\t"));
             String line;
-            while((line = reader.readLine()) != null) {
+            while ((line = reader.readLine()) != null) {
                 List<String> data = Arrays.asList(line.split("\t"));
-                for(int i = 1; i < header.size(); i++) {
+                for (int i = 1; i < header.size(); i++) {
                     if (!cvrUtilities.getNewIds().contains(header.get(i))) {
                         samples.add(header.get(i));
                         genes.add(data.get(0));
@@ -172,8 +195,7 @@ public class CVRCnaDataReader implements ItemStreamReader<CompositeCnaRecord>{
                     }
                 }
             }
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             log.info("CNA file does not yet exist");
         }
     }

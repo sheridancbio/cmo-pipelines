@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Memorial Sloan-Kettering Cancer Center.
+ * Copyright (c) 2016 - 2017 Memorial Sloan-Kettering Cancer Center.
  *
  * This library is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS
@@ -32,11 +32,12 @@
 
 package org.cbioportal.cmo.pipelines.cvr.variants;
 
-import org.cbioportal.cmo.pipelines.cvr.model.*;
-
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.*;
 import java.util.Iterator;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.log4j.Logger;
+import org.cbioportal.cmo.pipelines.cvr.CVRUtilities;
+import org.cbioportal.cmo.pipelines.cvr.model.*;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -47,15 +48,13 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.web.client.RestTemplate;
-import org.apache.log4j.Logger;
-import org.cbioportal.cmo.pipelines.cvr.CVRUtilities;
 
 /**
  *
  * @author heinsz
  */
-public class CVRVariantsProcessor implements ItemProcessor<CVRVariants, String>{
-    
+public class CVRVariantsProcessor implements ItemProcessor<CVRVariants, String> {
+
     @Value("${dmp.server_name}")
     private String dmpServerName;
     @Value("${dmp.tokens.retrieve_segment_data}")
@@ -66,18 +65,17 @@ public class CVRVariantsProcessor implements ItemProcessor<CVRVariants, String>{
     private String sessionId;
     @Value("#{jobParameters[skipSeg]}")
     private String skipSeg;
-    
+
     Logger log = Logger.getLogger(CVRVariantsProcessor.class);
-    
+
     @Autowired
     public CVRUtilities cvrUtilities;
-    
+
     private String dmpSegmentUrl;
     private String dmpConsumeUrl;
-    
+
     private CVRData cvrData;
-    
-    
+
     HttpEntity<LinkedMultiValueMap<String, Object>> requestEntity = getRequestEntity();
 
     // Need to call get_seg_data against the CVR webservice for every sample, then merge the results together (CVRMergedResult)
@@ -89,9 +87,8 @@ public class CVRVariantsProcessor implements ItemProcessor<CVRVariants, String>{
         HashMap<String, Object> results = i.getResults();
         cvrData = new CVRData(i.getSampleCount(), i.getDisclaimer(), new ArrayList<CVRMergedResult>());
         ObjectMapper mapper = new ObjectMapper();
-        
         Iterator it = results.entrySet().iterator();
-        while(it.hasNext()) {
+        while (it.hasNext()) {
             Map.Entry pair = (Map.Entry)it.next();
             String sampleId = (String)pair.getKey();
             cvrUtilities.addNewId(sampleId);
@@ -105,56 +102,51 @@ public class CVRVariantsProcessor implements ItemProcessor<CVRVariants, String>{
                 consumeSample(sampleId);
                 CVRMergedResult mergedResult = new CVRMergedResult(result, segData);
                 cvrData.addResult(mergedResult);
-            }                
-            
+            }
         }
-        
         // All the merged data is sent as a json string to the writer at this point
-        
-        return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(cvrData);                
+        return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(cvrData);
     }
-    
-    private HttpEntity getRequestEntity() {  
+
+    private HttpEntity getRequestEntity() {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
         return new HttpEntity<Object>(headers);
     }
-    
-    private void consumeSample(String sampleId){
+
+    private void consumeSample(String sampleId) {
         RestTemplate restTemplate = new RestTemplate();
         ResponseEntity<CVRConsumeSample> responseEntity;
-        try{
+        try {
             responseEntity = restTemplate.exchange(dmpConsumeUrl + sampleId, HttpMethod.GET, requestEntity, CVRConsumeSample.class);
-            if(responseEntity.getBody().getaffectedRows()==0){
+            if (responseEntity.getBody().getaffectedRows()==0) {
                 String message = "No consumption for sample " + sampleId;
                 log.warn(message);
             }
-            if(responseEntity.getBody().getaffectedRows()>1){
+            if (responseEntity.getBody().getaffectedRows()>1) {
                 String message = "Multple samples consumed (" + responseEntity.getBody().getaffectedRows() + ") for sample " + sampleId;
                 log.warn(message);
             }
-            if(responseEntity.getBody().getaffectedRows()==1){
+            if (responseEntity.getBody().getaffectedRows()==1) {
                 String message = "Sample "+ sampleId +" consumed succesfully";
                 log.info(message);
             }
-        }
-        catch(org.springframework.web.client.RestClientException e){
+        } catch (org.springframework.web.client.RestClientException e) {
             log.error("Error consuming sample " + sampleId + "(" + e + ")");
         }
-        
+
     }
-    
+
     private CVRSegData getSegmentData(String sampleId) {
         RestTemplate restTemplate = new RestTemplate();
         ResponseEntity<CVRSegData> responseEntity;
         try {
             responseEntity = restTemplate.exchange(dmpSegmentUrl + sampleId, HttpMethod.GET, requestEntity, CVRSegData.class);
-        }
-        catch (org.springframework.web.client.RestClientException e) {
+        } catch (org.springframework.web.client.RestClientException e) {
             String message = "Error getting seg data for sample: " + sampleId;
             log.warn(message);
             return null;
         }
         return responseEntity.getBody();
-    }       
+    }
 }

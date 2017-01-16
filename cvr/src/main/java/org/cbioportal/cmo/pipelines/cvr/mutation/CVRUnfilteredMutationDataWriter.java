@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Memorial Sloan-Kettering Cancer Center.
+ * Copyright (c) 2016 - 2017 Memorial Sloan-Kettering Cancer Center.
  *
  * This library is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS
@@ -53,18 +53,18 @@ import org.springframework.core.io.FileSystemResource;
  * @author heinsz
  */
 public class CVRUnfilteredMutationDataWriter implements ItemStreamWriter<String> {
-    
+
     @Value("#{jobParameters[stagingDirectory]}")
     private String stagingDirectory;
-    
+
     @Autowired
     public CVRUtilities constants;
-    
+
     @Value("#{stepExecutionContext['commentLines']}")
     private List<String> commentLines;
     @Value("#{stepExecutionContext['mutation_header']}")
-    private List<String> header;    
-    
+    private List<String> header;
+
     private String stagingFile;
     private FlatFileItemWriter<String> flatFileItemWriter = new FlatFileItemWriter<String>();
 
@@ -73,19 +73,15 @@ public class CVRUnfilteredMutationDataWriter implements ItemStreamWriter<String>
     public void open(ExecutionContext ec) throws ItemStreamException {
         if (stagingDirectory.endsWith("/")) {
             stagingFile = stagingDirectory + constants.UNFILTERED_MUTATION_FILE;
-        }
-        else {
+        } else {
             stagingFile = stagingDirectory + "/" + constants.UNFILTERED_MUTATION_FILE;
         }
-        
-        
         PassThroughLineAggregator aggr = new PassThroughLineAggregator();
         flatFileItemWriter.setLineAggregator(aggr);
         flatFileItemWriter.setHeaderCallback(new FlatFileHeaderCallback() {
             @Override
-            public void writeHeader(Writer writer) throws IOException { 
+            public void writeHeader(Writer writer) throws IOException {
                 AnnotatedRecord record = new AnnotatedRecord();
-                
                 // first write out the comment lines, then write the actual header
                 if (commentLines != null) {
                     for (String comment : commentLines) {
@@ -93,15 +89,15 @@ public class CVRUnfilteredMutationDataWriter implements ItemStreamWriter<String>
                     }
                 }
                 writer.write(StringUtils.join(header, "\t"));
-            }                
-        });    
-        flatFileItemWriter.setResource( new FileSystemResource(stagingFile));
+            }
+        });
+        flatFileItemWriter.setResource(new FileSystemResource(stagingFile));
         flatFileItemWriter.open(ec);
-
     }
 
     @Override
-    public void update(ExecutionContext ec) throws ItemStreamException {}
+    public void update(ExecutionContext ec) throws ItemStreamException {
+    }
 
     @Override
     public void close() throws ItemStreamException {
@@ -112,5 +108,4 @@ public class CVRUnfilteredMutationDataWriter implements ItemStreamWriter<String>
     public void write(List<? extends String> items) throws Exception {
         flatFileItemWriter.write(items);
     }
-    
 }

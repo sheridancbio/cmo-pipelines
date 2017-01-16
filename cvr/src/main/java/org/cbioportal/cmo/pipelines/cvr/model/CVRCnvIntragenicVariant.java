@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Memorial Sloan-Kettering Cancer Center.
+ * Copyright (c) 2016 - 2017 Memorial Sloan-Kettering Cancer Center.
  *
  * This library is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS
@@ -37,9 +37,6 @@ package org.cbioportal.cmo.pipelines.cvr.model;
  * @author heinsz
  */
 
-import java.util.HashMap;
-import java.util.Map;
-import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -47,6 +44,9 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import javax.annotation.Generated;
 import org.apache.commons.lang.builder.ToStringBuilder;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -83,13 +83,14 @@ public class CVRCnvIntragenicVariant {
     private Integer variantStatusCvId;
     @JsonIgnore
     private Map<String, Object> additionalProperties = new HashMap<String, Object>();
-    
+
     /**
     * No args constructor for use in serialization
-    * 
+    *
     */
-    public CVRCnvIntragenicVariant() {}
-    
+    public CVRCnvIntragenicVariant() {
+    }
+
     /**
     *
     *@param cluster1
@@ -112,9 +113,9 @@ public class CVRCnvIntragenicVariant {
         this.cytoband = cytoband;
         this.geneId = geneId;
         this.refseqAcc = refseqAcc;
-        this.variantStatusCvId = variantStatusCvId;        
+        this.variantStatusCvId = variantStatusCvId;
     }
-    
+
     /**
     *
     *@return
@@ -122,7 +123,7 @@ public class CVRCnvIntragenicVariant {
     */
     @JsonProperty("cluster_1")
     public String getCluster1() {
-            return cluster1;
+        return cluster1;
     }
 
     /**
@@ -132,9 +133,9 @@ public class CVRCnvIntragenicVariant {
     */
     @JsonProperty("cluster_1")
     public void setCluster1(String cluster1) {
-            this.cluster1 = cluster1;
+        this.cluster1 = cluster1;
     }
-    
+
     /**
     *
     *@return
@@ -142,7 +143,7 @@ public class CVRCnvIntragenicVariant {
     */
     @JsonProperty("cluster_2")
     public String getCluster2() {
-            return cluster2;
+        return cluster2;
     }
 
     /**
@@ -152,9 +153,9 @@ public class CVRCnvIntragenicVariant {
     */
     @JsonProperty("cluster_2")
     public void setCluster2(String cluster2) {
-            this.cluster2 = cluster2;
+        this.cluster2 = cluster2;
     }
-    
+
     /**
     *
     *@return
@@ -162,7 +163,7 @@ public class CVRCnvIntragenicVariant {
     */
     @JsonProperty("cnv_variant_id")
     public Integer getCnvVariantId() {
-            return cnvVariantId;
+        return cnvVariantId;
     }
 
     /**
@@ -172,9 +173,9 @@ public class CVRCnvIntragenicVariant {
     */
     @JsonProperty("cnv_variant_id")
     public void setCnvVariantId(Integer cnvVariantId) {
-            this.cnvVariantId = cnvVariantId;
+        this.cnvVariantId = cnvVariantId;
     }
-    
+
     /**
     *
     *@return
@@ -182,7 +183,7 @@ public class CVRCnvIntragenicVariant {
     */
     @JsonProperty("comments")
     public String getComments() {
-            return comments;
+        return comments;
     }
 
     /**
@@ -192,9 +193,9 @@ public class CVRCnvIntragenicVariant {
     */
     @JsonProperty("comments")
     public void setComments(String comments) {
-            this.comments = comments;
+        this.comments = comments;
     }
-    
+
     /**
     *
     *@return
@@ -202,7 +203,7 @@ public class CVRCnvIntragenicVariant {
     */
     @JsonProperty("confidence_cv_id")
     public Integer getConfidenceCvId() {
-            return confidenceCvId;
+        return confidenceCvId;
     }
 
     /**
@@ -212,9 +213,9 @@ public class CVRCnvIntragenicVariant {
     */
     @JsonProperty("confidence_cv_id")
     public void setConfidenceCvId(Integer confidenceCvId) {
-            this.confidenceCvId = confidenceCvId;
+        this.confidenceCvId = confidenceCvId;
     }
-    
+
     /**
     *
     *@return
@@ -222,7 +223,7 @@ public class CVRCnvIntragenicVariant {
     */
     @JsonProperty("cytoband")
     public String getCytoband() {
-            return cytoband;
+        return cytoband;
     }
 
     /**
@@ -232,9 +233,9 @@ public class CVRCnvIntragenicVariant {
     */
     @JsonProperty("cytoband")
     public void setCytoband(String cytoband) {
-            this.cytoband = cytoband;
+        this.cytoband = cytoband;
     }
-    
+
     /**
     *
     *@return
@@ -242,7 +243,7 @@ public class CVRCnvIntragenicVariant {
     */
     @JsonProperty("gene_id")
     public String getGeneId() {
-            return geneId;
+        return geneId;
     }
 
     /**
@@ -252,9 +253,9 @@ public class CVRCnvIntragenicVariant {
     */
     @JsonProperty("gene_id")
     public void setGeneId(String geneId) {
-            this.geneId = geneId;
+        this.geneId = geneId;
     }
-    
+
     /**
     *
     *@return
@@ -262,7 +263,7 @@ public class CVRCnvIntragenicVariant {
     */
     @JsonProperty("refseq_acc")
     public String getRefseqAcc() {
-            return refseqAcc;
+        return refseqAcc;
     }
 
     /**
@@ -272,9 +273,9 @@ public class CVRCnvIntragenicVariant {
     */
     @JsonProperty("refseq_acc")
     public void setRefseqAcc(String refseqAcc) {
-            this.refseqAcc = refseqAcc;
+        this.refseqAcc = refseqAcc;
     }
-    
+
     /**
     *
     *@return
@@ -282,7 +283,7 @@ public class CVRCnvIntragenicVariant {
     */
     @JsonProperty("variant_status_cv_id")
     public Integer getVariantStatusCvId() {
-            return variantStatusCvId;
+        return variantStatusCvId;
     }
 
     /**
@@ -292,27 +293,26 @@ public class CVRCnvIntragenicVariant {
     */
     @JsonProperty("variant_status_cv_id")
     public void setVariantStatusCvId(Integer variantStatusCvId) {
-            this.variantStatusCvId = variantStatusCvId;
+        this.variantStatusCvId = variantStatusCvId;
     }
-    
+
     @Override
     public String toString() {
         return ToStringBuilder.reflectionToString(this);
     }
-    
+
     @JsonAnyGetter
     public Map<String, Object> getAdditionalProperties() {
         return this.additionalProperties;
     }
-    
+
     @JsonAnySetter
     public void setAdditionalProperty(String name, Object value) {
         this.additionalProperties.put(name, value);
     }
-    
+
     public CVRCnvIntragenicVariant withAdditionalProperty(String name, Object value) {
         this.additionalProperties.put(name, value);
         return this;
-    }    
-    
+    }
 }

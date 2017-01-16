@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Memorial Sloan-Kettering Cancer Center.
+ * Copyright (c) 2016 - 2017 Memorial Sloan-Kettering Cancer Center.
  *
  * This library is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS
@@ -43,20 +43,19 @@ import org.springframework.batch.item.ItemProcessor;
  *
  * @author heinsz
  */
-public class CVRSvDataProcessor implements ItemProcessor<CVRSvRecord, CompositeSvRecord>{
+public class CVRSvDataProcessor implements ItemProcessor<CVRSvRecord, CompositeSvRecord> {
     @Override
-    public CompositeSvRecord process(CVRSvRecord i) throws Exception {      
+    public CompositeSvRecord process(CVRSvRecord i) throws Exception {
         List<String> record = new ArrayList<String>();
-        for(String field : i.getFieldNames()) {
+        for (String field : i.getFieldNames()) {
             record.add(i.getClass().getMethod("get" + field).invoke(i, null).toString().replace("\r\n", " ").replace("\r", " ").replace("\n", " ").replace("\t", " "));
         }
         CompositeSvRecord compRecord = new CompositeSvRecord();
-        if(!i.getIsNew().isEmpty()){
+        if (!i.getIsNew().isEmpty()) {
             compRecord.setNewSvRecord(StringUtils.join(record, "\t").trim());
-        }
-        else{
+        } else {
             compRecord.setOldSvRecord(StringUtils.join(record, "\t").trim());
         }
         return compRecord;
-    }       
+    }
 }

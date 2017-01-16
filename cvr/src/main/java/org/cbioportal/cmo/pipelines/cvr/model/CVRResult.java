@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Memorial Sloan-Kettering Cancer Center.
+ * Copyright (c) 2016 - 2017 Memorial Sloan-Kettering Cancer Center.
  *
  * This library is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS
@@ -29,6 +29,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+
 package org.cbioportal.cmo.pipelines.cvr.model;
 
 /**
@@ -36,15 +37,14 @@ package org.cbioportal.cmo.pipelines.cvr.model;
  * @author heinsz
  */
 
-
-import java.util.*;
-import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import java.util.*;
+import javax.annotation.Generated;
 import org.apache.commons.lang.builder.ToStringBuilder;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -78,13 +78,14 @@ public class CVRResult {
     private List<CVRSvVariant> svVariants;
     @JsonIgnore
     private Map<String, Object> additionalProperties = new HashMap<String, Object>();
-    
+
     /**
     * No args constructor for use in serialization
-    * 
+    *
     */
-    public CVRResult() {}
-    
+    public CVRResult() {
+    }
+
     /**
     *
     *@param cnvIntragenicVariants
@@ -96,7 +97,7 @@ public class CVRResult {
     *@param snpIndelSilentNp
     *@param svVariants
     */
-    public CVRResult(List<CVRCnvIntragenicVariant> cnvIntragenicVariants, List<CVRCnvVariant> cnvVariants, 
+    public CVRResult(List<CVRCnvIntragenicVariant> cnvIntragenicVariants, List<CVRCnvVariant> cnvVariants,
             CVRMetaData metaData, List<CVRSnp> snpIndelExonic,
             List<CVRSnp> snpIndelExonicNp, List<CVRSnp> snpIndelSilent,
             List<CVRSnp> snpIndelSilentNp, List<CVRSvVariant> svVariants) {
@@ -107,9 +108,9 @@ public class CVRResult {
         this.snpIndelExonicNp = snpIndelExonicNp;
         this.snpIndelSilent = snpIndelSilent;
         this.snpIndelSilentNp = snpIndelSilentNp;
-        this.svVariants = svVariants;        
+        this.svVariants = svVariants;
     }
-    
+
     /**
     *
     *@return
@@ -117,7 +118,7 @@ public class CVRResult {
     */
     @JsonProperty("cnv-intragenic-variants")
     public List<CVRCnvIntragenicVariant> getCnvIntragenicVariants() {
-            return cnvIntragenicVariants;
+        return cnvIntragenicVariants;
     }
 
     /**
@@ -127,9 +128,9 @@ public class CVRResult {
     */
     @JsonProperty("cnv-intragenic-variants")
     public void setCnvIntragenicVariants(List<CVRCnvIntragenicVariant> cnvIntragenicVariants) {
-            this.cnvIntragenicVariants = cnvIntragenicVariants;
+        this.cnvIntragenicVariants = cnvIntragenicVariants;
     }
-    
+
     /**
     *
     *@return
@@ -137,7 +138,7 @@ public class CVRResult {
     */
     @JsonProperty("cnv-variants")
     public List<CVRCnvVariant> getCnvVariants() {
-            return cnvVariants;
+        return cnvVariants;
     }
 
     /**
@@ -147,9 +148,9 @@ public class CVRResult {
     */
     @JsonProperty("cnv-variants")
     public void setCnvVariants(List<CVRCnvVariant> cnvVariants) {
-            this.cnvVariants = cnvVariants;
+        this.cnvVariants = cnvVariants;
     }
-    
+
     /**
     *
     *@return
@@ -157,7 +158,7 @@ public class CVRResult {
     */
     @JsonProperty("meta-data")
     public CVRMetaData getMetaData() {
-            return metaData;
+        return metaData;
     }
 
     /**
@@ -167,9 +168,9 @@ public class CVRResult {
     */
     @JsonProperty("meta-data")
     public void setMetaData(CVRMetaData metaData) {
-            this.metaData = metaData;
+        this.metaData = metaData;
     }
-    
+
     /**
     *
     *@return
@@ -177,7 +178,7 @@ public class CVRResult {
     */
     @JsonProperty("snp-indel-exonic")
     public List<CVRSnp> getSnpIndelExonic() {
-            return snpIndelExonic;
+        return snpIndelExonic;
     }
 
     /**
@@ -187,9 +188,9 @@ public class CVRResult {
     */
     @JsonProperty("snp-indel-exonic")
     public void setSnpIndelExonic(List<CVRSnp> snpIndelExonic) {
-            this.snpIndelExonic = snpIndelExonic;
+        this.snpIndelExonic = snpIndelExonic;
     }
-    
+
     /**
     *
     *@return
@@ -197,7 +198,7 @@ public class CVRResult {
     */
     @JsonProperty("snp-indel-exonic-np")
     public List<CVRSnp> getSnpIndelExonicNp() {
-            return snpIndelExonicNp;
+        return snpIndelExonicNp;
     }
 
     /**
@@ -207,9 +208,9 @@ public class CVRResult {
     */
     @JsonProperty("snp-indel-exonic-np")
     public void setSnpIndelExonicNp(List<CVRSnp> snpIndelExonicNp) {
-            this.snpIndelExonicNp = snpIndelExonicNp;
+        this.snpIndelExonicNp = snpIndelExonicNp;
     }
-    
+
     /**
     *
     *@return
@@ -217,7 +218,7 @@ public class CVRResult {
     */
     @JsonProperty("snp-indel-silent")
     public List<CVRSnp> getSnpIndelSilent() {
-            return snpIndelSilent;
+        return snpIndelSilent;
     }
 
     /**
@@ -227,9 +228,9 @@ public class CVRResult {
     */
     @JsonProperty("snp-indel-silent")
     public void setSnpIndelSilent(List<CVRSnp> snpIndelSilent) {
-            this.snpIndelSilent = snpIndelSilent;
+        this.snpIndelSilent = snpIndelSilent;
     }
-    
+
     /**
     *
     *@return
@@ -237,7 +238,7 @@ public class CVRResult {
     */
     @JsonProperty("snp-indel-silent-np")
     public List<CVRSnp> getSnpIndelSilentNp() {
-            return snpIndelSilentNp;
+        return snpIndelSilentNp;
     }
 
     /**
@@ -247,9 +248,9 @@ public class CVRResult {
     */
     @JsonProperty("snp-indel-silent-np")
     public void setSnpIndelSilentNp(List<CVRSnp> snpIndelSilentNp) {
-            this.snpIndelSilentNp = snpIndelSilentNp;
-    }    
-    
+        this.snpIndelSilentNp = snpIndelSilentNp;
+    }
+
     /**
     *
     *@return
@@ -257,7 +258,7 @@ public class CVRResult {
     */
     @JsonProperty("sv-variants")
     public List<CVRSvVariant> getSvVariants() {
-            return svVariants;
+        return svVariants;
     }
 
     /**
@@ -267,26 +268,26 @@ public class CVRResult {
     */
     @JsonProperty("sv-variants")
     public void setSvVariants(List<CVRSvVariant> svVariants) {
-            this.svVariants = svVariants;
+        this.svVariants = svVariants;
     }
-    
+
     @Override
     public String toString() {
         return ToStringBuilder.reflectionToString(this);
     }
-    
+
     @JsonAnyGetter
     public Map<String, Object> getAdditionalProperties() {
         return this.additionalProperties;
     }
-    
+
     @JsonAnySetter
     public void setAdditionalProperty(String name, Object value) {
         this.additionalProperties.put(name, value);
     }
-    
+
     public CVRResult withAdditionalProperty(String name, Object value) {
         this.additionalProperties.put(name, value);
         return this;
-    }  
+    }
 }
