@@ -47,9 +47,6 @@ public class MskimpactBrainSpineClinicalProcessor implements ItemProcessor<Mskim
         List<String> record = new ArrayList<>();
         for(String field : new MskimpactBrainSpineClinical().getFieldNames()){
 			String value = darwinClinicalBrainSpine.getClass().getMethod("get"+field).invoke(darwinClinicalBrainSpine).toString();
-			if (field.equals("OS_STATUS") && value.equals("LIVING")) {
-				value = "ALIVE";
-			}
 			record.add(value);
         }
         
