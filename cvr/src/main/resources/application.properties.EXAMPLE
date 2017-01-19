@@ -9,7 +9,11 @@ dmp.user_name=
 dmp.password=
 dmp.tokens.create_session=create_session
 dmp.tokens.create_gml_session=create_gml_session
-dmp.tokens.retrieve_variants=cbio_retrieve_variants
+#select one of the following dmp.tokens.retrieve_variants lines:
+#dmp.tokens.retrieve_variants=cbio_retrieve_variants
+#dmp.tokens.retrieve_variants=cbio_rdts_retrieve_variants
+#dmp.tokens.retrieve_variants=cbio_retrieve_heme_variants
+#dmp.tokens.retrieve_variants=cbio_archer_retrieve_variants
 dmp.tokens.retrieve_gml_variants=gml_cbio_retrieve_variants
 dmp.tokens.retrieve_segment_data=get_seg_data
 dmp.tokens.retrieve_gml_segment_data=gml_get_seg_data
