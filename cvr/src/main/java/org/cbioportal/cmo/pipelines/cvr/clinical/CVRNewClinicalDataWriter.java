@@ -33,7 +33,6 @@
 package org.cbioportal.cmo.pipelines.cvr.clinical;
 
 import java.io.*;
-import java.nio.file.*;
 import java.util.*;
 import org.apache.commons.lang.StringUtils;
 import org.cbioportal.cmo.pipelines.cvr.CVRUtilities;
@@ -58,13 +57,12 @@ public class CVRNewClinicalDataWriter implements ItemStreamWriter<CompositeClini
     @Autowired
     public CVRUtilities cvrUtilities;
 
-    private String stagingFile;
-    private FlatFileItemWriter<String> flatFileItemWriter = new FlatFileItemWriter<String>();
+    private FlatFileItemWriter<String> flatFileItemWriter = new FlatFileItemWriter<>();
 
     // Set up the writer and print the json from CVR to a file
     @Override
     public void open(ExecutionContext ec) throws ItemStreamException {
-        stagingFile = Paths.get(stagingDirectory).resolve(cvrUtilities.CLINICAL_FILE).toString();
+        File stagingFile = new File(stagingDirectory, cvrUtilities.CLINICAL_FILE);
         PassThroughLineAggregator aggr = new PassThroughLineAggregator();
         flatFileItemWriter.setLineAggregator(aggr);
         flatFileItemWriter.setHeaderCallback(new FlatFileHeaderCallback() {

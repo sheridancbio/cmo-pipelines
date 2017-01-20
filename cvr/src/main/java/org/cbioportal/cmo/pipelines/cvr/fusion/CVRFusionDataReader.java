@@ -32,8 +32,8 @@
 
 package org.cbioportal.cmo.pipelines.cvr.fusion;
 
+import java.io.File;
 import java.io.IOException;
-import java.nio.file.Paths;
 import java.util.*;
 import org.apache.log4j.Logger;
 import org.cbioportal.cmo.pipelines.cvr.CVRUtilities;
@@ -56,53 +56,61 @@ import org.springframework.core.io.FileSystemResource;
  * @author heinsz
  */
 public class CVRFusionDataReader implements ItemStreamReader<CVRFusionRecord> {
+    
     @Value("#{jobParameters[stagingDirectory]}")
     private String stagingDirectory;
 
     @Autowired
     public CVRUtilities cvrUtilities;
 
-    private CVRData cvrData;
-    private List<CVRFusionRecord> fusionRecords = new ArrayList<>();
+    private List<CVRFusionRecord> fusionRecords = new ArrayList();
     Logger log = Logger.getLogger(CVRFusionDataReader.class);
 
     @Override
     public void open(ExecutionContext ec) throws ItemStreamException {
+        CVRData cvrData = new CVRData();        
+        // load cvr data from cvr_data.json file
+        File cvrFile = new File(stagingDirectory, cvrUtilities.CVR_FILE);
         try {
-            if (ec.get("cvrData") == null) {
-                cvrData = cvrUtilities.readJson(Paths.get(stagingDirectory).resolve(cvrUtilities.CVR_FILE).toString());
-            } else {
-                cvrData = (CVRData)ec.get("cvrData");
-            }
+            cvrData = cvrUtilities.readJson(cvrFile);
         } catch (IOException e) {
-            throw new ItemStreamException("Failure to read " + stagingDirectory + "/" + cvrUtilities.CVR_FILE);
+            log.error("Error reading file: " + cvrFile.getName());
+            throw new ItemStreamException(e);
         }
-        try {//Catches exception when file does not exist (e.g. first run, file not yet written)
-            FlatFileItemReader<CVRFusionRecord> reader = new FlatFileItemReader<>();
-            reader.setResource(new FileSystemResource(stagingDirectory + "/" + cvrUtilities.FUSION_FILE));
+        
+        File fusionFile = new File(stagingDirectory, cvrUtilities.FUSION_FILE);
+        if (!fusionFile.exists()) {
+            log.info("File does not exist - skipping data loading from fusion file: " + fusionFile.getName());
+        }
+        else {
+            log.info("Loading fusion data from: " + fusionFile.getName());
+            
+            DelimitedLineTokenizer tokenizer = new DelimitedLineTokenizer(DelimitedLineTokenizer.DELIMITER_TAB);
             DefaultLineMapper<CVRFusionRecord> mapper = new DefaultLineMapper<>();
-            DelimitedLineTokenizer tokenizer = new DelimitedLineTokenizer();
-            tokenizer.setDelimiter("\t");
             mapper.setLineTokenizer(tokenizer);
             mapper.setFieldSetMapper(new CVRFusionFieldSetMapper());
+            
+            FlatFileItemReader<CVRFusionRecord> reader = new FlatFileItemReader<>();
+            reader.setResource(new FileSystemResource(fusionFile));
             reader.setLineMapper(mapper);
             reader.setLinesToSkip(1);
             reader.open(ec);
-            CVRFusionRecord to_add;
+            
             try {
+                CVRFusionRecord to_add;
                 while ((to_add = reader.read()) != null) {
                     if (!cvrUtilities.getNewIds().contains(to_add.getTumor_Sample_Barcode()) && to_add.getTumor_Sample_Barcode() != null) {
                         fusionRecords.add(to_add);
                     }
                 }
-            } catch (Exception e) {
+            } catch (Exception e){
+                log.info("Error loading data from fusion file: " + fusionFile.getName());
                 throw new ItemStreamException(e);
             }
             reader.close();
-        } catch (Exception a){
-            String message = "File " + cvrUtilities.FUSION_FILE + " does not exist";
-            log.info(message);
         }
+        
+        // merge existing and new fusion records
         for (CVRMergedResult result : cvrData.getResults()) {
             String sampleId = result.getMetaData().getDmpSampleId();
             List<CVRSvVariant> variants = result.getSvVariants();

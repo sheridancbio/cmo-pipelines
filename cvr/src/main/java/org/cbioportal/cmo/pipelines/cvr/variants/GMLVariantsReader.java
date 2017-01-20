@@ -55,12 +55,11 @@ public class GMLVariantsReader implements ItemStreamReader<GMLVariant> {
     @Value("${dmp.tokens.retrieve_gml_variants}")
     private String dmpRetreiveVariants;
 
-    private String dmpUrl;
     private List<GMLVariant> gmlVariants = new ArrayList<>();
 
     @Override
     public void open(ExecutionContext ec) throws ItemStreamException {
-        dmpUrl = dmpServerName + dmpRetreiveVariants + "/" + sessionId + "/0";
+        String dmpUrl = dmpServerName + dmpRetreiveVariants + "/" + sessionId + "/0";
         RestTemplate restTemplate = new RestTemplate();
         HttpEntity<LinkedMultiValueMap<String, Object>> requestEntity = getRequestEntity();
         ResponseEntity<GMLVariant> responseEntity = restTemplate.exchange(dmpUrl, HttpMethod.GET, requestEntity, GMLVariant.class);

@@ -34,14 +34,11 @@ package org.cbioportal.cmo.pipelines.cvr.mutation;
 
 import java.io.*;
 import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.*;
 import org.apache.log4j.Logger;
 import org.cbioportal.annotator.*;
 import org.cbioportal.cmo.pipelines.cvr.CVRUtilities;
 import org.cbioportal.cmo.pipelines.cvr.model.*;
-import org.cbioportal.cmo.pipelines.cvr.mutation.CVRMutationFieldSetMapper;
 import org.cbioportal.models.*;
 import org.springframework.batch.item.ExecutionContext;
 import org.springframework.batch.item.ItemStreamException;
@@ -60,6 +57,7 @@ import org.springframework.web.client.HttpServerErrorException;
  * @author heinsz
  */
 public class CVRUnfilteredMutationDataReader implements ItemStreamReader<AnnotatedRecord> {
+    
     @Value("#{jobParameters[stagingDirectory]}")
     private String stagingDirectory;
 
@@ -69,26 +67,26 @@ public class CVRUnfilteredMutationDataReader implements ItemStreamReader<Annotat
     @Autowired
     private Annotator annotator;
 
-    private Path filename;
-    private CVRData cvrData;
+    private File mutationFile;
     private List<AnnotatedRecord> mutationRecords = new ArrayList<>();
     private Map<String, List<AnnotatedRecord>> mutationMap = new HashMap<>();
-    private Set<String> header = new LinkedHashSet<>();
     private Set<String> additionalPropertyKeys = new LinkedHashSet<>();
 
     Logger log = Logger.getLogger(CVRUnfilteredMutationDataReader.class);
 
     @Override
     public void open(ExecutionContext ec) throws ItemStreamException {
+        CVRData cvrData = new CVRData();        
+        // load cvr data from cvr_data.json file
+        File cvrFile = new File(stagingDirectory, cvrUtilities.CVR_FILE);
         try {
-            if (ec.get("cvrData") == null) {
-                cvrData = cvrUtilities.readJson(Paths.get(stagingDirectory).resolve(cvrUtilities.CVR_FILE).toString());
-            } else {
-                cvrData = (CVRData)ec.get("cvrData");
-            }
+            cvrData = cvrUtilities.readJson(cvrFile);
         } catch (IOException e) {
-            throw new ItemStreamException("Failure to read " + stagingDirectory + "/" + cvrUtilities.CVR_FILE);
+            log.error("Error reading file: " + cvrFile.getName());
+            throw new ItemStreamException(e);
         }
+        
+        Set<String> header = new LinkedHashSet<>();
         for (CVRMergedResult result : cvrData.getResults()) {
             String sampleId = result.getMetaData().getDmpSampleId();
             String somaticStatus = result.getMetaData().getSomaticStatus() != null ? result.getMetaData().getSomaticStatus() : "N/A";
@@ -112,19 +110,23 @@ public class CVRUnfilteredMutationDataReader implements ItemStreamReader<Annotat
                 mutationRecords.add(annotatedRecord);
                 header.addAll(record.getHeaderWithAdditionalFields());
                 additionalPropertyKeys.addAll(record.getAdditionalProperties().keySet());
-                addRecordToMap(annotatedRecord);
+                mutationMap.getOrDefault(annotatedRecord.getTumor_Sample_Barcode(), new ArrayList()).add(annotatedRecord);
             }
         }
-        filename = Paths.get(stagingDirectory).resolve(cvrUtilities.UNFILTERED_MUTATION_FILE);
-        if (new File(filename.toString()).exists()) {
-            FlatFileItemReader<MutationRecord> reader = new FlatFileItemReader<>();
-            processComments(ec);
-            reader.setResource(new FileSystemResource(filename.toString()));
+
+        this.mutationFile = new File(stagingDirectory, cvrUtilities.UNFILTERED_MUTATION_FILE);
+        if (!mutationFile.exists()) {
+            log.info("File does not exist - skipping data loading from mutation file: " + mutationFile.getName());
+        }
+        else {
+            log.info("Loading mutation data from: " + mutationFile.getName());            
+            final DelimitedLineTokenizer tokenizer = new DelimitedLineTokenizer(DelimitedLineTokenizer.DELIMITER_TAB);
             DefaultLineMapper<MutationRecord> mapper = new DefaultLineMapper<>();
-            final DelimitedLineTokenizer tokenizer = new DelimitedLineTokenizer();
-            tokenizer.setDelimiter("\t");
             mapper.setLineTokenizer(tokenizer);
             mapper.setFieldSetMapper(new CVRMutationFieldSetMapper());
+            
+            FlatFileItemReader<MutationRecord> reader = new FlatFileItemReader<>();
+            reader.setResource(new FileSystemResource(mutationFile));
             reader.setLineMapper(mapper);
             reader.setLinesToSkip(1);
             reader.setSkippedLinesCallback(new LineCallbackHandler() {
@@ -134,11 +136,13 @@ public class CVRUnfilteredMutationDataReader implements ItemStreamReader<Annotat
                 }
             });
             reader.open(ec);
-            MutationRecord to_add;
+                        
             try {
+                MutationRecord to_add;
                 while ((to_add = reader.read()) != null && to_add.getTumor_Sample_Barcode() != null) {
-                    if (!cvrUtilities.getNewIds().contains(to_add.getTumor_Sample_Barcode()) && !isDuplicate(to_add)) {
-                        AnnotatedRecord to_add_annotated = new AnnotatedRecord();
+                    if (!cvrUtilities.getNewIds().contains(to_add.getTumor_Sample_Barcode()) && 
+                            !cvrUtilities.isDuplicateRecord(to_add, mutationMap.get(to_add.getTumor_Sample_Barcode()))) {
+                        AnnotatedRecord to_add_annotated;
                         try {
                             to_add_annotated = annotator.annotateRecord(to_add, false, "mskcc", false);
                         } catch (HttpServerErrorException e) {
@@ -146,20 +150,20 @@ public class CVRUnfilteredMutationDataReader implements ItemStreamReader<Annotat
                             to_add_annotated = cvrUtilities.buildCVRAnnotatedRecord(to_add);
                         }
                         mutationRecords.add(to_add_annotated);
-                        addRecordToMap(to_add_annotated);
+                        mutationMap.getOrDefault(to_add_annotated.getTumor_Sample_Barcode(), new ArrayList()).add(to_add_annotated);
                         header.addAll(to_add_annotated.getHeaderWithAdditionalFields());
                         additionalPropertyKeys.addAll(to_add_annotated.getAdditionalProperties().keySet());
                     }
                 }
+                ec.put("commentLines", cvrUtilities.processFileComments(mutationFile, false));
             }
             catch (Exception e) {
-                log.warn(e.getMessage());
+                log.warn("Error loading data from mutation file: " + mutationFile.getName());
                 throw new ItemStreamException(e);
             }
             reader.close();
         }
-        List<String> full_header = new ArrayList(header);
-        ec.put("mutation_header", full_header);
+        ec.put("mutation_header", new ArrayList(header));
     }
 
     @Override
@@ -185,61 +189,4 @@ public class CVRUnfilteredMutationDataReader implements ItemStreamReader<Annotat
         return null;
     }
 
-    private boolean isDuplicate(MutationRecord snp) {
-        String sampleId = snp.getTumor_Sample_Barcode();
-        if (mutationMap.containsKey(sampleId)) {
-            String chrom = snp.getChromosome();
-            String start = snp.getStart_Position();
-            String end = snp.getEnd_Position();
-            String ref = snp.getReference_Allele();
-            String alt = snp.getTumor_Seq_Allele2();
-            String gene = snp.getHugo_Symbol();
-            List<AnnotatedRecord> records = mutationMap.get(sampleId);
-            for (AnnotatedRecord record: records) {
-                if (chrom.equals(record.getChromosome()) &&
-                        start.equals(record.getStart_Position()) &&
-                        end.equals(record.getStart_Position()) &&
-                        ref.equals(record.getReference_Allele()) &&
-                        alt.equals(record.getTumor_Seq_Allele2()) &&
-                        gene.equals(record.getHugo_Symbol())) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
-    private void processComments(ExecutionContext ec) {
-        List<String> comments = new ArrayList<>();
-        BufferedReader reader = null;
-        try {
-            reader = new BufferedReader(new FileReader(filename.toString()));
-            String line;
-            while ((line = reader.readLine()) != null) {
-                if (line.startsWith("#")) {
-                    comments.add(line);
-                } else {
-                    // no more comments, go on processing
-                    break;
-                }
-            }
-            reader.close();
-        } catch (Exception e) {
-            throw new ItemStreamException(e);
-        }
-        // Add comments to the config for the writer to access later
-        ec.put("commentLines", comments);
-    }
-
-    private void addRecordToMap(AnnotatedRecord record) {
-        String sampleId = record.getTumor_Sample_Barcode();
-        List<AnnotatedRecord> recordList = mutationMap.get(sampleId);
-        if (recordList == null) {
-            recordList = new ArrayList<>();
-            recordList.add(record);
-            mutationMap.put(sampleId, recordList);
-        } else {
-            recordList.add(record);
-        }
-    }
 }

@@ -32,12 +32,12 @@
 
 package org.cbioportal.cmo.pipelines.cvr.mutation;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.*;
 import org.apache.commons.lang.StringUtils;
 import org.cbioportal.cmo.pipelines.cvr.CVRUtilities;
-import org.cbioportal.models.AnnotatedRecord;
 import org.springframework.batch.item.ExecutionContext;
 import org.springframework.batch.item.ItemStreamException;
 import org.springframework.batch.item.ItemStreamWriter;
@@ -64,41 +64,30 @@ public class CVRMutationDataWriter implements ItemStreamWriter<String> {
     private List<String> header;
 
     @Autowired
-    public CVRUtilities constants;
+    public CVRUtilities cvrUtilities;
 
-    private String stagingFile;
-    private FlatFileItemWriter<String> flatFileItemWriter = new FlatFileItemWriter<String>();
+    private FlatFileItemWriter<String> flatFileItemWriter = new FlatFileItemWriter<>();
 
     // Set up the writer and print the json from CVR to a file
     @Override
     public void open(ExecutionContext ec) throws ItemStreamException {
-        if (stagingDirectory.endsWith("/")) {
-            stagingFile = stagingDirectory + constants.MUTATION_FILE;
-        } else {
-            stagingFile = stagingDirectory + "/" + constants.MUTATION_FILE;
-        }
+        File stagingFile = new File(stagingDirectory, cvrUtilities.MUTATION_FILE);
         PassThroughLineAggregator aggr = new PassThroughLineAggregator();
         flatFileItemWriter.setLineAggregator(aggr);
         flatFileItemWriter.setHeaderCallback(new FlatFileHeaderCallback() {
             @Override
             public void writeHeader(Writer writer) throws IOException {
                 // first write out the comment lines, then write the actual header
-                if  (commentLines != null) {
+                if  (commentLines != null && !commentLines.isEmpty()) {
                     for (String comment : commentLines) {
                         if (comment.startsWith("#sequenced_samples")) {
-                            comment = "#sequenced_samples:";
-                            for (String id : constants.getAllIds()) {
-                                comment = comment + " " + id;
-                            }
+                            comment = "#sequenced_samples: " + StringUtils.join(cvrUtilities.getAllIds(), " ");
                         }
-                        writer.write(comment + "\n");
+                        writer.write(comment);
                     }
                 } else {
-                    String comment = "#sequenced_samples:";
-                    for (String id : constants.getAllIds()) {
-                        comment = comment + " " + id;
-                    }
-                    writer.write(comment + "\n");
+                    String comment = "#sequenced_samples: " + StringUtils.join(cvrUtilities.getAllIds(), " ");
+                    writer.write(comment);
                 }
                 writer.write(StringUtils.join(header , "\t"));
             }
@@ -118,10 +107,6 @@ public class CVRMutationDataWriter implements ItemStreamWriter<String> {
 
     @Override
     public void write(List<? extends String> items) throws Exception {
-        List<String> writeList = new ArrayList<>();
-        for (String item : items) {
-            writeList.add(item);
-        }
-        flatFileItemWriter.write(writeList);
+        flatFileItemWriter.write(items);
     }
 }

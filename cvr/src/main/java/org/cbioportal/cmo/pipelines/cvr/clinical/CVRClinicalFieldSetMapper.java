@@ -58,8 +58,7 @@ public class CVRClinicalFieldSetMapper implements  FieldSetMapper<CVRClinicalRec
                 record.getClass().getMethod("set" + field, String.class).invoke(record, fs.readString(i));
             } catch (Exception e) {
                 if (e.getClass().equals(NoSuchMethodException.class)) {
-                    String message = "No set method exists for " + field;
-                    log.info(message);
+                    log.info("No set method exists for " + field);
                 }
             }
         }

@@ -58,30 +58,33 @@ public class GMLVariantsProcessor implements ItemProcessor<GMLVariant, String> {
     @Value("#{jobParameters[sessionId]}")
     private String sessionId;
 
+    @Value("#{jobParameters[testingMode]}")
+    private boolean testingMode;
+    
     Logger log = Logger.getLogger(GMLVariantsProcessor.class);
 
     @Autowired
     public CVRUtilities cvrUtilities;
 
-    private String gmlSegmentUrl;
     private String gmlConsumeUrl;
-
-    private GMLData gmlData;
 
     HttpEntity<LinkedMultiValueMap<String, Object>> requestEntity = getRequestEntity();
 
     @Override
     public String process(GMLVariant g) throws Exception {
-        gmlConsumeUrl = dmpServerName = dmpConsumeSample + "/" + sessionId + "/";
+        gmlConsumeUrl = dmpServerName + dmpConsumeSample + "/" + sessionId + "/";
         HashMap<String, GMLResult> results = g.getResults();
-        gmlData = new GMLData(g.getSampleCount(), g.getDisclaimer(), new ArrayList<GMLResult>());
+        GMLData gmlData = new GMLData(g.getSampleCount(), g.getDisclaimer(), new ArrayList<GMLResult>());
         ObjectMapper mapper = new ObjectMapper();
         for (Map.Entry<String, GMLResult> pair : results.entrySet()) {
             GMLResult result = pair.getValue();
             String patientId = result.getMetaData().getDmpPatientId();
             cvrUtilities.addNewId(patientId);
             String sampleId = pair.getKey();
-            //consumeSample(sampleId);
+            
+            if (!testingMode) {
+                consumeSample(sampleId);
+            }
             gmlData.addResult(result);
         }
         return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(gmlData);

@@ -58,13 +58,12 @@ public class CVRVariantsReader implements ItemStreamReader<CVRVariants> {
     @Value("${dmp.tokens.retrieve_variants}")
     private String dmpRetreiveVariants;
 
-    private String dmpUrl;
     private List<CVRVariants> cvrVariants = new ArrayList<CVRVariants>();
 
     // Calls cbio_retrieve_variants against CVR web service
     @Override
     public void open(ExecutionContext ec) throws ItemStreamException {
-        dmpUrl = dmpServerName + dmpRetreiveVariants + "/" + sessionId + "/0";
+        String dmpUrl = dmpServerName + dmpRetreiveVariants + "/" + sessionId + "/0";
         RestTemplate restTemplate = new RestTemplate();
         HttpEntity<LinkedMultiValueMap<String, Object>> requestEntity = getRequestEntity();
         ResponseEntity<CVRVariants> responseEntity = restTemplate.exchange(dmpUrl, HttpMethod.GET, requestEntity, CVRVariants.class);

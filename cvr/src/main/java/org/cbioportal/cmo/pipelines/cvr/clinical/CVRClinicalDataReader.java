@@ -32,8 +32,8 @@
 
 package org.cbioportal.cmo.pipelines.cvr.clinical;
 
+import java.io.File;
 import java.io.IOException;
-import java.nio.file.Paths;
 import java.util.*;
 import org.apache.log4j.Logger;
 import org.cbioportal.cmo.pipelines.cvr.CVRUtilities;
@@ -55,56 +55,62 @@ import org.springframework.core.io.FileSystemResource;
  * @author heinsz
  */
 public class CVRClinicalDataReader implements ItemStreamReader<CVRClinicalRecord> {
+    
     @Value("#{jobParameters[stagingDirectory]}")
     private String stagingDirectory;
 
     @Autowired
     public CVRUtilities cvrUtilities;
 
-    private CVRData cvrData;
-    private List<CVRClinicalRecord> clinicalRecords = new ArrayList<>();
+    private List<CVRClinicalRecord> clinicalRecords = new ArrayList();
 
     Logger log = Logger.getLogger(CVRClinicalDataReader.class);
 
     @Override
     public void open(ExecutionContext ec) throws ItemStreamException {
+        CVRData cvrData = new CVRData();
+        // load cvr data from cvr_data.json file
+        File cvrFile = new File(stagingDirectory, cvrUtilities.CVR_FILE);
         try {
-            if (ec.get("cvrData") == null) {
-                cvrData = cvrUtilities.readJson(Paths.get(stagingDirectory).resolve(cvrUtilities.CVR_FILE).toString());
-            } else {
-                cvrData = (CVRData)ec.get("cvrData");
-            }
+            cvrData = cvrUtilities.readJson(cvrFile);
         } catch (IOException e) {
-            throw new ItemStreamException("Failure to read " + stagingDirectory + "/" + cvrUtilities.CVR_FILE);
+            log.error("Error reading file: " + cvrFile.getName());
+            throw new ItemStreamException(e);
         }
-        try {//Catches exception when file does not exist (e.g. first run, file not yet written)
-            FlatFileItemReader<CVRClinicalRecord> reader = new FlatFileItemReader<>();
-            reader.setResource(new FileSystemResource(stagingDirectory + "/" + cvrUtilities.CLINICAL_FILE));
+        
+        File clinicalFile = new File(stagingDirectory, cvrUtilities.CLINICAL_FILE);
+        if (!clinicalFile.exists()) {
+            log.error("File does not exist - skipping data loading from clinical file: " + clinicalFile.getName());
+        }
+        else {
+            log.info("Loading clinical data from: " + clinicalFile.getName());
+            DelimitedLineTokenizer tokenizer = new DelimitedLineTokenizer(DelimitedLineTokenizer.DELIMITER_TAB);
             DefaultLineMapper<CVRClinicalRecord> mapper = new DefaultLineMapper<>();
-            DelimitedLineTokenizer tokenizer = new DelimitedLineTokenizer();
-            tokenizer.setDelimiter("\t");
             mapper.setLineTokenizer(tokenizer);
             mapper.setFieldSetMapper(new CVRClinicalFieldSetMapper());
+            
+            FlatFileItemReader<CVRClinicalRecord> reader = new FlatFileItemReader<>();
+            reader.setResource(new FileSystemResource(clinicalFile));
             reader.setLineMapper(mapper);
             reader.setLinesToSkip(1);
             reader.open(ec);
-            CVRClinicalRecord to_add;
+            
             try {
+                CVRClinicalRecord to_add;
                 while ((to_add = reader.read()) != null) {
                     if (!cvrUtilities.getNewIds().contains(to_add.getSAMPLE_ID()) && to_add.getSAMPLE_ID() != null) {
                         clinicalRecords.add(to_add);
                         cvrUtilities.addAllIds(to_add.getSAMPLE_ID());
                     }
-                }
-            } catch (Exception e) {
+                }                
+            }
+            catch (Exception e) {
+                log.error("Error reading data from clinical file: " + clinicalFile.getName());
                 throw new ItemStreamException(e);
             }
             reader.close();
         }
-        catch (Exception b) {
-            String message = "File " + cvrUtilities.CLINICAL_FILE + " does not exist";
-            log.info(message);
-        }
+
         for (CVRMergedResult result : cvrData.getResults()) {
             CVRClinicalRecord record = new CVRClinicalRecord(result.getMetaData());
             record.setIsNew(cvrUtilities.IS_NEW);

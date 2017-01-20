@@ -33,8 +33,11 @@
 package org.cbioportal.cmo.pipelines.cvr;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
 import java.util.*;
 import org.apache.commons.lang.StringUtils;
@@ -59,13 +62,14 @@ public class CVRUtilities {
     public final String UNFILTERED_MUTATION_FILE = "data_mutations_unfiltered.txt";
     public final String CLINICAL_FILE = "data_clinical.txt";
     public final String CNA_FILE = "data_CNA.txt";
-    public final String SEG_FILE = "mskimpact_data_cna_hg19.seg";
+    public final String SEG_FILE = "_data_cna_hg19.seg";
     public final String FUSION_FILE = "data_fusions.txt";
     public final String SV_FILE = "data_SV.txt";
     public final String CNA_HEADER_HUGO_SYMBOL = "Hugo_Symbol";
     public final String GML_FILE = "cvr_gml_data.json";
     public final String GENE_PANEL = "gene_panels/impact468_gene_panel.txt";
     public final String IS_NEW = "NEWRECORD";
+    public final String CANCER_STUDY_ID_TAG = "<CANCER_STUDY_ID>";
 
     private final String CENTER_MSKCC = "MSKCC";
     private final String DEFAULT_BUILD_NUMBER = "37";
@@ -106,13 +110,13 @@ public class CVRUtilities {
         allIds.add(id);
     }
 
-    public CVRData readJson(String cvrFilename) throws IOException {
+    public CVRData readJson(File cvrFile) throws IOException {
         ObjectMapper mapper = new ObjectMapper();
-        return mapper.readValue(new File(cvrFilename), CVRData.class);
+        return mapper.readValue(cvrFile, CVRData.class);
     }
-    public GMLData readGMLJson(String gmlFilename) throws IOException {
+    public GMLData readGMLJson(File gmlFile) throws IOException {
         ObjectMapper mapper = new ObjectMapper();
-        return mapper.readValue(new File(gmlFilename), GMLData.class);
+        return mapper.readValue(gmlFile, GMLData.class);
     }
 
     public String getGenesStableId() {
@@ -159,7 +163,44 @@ public class CVRUtilities {
             throw new IllegalArgumentException(propertyName + " is not specified!");
         }
         String[] symbols = propertyValue.split("\t");
-        return new ArrayList<>(Arrays.asList(symbols));
+        return Arrays.asList(symbols);
+    }
+    
+    public List<String> processFileComments(File dataFile, boolean withAllSampleIds) throws FileNotFoundException, IOException {
+        List<String> comments  = new ArrayList();
+        BufferedReader reader  = new BufferedReader(new FileReader(dataFile));
+        String line;
+        while ((line = reader.readLine()) != null && line.startsWith("#")) {
+            comments.add(line);
+            if (withAllSampleIds && line.startsWith("#sequenced_samples")) {
+                for (String sample : line.split(":")[1].split(" ")) {
+                    if (!sample.trim().isEmpty()) {
+                        addAllIds(sample);
+                    }
+                }
+            }
+        }
+        reader.close();
+        
+        return comments;
+    }
+    
+    public boolean isDuplicateRecord(MutationRecord snp, List<AnnotatedRecord> annotatedRecords) {
+        if (annotatedRecords == null || annotatedRecords.isEmpty()) {
+            return false;
+        }
+        
+        for (AnnotatedRecord record : annotatedRecords) {
+            if (record.getChromosome().equals(snp.getChromosome()) && 
+                    record.getStart_Position().equals(snp.getStart_Position()) &&
+                    record.getEnd_Position().equals(snp.getEnd_Position()) &&
+                    record.getReference_Allele().equals(snp.getReference_Allele()) &&
+                    record.getTumor_Seq_Allele2().equals(snp.getTumor_Seq_Allele2()) && 
+                    record.getHugo_Symbol().equals(snp.getHugo_Symbol())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public AnnotatedRecord buildCVRAnnotatedRecord(MutationRecord record) {
@@ -352,7 +393,7 @@ public class CVRUtilities {
 
     private List<String> createVariationList() {
         // the order in which these are added is important!
-        List<String> list = new ArrayList<String>();
+        List<String> list = new ArrayList();
         list.add("INS");
         list.add("SNP");
         list.add("DNP");

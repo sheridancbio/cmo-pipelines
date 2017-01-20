@@ -32,7 +32,7 @@
 
 package org.cbioportal.cmo.pipelines.cvr.cna;
 
-import java.nio.file.*;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import org.cbioportal.cmo.pipelines.cvr.CVRUtilities;
@@ -58,13 +58,12 @@ public class CVRNewCnaDataWriter implements ItemStreamWriter<CompositeCnaRecord>
     @Autowired
     public CVRUtilities cvrUtilities;
 
-    private String stagingFile;
     private FlatFileItemWriter<String> flatFileItemWriter = new FlatFileItemWriter<String>();
 
     // Set up the writer and print the json from CVR to a file
     @Override
     public void open(ExecutionContext ec) throws ItemStreamException {
-        stagingFile = Paths.get(stagingDirectory).resolve(cvrUtilities.CNA_FILE).toString();
+        File stagingFile = new File(stagingDirectory, cvrUtilities.CNA_FILE);
         PassThroughLineAggregator aggr = new PassThroughLineAggregator();
         flatFileItemWriter.setLineAggregator(aggr);
         flatFileItemWriter.setResource(new FileSystemResource(stagingFile));

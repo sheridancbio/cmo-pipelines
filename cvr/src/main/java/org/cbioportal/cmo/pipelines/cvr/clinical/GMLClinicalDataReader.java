@@ -34,7 +34,6 @@ package org.cbioportal.cmo.pipelines.cvr.clinical;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.*;
 import java.util.*;
 import org.apache.log4j.Logger;
 import org.cbioportal.cmo.pipelines.cvr.CVRUtilities;
@@ -55,46 +54,49 @@ import org.springframework.core.io.FileSystemResource;
  * @author jake
  */
 public class GMLClinicalDataReader implements ItemStreamReader<CVRClinicalRecord> {
+    
     @Value("#{jobParameters[stagingDirectory]}")
     private String stagingDirectory;
 
     @Autowired
     public CVRUtilities cvrUtilities;
 
-    private String seperator = File.separator;
-    private GMLData gmlData;
-    private String file;
-    private List<CVRClinicalRecord> clinicalRecords = new ArrayList<>();
+    private List<CVRClinicalRecord> clinicalRecords = new ArrayList();
 
     Logger log = Logger.getLogger(GMLClinicalDataReader.class);
 
     @Override
     public void open(ExecutionContext ec) throws ItemStreamException {
+        GMLData gmlData = new GMLData();
+        // load gml cvr data from cvr_gml_data.json file
+        File cvrGmlFile =  new File(stagingDirectory, cvrUtilities.GML_FILE);
         try {
-            if (ec.get("gmlData") == null) {
-                gmlData = cvrUtilities.readGMLJson(Paths.get(stagingDirectory).resolve(cvrUtilities.GML_FILE).toString());
-            } else {
-                gmlData = (GMLData)ec.get("gmlData");
-            }
-        } catch (IOException e) {
-            throw new ItemStreamException("Failure to read " + file);
+            gmlData = cvrUtilities.readGMLJson(cvrGmlFile);
+        } catch (IOException ex) {
+            log.error("Error reading file: " + cvrGmlFile);
+            ex.printStackTrace();
         }
-        Path filename = Paths.get(stagingDirectory).resolve(cvrUtilities.CLINICAL_FILE);
-        if (new File(filename.toString()).exists()) {
-            FlatFileItemReader<CVRClinicalRecord> reader = new FlatFileItemReader<>();
-            reader.setResource(new FileSystemResource(stagingDirectory + "/" + cvrUtilities.CLINICAL_FILE));
+        
+        File clinicalFile = new File(stagingDirectory, cvrUtilities.CLINICAL_FILE);
+        if (!clinicalFile.exists()) {
+            log.error("Could not find clinical file: " + clinicalFile.getName());
+        }
+        else {
+            log.info("Loading clinical data from: " + clinicalFile.getName());
+            DelimitedLineTokenizer tokenizer = new DelimitedLineTokenizer(DelimitedLineTokenizer.DELIMITER_TAB);
             DefaultLineMapper<CVRClinicalRecord> mapper = new DefaultLineMapper<>();
-            DelimitedLineTokenizer tokenizer = new DelimitedLineTokenizer();
-            tokenizer.setDelimiter("\t");
             mapper.setLineTokenizer(tokenizer);
             mapper.setFieldSetMapper(new CVRClinicalFieldSetMapper());
+                        
+            FlatFileItemReader<CVRClinicalRecord> reader = new FlatFileItemReader<>();
+            reader.setResource(new FileSystemResource(clinicalFile));
             reader.setLineMapper(mapper);
             reader.setLinesToSkip(1);
             reader.open(ec);
 
-            CVRClinicalRecord to_add;
             Map<String, List<String>> patientSampleMap = new HashMap<>();
             try {
+                CVRClinicalRecord to_add;
                 while ((to_add = reader.read()) != null) {
                     if (patientSampleMap.containsKey(to_add.getPATIENT_ID())) {
                         patientSampleMap.get(to_add.getPATIENT_ID()).add(to_add.getSAMPLE_ID());
@@ -113,6 +115,7 @@ public class GMLClinicalDataReader implements ItemStreamReader<CVRClinicalRecord
                     cvrUtilities.addAllIds(to_add.getSAMPLE_ID());
                 }
             } catch (Exception e) {
+                log.error("Error loading clinical data from: " + clinicalFile.getName());
                 throw new ItemStreamException(e);
             }
             ec.put("patientSampleMap", patientSampleMap);

@@ -32,8 +32,8 @@
 
 package org.cbioportal.cmo.pipelines.cvr.sv;
 
+import java.io.File;
 import java.io.IOException;
-import java.nio.file.Paths;
 import java.util.*;
 import org.apache.log4j.Logger;
 import org.cbioportal.cmo.pipelines.cvr.CVRUtilities;
@@ -61,48 +61,53 @@ public class CVRSvDataReader implements ItemStreamReader<CVRSvRecord> {
     @Autowired
     public CVRUtilities cvrUtilities;
 
-    private CVRData cvrData;
-    private List<CVRSvRecord> svRecords = new ArrayList<>();
+    private List<CVRSvRecord> svRecords = new ArrayList();
 
     Logger log = Logger.getLogger(CVRSvDataReader.class);
 
     @Override
     public void open(ExecutionContext ec) throws ItemStreamException {
+        CVRData cvrData = new CVRData();        
+        // load cvr data from cvr_data.json file
+        File cvrFile = new File(stagingDirectory, cvrUtilities.CVR_FILE);
         try {
-            if (ec.get("cvrData") == null) {
-                cvrData = cvrUtilities.readJson(Paths.get(stagingDirectory).resolve(cvrUtilities.CVR_FILE).toString());
-            } else {
-                cvrData = (CVRData)ec.get("cvrData");
-            }
+            cvrData = cvrUtilities.readJson(cvrFile);
         } catch (IOException e) {
-            throw new ItemStreamException("Failure to read " + stagingDirectory + "/" + cvrUtilities.CVR_FILE);
+            log.error("Error reading file: " + cvrFile.getName());
+            throw new ItemStreamException(e);
         }
-        try {//Catches exception when file does not exist (e.g. first run, file not yet written)
-            FlatFileItemReader<CVRSvRecord> reader = new FlatFileItemReader<>();
-            reader.setResource(new FileSystemResource(stagingDirectory + "/" + cvrUtilities.SV_FILE));
+        
+        File svFile = new File(stagingDirectory, cvrUtilities.SV_FILE);        
+        if (!svFile.exists()) {
+            log.info("File does not exist - skipping data loading from SV file: " + svFile.getName());
+        }
+        else {
+            log.info("Loading SV data from: " + svFile.getName());
+            DelimitedLineTokenizer tokenizer = new DelimitedLineTokenizer(DelimitedLineTokenizer.DELIMITER_TAB);
             DefaultLineMapper<CVRSvRecord> mapper = new DefaultLineMapper<>();
-            DelimitedLineTokenizer tokenizer = new DelimitedLineTokenizer();
-            tokenizer.setDelimiter("\t");
             mapper.setLineTokenizer(tokenizer);
             mapper.setFieldSetMapper(new CVRSvFieldSetMapper());
+            
+            FlatFileItemReader<CVRSvRecord> reader = new FlatFileItemReader<>();
+            reader.setResource(new FileSystemResource(svFile));
             reader.setLineMapper(mapper);
             reader.setLinesToSkip(1);
             reader.open(ec);
-            CVRSvRecord to_add;
+                
             try {
+                CVRSvRecord to_add;
                 while ((to_add = reader.read()) != null) {
                     if (!cvrUtilities.getNewIds().contains(to_add.getSampleId()) && to_add.getSampleId()!= null) {
                         svRecords.add(to_add);
                     }
                 }
             } catch (Exception e) {
+                log.error("Error loading data from SV file: " + svFile.getName());
                 throw new ItemStreamException(e);
             }
             reader.close();
-        } catch (Exception a) {
-            String message = "File " + cvrUtilities.SV_FILE + " does not exist";
-            log.info(message);
         }
+        
         for (CVRMergedResult result : cvrData.getResults()) {
             String sampleId = result.getMetaData().getDmpSampleId();
             List<CVRSvVariant> variants = result.getSvVariants();

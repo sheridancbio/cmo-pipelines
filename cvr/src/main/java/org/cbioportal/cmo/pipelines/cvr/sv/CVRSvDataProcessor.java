@@ -46,9 +46,9 @@ import org.springframework.batch.item.ItemProcessor;
 public class CVRSvDataProcessor implements ItemProcessor<CVRSvRecord, CompositeSvRecord> {
     @Override
     public CompositeSvRecord process(CVRSvRecord i) throws Exception {
-        List<String> record = new ArrayList<String>();
+        List<String> record = new ArrayList<>();
         for (String field : i.getFieldNames()) {
-            record.add(i.getClass().getMethod("get" + field).invoke(i, null).toString().replace("\r\n", " ").replace("\r", " ").replace("\n", " ").replace("\t", " "));
+            record.add(i.getClass().getMethod("get" + field).invoke(i).toString().replaceAll("[\\t\\n\\r]+"," "));
         }
         CompositeSvRecord compRecord = new CompositeSvRecord();
         if (!i.getIsNew().isEmpty()) {

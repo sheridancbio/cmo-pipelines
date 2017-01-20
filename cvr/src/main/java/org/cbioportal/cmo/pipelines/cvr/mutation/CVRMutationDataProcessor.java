@@ -43,17 +43,18 @@ import org.springframework.beans.factory.annotation.Value;
  * @author heinsz
  */
 public class CVRMutationDataProcessor implements ItemProcessor<AnnotatedRecord, String> {
+    
     @Value("#{stepExecutionContext['mutation_header']}")
     private List<String> header;
 
     @Override
     public String process(AnnotatedRecord i) throws Exception {
-        List<String> record = new ArrayList<String>();
+        List<String> record = new ArrayList<>();
         for (String field : header) {
             try {
-                record.add(i.getClass().getMethod("get" + field, null).invoke(i, null).toString().replace("\r\n", " ").replace("\r", " ").replace("\n", " ").replace("\t", " "));
+                record.add(i.getClass().getMethod("get" + field).invoke(i).toString().replaceAll("[\\t\\n\\r]+"," "));
             } catch (Exception e) {
-                record.add(i.getAdditionalProperties().get(field).replace("\r\n", " ").replace("\r", " ").replace("\n", " ").replace("\t", " "));
+                record.add(i.getAdditionalProperties().get(field).replace("\r\n", " ").replaceAll("[\\t\\n\\r]+"," "));
             }
         }
         return StringUtils.join(record, "\t");

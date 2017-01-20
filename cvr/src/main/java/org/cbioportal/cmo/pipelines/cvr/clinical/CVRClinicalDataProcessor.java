@@ -47,7 +47,7 @@ public class CVRClinicalDataProcessor implements ItemProcessor<CVRClinicalRecord
     public CompositeClinicalRecord process(CVRClinicalRecord i) throws Exception {
         List<String> record = new ArrayList<>();
         for (String field : i.getFieldNames()) {
-            record.add(i.getClass().getMethod("get" + field).invoke(i, null).toString().replace("\r\n", " ").replace("\r", " ").replace("\n", " ").replace("\t", " "));
+            record.add(i.getClass().getMethod("get" + field).invoke(i).toString().replaceAll("[\\t\\n\\r]+"," "));
         }
         CompositeClinicalRecord compRecord = new CompositeClinicalRecord();
         if (!i.getIsNew().isEmpty()) {

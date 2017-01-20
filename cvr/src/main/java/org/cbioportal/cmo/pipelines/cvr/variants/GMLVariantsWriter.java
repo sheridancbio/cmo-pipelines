@@ -54,13 +54,11 @@ public class GMLVariantsWriter implements ItemStreamWriter<String> {
     @Autowired
     public CVRUtilities cvrUtilities;
 
-    private String stagingFile;
-    private final String seperator = File.separator;
     private FlatFileItemWriter<String> flatFileItemWriter = new FlatFileItemWriter<>();
 
     @Override
     public void open(ExecutionContext ec) throws ItemStreamException {
-        stagingFile = stagingDirectory + seperator + cvrUtilities.GML_FILE;
+        File stagingFile = new File(stagingDirectory, cvrUtilities.GML_FILE);
         PassThroughLineAggregator aggr = new PassThroughLineAggregator();
         flatFileItemWriter.setLineAggregator(aggr);
         flatFileItemWriter.setResource(new FileSystemResource(stagingFile));
