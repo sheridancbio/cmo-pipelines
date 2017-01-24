@@ -52,13 +52,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.batch.item.file.LineCallbackHandler;
 import org.springframework.core.io.FileSystemResource;
+import org.springframework.web.client.HttpServerErrorException;
 
 /**
  *
  * @author jake
  */
 public class GMLMutationDataReader implements ItemStreamReader<AnnotatedRecord> {
-    
+
     @Value("#{jobParameters[stagingDirectory]}")
     private String stagingDirectory;
 
@@ -73,7 +74,7 @@ public class GMLMutationDataReader implements ItemStreamReader<AnnotatedRecord> 
 
     private List<AnnotatedRecord> mutationRecords = new ArrayList();
     private Map<String, List<AnnotatedRecord>> mutationMap = new HashMap<>();
-    
+
     private File mutationFile;
     private Set<String> additionalPropertyKeys = new LinkedHashSet<>();
 
@@ -101,7 +102,14 @@ public class GMLMutationDataReader implements ItemStreamReader<AnnotatedRecord> 
                 for (GMLSnp snp : snps) {
                     for (String sampleId : samples) {
                         MutationRecord record = cvrUtilities.buildGMLMutationRecord(snp, sampleId);
-                        AnnotatedRecord annotatedRecord = annotator.annotateRecord(record, false, "mskcc", false);
+                        AnnotatedRecord annotatedRecord;
+                        try {
+                            annotatedRecord = annotator.annotateRecord(record, false, "mskcc", false);
+                        }
+                        catch (HttpServerErrorException e) {
+                            log.warn("Failed to annotate a record from json! Sample: " + sampleId + " Variant: " + record.getChromosome() + ":" + record.getStart_Position() + record.getReference_Allele() + ">" + record.getTumor_Seq_Allele2());
+                            annotatedRecord = cvrUtilities.buildCVRAnnotatedRecord(record);
+                        }
                         mutationRecords.add(annotatedRecord);
                         header.addAll(record.getHeaderWithAdditionalFields());
                         additionalPropertyKeys.addAll(record.getAdditionalProperties().keySet());
@@ -110,20 +118,20 @@ public class GMLMutationDataReader implements ItemStreamReader<AnnotatedRecord> 
                 }
             }
         }
-        
+
         // load data from mutation file
         if (!mutationFile.exists()) {
             log.info("File does not exist - skipping data loading from mutation file: " + mutationFile.getName());
         }
         else {
-            log.info("Loading mutation data from: " + mutationFile.getName());            
+            log.info("Loading mutation data from: " + mutationFile.getName());
             final DelimitedLineTokenizer tokenizer = new DelimitedLineTokenizer(DelimitedLineTokenizer.DELIMITER_TAB);
             DefaultLineMapper<MutationRecord> mapper = new DefaultLineMapper<>();
             mapper.setLineTokenizer(tokenizer);
             mapper.setFieldSetMapper(new CVRMutationFieldSetMapper());
-            
+
             FlatFileItemReader<MutationRecord> reader = new FlatFileItemReader<>();
-            reader.setResource(new FileSystemResource(mutationFile));            
+            reader.setResource(new FileSystemResource(mutationFile));
             reader.setLineMapper(mapper);
             reader.setLinesToSkip(1);
             reader.setSkippedLinesCallback(new LineCallbackHandler() {
@@ -133,12 +141,18 @@ public class GMLMutationDataReader implements ItemStreamReader<AnnotatedRecord> 
                 }
             });
             reader.open(ec);
-                        
             try {
                 MutationRecord to_add;
                 while ((to_add = reader.read()) != null && to_add.getTumor_Sample_Barcode() != null) {
-                    AnnotatedRecord to_add_annotated = annotator.annotateRecord(to_add, false, "mskcc", false);
-                    if (!cvrUtilities.getNewIds().contains(to_add.getTumor_Sample_Barcode()) && 
+                    AnnotatedRecord to_add_annotated;
+                    try {
+                        to_add_annotated = annotator.annotateRecord(to_add, false, "mskcc", false);
+                    }
+                    catch (HttpServerErrorException e) {
+                        log.warn("Failed to annotate a record from existing file! Sample: " + to_add.getTumor_Sample_Barcode() + " Variant: " + to_add.getChromosome() + ":" + to_add.getStart_Position() + to_add.getReference_Allele() + ">" + to_add.getTumor_Seq_Allele2());
+                        to_add_annotated = cvrUtilities.buildCVRAnnotatedRecord(to_add);
+                    }
+                    if (!cvrUtilities.getNewIds().contains(to_add.getTumor_Sample_Barcode()) &&
                             !cvrUtilities.isDuplicateRecord(to_add, mutationMap.get(to_add.getTumor_Sample_Barcode()))) {
                         mutationRecords.add(to_add_annotated);
                         header.addAll(to_add_annotated.getHeaderWithAdditionalFields());
