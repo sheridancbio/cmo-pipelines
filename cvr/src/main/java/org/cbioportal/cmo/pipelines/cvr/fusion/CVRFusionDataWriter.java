@@ -32,9 +32,9 @@
 
 package org.cbioportal.cmo.pipelines.cvr.fusion;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.Writer;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.commons.lang.StringUtils;
@@ -55,10 +55,9 @@ import org.springframework.core.io.FileSystemResource;
  * @author heinsz
  */
 public class CVRFusionDataWriter implements ItemStreamWriter<String> {
+
     @Value("#{jobParameters[stagingDirectory]}")
     private String stagingDirectory;
-
-    private String stagingFile;
 
     @Autowired
     public CVRUtilities cvrUtilities;
@@ -67,7 +66,7 @@ public class CVRFusionDataWriter implements ItemStreamWriter<String> {
 
     @Override
     public void open(ExecutionContext ec) throws ItemStreamException {
-        stagingFile = Paths.get(stagingDirectory).resolve(cvrUtilities.FUSION_FILE).toString();
+        File stagingFile = new File(stagingDirectory, cvrUtilities.FUSION_FILE);
         PassThroughLineAggregator aggr = new PassThroughLineAggregator();
         flatFileItemWriter.setLineAggregator(aggr);
         flatFileItemWriter.setHeaderCallback(new FlatFileHeaderCallback() {

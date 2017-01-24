@@ -32,8 +32,6 @@
 
 package org.cbioportal.cmo.pipelines.cvr.model;
 
-import java.util.*;
-
 public class CompositeClinicalRecord {
     private String newClinicalRecord;
     private String oldClinicalRecord;

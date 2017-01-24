@@ -57,17 +57,12 @@ public class CVRClinicalDataWriter implements ItemStreamWriter<CompositeClinical
     @Autowired
     public CVRUtilities cvrUtilities;
 
-    private String stagingFile;
-    private FlatFileItemWriter<String> flatFileItemWriter = new FlatFileItemWriter<String>();
+    private FlatFileItemWriter<String> flatFileItemWriter = new FlatFileItemWriter<>();
 
     // Set up the writer and print the json from CVR to a file
     @Override
     public void open(ExecutionContext ec) throws ItemStreamException {
-        if (stagingDirectory.endsWith("/")) {
-            stagingFile = stagingDirectory + cvrUtilities.CLINICAL_FILE;
-        } else {
-            stagingFile = stagingDirectory + "/" + cvrUtilities.CLINICAL_FILE;
-        }
+        File stagingFile = new File(stagingDirectory, cvrUtilities.CLINICAL_FILE);
         PassThroughLineAggregator aggr = new PassThroughLineAggregator();
         flatFileItemWriter.setLineAggregator(aggr);
         flatFileItemWriter.setHeaderCallback(new FlatFileHeaderCallback() {

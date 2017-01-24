@@ -57,14 +57,21 @@ public class CVRVariantsProcessor implements ItemProcessor<CVRVariants, String> 
 
     @Value("${dmp.server_name}")
     private String dmpServerName;
+    
     @Value("${dmp.tokens.retrieve_segment_data}")
     private String dmpRetrieveSegmentData;
+    
     @Value("${dmp.tokens.consume_sample}")
     private String dmpConsumeSample;
+    
     @Value("#{jobParameters[sessionId]}")
     private String sessionId;
+    
     @Value("#{jobParameters[skipSeg]}")
-    private String skipSeg;
+    private boolean skipSeg;
+    
+    @Value("#{jobParameters[testingMode]}")
+    private boolean testingMode;
 
     Logger log = Logger.getLogger(CVRVariantsProcessor.class);
 
@@ -73,8 +80,6 @@ public class CVRVariantsProcessor implements ItemProcessor<CVRVariants, String> 
 
     private String dmpSegmentUrl;
     private String dmpConsumeUrl;
-
-    private CVRData cvrData;
 
     HttpEntity<LinkedMultiValueMap<String, Object>> requestEntity = getRequestEntity();
 
@@ -85,7 +90,7 @@ public class CVRVariantsProcessor implements ItemProcessor<CVRVariants, String> 
         dmpSegmentUrl = dmpServerName + dmpRetrieveSegmentData + "/" + sessionId + "/";
         dmpConsumeUrl = dmpServerName + dmpConsumeSample + "/" + sessionId + "/";
         HashMap<String, Object> results = i.getResults();
-        cvrData = new CVRData(i.getSampleCount(), i.getDisclaimer(), new ArrayList<CVRMergedResult>());
+        CVRData cvrData = new CVRData(i.getSampleCount(), i.getDisclaimer(), new ArrayList<CVRMergedResult>());
         ObjectMapper mapper = new ObjectMapper();
         Iterator it = results.entrySet().iterator();
         while (it.hasNext()) {
@@ -95,11 +100,13 @@ public class CVRVariantsProcessor implements ItemProcessor<CVRVariants, String> 
             cvrUtilities.addAllIds(sampleId);
             CVRResult result = (CVRResult)pair.getValue();
             CVRSegData segData = new CVRSegData();
-            if (skipSeg.equals("false")) {
+            if (!skipSeg) {
                 segData = getSegmentData(sampleId);
             }
             if (segData != null) {
-                consumeSample(sampleId);
+                if (!testingMode) {
+                    consumeSample(sampleId);
+                }
                 CVRMergedResult mergedResult = new CVRMergedResult(result, segData);
                 cvrData.addResult(mergedResult);
             }

@@ -33,7 +33,6 @@
 package org.cbioportal.cmo.pipelines.cvr.model;
 
 import java.util.*;
-import org.springframework.util.StringUtils;
 
 /**
  *
@@ -127,4 +126,5 @@ public class CVRSegRecord {
         }
         return headerNames;
     }
+
 }

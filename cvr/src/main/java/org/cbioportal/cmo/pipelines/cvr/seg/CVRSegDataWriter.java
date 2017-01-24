@@ -32,9 +32,9 @@
 
 package org.cbioportal.cmo.pipelines.cvr.seg;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.Writer;
-import java.nio.file.*;
 import java.util.*;
 import org.apache.commons.lang.StringUtils;
 import org.cbioportal.cmo.pipelines.cvr.CVRUtilities;
@@ -56,10 +56,12 @@ import org.springframework.core.io.FileSystemResource;
  */
 
 public class CVRSegDataWriter implements ItemStreamWriter<CompositeSegRecord> {
+    
     @Value("#{jobParameters[stagingDirectory]}")
     private String stagingDirectory;
-
-    private String stagingFile;
+    
+    @Value("#{jobParameters[studyId]}")
+    private String studyId;
 
     @Autowired
     public CVRUtilities cvrUtilities;
@@ -68,7 +70,7 @@ public class CVRSegDataWriter implements ItemStreamWriter<CompositeSegRecord> {
 
     @Override
     public void open(ExecutionContext ec) throws ItemStreamException {
-        stagingFile = Paths.get(stagingDirectory).resolve(cvrUtilities.SEG_FILE).toString();
+        File stagingFile = new File(stagingDirectory, studyId + cvrUtilities.SEG_FILE);
         PassThroughLineAggregator aggr = new PassThroughLineAggregator();
         flatFileItemWriter.setLineAggregator(aggr);
         flatFileItemWriter.setHeaderCallback(new FlatFileHeaderCallback() {

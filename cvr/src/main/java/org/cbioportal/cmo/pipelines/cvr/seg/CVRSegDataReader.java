@@ -37,8 +37,8 @@ package org.cbioportal.cmo.pipelines.cvr.seg;
  * @author jake-rose
  */
 
+import java.io.File;
 import java.io.IOException;
-import java.nio.file.Paths;
 import java.util.*;
 import org.apache.log4j.Logger;
 import org.cbioportal.cmo.pipelines.cvr.CVRUtilities;
@@ -61,54 +61,63 @@ public class CVRSegDataReader implements ItemStreamReader<CVRSegRecord> {
     @Value("#{jobParameters[stagingDirectory]}")
     private String stagingDirectory;
 
+    @Value("#{jobParameters[studyId]}")
+    private String studyId;
+    
     @Autowired
     public CVRUtilities cvrUtilities;
 
-    private CVRData cvrData;
-    private List<CVRSegData> cvrSegData = new ArrayList<>();
-    private List<CVRSegRecord> cvrSegRecords = new ArrayList<>();
+    private List<CVRSegRecord> cvrSegRecords = new ArrayList();
 
     Logger log = Logger.getLogger(CVRSegDataReader.class);
 
     @Override
     public void open(ExecutionContext ec) throws ItemStreamException {
+        CVRData cvrData = new CVRData();        
+        // load cvr data from cvr_data.json file
+        File cvrFile = new File(stagingDirectory, cvrUtilities.CVR_FILE);
         try {
-            if (ec.get("cvrData") == null) {
-                cvrData = cvrUtilities.readJson(Paths.get(stagingDirectory).resolve(cvrUtilities.CVR_FILE).toString());
-            } else {
-                cvrData = (CVRData)ec.get("cvrData");
-            }
+            cvrData = cvrUtilities.readJson(cvrFile);
         } catch (IOException e) {
-            throw new ItemStreamException("Failure to read " + stagingDirectory + "/" + cvrUtilities.CVR_FILE);
+            log.error("Error reading file: " + cvrFile.getName());
+            throw new ItemStreamException(e);
         }
-        try {//Catches exception when file does not exist (e.g. first run, file not yet written)
-            FlatFileItemReader<CVRSegRecord> reader = new FlatFileItemReader<>();
-            reader.setResource(new FileSystemResource(stagingDirectory + "/" + cvrUtilities.SEG_FILE));
+
+        // only read from seg file if exists
+        String filename = cvrUtilities.SEG_FILE.replace(cvrUtilities.CANCER_STUDY_ID_TAG, studyId);
+        File segFile = new File(stagingDirectory, filename);
+        if (!segFile.exists()) {
+            log.error("File does not exist - skipping data loading from SEG file: " + filename);
+        }
+        else {
+            log.info("Loading SEG data from: " + filename);
+            DelimitedLineTokenizer tokenizer = new DelimitedLineTokenizer(DelimitedLineTokenizer.DELIMITER_TAB);
             DefaultLineMapper<CVRSegRecord> mapper = new DefaultLineMapper<>();
-            DelimitedLineTokenizer tokenizer = new DelimitedLineTokenizer();
-            tokenizer.setDelimiter("\t");
             mapper.setLineTokenizer(tokenizer);
             mapper.setFieldSetMapper(new CVRSegFieldSetMapper());
+            
+            FlatFileItemReader<CVRSegRecord> reader = new FlatFileItemReader<>();
+            reader.setResource(new FileSystemResource(segFile));
             reader.setLineMapper(mapper);
             reader.setLinesToSkip(1);
             reader.open(ec);
-            CVRSegRecord to_add;
+            
             try {
-                while ((to_add = reader.read()) != null && to_add.getID() != null) {
+                CVRSegRecord to_add;
+                while ((to_add = reader.read()) != null && to_add.getID() !=  null) {
                     if (!cvrUtilities.getNewIds().contains(to_add.getID())) {
                         cvrSegRecords.add(to_add);
                     }
                 }
             }
             catch (Exception e) {
+                log.error("Error loading data from SEG file: " + filename);
                 throw new ItemStreamException(e);
             }
             reader.close();
         }
-        catch (Exception b) {
-            String message = "File " + cvrUtilities.SEG_FILE + " does not exist";
-            log.info(message);
-        }
+        
+        // merge cvr SEG data existing SEG data and new data from CVR
         for (CVRMergedResult result : cvrData.getResults()) {
             CVRSegData cvrSegData = result.getSegData();
             if (cvrSegData.getSegData() == null) {
@@ -117,22 +126,22 @@ public class CVRSegDataReader implements ItemStreamReader<CVRSegRecord> {
             HashMap<Integer,String> indexMap = new HashMap<>();
             boolean first = true;
             String id = result.getMetaData().getDmpSampleId();
-            for (List<String> segData : cvrSegData.getSegData()) {
-                CVRSegRecord cvrSegRecord = new CVRSegRecord();
+            for (List<String> segData : cvrSegData.getSegData()) {                
                 if (first) {
                     for (int i=0;i<segData.size();i++) {
                         indexMap.put(i, segData.get(i));
                     }
                     first = false;
                 } else {
+                    CVRSegRecord cvrSegRecord = new CVRSegRecord();
                     for (int i=0;i<segData.size();i++) {
                         cvrSegRecord.setID(id);
                         String field = indexMap.get(i).replace(".", "_");//dots in source; replaced for method
                         try {
                             cvrSegRecord.getClass().getMethod("set" + field, String.class).invoke(cvrSegRecord, segData.get(i));
-                        } catch (Exception e) {
-                            String message = "No set method exists for " + field;
-                            log.warn(message);
+                        } 
+                        catch (Exception e) {
+                            log.warn("No such method 'set" + field + "' for CVRSegRecord");
                         }
                     }
                     cvrSegRecord.setIsNew(cvrUtilities.IS_NEW);

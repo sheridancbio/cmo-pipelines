@@ -49,7 +49,7 @@ public class CVRSegDataProcessor implements ItemProcessor<CVRSegRecord, Composit
     public CompositeSegRecord process(CVRSegRecord i) throws Exception {
         List<String> record = new ArrayList<>();
         for (String field : i.getFieldNames()) {
-            record.add(i.getClass().getMethod("get" + field).invoke(i, null).toString().replace("\r\n"," ").replace("\r", " ").replace("\n", " ").replace("\t", " "));
+            record.add(i.getClass().getMethod("get" + field).invoke(i).toString().replaceAll("[\\t\\n\\r]+"," "));
         }
         CompositeSegRecord compRecord = new CompositeSegRecord();
         if (!i.getIsNew().isEmpty()) {

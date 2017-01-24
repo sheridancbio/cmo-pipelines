@@ -59,7 +59,9 @@ public class CVRPipeline {
             .addOption("j", "json", false, "To read or not to read")
             .addOption("g", "gml", false, "Run germline job")
             .addOption("s", "skipSeg", false, "Flag to skip fetching seg data")
-            .addOption("m", "gmljson", false, "Only gml json");
+            .addOption("m", "gmljson", false, "Only gml json")
+            .addOption("t", "test", false, "Flag for running pipeline in testing mode so that samples are not consumed")
+            .addOption("i", "study_id", true, "Study identifier (i.e., mskimpact, raindance, archer, etc.)");
         return gnuOptions;
     }
 
@@ -69,35 +71,45 @@ public class CVRPipeline {
         System.exit(exitStatus);
     }
 
-    private static void launchJob(String[] args, String directory, Boolean json, Boolean gml, Boolean gmljson, Boolean skipSeg) throws Exception {
+    private static void launchJob(String[] args, String directory, String studyId, Boolean json, Boolean gml, Boolean gmljson, Boolean skipSeg, Boolean testMode) throws Exception {
         SpringApplication app = new SpringApplication(CVRPipeline.class);
         ConfigurableApplicationContext ctx= app.run(args);
         JobLauncher jobLauncher = ctx.getBean(JobLauncher.class);
-        Job cvrJob;
-        JobParameters jobParameters = new JobParametersBuilder().addString("stagingDirectory", directory).toJobParameters();
-        // Job description gotten from the BatchConfiguration
+        
+        // Job description from the BatchConfiguration
+        String jobName;
+        JobParametersBuilder builder = new JobParametersBuilder();
+        builder.addString("stagingDirectory", directory)
+                .addString("testingMode", String.valueOf(testMode))
+                .addString("studyId", studyId);
         if (json) {
-            cvrJob = ctx.getBean(BatchConfiguration.JSON_JOB, Job.class);
-        } else if (gml) {
-            // SessionID is gotten from a spring bean in the SessionConfiguration and passed through here as a param
-            jobParameters = new JobParametersBuilder()
-                    .addString("sessionId", ctx.getBean(SessionConfiguration.GML_SESSION, String.class))
-                    .addString("stagingDirectory", directory)
-                    .toJobParameters();
-            cvrJob = ctx.getBean(BatchConfiguration.GML_JOB, Job.class);
-        } else if (gmljson){
-            cvrJob = ctx.getBean(BatchConfiguration.GML_JSON_JOB, Job.class);
-        } else {
-            // SessionID is gotten from a spring bean in the SessionConfiguration and passed through here as a param
-            jobParameters = new JobParametersBuilder()
-                    .addString("sessionId", ctx.getBean(SessionConfiguration.SESSION_ID, String.class))
-                    .addString("stagingDirectory", directory)
-                    .addString("skipSeg", skipSeg.toString())
-                    .toJobParameters();
-            cvrJob = ctx.getBean(BatchConfiguration.CVR_JOB, Job.class);
+            jobName = BatchConfiguration.JSON_JOB;            
         }
-        // Run it!
-        JobExecution jobExeuction = jobLauncher.run(cvrJob, jobParameters);
+        else if (gmljson) {
+            jobName = BatchConfiguration.GML_JSON_JOB;
+        }
+        else if (gml) {
+            // SessionID is gotten from a spring bean in the SessionConfiguration and passed through here as a param
+            builder.addString("sessionId", ctx.getBean(SessionConfiguration.GML_SESSION, String.class));
+            jobName = BatchConfiguration.GML_JOB;
+        }
+        else {
+            // SessionID is gotten from a spring bean in the SessionConfiguration and passed through here as a param
+            builder.addString("sessionId", ctx.getBean(SessionConfiguration.SESSION_ID, String.class))
+                    .addString("skipSeg", String.valueOf(skipSeg));
+            jobName = BatchConfiguration.CVR_JOB;
+        }
+        // log wether in testing mode or not
+        if (testMode) {
+            log.warn("CVR Pipeline running in TEST mode - samples will NOT be consumed");
+        }
+        else {
+            log.warn("CVR Pipeline running in production mode - samples will be consumed");
+        }
+        // configure job and run
+        Job cvrJob = ctx.getBean(jobName, Job.class);
+        JobParameters jobParameters = builder.toJobParameters();
+        JobExecution jobExecution = jobLauncher.run(cvrJob, jobParameters);
         log.info("Shutting down CVR Pipeline");
     }
 
@@ -105,9 +117,11 @@ public class CVRPipeline {
         Options gnuOptions = CVRPipeline.getOptions(args);
         CommandLineParser parser = new GnuParser();
         CommandLine commandLine = parser.parse(gnuOptions, args);
-        if (commandLine.hasOption("h") || !commandLine.hasOption("d")) {
+        if (commandLine.hasOption("h") || !commandLine.hasOption("d") || !commandLine.hasOption("i")) {
             help(gnuOptions, 0);
         }
-        launchJob(args, commandLine.getOptionValue("d"), commandLine.hasOption("j"), commandLine.hasOption("g"), commandLine.hasOption("m"), commandLine.hasOption("s"));
+        launchJob(args, commandLine.getOptionValue("d"), commandLine.getOptionValue("i"), 
+                commandLine.hasOption("j"), commandLine.hasOption("g"), commandLine.hasOption("m"), 
+                commandLine.hasOption("s"), commandLine.hasOption("t"));
     }
 }

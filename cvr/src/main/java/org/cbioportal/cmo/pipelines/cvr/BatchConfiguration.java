@@ -70,7 +70,7 @@ public class BatchConfiguration {
     public StepBuilderFactory stepBuilderFactory;
 
     @Value("${chunk}")
-    private String chunk;
+    private int chunkInterval;
 
     @Bean
     public Job gmlJob() {
@@ -124,7 +124,7 @@ public class BatchConfiguration {
     @Bean
     public Step gmlJsonStep() {
         return stepBuilderFactory.get("gmlJsonStep")
-                .<GMLVariant, String> chunk(Integer.parseInt(chunk))
+                .<GMLVariant, String> chunk(chunkInterval)
                 .reader(gmlJsonReader())
                 .processor(gmlJsonProcessor())
                 .writer(gmlJsonWriter())
@@ -133,8 +133,8 @@ public class BatchConfiguration {
 
     @Bean
     public Step gmlMutationStep() {
-        return stepBuilderFactory.get("gmlMAFStep")
-                .<AnnotatedRecord, String> chunk(Integer.parseInt(chunk))
+        return stepBuilderFactory.get("gmlMutationStep")
+                .<AnnotatedRecord, String> chunk(chunkInterval)
                 .reader(gmlMutationReader())
                 .processor(gmlMutationProcessor())
                 .writer(gmlMutationDataWriter())
@@ -145,7 +145,7 @@ public class BatchConfiguration {
     public Step gmlClinicalStep() {
         return stepBuilderFactory.get("gmlClinicalStep")
                 .listener(gmlClinicalStepListener())
-                .<CVRClinicalRecord, CompositeClinicalRecord> chunk(Integer.parseInt(chunk))
+                .<CVRClinicalRecord, CompositeClinicalRecord> chunk(chunkInterval)
                 .reader(gmlClinicalDataReader())
                 .processor(clinicalDataProcessor())
                 .writer(allClinicalDataWriter())
@@ -155,7 +155,7 @@ public class BatchConfiguration {
     @Bean
     public Step cvrJsonStep() {
         return stepBuilderFactory.get("cvrJsonStep")
-                .<CVRVariants, String> chunk(Integer.parseInt(chunk))
+                .<CVRVariants, String> chunk(chunkInterval)
                 .reader(cvrJsonreader())
                 .processor(cvrJsonprocessor())
                 .writer(cvrJsonwriter())
@@ -165,7 +165,7 @@ public class BatchConfiguration {
     @Bean
     public Step clinicalStep() {
         return stepBuilderFactory.get("clinicalStep")
-                .<CVRClinicalRecord, CompositeClinicalRecord> chunk(Integer.parseInt(chunk))
+                .<CVRClinicalRecord, CompositeClinicalRecord> chunk(chunkInterval)
                 .reader(clinicalDataReader())
                 .processor(clinicalDataProcessor())
                 .writer(compositeClinicalDataWriter())
@@ -175,7 +175,7 @@ public class BatchConfiguration {
     @Bean
     public Step mutationStep() {
         return stepBuilderFactory.get("mutationStep")
-                .<AnnotatedRecord, String> chunk(Integer.parseInt(chunk))
+                .<AnnotatedRecord, String> chunk(chunkInterval)
                 .reader(mutationDataReader())
                 .processor(mutationDataProcessor())
                 .writer(mutationDataWriter())
@@ -185,7 +185,7 @@ public class BatchConfiguration {
     @Bean
     public Step unfilteredMutationStep() {
         return stepBuilderFactory.get("unfilteredMutationStep")
-                .<AnnotatedRecord, String> chunk(Integer.parseInt(chunk))
+                .<AnnotatedRecord, String> chunk(chunkInterval)
                 .reader(unfilteredMutationDataReader())
                 .processor(mutationDataProcessor())
                 .writer(unfilteredMutationDataWriter())
@@ -195,9 +195,8 @@ public class BatchConfiguration {
     @Bean
     public Step cnaStep() {
         return stepBuilderFactory.get("cnaStep")
-                .<CompositeCnaRecord, CompositeCnaRecord> chunk(Integer.parseInt(chunk))
+                .<CompositeCnaRecord, CompositeCnaRecord> chunk(chunkInterval)
                 .reader(cnaDataReader())
-                .processor(cnaDataProcessor())
                 .writer(compositeCnaDataWriter())
                 .build();
     }
@@ -205,7 +204,7 @@ public class BatchConfiguration {
     @Bean
     public Step svStep() {
         return stepBuilderFactory.get("svStep")
-                .<CVRSvRecord, CompositeSvRecord> chunk(Integer.parseInt(chunk))
+                .<CVRSvRecord, CompositeSvRecord> chunk(chunkInterval)
                 .reader(svDataReader())
                 .processor(svDataProcessor())
                 .writer(compositeSvDataWriter())
@@ -215,7 +214,7 @@ public class BatchConfiguration {
     @Bean
     public Step fusionStep() {
         return stepBuilderFactory.get("fusionStep")
-                .<CVRFusionRecord, String> chunk(Integer.parseInt(chunk))
+                .<CVRFusionRecord, String> chunk(chunkInterval)
                 .reader(fusionDataReader())
                 .processor(fusionDataProcessor())
                 .writer(fusionDataWriter())
@@ -225,7 +224,7 @@ public class BatchConfiguration {
     @Bean
     public Step segStep() {
         return stepBuilderFactory.get("segStep")
-                .<CVRSegRecord, CompositeSegRecord> chunk(Integer.parseInt(chunk))
+                .<CVRSegRecord, CompositeSegRecord> chunk(chunkInterval)
                 .reader(segDataReader())
                 .processor(segDataProcessor())
                 .writer(compositeSegDataWriter())
@@ -373,13 +372,6 @@ public class BatchConfiguration {
     @StepScope
     public ItemStreamReader<CompositeCnaRecord> cnaDataReader() {
         return new CVRCnaDataReader();
-    }
-
-    // Processor for unfiltered mutation data
-    @Bean
-    @StepScope
-    public CVRCnaDataProcessor cnaDataProcessor() {
-        return new CVRCnaDataProcessor();
     }
 
     // Writer for writing cna data

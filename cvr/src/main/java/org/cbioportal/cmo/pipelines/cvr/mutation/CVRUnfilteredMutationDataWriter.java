@@ -32,12 +32,12 @@
 
 package org.cbioportal.cmo.pipelines.cvr.mutation;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.*;
 import org.apache.commons.lang.StringUtils;
 import org.cbioportal.cmo.pipelines.cvr.CVRUtilities;
-import org.cbioportal.models.AnnotatedRecord;
 import org.springframework.batch.item.ExecutionContext;
 import org.springframework.batch.item.ItemStreamException;
 import org.springframework.batch.item.ItemStreamWriter;
@@ -57,35 +57,30 @@ public class CVRUnfilteredMutationDataWriter implements ItemStreamWriter<String>
     @Value("#{jobParameters[stagingDirectory]}")
     private String stagingDirectory;
 
-    @Autowired
-    public CVRUtilities constants;
-
     @Value("#{stepExecutionContext['commentLines']}")
     private List<String> commentLines;
+    
     @Value("#{stepExecutionContext['mutation_header']}")
     private List<String> header;
 
-    private String stagingFile;
-    private FlatFileItemWriter<String> flatFileItemWriter = new FlatFileItemWriter<String>();
+    @Autowired
+    public CVRUtilities cvrUtilities;
+    
+    private FlatFileItemWriter<String> flatFileItemWriter = new FlatFileItemWriter<>();
 
     // Set up the writer and print the json from CVR to a file
     @Override
     public void open(ExecutionContext ec) throws ItemStreamException {
-        if (stagingDirectory.endsWith("/")) {
-            stagingFile = stagingDirectory + constants.UNFILTERED_MUTATION_FILE;
-        } else {
-            stagingFile = stagingDirectory + "/" + constants.UNFILTERED_MUTATION_FILE;
-        }
+        File stagingFile = new File(stagingDirectory, cvrUtilities.UNFILTERED_MUTATION_FILE);
         PassThroughLineAggregator aggr = new PassThroughLineAggregator();
         flatFileItemWriter.setLineAggregator(aggr);
         flatFileItemWriter.setHeaderCallback(new FlatFileHeaderCallback() {
             @Override
             public void writeHeader(Writer writer) throws IOException {
-                AnnotatedRecord record = new AnnotatedRecord();
                 // first write out the comment lines, then write the actual header
-                if (commentLines != null) {
+                if (commentLines != null && !commentLines.isEmpty()) {
                     for (String comment : commentLines) {
-                        writer.write(comment + "\n");
+                        writer.write(comment);
                     }
                 }
                 writer.write(StringUtils.join(header, "\t"));
