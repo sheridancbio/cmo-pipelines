@@ -81,12 +81,12 @@ public class CVRMutationDataWriter implements ItemStreamWriter<String> {
                 if  (commentLines != null && !commentLines.isEmpty()) {
                     for (String comment : commentLines) {
                         if (comment.startsWith("#sequenced_samples")) {
-                            comment = "#sequenced_samples: " + StringUtils.join(cvrUtilities.getAllIds(), " ");
+                            comment = "#sequenced_samples: " + StringUtils.join(cvrUtilities.getAllIds(), " ") + "\n";
                         }
                         writer.write(comment);
                     }
                 } else {
-                    String comment = "#sequenced_samples: " + StringUtils.join(cvrUtilities.getAllIds(), " ");
+                    String comment = "#sequenced_samples: " + StringUtils.join(cvrUtilities.getAllIds(), " ") + "\n";
                     writer.write(comment);
                 }
                 writer.write(StringUtils.join(header , "\t"));
