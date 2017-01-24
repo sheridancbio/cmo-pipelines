@@ -80,7 +80,7 @@ public class CVRUnfilteredMutationDataWriter implements ItemStreamWriter<String>
                 // first write out the comment lines, then write the actual header
                 if (commentLines != null && !commentLines.isEmpty()) {
                     for (String comment : commentLines) {
-                        writer.write(comment);
+                        writer.write(comment + "\n");
                     }
                 }
                 writer.write(StringUtils.join(header, "\t"));
