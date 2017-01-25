@@ -84,13 +84,12 @@ public class CVRSegDataReader implements ItemStreamReader<CVRSegRecord> {
         }
 
         // only read from seg file if exists
-        String filename = cvrUtilities.SEG_FILE.replace(cvrUtilities.CANCER_STUDY_ID_TAG, studyId);
-        File segFile = new File(stagingDirectory, filename);
+        File segFile = new File(stagingDirectory, studyId + cvrUtilities.SEG_FILE);
         if (!segFile.exists()) {
-            log.error("File does not exist - skipping data loading from SEG file: " + filename);
+            log.error("File does not exist - skipping data loading from SEG file: " + segFile.getName());
         }
         else {
-            log.info("Loading SEG data from: " + filename);
+            log.info("Loading SEG data from: " + segFile.getName());
             DelimitedLineTokenizer tokenizer = new DelimitedLineTokenizer(DelimitedLineTokenizer.DELIMITER_TAB);
             DefaultLineMapper<CVRSegRecord> mapper = new DefaultLineMapper<>();
             mapper.setLineTokenizer(tokenizer);
@@ -111,7 +110,7 @@ public class CVRSegDataReader implements ItemStreamReader<CVRSegRecord> {
                 }
             }
             catch (Exception e) {
-                log.error("Error loading data from SEG file: " + filename);
+                log.error("Error loading data from SEG file: " + segFile.getName());
                 throw new ItemStreamException(e);
             }
             reader.close();
