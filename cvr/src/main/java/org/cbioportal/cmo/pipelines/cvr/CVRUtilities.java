@@ -69,7 +69,6 @@ public class CVRUtilities {
     public final String GML_FILE = "cvr_gml_data.json";
     public final String GENE_PANEL = "gene_panels/impact468_gene_panel.txt";
     public final String IS_NEW = "NEWRECORD";
-    public final String CANCER_STUDY_ID_TAG = "<CANCER_STUDY_ID>";
 
     private final String CENTER_MSKCC = "MSKCC";
     private final String DEFAULT_BUILD_NUMBER = "37";
