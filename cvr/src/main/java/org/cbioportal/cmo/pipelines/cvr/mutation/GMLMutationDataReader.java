@@ -94,12 +94,16 @@ public class GMLMutationDataReader implements ItemStreamReader<AnnotatedRecord> 
         this.mutationFile = new File(stagingDirectory, cvrUtilities.MUTATION_FILE);
 
         Set<String> header = new LinkedHashSet<>();
+        Set<String> germlineSamples = new HashSet<>();
         for (GMLResult result : gmlData.getResults()) {
             String patientId = result.getMetaData().getDmpPatientId();
             List<String> samples = patientSampleMap.get(patientId);
             List<GMLSnp> snps = result.getSnpIndelGml();
             if (samples != null && snps != null) {
                 for (GMLSnp snp : snps) {
+                    if (snp.getClinicalSignedOut().equals("0")) {
+                        continue;
+                    }
                     for (String sampleId : samples) {
                         MutationRecord record = cvrUtilities.buildGMLMutationRecord(snp, sampleId);
                         AnnotatedRecord annotatedRecord;
@@ -114,6 +118,7 @@ public class GMLMutationDataReader implements ItemStreamReader<AnnotatedRecord> 
                         header.addAll(record.getHeaderWithAdditionalFields());
                         additionalPropertyKeys.addAll(record.getAdditionalProperties().keySet());
                         mutationMap.getOrDefault(annotatedRecord.getTumor_Sample_Barcode(), new ArrayList()).add(annotatedRecord);
+                        germlineSamples.add(sampleId);
                     }
                 }
             }
@@ -152,8 +157,7 @@ public class GMLMutationDataReader implements ItemStreamReader<AnnotatedRecord> 
                         log.warn("Failed to annotate a record from existing file! Sample: " + to_add.getTumor_Sample_Barcode() + " Variant: " + to_add.getChromosome() + ":" + to_add.getStart_Position() + to_add.getReference_Allele() + ">" + to_add.getTumor_Seq_Allele2());
                         to_add_annotated = cvrUtilities.buildCVRAnnotatedRecord(to_add);
                     }
-                    if (!cvrUtilities.getNewIds().contains(to_add.getTumor_Sample_Barcode()) &&
-                            !cvrUtilities.isDuplicateRecord(to_add, mutationMap.get(to_add.getTumor_Sample_Barcode()))) {
+                    if (!cvrUtilities.isDuplicateRecord(to_add, mutationMap.get(to_add.getTumor_Sample_Barcode())) && !(germlineSamples.contains(to_add.getTumor_Sample_Barcode()) && to_add.getMutation_Status().equals("GERMLINE"))) {
                         mutationRecords.add(to_add_annotated);
                         header.addAll(to_add_annotated.getHeaderWithAdditionalFields());
                         cvrUtilities.addAllIds(to_add.getTumor_Sample_Barcode());
