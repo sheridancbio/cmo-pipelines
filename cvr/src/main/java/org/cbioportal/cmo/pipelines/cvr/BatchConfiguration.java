@@ -35,6 +35,7 @@ package org.cbioportal.cmo.pipelines.cvr;
 import java.util.*;
 import org.cbioportal.cmo.pipelines.cvr.clinical.*;
 import org.cbioportal.cmo.pipelines.cvr.cna.*;
+import org.cbioportal.cmo.pipelines.cvr.consume.*;
 import org.cbioportal.cmo.pipelines.cvr.fusion.*;
 import org.cbioportal.cmo.pipelines.cvr.model.*;
 import org.cbioportal.cmo.pipelines.cvr.mutation.*;
@@ -62,6 +63,7 @@ public class BatchConfiguration {
     public static final String JSON_JOB = "jsonJob";
     public static final String GML_JOB = "gmlJob";
     public static final String GML_JSON_JOB = "gmlJsonJob";
+    public static final String CONSUME_SAMPLES_JOB = "consumeSamplesJob";
 
     @Autowired
     public JobBuilderFactory jobBuilderFactory;
@@ -115,7 +117,14 @@ public class BatchConfiguration {
                 .next(gmlClinicalStep())
                 .build();
     }
-
+    
+    @Bean
+    public Job consumeSamplesJob() {
+        return jobBuilderFactory.get(CONSUME_SAMPLES_JOB)
+                .start(consumeSampleStep())
+                .build();
+    }
+    
     @Bean
     public GMLClinicalStepListener gmlClinicalStepListener() {
         return new GMLClinicalStepListener();
@@ -228,6 +237,15 @@ public class BatchConfiguration {
                 .reader(segDataReader())
                 .processor(segDataProcessor())
                 .writer(compositeSegDataWriter())
+                .build();
+    }
+    
+    @Bean
+    public Step consumeSampleStep() {
+        return stepBuilderFactory.get("consumeSampleStep")
+                .<String, String> chunk(chunkInterval)
+                .reader(consumeSampleReader())
+                .writer(consumeSampleWriter())
                 .build();
     }
 
@@ -490,5 +508,17 @@ public class BatchConfiguration {
         CompositeItemWriter writer = new CompositeItemWriter<>();
         writer.setDelegates(writerDelegates);
         return writer;
+    }
+    
+    @Bean
+    @StepScope
+    public ItemStreamReader<String> consumeSampleReader() {
+        return new ConsumeSampleReader();
+    }
+    
+    @Bean
+    @StepScope
+    public ItemStreamWriter<String> consumeSampleWriter() {
+        return new ConsumeSampleWriter();
     }
 }
