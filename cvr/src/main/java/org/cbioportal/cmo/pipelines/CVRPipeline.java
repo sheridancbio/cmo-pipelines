@@ -60,8 +60,9 @@ public class CVRPipeline {
             .addOption("g", "gml", false, "Run germline job")
             .addOption("s", "skipSeg", false, "Flag to skip fetching seg data")
             .addOption("m", "gmljson", false, "Only gml json")
+            .addOption("i", "study_id", true, "Study identifier (i.e., mskimpact, raindance, archer, etc.)")
             .addOption("t", "test", false, "Flag for running pipeline in testing mode so that samples are not consumed")
-            .addOption("i", "study_id", true, "Study identifier (i.e., mskimpact, raindance, archer, etc.)");
+            .addOption("c", "consume_samples", true, "Path to CVR json filename");
         return gnuOptions;
     }
 
@@ -71,7 +72,7 @@ public class CVRPipeline {
         System.exit(exitStatus);
     }
 
-    private static void launchJob(String[] args, String directory, String studyId, Boolean json, Boolean gml, Boolean gmljson, Boolean skipSeg, Boolean testMode) throws Exception {
+    private static void launchCvrPipelineJob(String[] args, String directory, String studyId, Boolean json, Boolean gml, Boolean gmljson, Boolean skipSeg) throws Exception {
         SpringApplication app = new SpringApplication(CVRPipeline.class);
         ConfigurableApplicationContext ctx= app.run(args);
         JobLauncher jobLauncher = ctx.getBean(JobLauncher.class);
@@ -80,7 +81,6 @@ public class CVRPipeline {
         String jobName;
         JobParametersBuilder builder = new JobParametersBuilder();
         builder.addString("stagingDirectory", directory)
-                .addString("testingMode", String.valueOf(testMode))
                 .addString("studyId", studyId);
         if (json) {
             jobName = BatchConfiguration.JSON_JOB;            
@@ -99,29 +99,50 @@ public class CVRPipeline {
                     .addString("skipSeg", String.valueOf(skipSeg));
             jobName = BatchConfiguration.CVR_JOB;
         }
-        // log wether in testing mode or not
-        if (testMode) {
-            log.warn("CVR Pipeline running in TEST mode - samples will NOT be consumed");
-        }
-        else {
-            log.warn("CVR Pipeline running in production mode - samples will be consumed");
-        }
         // configure job and run
         Job cvrJob = ctx.getBean(jobName, Job.class);
         JobParameters jobParameters = builder.toJobParameters();
         JobExecution jobExecution = jobLauncher.run(cvrJob, jobParameters);
         log.info("Shutting down CVR Pipeline");
     }
+    
+    private static void launchConsumeSamplesJob(String[] args, String jsonFilename, boolean testingMode) throws Exception {
+        // log wether in testing mode or not
+        if (testingMode) {
+            log.warn("ConsumeSamplesJob running in TESTING MODE - samples will NOT be consumed.");
+        }
+        else {
+            log.warn("ConsumeSamplesJob running in PRODUCTION MODE - samples will be consumed.");
+        }
+        
+        SpringApplication app = new SpringApplication(CVRPipeline.class);
+        ConfigurableApplicationContext ctx= app.run(args);
+        JobLauncher jobLauncher = ctx.getBean(JobLauncher.class);
+        JobParameters jobParameters = new JobParametersBuilder()
+                .addString("jsonFilename", jsonFilename)
+                .addString("testingMode", String.valueOf(testingMode))
+                .toJobParameters();
+        Job consumeJob = ctx.getBean(BatchConfiguration.CONSUME_SAMPLES_JOB, Job.class);               
+        JobExecution jobExecution = jobLauncher.run(consumeJob, jobParameters);
+        log.info("Shutting down Consume Sample Job");
+    }
 
     public static void main(String[] args) throws Exception {
         Options gnuOptions = CVRPipeline.getOptions(args);
         CommandLineParser parser = new GnuParser();
         CommandLine commandLine = parser.parse(gnuOptions, args);
-        if (commandLine.hasOption("h") || !commandLine.hasOption("d") || !commandLine.hasOption("i")) {
+        if (commandLine.hasOption("h") || 
+                ((!commandLine.hasOption("d") || !commandLine.hasOption("i")) && !commandLine.hasOption("c"))) {                
             help(gnuOptions, 0);
         }
-        launchJob(args, commandLine.getOptionValue("d"), commandLine.getOptionValue("i"), 
+        
+        if (commandLine.hasOption("c")) {
+            launchConsumeSamplesJob(args, commandLine.getOptionValue("c"), commandLine.hasOption("t"));
+        }
+        else {
+            launchCvrPipelineJob(args, commandLine.getOptionValue("d"), commandLine.getOptionValue("i"), 
                 commandLine.hasOption("j"), commandLine.hasOption("g"), commandLine.hasOption("m"), 
-                commandLine.hasOption("s"), commandLine.hasOption("t"));
+                commandLine.hasOption("s"));
+        }       
     }
 }

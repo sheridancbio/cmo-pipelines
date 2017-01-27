@@ -39,40 +39,20 @@ import org.cbioportal.cmo.pipelines.cvr.CVRUtilities;
 import org.cbioportal.cmo.pipelines.cvr.model.*;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.beans.factory.annotation.*;
-import org.springframework.http.*;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.web.client.RestTemplate;
 
 /**
  *
  * @author jake
  */
 public class GMLVariantsProcessor implements ItemProcessor<GMLVariant, String> {
-
-    @Value("${dmp.server_name}")
-    private String dmpServerName;
-
-    @Value("${dmp.tokens.consume_gml_sample}")
-    private String dmpConsumeSample;
-
-    @Value("#{jobParameters[sessionId]}")
-    private String sessionId;
-
-    @Value("#{jobParameters[testingMode]}")
-    private boolean testingMode;
     
     Logger log = Logger.getLogger(GMLVariantsProcessor.class);
 
     @Autowired
     public CVRUtilities cvrUtilities;
 
-    private String gmlConsumeUrl;
-
-    HttpEntity<LinkedMultiValueMap<String, Object>> requestEntity = getRequestEntity();
-
     @Override
     public String process(GMLVariant g) throws Exception {
-        gmlConsumeUrl = dmpServerName + dmpConsumeSample + "/" + sessionId + "/";
         HashMap<String, GMLResult> results = g.getResults();
         GMLData gmlData = new GMLData(g.getSampleCount(), g.getDisclaimer(), new ArrayList<GMLResult>());
         ObjectMapper mapper = new ObjectMapper();
@@ -80,41 +60,8 @@ public class GMLVariantsProcessor implements ItemProcessor<GMLVariant, String> {
             GMLResult result = pair.getValue();
             String patientId = result.getMetaData().getDmpPatientId();
             cvrUtilities.addNewId(patientId);
-            String sampleId = pair.getKey();
-            
-            if (!testingMode) {
-                consumeSample(sampleId);
-            }
             gmlData.addResult(result);
         }
         return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(gmlData);
-    }
-
-    private HttpEntity getRequestEntity() {
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-        return new HttpEntity<>(headers);
-    }
-
-    private void consumeSample(String sampleId) {
-        RestTemplate restTemplate = new RestTemplate();
-        ResponseEntity<CVRConsumeSample> responseEntity;
-        try {
-            responseEntity = restTemplate.exchange(gmlConsumeUrl + sampleId, HttpMethod.GET, requestEntity, CVRConsumeSample.class);
-            if (responseEntity.getBody().getaffectedRows()==0) {
-                String message = "No consumption for sample " + sampleId;
-                log.warn(message);
-            }
-            if (responseEntity.getBody().getaffectedRows()>1) {
-                String message = "Multple samples consumed (" + responseEntity.getBody().getaffectedRows() + ") for sample " + sampleId;
-                log.warn(message);
-            }
-            if (responseEntity.getBody().getaffectedRows()==1) {
-                String message = "Sample "+ sampleId +" consumed succesfully";
-                log.info(message);
-            }
-        } catch (org.springframework.web.client.RestClientException e) {
-            log.error("Error consuming sample " + sampleId + "(" + e + ")");
-        }
     }
 }
