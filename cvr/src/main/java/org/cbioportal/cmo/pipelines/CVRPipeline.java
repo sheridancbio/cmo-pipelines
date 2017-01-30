@@ -37,12 +37,13 @@ package org.cbioportal.cmo.pipelines;
  * @author heinsz
  */
 
+import java.util.*;
 import org.apache.commons.cli.*;
 import org.apache.log4j.Logger;
-import org.cbioportal.cmo.pipelines.cvr.BatchConfiguration;
-import org.cbioportal.cmo.pipelines.cvr.SessionConfiguration;
+import org.cbioportal.cmo.pipelines.cvr.*;
 import org.springframework.batch.core.*;
 import org.springframework.batch.core.launch.JobLauncher;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ConfigurableApplicationContext;
@@ -76,14 +77,14 @@ public class CVRPipeline {
         SpringApplication app = new SpringApplication(CVRPipeline.class);
         ConfigurableApplicationContext ctx= app.run(args);
         JobLauncher jobLauncher = ctx.getBean(JobLauncher.class);
-        
+
         // Job description from the BatchConfiguration
         String jobName;
         JobParametersBuilder builder = new JobParametersBuilder();
         builder.addString("stagingDirectory", directory)
                 .addString("studyId", studyId);
         if (json) {
-            jobName = BatchConfiguration.JSON_JOB;            
+            jobName = BatchConfiguration.JSON_JOB;
         }
         else if (gmljson) {
             jobName = BatchConfiguration.GML_JSON_JOB;
@@ -103,9 +104,11 @@ public class CVRPipeline {
         Job cvrJob = ctx.getBean(jobName, Job.class);
         JobParameters jobParameters = builder.toJobParameters();
         JobExecution jobExecution = jobLauncher.run(cvrJob, jobParameters);
+        EmailUtil emailUtil = ctx.getBean(BatchConfiguration.EMAIL_UTIL, EmailUtil.class);
+        checkExceptions(jobExecution, jobParameters, emailUtil);
         log.info("Shutting down CVR Pipeline");
     }
-    
+
     private static void launchConsumeSamplesJob(String[] args, String jsonFilename, boolean testingMode) throws Exception {
         // log wether in testing mode or not
         if (testingMode) {
@@ -114,7 +117,7 @@ public class CVRPipeline {
         else {
             log.warn("ConsumeSamplesJob running in PRODUCTION MODE - samples will be consumed.");
         }
-        
+
         SpringApplication app = new SpringApplication(CVRPipeline.class);
         ConfigurableApplicationContext ctx= app.run(args);
         JobLauncher jobLauncher = ctx.getBean(JobLauncher.class);
@@ -122,27 +125,36 @@ public class CVRPipeline {
                 .addString("jsonFilename", jsonFilename)
                 .addString("testingMode", String.valueOf(testingMode))
                 .toJobParameters();
-        Job consumeJob = ctx.getBean(BatchConfiguration.CONSUME_SAMPLES_JOB, Job.class);               
+        Job consumeJob = ctx.getBean(BatchConfiguration.CONSUME_SAMPLES_JOB, Job.class);
+        EmailUtil emailUtil = ctx.getBean(BatchConfiguration.EMAIL_UTIL, EmailUtil.class);
         JobExecution jobExecution = jobLauncher.run(consumeJob, jobParameters);
+        checkExceptions(jobExecution, jobParameters, emailUtil);
         log.info("Shutting down Consume Sample Job");
+    }
+
+    private static void checkExceptions(JobExecution jobExecution, JobParameters jobParameters, EmailUtil emailUtil) {
+        List<Throwable> exceptions = jobExecution.getAllFailureExceptions();
+        if (exceptions.size() > 0) {
+            emailUtil.sendErrorEmail(exceptions, jobParameters.toString());
+            System.exit(1);
+        }
     }
 
     public static void main(String[] args) throws Exception {
         Options gnuOptions = CVRPipeline.getOptions(args);
         CommandLineParser parser = new GnuParser();
         CommandLine commandLine = parser.parse(gnuOptions, args);
-        if (commandLine.hasOption("h") || 
-                ((!commandLine.hasOption("d") || !commandLine.hasOption("i")) && !commandLine.hasOption("c"))) {                
+        if (commandLine.hasOption("h") ||
+                ((!commandLine.hasOption("d") || !commandLine.hasOption("i")) && !commandLine.hasOption("c"))) {
             help(gnuOptions, 0);
         }
-        
         if (commandLine.hasOption("c")) {
             launchConsumeSamplesJob(args, commandLine.getOptionValue("c"), commandLine.hasOption("t"));
         }
         else {
-            launchCvrPipelineJob(args, commandLine.getOptionValue("d"), commandLine.getOptionValue("i"), 
-                commandLine.hasOption("j"), commandLine.hasOption("g"), commandLine.hasOption("m"), 
+            launchCvrPipelineJob(args, commandLine.getOptionValue("d"), commandLine.getOptionValue("i"),
+                commandLine.hasOption("j"), commandLine.hasOption("g"), commandLine.hasOption("m"),
                 commandLine.hasOption("s"));
-        }       
+        }
     }
 }

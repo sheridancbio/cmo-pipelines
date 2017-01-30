@@ -64,6 +64,7 @@ public class BatchConfiguration {
     public static final String GML_JOB = "gmlJob";
     public static final String GML_JSON_JOB = "gmlJsonJob";
     public static final String CONSUME_SAMPLES_JOB = "consumeSamplesJob";
+    public static final String EMAIL_UTIL= "EmailUtil";
 
     @Autowired
     public JobBuilderFactory jobBuilderFactory;
