@@ -47,22 +47,113 @@ import org.springframework.beans.factory.annotation.Value;
 public class ClinicalDataReader implements ItemStreamReader<Map<String, String>> {    
     
     @Autowired
-    public ClinicalDataSource clinicalDataSource;    
+    public ClinicalDataSource clinicalDataSource;
+        
     @Autowired
-    public MetadataManager metadataManager;   
+    public MetadataManager metadataManager;
+    
+    @Value("#{jobParameters[mergeClinicalDataSources]}")
+    private boolean mergeClinicalDataSources;
+    
+    private Map<String, List<String>> fullSampleHeader = new HashMap<>();
+    private Map<String, List<String>> fullPatientHeader = new HashMap<>();    
+    private List<Map<String, String>> clinicalRecords = new ArrayList();
+    private Map<String, Map<String, String>> compiledClinicalRecords = new LinkedHashMap<>();
+    
     private final Logger log = Logger.getLogger(ClinicalDataReader.class);
-    public List<Map<String, String>> records = new ArrayList<>();        
     
     @Override
     public void open(ExecutionContext ec) throws ItemStreamException {
-        ec.put("studyId", clinicalDataSource.getNextClinicalStudyId());
-        log.info("Getting sample header...");
-        ec.put("sampleHeader", metadataManager.getFullHeader(clinicalDataSource.getSampleHeader()));
-        log.info("Getting patient header...");
-        ec.put("patientHeader", metadataManager.getFullHeader(clinicalDataSource.getPatientHeader()));        
-        records = clinicalDataSource.getClinicalData();         
+        String studyId = clinicalDataSource.getNextClinicalStudyId();
+        
+        log.info("Getting sample header for project: " + studyId);
+        this.fullSampleHeader = metadataManager.getFullHeader(clinicalDataSource.getSampleHeader());
+        
+        log.info("Getting patient header for project: " + studyId);
+        this.fullPatientHeader = metadataManager.getFullHeader(clinicalDataSource.getPatientHeader());
+        
+        this.clinicalRecords = clinicalDataSource.getClinicalData();        
+        if (mergeClinicalDataSources && clinicalDataSource.hasMoreClinicalData()) {
+            for (Map<String, String> record : clinicalRecords) {
+                compiledClinicalRecords.put(record.get("SAMPLE_ID"), record);
+            }
+            // now merge remaining clinical data sources 
+            mergeClinicalDataSources();
+            this.clinicalRecords = new ArrayList(compiledClinicalRecords.values());
+        }
+        
+        // if sample header size is <= 1 then skip writing the sample clinical data file
+        boolean writeClinicalSample = true;
+        if (fullSampleHeader.get("header").size() <= 1) {
+            log.warn("Sample header size for project <=1 - clinical sample data file will not be generated");
+            writeClinicalSample = false;
+        }
+
+        // if patient header size is <= 1 then skip writing the patient clinical data file
+        boolean writeClinicalPatient = true;
+        if (fullPatientHeader.get("header").size() <= 1) {
+            log.warn("Patient header size for project <=1 - clinical patient data file will not be generated");
+            writeClinicalPatient = false;
+        }
+        
+        // add headers and booleans to execution context for processors and writers
+        ec.put("studyId", studyId);
+        ec.put("sampleHeader", fullSampleHeader);
+        ec.put("patientHeader", fullPatientHeader);
+        ec.put("writeClinicalSample", writeClinicalSample);
+        ec.put("writeClinicalPatient", writeClinicalPatient);
     }
 
+    private void mergeClinicalDataSources() {        
+        while (clinicalDataSource.hasMoreClinicalData()) {
+            String studyId = clinicalDataSource.getNextClinicalStudyId();
+            
+            // get sample header for project and merge into global sample header list
+            log.info("Merging sample header for project: " + studyId);
+            Map<String, List<String>> sampleHeader = metadataManager.getFullHeader(clinicalDataSource.getSampleHeader());
+            List<String> sampleColumnNames = sampleHeader.get("header");
+            for (int i=0;i<sampleColumnNames.size();i++) {
+                if (!fullSampleHeader.get("header").contains(sampleColumnNames.get(i))) {                    
+                    for (String metadataName : fullSampleHeader.keySet()) {
+                        this.fullSampleHeader.get(metadataName).add(sampleHeader.get(metadataName).get(i));
+                    }
+                }
+            }
+            
+            // get patient header for project and merge into global patient header list
+            log.info("Merging patient header for project: " + studyId);
+            Map<String, List<String>> patientHeader = metadataManager.getFullHeader(clinicalDataSource.getPatientHeader());
+            List<String> patientColumnNames = patientHeader.get("header");
+            for (int i=0;i<patientColumnNames.size();i++) {
+                if (!fullPatientHeader.get("header").contains(patientColumnNames.get(i))) {                    
+                    for (String metadataName : fullPatientHeader.keySet()) {
+                        this.fullPatientHeader.get(metadataName).add(patientHeader.get(metadataName).get(i));
+                    }
+                }
+            }
+            
+            // get clinical records and merge into existing clinical records
+            for (Map<String, String> record : clinicalDataSource.getClinicalData()) {
+                Map<String, String> existingData = compiledClinicalRecords.getOrDefault(record.get("SAMPLE_ID"), new HashMap<>());
+                for (String attribute : record.keySet()) {
+                    if (!existingData.containsKey(attribute)) {
+                        existingData.put(attribute, record.get(attribute));
+                    }
+                    else {
+                        if (!existingData.get(attribute).isEmpty() && !record.get(attribute).isEmpty()) {
+                            log.info("Clinical attribute " + attribute + " already loaded for sample " + record.get("SAMPLE_ID") + " - skipping.");
+                        }
+                        else {
+                            String value = (!existingData.get(attribute).isEmpty()) ? existingData.get(attribute) : record.get(attribute);
+                            existingData.put(attribute, value);
+                        }
+                    }
+                }
+                this.compiledClinicalRecords.put(record.get("SAMPLE_ID"), existingData);
+            }
+        }
+    }
+    
     @Override
     public void update(ExecutionContext ec) throws ItemStreamException {}
 
@@ -71,8 +162,8 @@ public class ClinicalDataReader implements ItemStreamReader<Map<String, String>>
 
     @Override
     public Map<String, String> read() throws Exception {
-        if (!records.isEmpty()) {            
-            return records.remove(0);         
+        if (!clinicalRecords.isEmpty()) {            
+            return clinicalRecords.remove(0);         
         }
         return null;
     }       

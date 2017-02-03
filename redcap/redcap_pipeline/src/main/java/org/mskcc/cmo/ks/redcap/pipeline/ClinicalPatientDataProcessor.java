@@ -32,7 +32,7 @@
 package org.mskcc.cmo.ks.redcap.pipeline;
 
 import java.util.*;
-import org.apache.log4j.Logger;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.batch.item.ItemProcessor;
 
@@ -45,22 +45,20 @@ public class ClinicalPatientDataProcessor implements ItemProcessor<ClinicalDataC
     @Value("#{stepExecutionContext['patientHeader']}")
     private Map<String, List<String>> total_header;
     
-    private final Logger log = Logger.getLogger(ClinicalPatientDataProcessor.class);
-    
     @Override
     public ClinicalDataComposite process(ClinicalDataComposite composite) throws Exception {        
-        String to_write = "";
+        List<String> record = new ArrayList();
         List<String> header = total_header.get("header");
         
-        to_write += composite.getData().get("PATIENT_ID") + "\t";
+        record.add(composite.getData().get("PATIENT_ID"));
         
         for(String column : header) {
             if (!column.equals("PATIENT_ID")) {
-                to_write += composite.getData().get(column) + "\t";
+                record.add(composite.getData().getOrDefault(column, ""));
             }            
         }                        
         
-        composite.setPatientResult(to_write);        
+        composite.setPatientResult(StringUtils.join(record, "\t"));
         return composite;
     }       
 }

@@ -52,8 +52,9 @@ public class RedcapPipeline {
     {
         Options gnuOptions = new Options();
         gnuOptions.addOption("h", "help", false, "shows this help document and quits.")
-            .addOption("p", "redcap_project", true, "Redcap Project Name")
-            .addOption("d", "directory", true, "Output directory");
+            .addOption("p", "redcap_project", true, "Redcap Project stable ID")
+            .addOption("d", "directory", true, "Output directory")
+            .addOption("m", "merge-datasources", false, "Flag for merging datasources for given stable ID");
 
         return gnuOptions;
     }
@@ -65,7 +66,7 @@ public class RedcapPipeline {
         System.exit(exitStatus);
     }
 
-    private static void launchJob(String[] args, String project, String directory) throws Exception
+    private static void launchJob(String[] args, String project, String directory, boolean mergeClinicalDataSources) throws Exception
     {
         SpringApplication app = new SpringApplication(RedcapPipeline.class);      
         ConfigurableApplicationContext ctx = app.run(args);
@@ -73,10 +74,11 @@ public class RedcapPipeline {
         JobParameters jobParameters = new JobParametersBuilder()
                 .addString("redcap_project", project)
                 .addString("directory", directory)
-                    .toJobParameters();  
+                .addString("mergeClinicalDataSources", String.valueOf(mergeClinicalDataSources))
+                .toJobParameters();
              
-            Job redcapJob= ctx.getBean(BatchConfiguration.REDCAP_JOB, Job.class);       
-            JobExecution jobExecution = jobLauncher.run(redcapJob, jobParameters);                
+        Job redcapJob= ctx.getBean(BatchConfiguration.REDCAP_JOB, Job.class);
+        JobExecution jobExecution = jobLauncher.run(redcapJob, jobParameters);    
 
     }
     
@@ -90,6 +92,6 @@ public class RedcapPipeline {
             !commandLine.hasOption("redcap_project")) {
             help(gnuOptions, 0);
         }
-        launchJob(args, commandLine.getOptionValue("redcap_project"), commandLine.getOptionValue("directory"));
+        launchJob(args, commandLine.getOptionValue("redcap_project"), commandLine.getOptionValue("directory"), commandLine.hasOption("m"));
     }    
 }

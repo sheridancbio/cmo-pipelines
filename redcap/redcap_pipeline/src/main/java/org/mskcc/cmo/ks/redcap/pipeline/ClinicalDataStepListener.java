@@ -32,6 +32,6 @@ public class ClinicalDataStepListener implements StepExecutionListener {
         if (clinicalDataSource.hasMoreTimelineData()) {
             return new ExitStatus("TIMELINE");
         }
-        return new ExitStatus("FINISHED");
+        return ExitStatus.COMPLETED;
     }
 }
