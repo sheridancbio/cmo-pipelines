@@ -31,12 +31,10 @@
 */
 package org.mskcc.cmo.ks.redcap.pipeline;
 
-import java.io.IOException;
-import java.io.Writer;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.io.*;
 import java.util.*;
 import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
 import org.springframework.batch.item.ExecutionContext;
 import org.springframework.batch.item.ItemStreamException;
 import org.springframework.batch.item.ItemStreamWriter;
@@ -55,55 +53,81 @@ public class ClinicalPatientDataWriter implements ItemStreamWriter<ClinicalDataC
     @Value("#{jobParameters[directory]}")
     private String directory;
     
-    @Value("#{jobParameters[redcap_project]}")
-    private String project;    
+    @Value("#{jobParameters[mergeClinicalDataSources]}")
+    private boolean mergeClinicalDataSources;
     
-    private String outputFilename = "data_clinical_patient_";
-        
-    private Path stagingFile;
+    @Value("#{stepExecutionContext['studyId']}")
+    private String studyId;
     
-    private FlatFileItemWriter<String> flatFileItemWriter = new FlatFileItemWriter<String>();
-    
+    @Value("#{stepExecutionContext['writeClinicalPatient']}")
+    private boolean writeClinicalPatient;
+
+    @Value("#{stepExecutionContext['patientHeader']}")
     private Map<String, List<String>> header;
     
+    private File stagingFile;
+    private Set<String> patientsProcessed = new HashSet();
+    private Set<String> skippedPatients = new HashSet();
+    private String outputFilename = "data_clinical_patient";    
+    private FlatFileItemWriter<String> flatFileItemWriter = new FlatFileItemWriter<String>();
     private List<String> writeList = new ArrayList<>();
     
+    private final Logger log = Logger.getLogger(ClinicalPatientDataWriter.class);
+            
     @Override
     public void open(ExecutionContext ec) throws ItemStreamException {
-        stagingFile = Paths.get(directory).resolve(outputFilename + (String)ec.getString("studyId") + ".txt");  
-        header = (Map<String, List<String>>) ec.get("patientHeader");
-        
-        PassThroughLineAggregator aggr = new PassThroughLineAggregator();
-        flatFileItemWriter.setLineAggregator(aggr);
-        flatFileItemWriter.setResource( new FileSystemResource(stagingFile.toString()));        
-        flatFileItemWriter.setHeaderCallback(new FlatFileHeaderCallback() {
-            @Override
-            public void writeHeader(Writer writer) throws IOException {                
-                writer.write("#" + getMetaLine(header.get("display_names")) + "\n");
-                writer.write("#" + getMetaLine(header.get("descriptions")) + "\n");
-                writer.write("#" +getMetaLine(header.get("datatypes")) + "\n");
-                writer.write("#" + getMetaLine(header.get("priorities")) + "\n");
-                writer.write(getMetaLine(header.get("header")));
-            }                
-        });  
-        flatFileItemWriter.open(ec);        
+        if (writeClinicalPatient) {
+            if (!mergeClinicalDataSources) {
+                outputFilename += "_" + studyId + ".txt";
+            }
+            else {
+                outputFilename += ".txt";
+            }
+            this.stagingFile = new File(directory, outputFilename);
+            PassThroughLineAggregator aggr = new PassThroughLineAggregator();
+            flatFileItemWriter.setLineAggregator(aggr);
+            flatFileItemWriter.setResource( new FileSystemResource(stagingFile));
+            flatFileItemWriter.setHeaderCallback(new FlatFileHeaderCallback() {
+                @Override
+                public void writeHeader(Writer writer) throws IOException {                
+                    writer.write("#" + getMetaLine(header.get("display_names")) + "\n");
+                    writer.write("#" + getMetaLine(header.get("descriptions")) + "\n");
+                    writer.write("#" +getMetaLine(header.get("datatypes")) + "\n");
+                    writer.write("#" + getMetaLine(header.get("priorities")) + "\n");
+                    writer.write(getMetaLine(header.get("header")));
+                }                
+            });  
+            flatFileItemWriter.open(ec);
+        }
     }
 
     @Override
     public void update(ExecutionContext ec) throws ItemStreamException {}
 
     @Override
-    public void close() throws ItemStreamException {
-        flatFileItemWriter.close();
+    public void close() throws ItemStreamException {        
+        if (writeClinicalPatient) {
+            flatFileItemWriter.close();
+        }
+        
     }
 
     @Override
     public void write(List<? extends ClinicalDataComposite> items) throws Exception {
-        writeList.clear();
-        for (ClinicalDataComposite composite : items) {
-            writeList.add(composite.getPatientResult());
+        if (writeClinicalPatient) {
+            writeList.clear();
+            for (ClinicalDataComposite composite : items) {
+                if (!patientsProcessed.add(composite.getData().get("PATIENT_ID"))) {
+                    if (skippedPatients.add(composite.getData().get("PATIENT_ID"))) {
+                        log.warn("Clinical data for patient " + composite.getData().get("PATIENT_ID")
+                            + " has already been added - skipping record.");
+                    }                    
+                    continue;
+                }
+                writeList.add(composite.getPatientResult());
+            }        
+            flatFileItemWriter.write(writeList);
         }        
-         flatFileItemWriter.write(writeList);
     }   
     
     private String getMetaLine(List<String> metaData) {

@@ -32,7 +32,7 @@
 package org.mskcc.cmo.ks.redcap.pipeline;
 
 import java.util.*;
-import org.apache.log4j.Logger;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.beans.factory.annotation.Value;
 
@@ -44,25 +44,24 @@ public class ClinicalSampleDataProcessor implements ItemProcessor<Map<String, St
     
     @Value("#{stepExecutionContext['sampleHeader']}")
     private Map<String, List<String>> total_header;
-    
-    private final Logger log = Logger.getLogger(ClinicalSampleDataProcessor.class);
-    
+        
     @Override
     public ClinicalDataComposite process(Map<String, String> i) throws Exception {
         ClinicalDataComposite composite = new ClinicalDataComposite(i);
-        String to_write = "";
+        List<String> record = new ArrayList();
         List<String> header = total_header.get("header");
         
         // get the sample and patient ids first before processing the other columns
-        to_write= i.get("SAMPLE_ID") + "\t" + i.get("PATIENT_ID") + "\t";                      
+        record.add(i.get("SAMPLE_ID"));
+        record.add(i.get("PATIENT_ID"));       
         
         for(String column : header) {
             if(!column.equals("SAMPLE_ID")) {
-                to_write += i.get(column) + "\t";
+                record.add(i.getOrDefault(column, ""));
             }
         }        
         
-        composite.setSampleResult(to_write);        
+        composite.setSampleResult(StringUtils.join(record, "\t"));
         return composite;
     }       
 }
