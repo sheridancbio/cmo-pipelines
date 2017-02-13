@@ -4,6 +4,7 @@
 
 echo $(date)
 tmp=$PORTAL_HOME/tmp/import-cron-dmp-msk
+num_studies_updated=0
 
 if [[ -d "$tmp" && "$tmp" != "/" ]]; then
 	rm -rf "$tmp"/*
@@ -11,7 +12,7 @@ fi
 
 now=$(date "+%Y-%m-%d-%H-%M-%S")
 mskimpact_notification_file=$(mktemp $tmp/mskimpact-portal-update-notification.$now.XXXXXX)
-#mskheme_notification_file=$(mktemp $tmp/mskheme-portal-update-notification.$now.XXXXXX)
+mskheme_notification_file=$(mktemp $tmp/mskheme-portal-update-notification.$now.XXXXXX)
 mskraindance_notification_file=$(mktemp $tmp/mskraindance-portal-update-notification.$now.XXXXXX)
 #mskarcher_notification_file=$(mktemp $tmp/mskarcher-portal-update-notification.$now.XXXXXX)
 
@@ -33,116 +34,85 @@ done
 # commit these changes
 cd $MSK_IMPACT_DATA_HOME;$HG_BINARY commit -m "Latest MSK-IMPACT Dataset: newline fix"
 
-# Code for getting line counts before fetching
-    lcs=$(wc -l $MSK_IMPACT_DATA_HOME/data_clinical_supp_crdb*)
-    OLDIFS=$IFS
-    IFS=$'\n'
-    for lc in $lcs
-    do
-	    echo $lc >> "$tmp"/tmpfile_crdb.tmp
-    done
-    IFS=$OLDIFS
-    sed -e 's/[0-9]*\stotal//' < "$tmp"/tmpfile_crdb.tmp > "$tmp"/linecountsCVRDarwin_crdb.tmp 
-
-FAIL_CRDB=0
-FAIL_DARWIN=0
-FAIL_CVR=0
-
 # -----------------------------------------------------------------------------------------------------------
-# lcCompare.py returns 0 on success (line counts do not decrease) 1 on failure (line counts decrease)
-# if success import and push to mercurial
 
 # fetch CRDB data
 echo "fetching CRDB data"
 $JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -jar $PORTAL_HOME/lib/crdb_fetcher.jar -stage $MSK_IMPACT_DATA_HOME
-
-if ! $PYTHON_BINARY $PORTAL_HOME/scripts/lcCompare.py --line-counts="$tmp"/linecountsCVRDarwin_crdb.tmp --repo-path=$MSK_IMPACT_DATA_HOME --fail-output=$PORTAL_HOME/failed_CRDB/fail_message.txt; then 
-	echo "Files appear smaller after CRDB fetch. Reverting mercurial repository"
-    cp $MSK_IMPACT_DATA_HOME/* $PORTAL_HOME/failed_CRDB/
-    cp "$tmp"/linecountsCVRDarwin_crdb.tmp $PORTAL_HOME/failed_CRDB/
-	FAIL_CRDB=1
-	cd $MSK_IMPACT_DATA_HOME;$HG_BINARY revert --all;rm *.orig
-else
-	echo "Files from CRDB fetch pass checks - committing changes locally"
-	cd $MSK_IMPACT_DATA_HOME;$HG_BINARY commit -m "Latest MSK-IMPACT Dataset: CRDB"
-fi
-
-# Code for getting line counts before fetching
-    lcs=$(wc -l $MSK_IMPACT_DATA_HOME/data_clinical_supp_caisis_gbm.txt)
-    lcs="$lcs $(wc -l $MSK_IMPACT_DATA_HOME/data_clinical_supp_darwin*)"
-    lcs="$lcs $(wc -l $MSK_IMPACT_DATA_HOME/data_timeline_diagnostics_caisis_gbm.txt)"
-    lcs="$lcs $(wc -l $MSK_IMPACT_DATA_HOME/data_timeline_specimen_caisis_gbm.txt)"
-    lcs="$lcs $(wc -l $MSK_IMPACT_DATA_HOME/data_timeline_status_caisis_gbm.txt)"
-    lcs="$lcs $(wc -l $MSK_IMPACT_DATA_HOME/data_timeline_surgery_caisis_gbm.txt)"
-    lcs="$lcs $(wc -l $MSK_IMPACT_DATA_HOME/data_timeline_treatment_caisis_gbm.txt)"
-    OLDIFS=$IFS
-    IFS=$'\n'
-    for lc in $lcs
-    do
-	    echo $lc >> "$tmp"/tmpfile_darwin.tmp
-    done
-    IFS=$OLDIFS
-    sed -e 's/[0-9]*\stotal//' < "$tmp"/tmpfile_darwin.tmp > "$tmp"/linecountsCVRDarwin_darwin.tmp 
+cd $MSK_IMPACT_DATA_HOME;$HG_BINARY commit -m "Latest MSK-IMPACT Dataset: CRDB"
 
 # fetch Darwin data
 
 echo "fetching Darwin data"
 $JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -jar $PORTAL_HOME/lib/darwin_fetcher.jar -d $MSK_IMPACT_DATA_HOME -s mskimpact
+cd $MSK_IMPACT_DATA_HOME;$HG_BINARY commit -m "Latest MSK-IMPACT Dataset: Darwin"
 
-if ! $PYTHON_BINARY $PORTAL_HOME/scripts/lcCompare.py --line-counts="$tmp"/linecountsCVRDarwin_darwin.tmp --repo-path=$MSK_IMPACT_DATA_HOME --fail-output=$PORTAL_HOME/failed_Darwin/fail_message.txt; then 
-	echo "Files appear smaller after Darwin fetch. Reverting mercurial repository"
-    cp $MSK_IMPACT_DATA_HOME/* $PORTAL_HOME/failed_Darwin/
-    cp "$tmp"/linecountsCVRDarwin_darwin.tmp $PORTAL_HOME/failed_Darwin/
-	FAIL_DARWIN=1
-	cd $MSK_IMPACT_DATA_HOME;$HG_BINARY revert --all;rm *.orig
-else
-	echo "Files from Darwin fetch pass checks - committing changes locally"
-	cd $MSK_IMPACT_DATA_HOME;$HG_BINARY commit -m "Latest MSK-IMPACT Dataset: Darwin"
-fi
-
-# Code for getting line counts before fetching
-    lcs=$(wc -l $MSK_IMPACT_DATA_HOME/data_clinical.txt)
-    OLDIFS=$IFS
-    IFS=$'\n'
-    for lc in $lcs
-    do
-	    echo $lc >> "$tmp"/tmpfile_cvr.tmp
-    done
-    IFS=$OLDIFS
-    sed -e 's/[0-9]*\stotal//' < "$tmp"/tmpfile_cvr.tmp > "$tmp"/linecountsCVRDarwin_cvr.tmp 
-
+IMPORT_STATUS=0
+IMPORT_FAIL=0
+VALIDATION_FAIL=0
+DELETE_FAIL=0
+RENAME_BACKUP_FAIL=0
+RENAME_FAIL=0
+GROUPS_FAIL=0
 
 # fetch new/updated IMPACT samples using CVR Web service   (must come after mercurial fetching) 
 echo "fetching samples from CVR Web service  ..."
 $JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -jar $PORTAL_HOME/lib/cvr_fetcher.jar -d $MSK_IMPACT_DATA_HOME -i mskimpact
-# fetch new/updated IMPACT germline samples using CVR Web service   (must come after normal cvr fetching) 
-echo "fetchomg CVR GML data ..."
-$JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -jar $PORTAL_HOME/lib/cvr_fetcher.jar -d $MSK_IMPACT_DATA_HOME -g -i mskimpact -t
-# fetch new/updated raindance samples using CVR Web service (must come after mercurial fetching). The -s flag skips segment data fetching
-$JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -jar $PORTAL_HOME/lib/raindance_fetcher.jar -d $MSK_RAINDANCE_DATA_HOME -s -i raindance
-# fetch new/updated raindance samples using CVR Web service (must come after mercurial fetching). The -s flag skips segment data fetching
-#$JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -jar $PORTAL_HOME/lib/hemepact_fetcher.jar -d $MSK_HEMEPACT_DATA_HOME
-# fetch new/updated raindance samples using CVR Web service (must come after mercurial fetching). The -s flag skips segment data fetching
-#$JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -jar $PORTAL_HOME/lib/archer_fetcher.jar -d $MSK_ARCHER_DATA_HOME
-
-if ! $PYTHON_BINARY $PORTAL_HOME/scripts/lcCompare.py --line-counts="$tmp"/linecountsCVRDarwin_cvr.tmp --repo-path=$MSK_IMPACT_DATA_HOME --fail-output=$PORTAL_HOME/failed_CVR/fail_message.txt; then 
-	echo "Files appear smaller after CVR fetch. Reverting mercurial repository"
-	FAIL_CVR=1
-    cp $MSK_IMPACT_DATA_HOME/* $PORTAL_HOME/failed_CVR/
-    cp $MSK_IMPACT_DATA_HOME/cvr_data.json $PORTAL_HOME/failed_CVR/cvr_data.$(date +%s).json
-    cp "$tmp"/linecountsCVRDarwin_cvr.tmp $PORTAL_HOME/failed_CVR/
+if [ $? -gt 0 ]
+then
+	echo "CVR fetch failed!"
 	cd $MSK_IMPACT_DATA_HOME;$HG_BINARY revert --all;rm *.orig
-	cd $PORTAL_DATA_HOME;$HG_BINARY revert --all;rm *.orig
+	IMPORT_STATUS=1
 else
-	echo "Files from CVR fetch pass checks - committing changes locally"
-	cd $MSK_RAINDANCE_DATA_HOME; rm data_CNA.txt; rm data_fusions.txt; rm data_SV.txt; rm mskimpact_data_cna_hg19.seg;
 	cd $MSK_IMPACT_DATA_HOME;$HG_BINARY commit -m "Latest MSK-IMPACT Dataset: CVR"
 fi
 
-#Refactor any residual DMP identifiers from staging files and ensure that other (i.e. legacy) identifiers are retained
-# arguments are data source name and cancer study name
-#echo "refactoring legacy DMP identifiers......."
-#$JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -ea -Dspring.profiles.active=dbcp -Djava.io.tmpdir="$tmp" -cp $PORTAL_HOME/lib/msk-dmp-importer.jar org.mskcc.cbio.importer.cvr.dmp.util.ImpactDataClinicalTimelineIdDRefactoringUtility dmp-clinical-data-darwin
+# fetch new/updated IMPACT germline samples using CVR Web service   (must come after normal cvr fetching) 
+echo "fetching CVR GML data ..."
+$JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -jar $PORTAL_HOME/lib/cvr_fetcher.jar -d $MSK_IMPACT_DATA_HOME -g -i mskimpact
+if [ $? -gt 0 ]
+then
+	echo "CVR Germline fetch failed!"
+	cd $MSK_IMPACT_DATA_HOME;$HG_BINARY revert --all;rm *.orig
+	IMPORT_STATUS=1
+else
+	cd $MSK_IMPACT_DATA_HOME;$HG_BINARY commit -m "Latest MSK-IMPACT Dataset: CVR Germline"
+fi
+
+# fetch new/updated raindance samples using CVR Web service (must come after mercurial fetching). The -s flag skips segment data fetching
+$JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -jar $PORTAL_HOME/lib/raindance_fetcher.jar -d $MSK_RAINDANCE_DATA_HOME -s -i raindance
+if [ $? -gt 0 ]
+then
+	echo "CVR raindance fetch failed!"
+	echo "This will not affect importing of mskimpact"
+	cd $MSK_IMPACT_DATA_HOME;$HG_BINARY revert --all;rm *.orig
+else
+	# raindance does not provide copy number or fusions data.
+	cd $MSK_RAINDANCE_DATA_HOME; rm data_CNA.txt; rm data_fusions.txt; rm data_SV.txt; rm mskimpact_data_cna_hg19.seg;
+	cd $MSK_IMPACT_DATA_HOME;$HG_BINARY commit -m "Latest Raindance dataset"
+fi
+
+# fetch new/updated raindance samples using CVR Web service (must come after mercurial fetching). The -s flag skips segment data fetching
+$JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -jar $PORTAL_HOME/lib/hemepact_fetcher.jar -d $MSK_HEMEPACT_DATA_HOME
+if [ $? -gt 0 ]
+then
+	echo "CVR heme fetch failed!"
+	echo "This will not affect importing of mskimpact"
+	cd $MSK_IMPACT_DATA_HOME;$HG_BINARY revert --all;rm *.orig
+else
+	cd $MSK_IMPACT_DATA_HOME;$HG_BINARY commit -m "Latest heme dataset"
+fi
+
+# fetch new/updated archer samples using CVR Web service (must come after mercurial fetching).
+$JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -jar $PORTAL_HOME/lib/archer_fetcher.jar -d $MSK_ARCHER_DATA_HOME
+if [ $? -gt 0 ]
+then
+	echo "CVR Archer fetch failed!"
+	echo "This will not affect importing of mskimpact"
+	cd $MSK_IMPACT_DATA_HOME;$HG_BINARY revert --all;rm *.orig
+else
+	cd $MSK_IMPACT_DATA_HOME;$HG_BINARY commit -m "Latest archer dataset"
+fi
 
 # create case lists by cancer type
 rm $MSK_IMPACT_DATA_HOME/case_lists/*
@@ -157,10 +127,62 @@ cd $MSK_IMPACT_DATA_HOME;$HG_BINARY add;$HG_BINARY commit -m "Latest MSK-IMPACT 
 # import into portal database
 echo "importing cancer type updates into msk portal database..."
 $JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -ea -Dspring.profiles.active=dbcp -Djava.io.tmpdir="$tmp" -cp $PORTAL_HOME/lib/msk-dmp-importer.jar org.mskcc.cbio.importer.Admin -import_types_of_cancer
-echo "importing DMP-IMPACT study data into msk portal database..."
-$JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -Xmx64g -ea -Dspring.profiles.active=dbcp -Djava.io.tmpdir="$tmp" -cp $PORTAL_HOME/lib/msk-dmp-importer.jar org.mskcc.cbio.importer.Admin -update_study_data mskimpact-portal:f:$mskimpact_notification_file:f
-num_studies_updated=$?
-$JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -Xmx64g -ea -Dspring.profiles.active=dbcp -Djava.io.tmpdir="$tmp" -cp $PORTAL_HOME/lib/msk-dmp-importer.jar org.mskcc.cbio.importer.Admin -update_study_data mskraindance-portal:f:$mskraindance_notification_file:f
+
+## use flag to import under temporary id
+
+if [ $IMPORT_STATUS -eq 0 ]
+then
+	$JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -Xmx64g -ea -Dspring.profiles.active=dbcp -Djava.io.tmpdir="$tmp" -cp $PORTAL_HOME/lib/msk-dmp-importer.jar org.mskcc.cbio.importer.Admin -update_study_data mskimpact-portal:f:$mskimpact_notification_file:f:temporary
+	if [ $? -gt 0 ]
+	then
+		echo "Failed to import mskimpact!"
+		IMPORT_FAIL=1
+	else
+		num_studies_updated=`cat $tmp/num_studies_updated.txt`
+		# validate
+		$JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -Xmx64g -ea -Dspring.profiles.active=dbcp -Djava.io.tmpdir="$tmp" -cp $PORTAL_HOME/lib/msk-dmp-importer.jar org.mskcc.cbio.importer.Admin -validate_temp_study temporary_mskimpact,mskimpact
+		if [ $? -gt 0 ]
+		then
+			echo "Failed to validate - deleting temp study"
+			$JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -Xmx64g -ea -Dspring.profiles.active=dbcp -Djava.io.tmpdir="$tmp" -cp $PORTAL_HOME/lib/msk-dmp-importer.jar org.mskcc.cbio.importer.Admin -delete_cancer_study temporary_mskimpact
+			VALIDATION_FAIL=1
+		else
+			echo "Successful validation - renaming mskimpact and temp studies"
+			$JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -Xmx64g -ea -Dspring.profiles.active=dbcp -Djava.io.tmpdir="$tmp" -cp $PORTAL_HOME/lib/msk-dmp-importer.jar org.mskcc.cbio.importer.Admin -delete_cancer_study yesterday_mskimpact
+			if [ $? -gt 0 ]
+			then
+				echo "Failed to delete cancer study yesterday_mskimpact!"
+				DELETE_FAIL=1
+			else
+				$JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -Xmx64g -ea -Dspring.profiles.active=dbcp -Djava.io.tmpdir="$tmp" -cp $PORTAL_HOME/lib/msk-dmp-importer.jar org.mskcc.cbio.importer.Admin -rename_cancer_study mskimpact,yesterday_mskimpact
+				if [ $? -gt 0 ]
+				then
+					echo "Failed to rename old mskimpact study to yesterday!"
+					RENAME_BACKUP_FAIL=1
+				else
+					$JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -Xmx64g -ea -Dspring.profiles.active=dbcp -Djava.io.tmpdir="$tmp" -cp $PORTAL_HOME/lib/msk-dmp-importer.jar org.mskcc.cbio.importer.Admin -update_groups yesterday_mskimpact:KSBACKUP
+					if [ $? -gt 0 ]
+					then
+						echo "Failed to change groups!"
+						GROUPS_FAIL=1
+					fi
+					$JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -Xmx64g -ea -Dspring.profiles.active=dbcp -Djava.io.tmpdir="$tmp" -cp $PORTAL_HOME/lib/msk-dmp-importer.jar org.mskcc.cbio.importer.Admin -rename_cancer_study temporary_mskimpact,mskimpact
+					if [ $? -gt 0 ]
+					then
+						echo "Failed to rename temp study to mskimpact!"
+						RENAME_FAIL=1
+					else
+						$JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -jar $PORTAL_HOME/lib/cvr_fetcher.jar -c $MSK_IMPACT_DATA_HOME/cvr_data.json
+					fi
+				fi
+			fi
+		fi
+	fi
+
+	$JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -Xmx64g -ea -Dspring.profiles.active=dbcp -Djava.io.tmpdir="$tmp" -cp $PORTAL_HOME/lib/msk-dmp-importer.jar org.mskcc.cbio.importer.Admin -update_study_data mskraindance-portal:f:$mskraindance_notification_file:f:f
+	$JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -Xmx64g -ea -Dspring.profiles.active=dbcp -Djava.io.tmpdir="$tmp" -cp $PORTAL_HOME/lib/msk-dmp-importer.jar org.mskcc.cbio.importer.Admin -update_study_data mskheme-portal:f:$mskheme_notification_file:f:f
+
+fi
 
 # redeploy war
 if [ $num_studies_updated -gt 0 ]
@@ -179,35 +201,54 @@ cd $MSK_IMPACT_DATA_HOME;$HG_BINARY push
 
 ### FAILURE EMAIL ###
 
-message=""
-EMAIL_BODY="Some file(s) edited by the import-dmp-impact-data.sh script in the msk-impact repository appear smaller than the originals."
-EMAIL_CRDB="CRDB_failure"
-EMAIL_DARWIN="Darwin_failure"
-EMAIL_CVR="CVR_failure"
-CAUSE_CRDB=$(<$PORTAL_HOME/failed_CRDB/fail_message.txt)
-CAUSE_DARWIN=$(<$PORTAL_HOME/failed_Darwin/fail_message.txt)
-CAUSE_CVR=$(<$PORTAL_HOME/failed_CVR/fail_message.txt)
-# send email if failures occured
-if [ $FAIL_CRDB -gt 0 ]
+EMAIL_BODY="The MSKIMPACT study failed import. The original study will remain on the portal."
+# send email if validation fails
+if [ $IMPORT_FAIL -gt 0 ]
 then
-	message="$message\n\n$EMAIL_CRDB\n$CAUSE_CRDB"
+	echo -e "Sending email $EMAIL_BODY"
+	echo -e "$EMAIL_BODY" | mail -s "MSKIMPACT Update Failure: Import" cbioportal-cmo-importer@cbio.mskcc.org
 fi
-if [ $FAIL_DARWIN -gt 0 ]
+
+EMAIL_BODY="The MSKIMPACT study failed to pass the validation step in import process. The original study will remain on the portal."
+# send email if validation fails
+if [ $VALIDATION_FAIL -gt 0 ]
 then
-	message="$message\n\n$EMAIL_DARWIN\n$CAUSE_DARWIN"
+	echo -e "Sending email $EMAIL_BODY"
+	echo -e "$EMAIL_BODY" | mail -s "MSKIMPACT Update Failure: Validation" cbioportal-cmo-importer@cbio.mskcc.org
 fi
-if [ $FAIL_CVR -gt 0 ]
+
+EMAIL_BODY="The yesterday_mskimpact study failed to delete. MSKIMPACT study did not finish updating."
+if [ $DELETE_FAIL -gt 0 ]
 then
-	message="$message\n\n$EMAIL_CVR\n$CAUSE_CVR"
+	echo -e "Sending email $EMAIL_BODY"
+	echo -e "$EMAIL_BODY" | mail -s "MSKIMPACT Update Failure: Deletion" cbioportal-cmo-importer@cbio.mskcc.org
 fi
-if [[ ! -z $message ]]
+
+
+EMAIL_BODY="Failed to backup mskimpact to yesterday_mskimpact via renaming. MSKIMPACT study did not finish updating."
+if [ $RENAME_BACKUP_FAIL -gt 0 ]
 then
-	echo -e "Sending email $EMAIL_BODY$message"
-	echo -e "$EMAIL_BODY$message" | mail -s "WARNING: CVR Pipeline Potential Data Loss" cbioportal-cmo-importer@cbio.mskcc.org
+	echo -e "Sending email $EMAIL_BODY"
+	echo -e "$EMAIL_BODY" | mail -s "MSKIMPACT Update Failure: Renaming backup" cbioportal-cmo-importer@cbio.mskcc.org
+fi
+
+EMAIL_BODY="Failed to rename temp study temporary_mskimpact to mskimpact. MSKIMPACT study did not finish updating."
+if [ $RENAME_FAIL -gt 0 ]
+then
+	echo -e "Sending email $EMAIL_BODY"
+	echo -e "$EMAIL_BODY" | mail -s "MSKIMPACT Update Failure: CRITIAL!! Renaming" cbioportal-cmo-importer@cbio.mskcc.org
+fi
+
+EMAIL_BODY="Failed to update groups for backup study."
+if [ $GROUPS_FAIL -gt 0 ]
+then
+	echo -e "Sending email $EMAIL_BODY"
+	echo -e "$EMAIL_BODY" | mail -s "MSKIMPACT Update Failure: Groups update" cbioportal-cmo-importer@cbio.mskcc.org
 fi
 
 $JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -Xmx16g -ea -Dspring.profiles.active=dbcp -Djava.io.tmpdir="$tmp" -cp $PORTAL_HOME/lib/msk-dmp-importer.jar org.mskcc.cbio.importer.Admin -send_update_notification mskimpact-portal:$mskimpact_notification_file
 $JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -Xmx16g -ea -Dspring.profiles.active=dbcp -Djava.io.tmpdir="$tmp" -cp $PORTAL_HOME/lib/msk-dmp-importer.jar org.mskcc.cbio.importer.Admin -send_update_notification mskraindance-portal:$mskraindance_notification_file
+$JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -Xmx16g -ea -Dspring.profiles.active=dbcp -Djava.io.tmpdir="$tmp" -cp $PORTAL_HOME/lib/msk-dmp-importer.jar org.mskcc.cbio.importer.Admin -send_update_notification mskheme-portal:$mskheme_notification_file
 
 if [[ -d "$tmp" && "$tmp" != "/" ]]; then
 	rm -rf "$tmp"/*

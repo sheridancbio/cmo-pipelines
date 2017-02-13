@@ -44,8 +44,8 @@ $JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,add
 $JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27183 -Xmx16g -ea -Dspring.profiles.active=dbcp -Djava.io.tmpdir="$tmp" -cp $PORTAL_HOME/lib/triage-cmo-importer.jar org.mskcc.cbio.importer.Admin -apply_overrides triage-portal
 
 echo "importing study data into triage portal database..."
-$JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27183 -Xmx32G -ea -Dspring.profiles.active=dbcp -Djava.io.tmpdir="$tmp" -cp $PORTAL_HOME/lib/triage-cmo-importer.jar org.mskcc.cbio.importer.Admin -update_study_data triage-portal:t:$triage_notification_file:t
-num_studies_updated=$?
+$JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27183 -Xmx32G -ea -Dspring.profiles.active=dbcp -Djava.io.tmpdir="$tmp" -cp $PORTAL_HOME/lib/triage-cmo-importer.jar org.mskcc.cbio.importer.Admin -update_study_data triage-portal:t:$triage_notification_file:t:f
+num_studies_updated=`cat $tmp/num_studies_updated.txt`
 
 # redeploy war
 if [ $num_studies_updated -gt 0 ]
