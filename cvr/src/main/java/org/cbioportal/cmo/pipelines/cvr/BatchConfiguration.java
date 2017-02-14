@@ -42,6 +42,7 @@ import org.cbioportal.cmo.pipelines.cvr.mutation.*;
 import org.cbioportal.cmo.pipelines.cvr.seg.*;
 import org.cbioportal.cmo.pipelines.cvr.sv.*;
 import org.cbioportal.cmo.pipelines.cvr.variants.*;
+import org.cbioportal.cmo.pipelines.cvr.genepanel.*;
 import org.cbioportal.models.*;
 import org.springframework.batch.core.*;
 import org.springframework.batch.core.configuration.annotation.*;
@@ -108,6 +109,7 @@ public class BatchConfiguration {
                 .next(svStep())
                 .next(fusionStep())
                 .next(segStep())
+                .next(genePanelStep())
                 .build();
     }
 
@@ -118,14 +120,14 @@ public class BatchConfiguration {
                 .next(gmlClinicalStep())
                 .build();
     }
-    
+
     @Bean
     public Job consumeSamplesJob() {
         return jobBuilderFactory.get(CONSUME_SAMPLES_JOB)
                 .start(consumeSampleStep())
                 .build();
     }
-    
+
     @Bean
     public GMLClinicalStepListener gmlClinicalStepListener() {
         return new GMLClinicalStepListener();
@@ -240,7 +242,16 @@ public class BatchConfiguration {
                 .writer(compositeSegDataWriter())
                 .build();
     }
-    
+
+    @Bean
+    public Step genePanelStep() {
+        return stepBuilderFactory.get("genePanelStep").<CVRGenePanelRecord, String> chunk(chunkInterval)
+                .reader(genePanelReader())
+                .processor(genePanelProcessor())
+                .writer(genePanelWriter())
+                .build();
+    }
+
     @Bean
     public Step consumeSampleStep() {
         return stepBuilderFactory.get("consumeSampleStep")
@@ -510,13 +521,31 @@ public class BatchConfiguration {
         writer.setDelegates(writerDelegates);
         return writer;
     }
-    
+
+    @Bean
+    @StepScope
+    public ItemStreamReader<CVRGenePanelRecord> genePanelReader() {
+        return new CVRGenePanelReader();
+    }
+
+    @Bean
+    @StepScope
+    public CVRGenePanelProcessor genePanelProcessor() {
+        return new CVRGenePanelProcessor();
+    }
+
+    @Bean
+    @StepScope
+    public ItemStreamWriter<String> genePanelWriter() {
+        return new CVRGenePanelWriter();
+    }
+
     @Bean
     @StepScope
     public ItemStreamReader<String> consumeSampleReader() {
         return new ConsumeSampleReader();
     }
-    
+
     @Bean
     @StepScope
     public ItemStreamWriter<String> consumeSampleWriter() {

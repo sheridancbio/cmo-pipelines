@@ -65,6 +65,7 @@ public class CVRUtilities {
     public final String SEG_FILE = "_data_cna_hg19.seg";
     public final String FUSION_FILE = "data_fusions.txt";
     public final String SV_FILE = "data_SV.txt";
+    public final String GENE_PANEL_FILE = "data_gene_matrix.txt";
     public final String CNA_HEADER_HUGO_SYMBOL = "Hugo_Symbol";
     public final String GML_FILE = "cvr_gml_data.json";
     public final String GENE_PANEL = "gene_panels/impact468_gene_panel.txt";
