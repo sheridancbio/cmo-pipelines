@@ -5,11 +5,12 @@
  */
 package org.mskcc.cmo.ks.redcap.pipeline;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.Writer;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import org.apache.commons.lang.StringUtils;
@@ -29,33 +30,30 @@ import org.springframework.core.io.FileSystemResource;
 public class TimelineWriter  implements ItemStreamWriter<String> {    
     @Value("#{jobParameters[directory]}")
     private String directory;
-
-    @Value("#{jobParameters[redcap_project]}")
-    private String project;    
+    
+    @Value("#{stepExecutionContext['combinedHeader']}")
+    private List<String> combinedHeader;
+    
+    @Value("#{stepExecutionContext['studyId']}")
+    private String studyId;
     
     private String outputFilename = "data_timeline_";
-    
-    private Path stagingFile;
-    
-    List<String> combinedHeader;
-    
+    private File stagingFile;    
     private FlatFileItemWriter<String> flatFileItemWriter = new FlatFileItemWriter<String>();   
     
     @Override
     public void open(ExecutionContext ec) throws ItemStreamException {
-        stagingFile = Paths.get(directory).resolve(outputFilename + (String)ec.get("studyId") + ".txt");        
-        combinedHeader = (List<String>) ec.get("combinedHeader");
-        
+        this.stagingFile = new File(directory, outputFilename + studyId + ".txt");
         PassThroughLineAggregator aggr = new PassThroughLineAggregator();
         flatFileItemWriter.setLineAggregator(aggr);
-        flatFileItemWriter.setResource( new FileSystemResource(stagingFile.toString()));        
+        flatFileItemWriter.setResource(new FileSystemResource(stagingFile));
         flatFileItemWriter.setHeaderCallback(new FlatFileHeaderCallback() {
             @Override
             public void writeHeader(Writer writer) throws IOException {                
                 writer.write(getHeaderLine(combinedHeader));
             }                
         });  
-        flatFileItemWriter.open(ec);        
+        flatFileItemWriter.open(ec);
     }
     
     @Override
@@ -72,21 +70,21 @@ public class TimelineWriter  implements ItemStreamWriter<String> {
     }
     
     private String getHeaderLine(List<String> metaData) {
-        String to_return = "";
+        List<String> header = new ArrayList();
         Integer sidIndex = metaData.indexOf("SAMPLE_ID");
         Integer pidIndex = metaData.indexOf("PATIENT_ID");
-        if (sidIndex >= 0 && pidIndex >= 0) {
-            to_return += metaData.get(sidIndex) + "\t" + metaData.get(pidIndex);
+        if (sidIndex >= 0) {
+            header.add(metaData.get(sidIndex));
         }
-        else if (pidIndex >= 0) {
-            to_return += metaData.get(pidIndex);
+        if (pidIndex >= 0) {
+            header.add(metaData.get(pidIndex));
         }
         for (String column : metaData) {
             if (!column.equals("SAMPLE_ID") && !column.equals("PATIENT_ID") && !column.equals("RECORD_ID")) {
-                to_return += "\t" + column;
+                header.add(column);
             }
         }
-        return to_return;
+        return StringUtils.join(header, "\t");
     }       
     
 }

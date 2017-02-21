@@ -38,7 +38,6 @@ import org.springframework.batch.item.ExecutionContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.batch.item.ItemStreamException;
 import org.springframework.batch.item.ItemStreamReader;
-import org.springframework.beans.factory.annotation.Value;
 
 /**
  *
@@ -57,10 +56,11 @@ public class TimelineReader implements ItemStreamReader<Map<String, String>> {
     
     @Override
     public void open(ExecutionContext ec) throws ItemStreamException {
-        ec.put("studyId", clinicalDataSource.getNextTimelineStudyId());
-        log.info("Getting timeline header...");
+        String studyId = clinicalDataSource.getNextTimelineStudyId();
+        ec.put("studyId", studyId);
+        log.info("Getting timeline header for project: " + studyId);
         ec.put("combinedHeader", clinicalDataSource.getTimelineHeader());
-        records = clinicalDataSource.getTimelineData();                
+        records = clinicalDataSource.getTimelineData();
     }
 
     @Override

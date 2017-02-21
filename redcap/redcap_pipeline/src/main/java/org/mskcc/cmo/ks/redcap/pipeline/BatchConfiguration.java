@@ -59,7 +59,7 @@ public class BatchConfiguration {
     private final Logger log = Logger.getLogger(BatchConfiguration.class);    
     
     @Value("${chunk}")
-    private String chunk;      
+    private Integer chunkInterval;      
 
     @Autowired
     public JobBuilderFactory jobBuilderFactory;
@@ -93,7 +93,7 @@ public class BatchConfiguration {
     public Step clinicalDataStep() {
         return stepBuilderFactory.get("clinicalDataStep")
                 .listener(clinicalDataStepListener())                
-                .<Map<String, String>, ClinicalDataComposite> chunk(Integer.parseInt(chunk))
+                .<Map<String, String>, ClinicalDataComposite> chunk(chunkInterval)
                 .reader(clinicalDataReader())
                 .processor(clinicalDataprocessor())
                 .writer(clinicalDatawriter())
@@ -104,7 +104,7 @@ public class BatchConfiguration {
     public Step timelineDataStep() {
         return stepBuilderFactory.get("timelineDataStep")
                 .listener(clinicalDataStepListener())
-                .<Map<String, String>, String> chunk(10)
+                .<Map<String, String>, String> chunk(chunkInterval)
                 .reader(timelineReader())
                 .processor(timelineProcessor())
                 .writer(timelineWriter())
