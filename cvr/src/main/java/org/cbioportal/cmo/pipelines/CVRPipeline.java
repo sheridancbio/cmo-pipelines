@@ -121,10 +121,16 @@ public class CVRPipeline {
         SpringApplication app = new SpringApplication(CVRPipeline.class);
         ConfigurableApplicationContext ctx= app.run(args);
         JobLauncher jobLauncher = ctx.getBean(JobLauncher.class);
-        JobParameters jobParameters = new JobParametersBuilder()
+        JobParametersBuilder builder = new JobParametersBuilder()
                 .addString("jsonFilename", jsonFilename)
-                .addString("testingMode", String.valueOf(testingMode))
-                .toJobParameters();
+                .addString("testingMode", String.valueOf(testingMode));
+        if (jsonFilename.contains(CVRUtilities.CVR_FILE)) {
+            builder.addString("sessionId", ctx.getBean(SessionConfiguration.SESSION_ID, String.class));
+        }
+        else {
+            builder.addString("sessionId", ctx.getBean(SessionConfiguration.GML_SESSION, String.class));
+        }
+        JobParameters jobParameters = builder.toJobParameters();
         Job consumeJob = ctx.getBean(BatchConfiguration.CONSUME_SAMPLES_JOB, Job.class);
         EmailUtil emailUtil = ctx.getBean(BatchConfiguration.EMAIL_UTIL, EmailUtil.class);
         JobExecution jobExecution = jobLauncher.run(consumeJob, jobParameters);
