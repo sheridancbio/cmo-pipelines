@@ -57,7 +57,7 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class CVRUtilities {
 
-    public final String CVR_FILE = "cvr_data.json";
+    public static final String CVR_FILE = "cvr_data.json";
     public final String MUTATION_FILE = "data_mutations_extended.txt";
     public final String UNFILTERED_MUTATION_FILE = "data_mutations_unfiltered.txt";
     public final String CLINICAL_FILE = "data_clinical.txt";
@@ -67,7 +67,7 @@ public class CVRUtilities {
     public final String SV_FILE = "data_SV.txt";
     public final String GENE_PANEL_FILE = "data_gene_matrix.txt";
     public final String CNA_HEADER_HUGO_SYMBOL = "Hugo_Symbol";
-    public final String GML_FILE = "cvr_gml_data.json";
+    public static final String GML_FILE = "cvr_gml_data.json";
     public final String GENE_PANEL = "gene_panels/impact468_gene_panel.txt";
     public final String IS_NEW = "NEWRECORD";
 

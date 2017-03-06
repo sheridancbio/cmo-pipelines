@@ -82,14 +82,12 @@ public class ConsumeSampleWriter implements ItemStreamWriter<String> {
     @Override
     public void open(ExecutionContext ec) throws ItemStreamException {
         // determine which dmp server url to use based on the file basename
-        this.dmpConsumeUrl = dmpServerName;
         if (jsonFilename.contains(cvrUtilities.CVR_FILE)) {
-            this.dmpConsumeUrl += dmpConsumeSample;
+            this.dmpConsumeUrl = dmpServerName + dmpConsumeSample + "/" + sessionId + "/";
         }
         else if (jsonFilename.contains(cvrUtilities.GML_FILE)) {
-            this.dmpConsumeUrl += dmpConsumeGmlSample;
+            this.dmpConsumeUrl = dmpServerName + dmpConsumeGmlSample + "/" + sessionId + "/";
         }
-        this.dmpConsumeUrl += "/" + sessionId + "/";
     }
 
     @Override
@@ -121,7 +119,7 @@ public class ConsumeSampleWriter implements ItemStreamWriter<String> {
                 log.warn(message);
             }
             if (responseEntity.getBody().getaffectedRows()>1) {
-                String message = "Multple samples consumed (" + responseEntity.getBody().getaffectedRows() + ") for sample " + sampleId;
+                String message = "Multiple samples consumed (" + responseEntity.getBody().getaffectedRows() + ") for sample " + sampleId;
                 log.warn(message);
             }
             if (responseEntity.getBody().getaffectedRows()==1) {
