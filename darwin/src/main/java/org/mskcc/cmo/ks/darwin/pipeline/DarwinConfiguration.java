@@ -35,11 +35,11 @@ import com.ibm.db2.jcc.DB2SimpleDataSource;
 import com.querydsl.sql.SQLQueryFactory;
 import com.querydsl.sql.DB2Templates;
 import java.sql.SQLException;
+import java.util.*;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
 /**
  *
  * @author jake
@@ -47,35 +47,33 @@ import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
 @Configuration
 @PropertySource("classpath:application.properties")
 public class DarwinConfiguration {
-    
+
     @Value("${darwin.username}")
     private String username;
-        
+
     @Value("${darwin.password}")
     private String password;
-    
+
     @Value("${darwin.server}")
     private String server;
-    
+
     @Value("${darwin.port}")
     private Integer port;
-    
+
     @Value("${darwin.database}")
     private String database;
-    
+
     @Value("${darwin.schema}")
     private String schema;
-    
-        
+
+
     @Bean
     public SQLQueryFactory darwinQueryFactory() throws SQLException{
         DB2Templates templates = new DB2Templates();
         com.querydsl.sql.Configuration config = new com.querydsl.sql.Configuration(templates);
-        return new SQLQueryFactory(config, darwinDataSource()); 
+        return new SQLQueryFactory(config, darwinDataSource());
     }
-    
-    
-    
+
     public DB2SimpleDataSource darwinDataSource(){
         DB2SimpleDataSource dataSource = new DB2SimpleDataSource();
         dataSource.setPortNumber(port);
@@ -86,6 +84,15 @@ public class DarwinConfiguration {
         dataSource.setServerName(server);
         dataSource.setDriverType(4);
         return dataSource;
-    }    
-    
+    }
+
+    @Bean(name="studyIdRegexMap")    
+    public Map<String, String> studyIdRegexMap() {
+        Map<String, String> studyIdRegexMap = new HashMap<>();
+        studyIdRegexMap.put("mskimpact", "%-IM%");
+        studyIdRegexMap.put("mskimpact_heme", "%-IH%");
+        studyIdRegexMap.put("mskarcher", "%-AR%");
+        studyIdRegexMap.put("raindance", "%-TS%");
+        return studyIdRegexMap;
+    }
 }

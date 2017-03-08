@@ -32,19 +32,17 @@
 package org.mskcc.cmo.ks.darwin.pipeline.mskimpactdemographics;
 
 import org.mskcc.cmo.ks.darwin.pipeline.model.*;
-
 import com.querydsl.core.types.Projections;
 import com.querydsl.sql.SQLQueryFactory;
-
 import org.springframework.batch.item.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 import org.apache.log4j.Logger;
-
 import java.util.*;
 import static com.querydsl.core.alias.Alias.$;
 import static com.querydsl.core.alias.Alias.alias;
+import javax.annotation.Resource;
 /**
  *
  * @author jake
@@ -52,33 +50,43 @@ import static com.querydsl.core.alias.Alias.alias;
 public class MskimpactPatientDemographicsReader implements ItemStreamReader<MskimpactPatientDemographics>{
     @Value("${darwin.demographics_view}")
     private String patientDemographicsView;
-    
+
     @Value("${darwin.icdo_view}")
     private String patientIcdoView;
-    
+
     @Value("${darwin.latest_activity_view}")
     private String latestActivityView;
-    
+
+    @Value("${darwin.pathology_dmp_view}")
+    private String pathologyDmpView;
+
+    @Value("#{jobParameters[studyID]}")
+    private String studyID;
+
     @Autowired
     SQLQueryFactory darwinQueryFactory;
-    
+
+    @Resource(name="studyIdRegexMap")
+    Map<String, String> studyIdRegexMap;
+
     private List<MskimpactPatientDemographics> darwinDemographicsResults;
     private Set<String> processedIds = new HashSet<>();
     private Integer missingTM_DX_YEAR = 0;
-    
+
     Logger log = Logger.getLogger(MskimpactPatientDemographicsReader.class);
-    
+
     @Override
     public void open(ExecutionContext executionContext) throws ItemStreamException{
         this.darwinDemographicsResults = getDarwinDemographicsResults();
     }
-            
+
     @Transactional
     private List<MskimpactPatientDemographics> getDarwinDemographicsResults(){
         log.info("Start of Darwin Patient Demographics View Import...");
         MskimpactPatientDemographics qMskImpactPatientDemographics = alias(MskimpactPatientDemographics.class, patientDemographicsView);
         MskimpactPatientIcdoRecord qMskImpactPatientIcdoRecord = alias(MskimpactPatientIcdoRecord.class, patientIcdoView);
         MskimpactLatestActivity qMskImpactLatestActivity = alias(MskimpactLatestActivity.class, latestActivityView);
+        MskimpactPathologyDmp qMskimpactPathologyDmp = alias(MskimpactPathologyDmp.class, pathologyDmpView);
         List<MskimpactPatientDemographics> darwinDemographicsResults = darwinQueryFactory.selectDistinct(Projections.constructor(MskimpactPatientDemographics.class,
                 $(qMskImpactPatientDemographics.getDMP_ID_DEMO()),
                 $(qMskImpactPatientDemographics.getGENDER()),
@@ -96,26 +104,29 @@ public class MskimpactPatientDemographicsReader implements ItemStreamReader<Mski
                 .on($(qMskImpactPatientDemographics.getDMP_ID_DEMO()).eq($(qMskImpactPatientIcdoRecord.getDMP_ID_ICDO())))
                 .fullJoin($(qMskImpactLatestActivity))
                 .on($(qMskImpactPatientDemographics.getDMP_ID_DEMO()).eq($(qMskImpactLatestActivity.getDMP_ID_PLA())))
+                .innerJoin($(qMskimpactPathologyDmp))
+                .on($(qMskImpactPatientDemographics.getPT_ID_DEMO()).eq($(qMskimpactPathologyDmp.getPT_ID_PATH_DMP())))
                 .orderBy($(qMskImpactPatientIcdoRecord.getTM_DX_YEAR()).asc())
+                .where($(qMskimpactPathologyDmp.getSAMPLE_ID_PATH_DMP()).like(studyIdRegexMap.get(studyID)))
                 .fetch();
         return darwinDemographicsResults;
     }
-    
+
     @Override
     public void update(ExecutionContext executionContext) throws ItemStreamException{}
-    
+
     @Override
     public void close() throws ItemStreamException{}
-    
+
     @Override
     public MskimpactPatientDemographics read() throws Exception{
         return getRecord();
     }
-     
+
     // Recursively remove items from darwinDemographicsResults looking for record to return.
     // Patients can have multiple entries in the icdo view - we only want to return the one with the oldest year
     // The records are ordered by TM_DX_YEAR
-    private MskimpactPatientDemographics getRecord() { 
+    private MskimpactPatientDemographics getRecord() {
         if (!darwinDemographicsResults.isEmpty()) {
             MskimpactPatientDemographics record = darwinDemographicsResults.remove(0);
             // Check if this patient has as already been processed. If it has, call this method again to find one that hasn't been.

@@ -44,6 +44,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.apache.log4j.Logger;
 
 import java.util.*;
+import javax.annotation.Resource;
 
 /**
  *
@@ -52,24 +53,30 @@ import java.util.*;
 public class MskimpactBrainSpineClinicalReader implements ItemStreamReader<MskimpactBrainSpineClinical>{
     @Value("${darwin.clinical_view}")
     private String clinicalBrainSpineView;
-    
+
+    @Value("#{jobParameters[studyID]}")
+    private String studyID;
+
     @Autowired
     SQLQueryFactory darwinQueryFactory;
-    
+
+    @Resource(name="studyIdRegexMap")
+    Map<String, String> studyIdRegexMap;
+
     private List<MskimpactBrainSpineClinical> clinicalBrainSpineResults;
-    
+
     Logger log = Logger.getLogger(MskimpactBrainSpineClinicalReader.class);
-    
+
     @Override
     public void open(ExecutionContext executionContext) throws ItemStreamException{
         this.clinicalBrainSpineResults = getClinicalBrainSpineResults();
     }
-    
+
     @Transactional
     private List<MskimpactBrainSpineClinical> getClinicalBrainSpineResults(){
         log.info("Start of Clinical Brain Spine View Import...");
         MskimpactBrainSpineClinical qCBSR = alias(MskimpactBrainSpineClinical.class, clinicalBrainSpineView);
-        List<MskimpactBrainSpineClinical> clinicalBrainSpineResults = darwinQueryFactory.select(Projections.constructor(MskimpactBrainSpineClinical.class, 
+        List<MskimpactBrainSpineClinical> clinicalBrainSpineResults = darwinQueryFactory.select(Projections.constructor(MskimpactBrainSpineClinical.class,
                 $(qCBSR.getDMP_PATIENT_ID_BRAINSPINECLIN()),
                 $(qCBSR.getDMP_SAMPLE_ID_BRAINSPINECLIN()),
                 $(qCBSR.getAGE()),
@@ -81,20 +88,20 @@ public class MskimpactBrainSpineClinicalReader implements ItemStreamReader<Mskim
                 $(qCBSR.getHISTOLOGY()),
                 $(qCBSR.getWHO_GRADE()),
                 $(qCBSR.getMGMT_STATUS())))
-            .where($(qCBSR.getDMP_PATIENT_ID_BRAINSPINECLIN()).isNotEmpty())
+            .where($(qCBSR.getDMP_PATIENT_ID_BRAINSPINECLIN()).isNotEmpty().and($(qCBSR.getDMP_SAMPLE_ID_BRAINSPINECLIN()).like(studyIdRegexMap.get(studyID))))
             .from($(qCBSR))
             .fetch();
-        
+
         log.info("Imported " + clinicalBrainSpineResults.size() + " records from Clinical Brain Spine View.");
         return clinicalBrainSpineResults;
     }
-    
+
     @Override
     public void update(ExecutionContext executionContext) throws ItemStreamException{}
-    
+
     @Override
     public void close() throws ItemStreamException{}
-    
+
     @Override
     public MskimpactBrainSpineClinical read() throws Exception{
         if(!clinicalBrainSpineResults.isEmpty()){
@@ -102,5 +109,5 @@ public class MskimpactBrainSpineClinicalReader implements ItemStreamReader<Mskim
         }
         return null;
     }
-    
+
 }
