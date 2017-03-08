@@ -56,7 +56,7 @@ import org.springframework.core.io.FileSystemResource;
  * @author heinsz
  */
 public class CVRFusionDataReader implements ItemStreamReader<CVRFusionRecord> {
-    
+
     @Value("#{jobParameters[stagingDirectory]}")
     private String stagingDirectory;
 
@@ -64,11 +64,12 @@ public class CVRFusionDataReader implements ItemStreamReader<CVRFusionRecord> {
     public CVRUtilities cvrUtilities;
 
     private List<CVRFusionRecord> fusionRecords = new ArrayList();
+    private Set<String> fusionsSeen = new HashSet();
     Logger log = Logger.getLogger(CVRFusionDataReader.class);
 
     @Override
     public void open(ExecutionContext ec) throws ItemStreamException {
-        CVRData cvrData = new CVRData();        
+        CVRData cvrData = new CVRData();
         // load cvr data from cvr_data.json file
         File cvrFile = new File(stagingDirectory, cvrUtilities.CVR_FILE);
         try {
@@ -77,30 +78,34 @@ public class CVRFusionDataReader implements ItemStreamReader<CVRFusionRecord> {
             log.error("Error reading file: " + cvrFile.getName());
             throw new ItemStreamException(e);
         }
-        
+
         File fusionFile = new File(stagingDirectory, cvrUtilities.FUSION_FILE);
         if (!fusionFile.exists()) {
             log.info("File does not exist - skipping data loading from fusion file: " + fusionFile.getName());
         }
         else {
             log.info("Loading fusion data from: " + fusionFile.getName());
-            
+
             DelimitedLineTokenizer tokenizer = new DelimitedLineTokenizer(DelimitedLineTokenizer.DELIMITER_TAB);
             DefaultLineMapper<CVRFusionRecord> mapper = new DefaultLineMapper<>();
             mapper.setLineTokenizer(tokenizer);
             mapper.setFieldSetMapper(new CVRFusionFieldSetMapper());
-            
+
             FlatFileItemReader<CVRFusionRecord> reader = new FlatFileItemReader<>();
             reader.setResource(new FileSystemResource(fusionFile));
             reader.setLineMapper(mapper);
             reader.setLinesToSkip(1);
             reader.open(ec);
-            
+
             try {
                 CVRFusionRecord to_add;
                 while ((to_add = reader.read()) != null) {
                     if (!cvrUtilities.getNewIds().contains(to_add.getTumor_Sample_Barcode()) && to_add.getTumor_Sample_Barcode() != null) {
-                        fusionRecords.add(to_add);
+                        String fusion = to_add.getHugo_Symbol() + "|" +to_add.getTumor_Sample_Barcode() + "|" + to_add.getFusion();
+                        if (!fusionsSeen.contains(fusion)) {
+                            fusionRecords.add(to_add);
+                            fusionsSeen.add(fusion);
+                        }
                     }
                 }
             } catch (Exception e){
@@ -109,17 +114,25 @@ public class CVRFusionDataReader implements ItemStreamReader<CVRFusionRecord> {
             }
             reader.close();
         }
-        
+
         // merge existing and new fusion records
         for (CVRMergedResult result : cvrData.getResults()) {
             String sampleId = result.getMetaData().getDmpSampleId();
             List<CVRSvVariant> variants = result.getSvVariants();
             for (CVRSvVariant variant : variants) {
                 CVRFusionRecord record = new CVRFusionRecord(variant, sampleId, false);
+                String fusion = record.getHugo_Symbol() + "|" +record.getTumor_Sample_Barcode() + "|" + record.getFusion();
                 CVRFusionRecord recordReversed = new CVRFusionRecord(variant, sampleId, true);
-                fusionRecords.add(record);
+                if (!fusionsSeen.contains(fusion)) {
+                    fusionRecords.add(record);
+                    fusionsSeen.add(fusion);
+                }
                 if (!variant.getSite1_Gene().equals(variant.getSite2_Gene())) {
-                    fusionRecords.add(recordReversed);
+                    fusion = recordReversed.getHugo_Symbol() + "|" +recordReversed.getTumor_Sample_Barcode() + "|" + recordReversed.getFusion();
+                    if (!fusionsSeen.contains(fusion)) {
+                        fusionRecords.add(recordReversed);
+                        fusionsSeen.add(fusion);
+                    }
                 }
             }
         }
