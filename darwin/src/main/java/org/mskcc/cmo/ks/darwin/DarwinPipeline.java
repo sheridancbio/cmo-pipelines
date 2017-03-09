@@ -46,9 +46,9 @@ import org.apache.log4j.Logger;
  */
 @SpringBootApplication
 public class DarwinPipeline {
-    
+
     private static Logger log = Logger.getLogger(DarwinPipeline.class);
-    
+
     private static Options getOptions(String[] args){
         Options gnuOptions = new Options();
         gnuOptions.addOption("h", "help", false, "shows this help document and quits.")
@@ -56,20 +56,19 @@ public class DarwinPipeline {
         .addOption("s", "study", true, "Cancer Study ID");
         return gnuOptions;
     }
-    
+
     private static void help(Options gnuOptions, int exitStatus){
         HelpFormatter helpFormatter = new HelpFormatter();
         helpFormatter.printHelp("Darwin Pipeline", gnuOptions);
         System.exit(exitStatus);
     }
-    
-    
+
     private static void launchJob(String[] args, String outputDirectory, String studyID) throws Exception{
         SpringApplication app = new SpringApplication(DarwinPipeline.class);
 
         ConfigurableApplicationContext ctx = app.run(args);
         JobLauncher jobLauncher = ctx.getBean(JobLauncher.class);
-       
+
         Job job;
         JobParameters jobParameters = new JobParametersBuilder()
                 .addString("outputDirectory", outputDirectory)
@@ -81,9 +80,9 @@ public class DarwinPipeline {
                 break;
             case "skcm_mskcc_2015_chant":
                 job = ctx.getBean(BatchConfiguration.SKCM_MSKCC_2015_CHANT_JOB, Job.class);
-				break;
+                break;
             default:
-                job = null;
+                job = ctx.getBean(BatchConfiguration.MSK_JOB, Job.class);
                 break;
         }
         if (job!=null){
@@ -92,11 +91,11 @@ public class DarwinPipeline {
         else{
             log.fatal("Failed to start DarwinPipeline");
         }
-        
+
         log.info("Shutting down DarwinPipeline");
         ctx.close();
     }
-    
+
     public static void main(String[] args) throws Exception{
         Options gnuOptions = DarwinPipeline.getOptions(args);
         CommandLineParser parser = new GnuParser();
@@ -106,10 +105,7 @@ public class DarwinPipeline {
             !commandLine.hasOption("study")){
             help(gnuOptions, 0);
         }
-        
+
         launchJob(args, commandLine.getOptionValue("directory"), commandLine.getOptionValue("study"));
     }
-            
-        
-    
 }
