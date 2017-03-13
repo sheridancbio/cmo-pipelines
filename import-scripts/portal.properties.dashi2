@@ -10,7 +10,7 @@ db.portal_db_name=cgds_pancan
 # props used by importer
 db.importer_db_name=cgds_importer
 db.driver=com.mysql.jdbc.Driver
-db.connection_string=jdbc:mysql://dashi2.cbio.mskcc.org:23306/
+db.connection_string=jdbc:mysql://dashi2.cbio.mskcc.org:3306/
 db.portal_schema=$PORTAL_HOME/core/src/main/resources/db/cgds.sql
 
 # google settings
