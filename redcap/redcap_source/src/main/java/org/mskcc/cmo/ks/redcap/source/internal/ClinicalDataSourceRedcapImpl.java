@@ -79,6 +79,8 @@ public class ClinicalDataSourceRedcapImpl implements ClinicalDataSource {
     private List<String> sampleHeader;
     private List<String> patientHeader;
     private List<String> combinedHeader;
+    private Map<String, List<String>> fullPatientHeader = new HashMap<>();
+    private Map<String, List<String>> fullSampleHeader = new HashMap<>();
     String nextClinicalId;
     String nextTimelineId;
     String metadataToken;
@@ -313,6 +315,72 @@ public class ClinicalDataSourceRedcapImpl implements ClinicalDataSource {
             fillTokens();
             gotTokens = true;
         }
+    }
+
+    /**
+     * Generates list of patient attributes from full header from redcap.
+     * @param fullHeader
+     * @return 
+     */
+    @Override
+    public Map<String, List<String>> getFullPatientHeader(Map<String, List<String>> fullHeader) {
+        List<String> displayNames = new ArrayList<>();
+        List<String> descriptions = new ArrayList<>();
+        List<String> datatypes = new ArrayList<>();
+        List<String> priorities = new ArrayList<>();
+        List<String> externalHeader = new ArrayList<>();
+        List<String> header = new ArrayList<>();
+        
+        for (int i=0; i<fullHeader.get("header").size(); i++) {
+            if (fullHeader.get("attribute_types").get(i).equals("PATIENT")) {
+                displayNames.add(fullHeader.get("display_names").get(i));
+                descriptions.add(fullHeader.get("descriptions").get(i));
+                datatypes.add(fullHeader.get("datatypes").get(i));
+                priorities.add(fullHeader.get("priorities").get(i));
+                externalHeader.add(fullHeader.get("external_header").get(i));
+                header.add(fullHeader.get("header").get(i));
+            }
+        }
+        fullPatientHeader.put("display_names", displayNames);
+        fullPatientHeader.put("descriptions", descriptions);
+        fullPatientHeader.put("datatypes", datatypes);
+        fullPatientHeader.put("priorities", priorities);
+        fullPatientHeader.put("external_header", externalHeader);
+        fullPatientHeader.put("header", header);
+        return fullPatientHeader;
+    }
+    
+    /**
+     * Generates list of sample attributes from full header from redcap.
+     * @param fullHeader
+     * @return 
+     */
+    @Override
+    public Map<String, List<String>> getFullSampleHeader(Map<String, List<String>> fullHeader) {
+        List<String> displayNames = new ArrayList<>();
+        List<String> descriptions = new ArrayList<>();
+        List<String> datatypes = new ArrayList<>();
+        List<String> priorities = new ArrayList<>();
+        List<String> externalHeader = new ArrayList<>();
+        List<String> header = new ArrayList<>();
+        
+        for (int i=0; i<fullHeader.get("header").size(); i++) {
+            if (fullHeader.get("attribute_types").get(i).equals("SAMPLE")) {
+                displayNames.add(fullHeader.get("display_names").get(i));
+                descriptions.add(fullHeader.get("descriptions").get(i));
+                datatypes.add(fullHeader.get("datatypes").get(i));
+                priorities.add(fullHeader.get("priorities").get(i));
+                externalHeader.add(fullHeader.get("external_header").get(i));
+                header.add(fullHeader.get("header").get(i));
+            }
+        }
+        fullSampleHeader.put("display_names", displayNames);
+        fullSampleHeader.put("descriptions", descriptions);
+        fullSampleHeader.put("datatypes", datatypes);
+        fullSampleHeader.put("priorities", priorities);
+        fullSampleHeader.put("external_header", externalHeader);
+        fullSampleHeader.put("header", header);
+        return fullSampleHeader;
     }
     
     public static void main(String[] args) {}

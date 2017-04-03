@@ -31,8 +31,7 @@
 */
 package org.mskcc.cmo.ks.redcap.source;
 
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  *
@@ -49,4 +48,6 @@ public interface ClinicalDataSource {
     String getNextTimelineStudyId();
     boolean hasMoreTimelineData();
     boolean hasMoreClinicalData();
+    Map<String, List<String>> getFullPatientHeader(Map<String, List<String>> fullHeader);
+    Map<String, List<String>> getFullSampleHeader(Map<String, List<String>> fullHeader);
 }

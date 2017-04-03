@@ -35,38 +35,43 @@ import org.mskcc.cmo.ks.darwin.pipeline.model.*;
 
 import java.util.*;
 import org.apache.commons.lang.StringUtils;
-import org.mskcc.cmo.ks.redcap.source.ClinicalDataSource;
-import org.mskcc.cmo.ks.redcap.source.MetadataManager;
 import org.springframework.batch.item.ItemProcessor;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 
 /**
  *
  * @author heinsz
  */
 public class Skcm_mskcc_2015_chantClinicalPatientProcessor implements ItemProcessor<Skcm_mskcc_2015_chantClinicalCompositeRecord, Skcm_mskcc_2015_chantClinicalCompositeRecord> {
-    @Autowired
-    public MetadataManager metadataManager;
-    @Autowired
-     public ClinicalDataSource clinicalDataSource;    
+
+    @Value("#{stepExecutionContext['patientHeader']}")
+    private Map<String, List<String>> patientHeader;
+    
     @Override
     public Skcm_mskcc_2015_chantClinicalCompositeRecord process(final Skcm_mskcc_2015_chantClinicalCompositeRecord melanomaClinicalCompositeRecord) throws Exception{
         Skcm_mskcc_2015_chantClinicalRecord melanomaClinicalRecord = melanomaClinicalCompositeRecord.getRecord();
         List<String> header =  melanomaClinicalRecord.getFieldNames();
-        Map<String, List<String>> fullHeader = metadataManager.getFullHeader(header);
-        
         List<String> record = new ArrayList<>();
-        for (String field : melanomaClinicalRecord.getFieldNames()) {
-            String value = melanomaClinicalRecord.getClass().getMethod("get" + field).invoke(melanomaClinicalRecord).toString();
-            Set<String> uniqueValues = new HashSet(Arrays.asList(value.split("\\|")));            
+        
+        // first add patient id to record then iterate through rest of patient header
+        record.add(melanomaClinicalRecord.getPATIENT_ID().split("\\|")[0]);        
+        for (int i=0; i<patientHeader.get("header").size(); i++) {
+            String normColumn = patientHeader.get("header").get(i);
+            if (normColumn.equals("PATIENT_ID")) {
+                continue;
+            }
+            // get value by external column header (same as melanoma clinical record field name)
+            // field data might contain '|'-delimited values - if only one unique
+            // value then use that, otherwise just use the data that's there
+            String extColumn = patientHeader.get("external_header").get(i+1);  // need to shift by one b/c writer removes PATIENT_ID metadata for header
+            String value = melanomaClinicalRecord.getClass().getMethod("get" + extColumn).invoke(melanomaClinicalRecord).toString();
+            Set<String> uniqueValues = new HashSet(Arrays.asList(value.split("\\|")));
             List<String> values = Arrays.asList(value.split("\\|"));
-            if (fullHeader.get("attribute_types").get(header.indexOf(field)).equals("PATIENT")) { 
-                if (uniqueValues.size() == 1) {
-                    record.add(values.get(0));
-                }
-                else {
-                    record.add(value);
-                 }
+            if (uniqueValues.size() == 1) {
+                record.add(values.get(0));
+            }
+            else {
+                record.add(value);
             }
         }
         melanomaClinicalCompositeRecord.setPatientRecord(StringUtils.join(record, "\t"));

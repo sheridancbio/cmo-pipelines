@@ -37,11 +37,9 @@ import org.springframework.batch.item.*;
 import org.springframework.batch.item.file.*;
 import org.springframework.core.io.*;
 import org.springframework.batch.item.file.transform.PassThroughLineAggregator;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.*;
 import java.io.*;
 import java.util.*;
-import java.nio.file.Paths;
 
 import org.apache.commons.lang.StringUtils;
 
@@ -55,32 +53,33 @@ public class Skcm_mskcc_2015_chantClinicalPatientWriter implements ItemStreamWri
     private String outputDirectory;    
     
     @Value("${darwin.skcm_mskcc_2015_chant_clinical_patient_filename}")
-    private String filename;    
+    private String filename;
+    
+    @Value("#{stepExecutionContext['patientHeader']}")
+    private Map<String, List<String>> patientHeader;
     
     @Autowired
     public MetadataManager metadataManager;
     
     private FlatFileItemWriter<String> flatFileItemWriter = new FlatFileItemWriter<>();
-    private String stagingFile;    
+    private File stagingFile;    
     
     @Override
     public void open(ExecutionContext executionContext) throws ItemStreamException {
+        this.stagingFile = new File(outputDirectory, filename);
         PassThroughLineAggregator aggr = new PassThroughLineAggregator();
         flatFileItemWriter.setLineAggregator(aggr);
+        flatFileItemWriter.setResource(new FileSystemResource(stagingFile));
         flatFileItemWriter.setHeaderCallback(new FlatFileHeaderCallback(){
             @Override
             public void writeHeader(Writer writer) throws IOException {
-                List<String> header = new Skcm_mskcc_2015_chantClinicalRecord().getFieldNames();
-                Map<String, List<String>> fullHeader = metadataManager.getFullHeader(header);
-                writer.write("#" + getMetaLine(fullHeader.get("display_names"), fullHeader).replace("\n", "") + "\n");
-                writer.write("#" + getMetaLine(fullHeader.get("descriptions"), fullHeader).replace("\n", "") + "\n");
-                writer.write("#" + getMetaLine(fullHeader.get("datatypes"), fullHeader).replace("\n", "") + "\n");
-                writer.write("#" + getMetaLine(fullHeader.get("priorities"), fullHeader).replace("\n", "") + "\n");
-                writer.write( getMetaLine(fullHeader.get("header"), fullHeader).replace("\n", "") + "\n");
+                    writer.write("#" + getMetaLine(patientHeader.get("display_names")) + "\n");
+                    writer.write("#" + getMetaLine(patientHeader.get("descriptions")) + "\n");
+                    writer.write("#" + getMetaLine(patientHeader.get("datatypes")) + "\n");
+                    writer.write("#" + getMetaLine(patientHeader.get("priorities")) + "\n");
+                    writer.write(getMetaLine(patientHeader.get("header")));
             }
         });
-        stagingFile = Paths.get(outputDirectory).resolve(filename).toString();
-        flatFileItemWriter.setResource(new FileSystemResource(stagingFile));
         flatFileItemWriter.open(executionContext);
     }
     
@@ -96,23 +95,14 @@ public class Skcm_mskcc_2015_chantClinicalPatientWriter implements ItemStreamWri
     public void write(List<? extends Skcm_mskcc_2015_chantClinicalCompositeRecord> items) throws Exception {
         List<String> writeList = new ArrayList<>();
         for (Skcm_mskcc_2015_chantClinicalCompositeRecord result : items) {
-            String patientLine = result.getPatientRecord();
-            writeList.add(patientLine.replace("\n", ""));
+            writeList.add(result.getPatientRecord());
         }
-        
         flatFileItemWriter.write(writeList);
     }
-    
-    private String getMetaLine(List<String> metaData, Map<String, List<String>> header) {
-        List<String> attributeTypes = header.get("attribute_types");
-        List<String> metaDataToWrite = new ArrayList<>();
-        for (int i = 0; i < metaData.size(); i++) {
-            if (attributeTypes.get(i).equals("PATIENT")) {
-                metaDataToWrite.add(metaData.get(i));
-            }
-        }
-        
-        return StringUtils.join(metaDataToWrite, "\t");        
+
+    private String getMetaLine(List<String> metaData) {
+        int pidIndex = patientHeader.get("header").indexOf("PATIENT_ID");
+        return metaData.remove(pidIndex) + "\t" + StringUtils.join(metaData, "\t");        
     }
     
 }

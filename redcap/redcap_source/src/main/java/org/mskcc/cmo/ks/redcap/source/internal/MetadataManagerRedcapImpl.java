@@ -84,13 +84,21 @@ public class MetadataManagerRedcapImpl implements MetadataManager {
         namespace = getNamespace();
         Map<String, RedcapAttributeMetadata> combinedAttributeMap = new LinkedHashMap<>();
         for (String attribute : header) {
+            String extColHeader = "";
             for (RedcapAttributeMetadata namespaceEntry : namespace) {
                 if (namespaceEntry.getExternalColumnHeader().equals(attribute.toUpperCase())) {
+                    // update attribute name and external column header values
+                    // since coming from a namespace and not the metadata source
                     attribute = namespaceEntry.getNormalizedColumnHeader();
+                    extColHeader = namespaceEntry.getExternalColumnHeader();
                 }
             }
             for (RedcapAttributeMetadata meta : metadata) {
                 if (attribute.toUpperCase().equals(meta.getRedcapId().toUpperCase())) {
+                    // update external column header if not empty 
+                    if (!extColHeader.isEmpty()) {
+                        meta.setExternalColumnHeader(extColHeader);
+                    }
                     combinedAttributeMap.put(attribute, meta);
                 }
             }
@@ -132,6 +140,8 @@ public class MetadataManagerRedcapImpl implements MetadataManager {
         List<String> descriptions = new ArrayList<>();
         List<String> datatypes = new ArrayList<>();
         List<String> priorities = new ArrayList<>();
+        List<String> attributeTypes = new ArrayList<>();
+        List<String> externalHeader = new ArrayList<>();
         List<String> header = new ArrayList<>();
         
         for (Map.Entry<String, RedcapAttributeMetadata> entry : attributeMap.entrySet()) {
@@ -139,6 +149,8 @@ public class MetadataManagerRedcapImpl implements MetadataManager {
             descriptions.add(entry.getValue().getDescriptions());
             datatypes.add(entry.getValue().getDatatype());
             priorities.add(entry.getValue().getPriority());
+            attributeTypes.add(entry.getValue().getAttributeType());
+            externalHeader.add(entry.getValue().getExternalColumnHeader());
             header.add(entry.getValue().getNormalizedColumnHeader());
         }
         
@@ -146,8 +158,9 @@ public class MetadataManagerRedcapImpl implements MetadataManager {
         headerMap.put("descriptions", descriptions);
         headerMap.put("datatypes", datatypes);
         headerMap.put("priorities", priorities);
-        headerMap.put("header", header);
-        
+        headerMap.put("attribute_types", attributeTypes);
+        headerMap.put("external_header", externalHeader);
+        headerMap.put("header", header);        
         return headerMap;
     }    
     
