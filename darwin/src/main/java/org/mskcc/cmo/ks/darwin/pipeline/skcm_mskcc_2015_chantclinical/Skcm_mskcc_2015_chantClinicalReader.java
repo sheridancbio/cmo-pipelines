@@ -33,10 +33,10 @@ package org.mskcc.cmo.ks.darwin.pipeline.skcm_mskcc_2015_chantclinical;
 
 import org.mskcc.cmo.ks.darwin.pipeline.mskimpactdemographics.MskimpactPatientDemographicsReader;
 import org.mskcc.cmo.ks.darwin.pipeline.model.Skcm_mskcc_2015_chantClinicalRecord;
+import org.mskcc.cmo.ks.redcap.source.*;
 import java.util.*;
 import org.springframework.batch.item.*;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.*;
 import org.springframework.transaction.annotation.Transactional;
 import org.apache.log4j.Logger;
 import com.querydsl.core.types.Projections;
@@ -68,14 +68,26 @@ public class Skcm_mskcc_2015_chantClinicalReader implements ItemStreamReader<Skc
     private String metastatSitesView;      
     
     @Autowired
+    public MetadataManager metadataManager;
+    
+    @Autowired
+    public ClinicalDataSource clinicalDataSource;
+    
+    @Autowired
     SQLQueryFactory darwinQueryFactory;
     
     Logger log = Logger.getLogger(MskimpactPatientDemographicsReader.class);
     
-    List<Skcm_mskcc_2015_chantClinicalRecord> melanomaClinicalRecords;
+    private List<Skcm_mskcc_2015_chantClinicalRecord> melanomaClinicalRecords;
     
     @Override
     public void open(ExecutionContext executionContext) throws ItemStreamException {
+        // add the patient and sample headers to the execution context
+        Map<String, List<String>> fullHeader = metadataManager.getFullHeader(new Skcm_mskcc_2015_chantClinicalRecord().getFieldNames());
+        executionContext.put("sampleHeader", clinicalDataSource.getFullSampleHeader(fullHeader));
+        executionContext.put("patientHeader", clinicalDataSource.getFullPatientHeader(fullHeader));
+        
+        // getting records from db view and merge data by sample id
         this.melanomaClinicalRecords = getMelanomaClinicalRecords();
     }
     
