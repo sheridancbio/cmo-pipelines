@@ -32,6 +32,7 @@
 
 package org.cbioportal.cmo.pipelines.cvr;
 
+import java.util.*;
 import org.apache.log4j.Logger;
 import org.cbioportal.cmo.pipelines.cvr.model.CVRSession;
 import org.springframework.beans.factory.annotation.Value;
@@ -70,6 +71,18 @@ public class SessionConfiguration {
 
     @Value("${dmp.tokens.create_gml_session}")
     private String gmlCreateSession;
+    
+    @Value("${dmp.tokens.retrieve_variants.impact}")
+    private String retrieveVariantsImpact;
+    
+    @Value("${dmp.tokens.retrieve_variants.rdts}")
+    private String retrieveVariantsRaindance;
+    
+    @Value("${dmp.tokens.retrieve_variants.heme}")
+    private String retrieveVariantsHeme;
+    
+    @Value("${dmp.tokens.retrieve_variants.archer}")
+    private String retrieveVariantsArcher;
 
     Logger log = Logger.getLogger(SessionConfiguration.class);
 
@@ -111,6 +124,21 @@ public class SessionConfiguration {
             log.error("Unable to secure connection");
             return "NA";
         }
+    }
+    
+    /**
+     * Maps a study id to it's dmp retrieve variants token.
+     * @return 
+     */
+    @Bean(name="retrieveVariantTokensMap")
+    public Map<String, String> retrieveVariantTokensMap() {
+        Map<String, String> map = new HashMap<>();
+        map.put("mskimpact", retrieveVariantsImpact);
+        map.put("raindance", retrieveVariantsRaindance);
+        map.put("hemepact", retrieveVariantsHeme);
+        map.put("mskarcher", retrieveVariantsArcher);
+        
+        return map;
     }
 
     private HttpEntity getRequestEntity() {
