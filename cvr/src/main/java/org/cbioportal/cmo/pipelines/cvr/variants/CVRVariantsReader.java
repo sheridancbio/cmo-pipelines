@@ -33,6 +33,7 @@
 package org.cbioportal.cmo.pipelines.cvr.variants;
 
 import java.util.*;
+import javax.annotation.Resource;
 import org.cbioportal.cmo.pipelines.cvr.model.*;
 import org.springframework.batch.item.ExecutionContext;
 import org.springframework.batch.item.ItemStreamException;
@@ -51,19 +52,23 @@ public class CVRVariantsReader implements ItemStreamReader<CVRVariants> {
 
     @Value("#{jobParameters[sessionId]}")
     private String sessionId;
+    
+    @Value("#{jobParameters[studyId]}")
+    private String studyId;
 
     @Value("${dmp.server_name}")
     private String dmpServerName;
-
-    @Value("${dmp.tokens.retrieve_variants}")
-    private String dmpRetreiveVariants;
+    
+    @Resource(name="retrieveVariantTokensMap")
+    private Map<String, String> retrieveVariantTokensMap;
 
     private List<CVRVariants> cvrVariants = new ArrayList<CVRVariants>();
 
     // Calls cbio_retrieve_variants against CVR web service
     @Override
     public void open(ExecutionContext ec) throws ItemStreamException {
-        String dmpUrl = dmpServerName + dmpRetreiveVariants + "/" + sessionId + "/0";
+        // get retrieve variants token by study id
+        String dmpUrl = dmpServerName + retrieveVariantTokensMap.get(studyId) + "/" + sessionId + "/0";
         RestTemplate restTemplate = new RestTemplate();
         HttpEntity<LinkedMultiValueMap<String, Object>> requestEntity = getRequestEntity();
         ResponseEntity<CVRVariants> responseEntity = restTemplate.exchange(dmpUrl, HttpMethod.GET, requestEntity, CVRVariants.class);
