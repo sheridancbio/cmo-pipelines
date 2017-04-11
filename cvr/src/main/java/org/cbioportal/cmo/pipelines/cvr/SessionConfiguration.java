@@ -134,8 +134,8 @@ public class SessionConfiguration {
     public Map<String, String> retrieveVariantTokensMap() {
         Map<String, String> map = new HashMap<>();
         map.put("mskimpact", retrieveVariantsImpact);
-        map.put("raindance", retrieveVariantsRaindance);
-        map.put("hemepact", retrieveVariantsHeme);
+        map.put("mskraindance", retrieveVariantsRaindance);
+        map.put("mskimpact_heme", retrieveVariantsHeme);
         map.put("mskarcher", retrieveVariantsArcher);
         
         return map;
