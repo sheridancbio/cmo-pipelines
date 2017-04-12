@@ -13,13 +13,14 @@ fi
 
 now=$(date "+%Y-%m-%d-%H-%M-%S")
 mskimpact_notification_file=$(mktemp $tmp/mskimpact-portal-update-notification.$now.XXXXXX)
-#mskheme_notification_file=$(mktemp $tmp/mskheme-portal-update-notification.$now.XXXXXX)
+mskheme_notification_file=$(mktemp $tmp/mskheme-portal-update-notification.$now.XXXXXX)
 mskraindance_notification_file=$(mktemp $tmp/mskraindance-portal-update-notification.$now.XXXXXX)
+mixedpact_notification_file=$(mktemp $tmp/mixedpact-portal-update-notification.$now.XXXXXX)
 #mskarcher_notification_file=$(mktemp $tmp/mskarcher-portal-update-notification.$now.XXXXXX)
 
 # fetch clinical data mercurial
 echo "fetching updates from msk-impact repository..."
-$JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182-ea -Dspring.profiles.active=dbcp -Djava.io.tmpdir="$tmp" -cp $PORTAL_HOME/lib/msk-dmp-importer.jar org.mskcc.cbio.importer.Admin --fetch-data --data-source dmp-clinical-data-mercurial --run-date latest
+$JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -ea -Dspring.profiles.active=dbcp -Djava.io.tmpdir="$tmp" -cp $PORTAL_HOME/lib/msk-dmp-importer.jar org.mskcc.cbio.importer.Admin --fetch-data --data-source dmp-clinical-data-mercurial --run-date latest
 
 # lets clean clinical data files
 echo "cleaning all clinical & timeline data files - replacing carriage returns with newlines..."
@@ -48,6 +49,10 @@ echo "fetching Darwin data"
 $JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -jar $PORTAL_HOME/lib/darwin_fetcher.jar -d $MSK_IMPACT_DATA_HOME -s mskimpact
 cd $MSK_IMPACT_DATA_HOME;$HG_BINARY commit -m "Latest MSK-IMPACT Dataset: Darwin"
 
+echo "fetching Darwin heme data"
+$JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -jar $PORTAL_HOME/lib/darwin_fetcher.jar -d $MSK_HEMEPACT_DATA_HOME -s mskimpact_heme
+cd $MSK_HEMEPACT_DATA_HOME;$HG_BINARY commit -m "Latest MSK-IMPACT Dataset: Darwin heme"
+
 DB_VERSION_FAIL=0
 IMPORT_STATUS=0
 IMPORT_FAIL=0
@@ -57,6 +62,8 @@ RENAME_BACKUP_FAIL=0
 RENAME_FAIL=0
 GROUPS_FAIL=0
 SUCCESS=0
+MERGE_FAIL=0
+MIXEDPACT_IMPORT_FAIL=0
 
 # fetch new/updated IMPACT samples using CVR Web service   (must come after mercurial fetching) 
 echo "fetching samples from CVR Web service  ..."
@@ -85,32 +92,32 @@ else
 fi
 
 # fetch new/updated raindance samples using CVR Web service (must come after mercurial fetching). The -s flag skips segment data fetching
-$JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -jar $PORTAL_HOME/lib/raindance_fetcher.jar -d $MSK_RAINDANCE_DATA_HOME -s -i raindance
+$JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -jar $PORTAL_HOME/lib/cvr_fetcher.jar -d $MSK_RAINDANCE_DATA_HOME -s -i mskraindance
 if [ $? -gt 0 ]
 then
 	echo "CVR raindance fetch failed!"
 	echo "This will not affect importing of mskimpact"
-	cd $MSK_IMPACT_DATA_HOME;$HG_BINARY revert --all --no-backup;rm *.orig
+	cd $MSK_RAINDANCE_DATA_HOME;$HG_BINARY revert --all --no-backup;rm *.orig
 else
 	# raindance does not provide copy number or fusions data.
 	echo "removing unused files"
-	cd $MSK_RAINDANCE_DATA_HOME; rm data_CNA.txt; rm data_fusions.txt; rm data_SV.txt; rm mskimpact_data_cna_hg19.seg;
-	cd $MSK_IMPACT_DATA_HOME;$HG_BINARY commit -m "Latest Raindance dataset"
+	cd $MSK_RAINDANCE_DATA_HOME; rm data_CNA.txt; rm data_fusions.txt; rm data_SV.txt; rm mskraindance_data_cna_hg19.seg;
+	cd $MSK_RAINDANCE_DATA_HOME;$HG_BINARY commit -m "Latest Raindance dataset"
 fi
 
-# fetch new/updated raindance samples using CVR Web service (must come after mercurial fetching). The -s flag skips segment data fetching
-#$JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -jar $PORTAL_HOME/lib/hemepact_fetcher.jar -d $MSK_HEMEPACT_DATA_HOME
-#if [ $? -gt 0 ]
-#then
-	#echo "CVR heme fetch failed!"
-	#echo "This will not affect importing of mskimpact"
-	#cd $MSK_IMPACT_DATA_HOME;$HG_BINARY revert --all --no-backup;rm *.orig
-#else
-	#cd $MSK_IMPACT_DATA_HOME;$HG_BINARY commit -m "Latest heme dataset"
-#fi
+echo "fetching CVR heme data ..."
+$JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -jar $PORTAL_HOME/lib/cvr_fetcher.jar -d $MSK_HEMEPACT_DATA_HOME -i mskimpact_heme
+if [ $? -gt 0 ]
+then
+      echo "CVR heme fetch failed!"
+      echo "This will not affect importing of mskimpact"
+      cd $MSK_HEMEPACT_DATA_HOME;$HG_BINARY revert --all --no-backup;rm *.orig
+else
+      cd $MSK_HEMEPACT_DATA_HOME;$HG_BINARY commit -m "Latest heme dataset"
+fi
 
 # fetch new/updated archer samples using CVR Web service (must come after mercurial fetching).
-#$JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -jar $PORTAL_HOME/lib/archer_fetcher.jar -d $MSK_ARCHER_DATA_HOME
+#$JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -jar $PORTAL_HOME/lib/cvr_fetcher.jar -d $MSK_ARCHER_DATA_HOME -i mskarcher
 #if [ $? -gt 0 ]
 #then
 	#echo "CVR Archer fetch failed!"
@@ -123,7 +130,7 @@ fi
 # create case lists by cancer type
 rm $MSK_IMPACT_DATA_HOME/case_lists/*
 $PYTHON_BINARY $PORTAL_HOME/scripts/oncotree_code_converter.py --oncotree-url "http://oncotree.mskcc.org/oncotree/api/tumor_types.txt" --clinical-file $MSK_IMPACT_DATA_HOME/data_clinical.txt
-$PYTHON_BINARY $PORTAL_HOME/scripts/create_case_lists_by_cancer_type.py --clinical-file="$MSK_IMPACT_DATA_HOME"/data_clinical.txt --output-directory="$MSK_IMPACT_DATA_HOME"/case_lists
+$PYTHON_BINARY $PORTAL_HOME/scripts/create_case_lists_by_cancer_type.py --clinical-file="$MSK_IMPACT_DATA_HOME"/data_clinical.txt --output-directory="$MSK_IMPACT_DATA_HOME"/case_lists --study-id=mskimpact
 cd $MSK_IMPACT_DATA_HOME;$HG_BINARY add;$HG_BINARY commit -m "Latest MSK-IMPACT Dataset: Case Lists"
 
 $PYTHON_BINARY $PORTAL_HOME/scripts/impact_timeline.py --hgrepo=$MSK_IMPACT_DATA_HOME
@@ -214,8 +221,6 @@ then
 		fi
 	fi
 
-	#$JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -Xmx64g -ea -Dspring.profiles.active=dbcp -Djava.io.tmpdir="$tmp" -cp $PORTAL_HOME/lib/msk-dmp-importer.jar org.mskcc.cbio.importer.Admin --update-study-data --portal mskraindance-portal --notification-file "$mskraindance_notification_file"
-	#$JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -Xmx64g -ea -Dspring.profiles.active=dbcp -Djava.io.tmpdir="$tmp" -cp $PORTAL_HOME/lib/msk-dmp-importer.jar org.mskcc.cbio.importer.Admin --update-study-data --portal mskheme-portal --notification-file "$mskheme_notification_file"
 else
     if [ $DB_VERSION_FAIL -gt 0 ]
     then
@@ -224,6 +229,96 @@ else
     	echo "Not importing - something went wrong with a fetch"
     fi
 fi
+
+echo "Importing mskimpact heme..."
+$JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -Xmx64g -ea -Dspring.profiles.active=dbcp -Djava.io.tmpdir="$tmp" -cp $PORTAL_HOME/lib/msk-dmp-importer.jar org.mskcc.cbio.importer.Admin --update-study-data --portal mskheme-portal --notification-file "$mskheme_notification_file"
+#echo "Importing mskimpact raindance..."
+#$JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -Xmx64g -ea -Dspring.profiles.active=dbcp -Djava.io.tmpdir="$tmp" -cp $PORTAL_HOME/lib/msk-dmp-importer.jar org.mskcc.cbio.importer.Admin --update-study-data --portal mskraindance-portal --notification-file "$mskraindance_notification_file"
+
+
+## MSK-IMPACT, HEMEPACT, and RAINDANCE merge
+echo "Beginning merge of MSK-IMPACT, HEMEPACT, RAINDANCE data..."
+
+# first touch meta_clinical.txt and meta_SV.txt in each directory if not already exists
+if [ ! -f $MSK_IMPACT_DATA_HOME/meta_clinical.txt ]; then
+    touch $MSK_IMPACT_DATA_HOME/meta_clinical.txt
+fi
+
+if [ ! -f $MSK_IMPACT_DATA_HOME/meta_SV.txt ]; then
+    touch $MSK_IMPACT_DATA_HOME/meta_SV.txt
+fi
+
+if [ ! -f $MSK_HEMEPACT_DATA_HOME/meta_clinical.txt ]; then
+    touch $MSK_HEMEPACT_DATA_HOME/meta_clinical.txt
+fi
+
+if [ ! -f $MSK_HEMEPACT_DATA_HOME/meta_SV.txt ]; then
+    touch $MSK_HEMEPACT_DATA_HOME/meta_SV.txt
+fi
+
+# raindance doesn't have SV data so no need to touch that meta file
+if [ ! -f $MSK_RAINDANCE_DATA_HOME/meta_clinical.txt ]; then
+    touch $MSK_RAINDANCE_DATA_HOME/meta_clinical.txt
+fi
+
+# merge data from both directories and check exit code
+$PYTHON_BINARY $PORTAL_HOME/scripts/merge.py -d $MSK_MIXEDPACT_DATA_HOME -i mixedpact -m "true" $MSK_IMPACT_DATA_HOME $MSK_HEMEPACT_DATA_HOME $MSK_RAINDANCE_DATA_HOME
+if [ $? -gt 0 ]; then
+    echo "MIXEDPACT merge failed! Study will not be updated in the portal."
+    MERGE_FAIL=1
+else
+    # if merge successful then copy case lists from MSK-IMPACT directory and change stable id
+    echo "MIXEDPACT merge successful! Creating cancer type case lists..."
+    rm $MSK_MIXEDPACT_DATA_HOME/case_lists/*
+    $PYTHON_BINARY $PORTAL_HOME/scripts/oncotree_code_converter.py --oncotree-url "http://oncotree.mskcc.org/oncotree/api/tumor_types.txt" --clinical-file $MSK_MIXEDPACT_DATA_HOME/data_clinical.txt
+    $PYTHON_BINARY $PORTAL_HOME/scripts/create_case_lists_by_cancer_type.py --clinical-file="$MSK_MIXEDPACT_DATA_HOME"/data_clinical.txt --output-directory="$MSK_MIXEDPACT_DATA_HOME"/case_lists --study-id=mixedpact
+    
+fi
+
+# check that meta_clinical.txt and meta_SV.txt are actually empty files before deleting from IMPACT, HEME, and RAINDANCE studies
+if [ $(wc -l < $MSK_IMPACT_DATA_HOME/meta_clinical.txt) -eq 0 ]; then
+    rm $MSK_IMPACT_DATA_HOME/meta_clinical.txt
+fi
+
+if [ $(wc -l < $MSK_IMPACT_DATA_HOME/meta_SV.txt) -eq 0 ]; then
+    rm $MSK_IMPACT_DATA_HOME/meta_SV.txt
+fi
+
+if [ $(wc -l < $MSK_HEMEPACT_DATA_HOME/meta_clinical.txt) -eq 0 ]; then
+    rm $MSK_HEMEPACT_DATA_HOME/meta_clinical.txt
+fi
+
+if [ $(wc -l < $MSK_HEMEPACT_DATA_HOME/meta_SV.txt) -eq 0 ]; then
+    rm $MSK_HEMEPACT_DATA_HOME/meta_SV.txt
+fi
+
+if [ $(wc -l < $MSK_RAINDANCE_DATA_HOME/meta_clinical.txt) -eq 0 ]; then
+    rm $MSK_RAINDANCE_DATA_HOME/meta_clinical.txt
+fi
+
+# update MIXEDPACT in portal only if merge and case list updates were succesful
+if [ $MERGE_FAIL -eq 0 ]; then
+    echo "Importing MIXEDPACT study..."
+	$JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -Xmx64g -ea -Dspring.profiles.active=dbcp -Djava.io.tmpdir="$tmp" -cp $PORTAL_HOME/lib/msk-dmp-importer.jar org.mskcc.cbio.importer.Admin --update-study-data --portal mixedpact-portal --notification-file "$mixedpact_notification_file" 
+    if [ $? -gt 0 ]; then 
+        echo "MIXEDPACT import failed!"
+        MIXEDPACT_IMPORT_FAIL=1
+    fi
+else
+    MIXEDPACT_IMPORT_FAIL=1
+fi
+
+# commit or revert changes for MIXEDPACT
+if [ $MIXEDPACT_IMPORT_FAIL -gt 0 ]; then
+    echo "MIXEDPACT merge and/or updates failed! Reverting data to last commit."
+    cd $MSK_MIXEDPACT_DATA_HOME;$HG_BINARY revert --all --no-backup;
+    rm $MSK_MIXEDPACT_DATA_HOME/*.orig
+    rm $MSK_MIXEDPACT_DATA_HOME/case_lists/*.orig
+else
+    echo "Committing MIXEDPACT data"
+    cd $MSK_MIXEDPACT_DATA_HOME;$HG_BINARY add;$HG_BINARY commit -m "Latest MIXEDPACT dataset"
+fi
+## END MSK-IMPACT, HEMEPACT, and RAINDANCE merge
 
 # redeploy war
 if [ $num_studies_updated -gt 0 ]
@@ -303,9 +398,22 @@ then
 	echo -e "$EMAIL_BODY" | mail -s "MSKIMPACT Update Failure: Groups update" $email_list
 fi
 
+EMAIL_BODY="Failed to merge MSK-IMPACT and HEMEPACT data. Merged study will not be updated."
+if [ $MERGE_FAIL -gt 0 ]; then
+    echo -e "Sending email $EMAIL_BODY"
+    echo -e "$EMAIL_BODY" |  mail -s "MIXEDPACT Merge Failure: Study will not be updated." $email_list
+fi
+
+EMAIL_BODY="Failed to import MIXEDPACT study."
+if [ $MIXEDPACT_IMPORT_FAIL -gt 0 ]; then
+    echo -e "Sending email $EMAIL_BODY"
+    echo -e "$EMAIL_BODY" | mail -s "MIXEDPACT Import Failure: Study will not be updated." $email_list
+fi
+
 $JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -Xmx16g -ea -Dspring.profiles.active=dbcp -Djava.io.tmpdir="$tmp" -cp $PORTAL_HOME/lib/msk-dmp-importer.jar org.mskcc.cbio.importer.Admin --send-update-notification --portal mskimpact-portal --notification-file "$mskimpact_notification_file"
 #$JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -Xmx16g -ea -Dspring.profiles.active=dbcp -Djava.io.tmpdir="$tmp" -cp $PORTAL_HOME/lib/msk-dmp-importer.jar org.mskcc.cbio.importer.Admin --send-update-notification --portal mskraindance-portal --notification-file $mskraindance_notification_file
-#$JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -Xmx16g -ea -Dspring.profiles.active=dbcp -Djava.io.tmpdir="$tmp" -cp $PORTAL_HOME/lib/msk-dmp-importer.jar org.mskcc.cbio.importer.Admin --send-update-notification --portal mskheme-portal --notification-file $mskheme_notification_file
+$JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -Xmx16g -ea -Dspring.profiles.active=dbcp -Djava.io.tmpdir="$tmp" -cp $PORTAL_HOME/lib/msk-dmp-importer.jar org.mskcc.cbio.importer.Admin --send-update-notification --portal mskheme-portal --notification-file $mskheme_notification_file
+$JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -Xmx16g -ea -Dspring.profiles.active=dbcp -Djava.io.tmpdir="$tmp" -cp $PORTAL_HOME/lib/msk-dmp-importer.jar org.mskcc.cbio.importer.Admin --send-update-notification --portal mixedpact-portal --notification-file "$mixedpact_notification_file"
 
 if [[ -d "$tmp" && "$tmp" != "/" ]]; then
 	rm -rf "$tmp"/*

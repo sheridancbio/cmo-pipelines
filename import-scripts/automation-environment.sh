@@ -5,11 +5,12 @@ export MSK_IMPACT_DATA_HOME=/data/portal-cron/cbio-portal-data/msk-impact/msk-im
 export MSK_RAINDANCE_DATA_HOME=/data/portal-cron/cbio-portal-data/msk-impact/raindance
 export MSK_HEMEPACT_DATA_HOME=/data/portal-cron/cbio-portal-data/msk-impact/hemepact
 export MSK_ARCHER_DATA_HOME=/data/portal-cron/cbio-portal-data/msk-impact/mskarcher
+export MSK_MIXEDPACT_DATA_HOME=/data/portal-cron/cbio-portal-data/msk-impact/mixedpact
 export IMPACT_DATA_HOME=/data/portal-cron/cbio-portal-data/impact
 export FOUNDATION_DATA_HOME=/data/portal-cron/cbio-portal-data/foundation
 # CMO_DATA_HOME looks unused
 #export CMO_DATA_HOME=/data/cbio-portal-data/bic-mskcc
 export JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk.x86_64
-export PYTHON_BINARY=/home/grossb/local/bin/python
-export HG_BINARY=/home/grossb/local/bin/hg
+export PYTHON_BINARY=/data/tools/python2.7/bin/python
+export HG_BINARY=/usr/bin/hg
 export PATH=/home/grossb/local/bin/:$PATH:/usr/bin/:/bin/

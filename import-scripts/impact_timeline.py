@@ -7,13 +7,8 @@ import getopt
 import time
 import csv
 import re
+import datetime as dt
 from datetime import datetime
-
-#import seaborn as sns
-
-#import matplotlib.pyplot as plt
-#import matplotlib.dates as mdate
-
 
 # ------------------------------------------------------------------------------
 # globals
@@ -23,28 +18,10 @@ ERROR_FILE = sys.stderr
 OUTPUT_FILE = sys.stdout
 
 CLINICAL_FILENAME = 'data_clinical.txt'
-MUTATION_FILENAME = 'data_mutations_extended.txt'
-CNA_FILENAME = 'data_CNA.txt'
-SAMPLES_TITLE = 'Number of Samples in MSK-IMPACT Over Time'
-SAMPLES_Y_LABEL = 'Number of Samples'
-SAMPLES_X_LABEL = 'Date'
-MUTATIONS_TITLE = 'Number of Mutations in MSK-IMPACT Over Time'
-MUTATIONS_Y_LABEL = 'Number of Mutations'
-MUTATIONS_X_LABEL = 'Date'
-CNA_TITLE = 'Number of CNA Events in MSK-IMPACT Over Time'
-CNA_Y_LABEL = 'Number of CNA Events'
-CNA_X_LABEL = 'Date'
 sample_date_map = {}
 sample_patient_map = {}
 sample_list = []
 current_sample_list = []
-
-
-def append_zero(number):
-	""" Appends a leading 0 to a month/day/second string for uniformity """
-	if len(number) == 1:
-		return '0' + number
-	return number
 
 def create_date_dict(log_lines):
 
@@ -52,70 +29,37 @@ def create_date_dict(log_lines):
 
 	Iterates through the selected log lines, creating a dictionary of changesets:dates
 
-	Then, figures out which changesets occured on the same dates, and filteres the original
+	Then, figures out which changesets occured on the same dates, and filters the original
 	dictionary keeping only the latest changeset that occured in a day
 
+	Example log output:
+		changeset:   0:51e4f8d10633
+		user:        Benjamin Gross <benjamin.gross@gmail.com>
+		date:        Wed Jan 02 22:05:18 2013 -0500
+		summary:     start of cvs migration. brca-bccrc move
 	"""
-
-	changeset_date_dict = {}
 	
+	changesets_by_day = {}
 	for i,line in enumerate(log_lines):
 		if 'date:' in line:
-			changeset = log_lines[i-1].split(':')[1].strip()
-			date = time.strptime(":".join(line.split(':')[1:]).split('-')[0].strip(), "%a %b %d %H:%M:%S %Y")
-			date = time.strftime("%Y/%m/%d", date)
-			#date = ''.join(map(append_zero, map(str, date[0:5])))
-			changeset_date_dict[changeset] = date
+			changeset = int(log_lines[i-1].split(':')[1].strip())
+			date_str = ":".join(line.split(':')[1:]).split('-')[0].strip()  # parses out the date (ex: Wed Jan 02 22:05:18 2013)
+			date = time.strptime(date_str, "%a %b %d %H:%M:%S %Y") # creates struct_time object
+			date = time.strftime("%Y/%m/%d", date) # formats date to YYYY/MM/DD (ex: 2013/01/02)
 
-	changesets_by_day = {}
-	
-	for cs, d in changeset_date_dict.iteritems():
-		if d in changesets_by_day:
-			changesets_by_day[d].append(cs)
-		else:
-			changesets_by_day[d] = [cs]
+			# organize changesets by date
+			if date in changesets_by_day:
+				changesets_by_day[date].append(changeset)
+			else:
+				changesets_by_day[date] = [changeset]
 
-	# only take latest one in a day
-	to_include = []
-	
-	for same_day_changesets in changesets_by_day.values():
-		to_include.append(max(map(int, same_day_changesets)))
-
-	
-
-	filtered_changeset_date_dict = {int(k):v for (k, v) in changeset_date_dict.iteritems() if k in map(str,to_include)}
+	# only take latest changeset in a day
+	filtered_changeset_date_dict = {}
+	for date,same_day_changesets in changesets_by_day.items():
+		latest_changeset = max(map(int, same_day_changesets))
+		filtered_changeset_date_dict[latest_changeset] = date
 
 	return filtered_changeset_date_dict
-
-def check_num_samples(last_num_samples, num_samples):
-	""" Only needed if it is desired to filter days when the number of samples decreased """
-	if last_num_samples < num_samples and last_num_samples != -1:
-		return False
-	return True
-
-def get_num_cna_events(cna_file):
-	""" 
-
-	Gets the number of CNA events from a file 
-	Only counts at deep deletions (-2) and amplificaitons (+2)
-
-	""" 
-
-	header = True
-	num_events = 0
-	for line in cna_file:
-		if header:
-			header = False
-			continue
-		data = line.strip().split('\t')[1:]
-		for datum in data:
-			# we don't care about anything that isn't a float
-			try:
-				if float(datum) != 0:
-					num_events = num_events + 1
-			except ValueError:
-				continue
-	return num_events
 
 def map_samples_to_date(clin_file, date, first):
 	
@@ -126,32 +70,36 @@ def map_samples_to_date(clin_file, date, first):
     """
 
     reader = csv.DictReader(clin_file, dialect='excel-tab')
-
     try:
-        for line in reader:
-            if 'DMP' not in line['SAMPLE_ID']:
-                sample_date_map[line['SAMPLE_ID']] = date
-                if line['SAMPLE_ID'] not in sample_patient_map:
-                    sample_patient_map[line['SAMPLE_ID']] = line['PATIENT_ID']
-                if first:
-                    sample_list.append(line['SAMPLE_ID'])
-
+		for line in reader:
+			if 'DMP' not in line['SAMPLE_ID'].strip():
+				sample_date_map[line['SAMPLE_ID'].strip()] = date
+				if line['SAMPLE_ID'].strip() not in sample_patient_map:
+					sample_patient_map[line['SAMPLE_ID'].strip()] = line['PATIENT_ID'].strip()
+				
+				# first refers to the latest checked in data_clinical.txt - only the samples in latest data_clinical.txt get added to this list
+				if first:
+					sample_list.append(line['SAMPLE_ID'].strip())
     except Exception, e:
-        print 'Something happened on: ' + date
-        print str(e)
+        print >> OUTPUT_FILE, 'Something happened on: ' + date
+        print >> OUTPUT_FILE, str(e)
         return
 
 def write_map_to_file(filtered_samples, hgrepo):
 
-    fieldnames = ['PATIENT_ID', 'SAMPLE_ID', 'DATE_ADDED']
-    output_file = open(os.path.join(hgrepo,'data_clinical_supp_date.txt'), 'w')
+    fieldnames = ['PATIENT_ID', 'SAMPLE_ID', 'DATE_ADDED', 'MONTH_ADDED', 'WEEK_ADDED']
+    output_file = open(os.path.join(hgrepo,'data_clinical_supp_date.txt'), 'wb')
     writer = csv.DictWriter(output_file, fieldnames = fieldnames, dialect = 'excel-tab')
     writer.writeheader()
     for k, v in filtered_samples.iteritems():
-        if k.strip() in current_sample_list:
-            writer.writerow({'PATIENT_ID':sample_patient_map[k], 'SAMPLE_ID':k, 'DATE_ADDED':v})
+        if k in current_sample_list:
+            date_parts = v.split('/')
+            month_date = date_parts[0] + '/' + date_parts[1]
+            week_date = date_parts[0] + ', Wk. ' + dt.date(int(date_parts[0]), int(date_parts[1]), int(date_parts[2])).strftime('%V')
+            writer.writerow({'PATIENT_ID':sample_patient_map[k], 'SAMPLE_ID':k, 'DATE_ADDED':v, 'MONTH_ADDED':month_date, 'WEEK_ADDED':week_date})
 
 def filter_samples():
+	""" Filters the sample-date dict using the latest data_clinical.txt """
 	filtered_samples = {}
 	for sample, date in sample_date_map.iteritems():
 		if sample in sample_list:
@@ -170,13 +118,12 @@ def get_patient_id(id):
     return patientid
 
 def make_sample_list(clin_filename):
-    clin_file = open(clin_filename, 'rU')
-    is_first = True
-    for line in clin_file:
-        if is_first:
-            is_first = False
-            continue
-        current_sample_list.append(line.split('\t')[0].strip())        
+	""" Generates the current sample list from latest data_clinical.txt """
+	clin_file = open(clin_filename, 'rU')
+	clin_reader = csv.DictReader(clin_file, dialect = 'excel-tab')
+	for line in clin_reader:
+		current_sample_list.append(line['SAMPLE_ID'].strip())
+	clin_file.close()
 
 def process_hg(changeset_date_dict, hgrepo):
 
@@ -186,85 +133,34 @@ def process_hg(changeset_date_dict, hgrepo):
     Then, the files are processed for that changeset and values are extracted and mapped to dates.
 
     """
-
-    sample_date_dict = {}
-    mut_date_dict = {}
-    cna_date_dict = {}
     clin_filename = os.path.join(hgrepo,CLINICAL_FILENAME)
-    mut_filename = os.path.join(hgrepo,MUTATION_FILENAME)
-    cna_filename = os.path.join(hgrepo,CNA_FILENAME)
-    last_num_samples = -1
     first = True
 
     make_sample_list(clin_filename)
 
-    for cs, d in reversed(sorted(changeset_date_dict.items())):
-        subprocess.call(['hg', 'revert', '-r', str(cs), clin_filename, '--cwd', hgrepo])
-        #subprocess.call(['hg', 'revert', '-r', str(cs), mut_filename, '--cwd', hgrepo])
-        #subprocess.call(['hg', 'revert', '-r', str(cs), cna_filename, '--cwd', hgrepo])
-		
+    # sorts dict from latest --> earliest changeset
+    # this order is chosen so that we only write date information for samples we currently have checked in 
+    # that way we do not end up including data for samples that have had their ID's changed 
+    # or whose data have been redacted at an earlier date
+    for changeset, date in reversed(sorted(changeset_date_dict.items())):
+    	# reverts clinical file to specificied changeset 
+        subprocess.call(['hg', 'revert', '-r', str(changeset), clin_filename, '--cwd', hgrepo, '--no-backup'])		
         try:
             clin_file = open(os.path.join(hgrepo, CLINICAL_FILENAME), 'rU')
-            #mut_file = open(os.path.join(hgrepo, MUTATION_FILENAME), 'rU')
-            #cna_file = open(os.path.join(hgrepo, CNA_FILENAME), 'rU')
         except IOError:
-            print >> ERROR_FILE, 'failed at cs ' + str(cs)
+            print >> ERROR_FILE, 'failed at changeset ' + str(changeset)
             fix_repo(hgrepo)
             sys.exit(1)
 		
-        map_samples_to_date(clin_file, d, first)
-        #num_samples = sum(1 for line in clin_file) - 1
-        #num_mutations = sum(1 for line in mut_file) - 2
-        #num_cna = get_num_cna_events(cna_file)
-
-        #sample_date_dict[d] = num_samples
-        #mut_date_dict[d] = num_mutations
-        #cna_date_dict[d] = num_cna
-		
+        map_samples_to_date(clin_file, date, first)
         clin_file.close()
-        #mut_file.close()
-		#cna_file.close()
-
         first = False
 
-    #create_over_time(sample_date_dict, title = SAMPLES_TITLE, y_label = SAMPLES_Y_LABEL, x_label = SAMPLES_X_LABEL)
-    #create_over_time(mut_date_dict, title = MUTATIONS_TITLE, y_label = MUTATIONS_Y_LABEL, x_label = MUTATIONS_X_LABEL)
-    #create_over_time(cna_date_dict, title = CNA_TITLE, y_label = CNA_Y_LABEL, x_label = CNA_X_LABEL)
     fix_repo(hgrepo)
     filtered_samples = filter_samples()
     write_map_to_file(filtered_samples, hgrepo)
 
-
-def create_over_time(sample_date_dict, title = '', y_label = '', x_label = ''):
-	""" Creates plot for number of events/items over time """
-	x = []
-	y = []
-
-	# this converts the date to epoch.
-	#fix_date = lambda x: int(datetime(int(x[0:-4][0:4]), int(x[0:-4][4:6]), int(x[0:-4][6:8])).strftime('%s'))
-
-	for k, v in sorted(sample_date_dict.items()):
-		x.append(k)
-		y.append(time.strftime('%s', v))
-
-	#sns.set_style('whitegrid')
-	fig, ax = plt.subplots()
-	ax.plot_date(mdate.epoch2num(x),y)
-	date_fmt = '%b-%Y'
-	date_formatter = mdate.DateFormatter(date_fmt)
-	ax.xaxis.set_major_formatter(date_formatter)
-
-	fig.autofmt_xdate()
-	plt.xlabel(x_label)
-	plt.ylabel(y_label)
-	plt.title(title)
-	#if set_range:
-	#	lower = y[0]
-	#	upper = y[-1]
-	#	plt.ylim([lower,upper])
-	plt.show()
-
-def make_graphs(hgrepo):
+def generate_impact_date_added_data(hgrepo):
 
 	""" 
 
@@ -276,13 +172,13 @@ def make_graphs(hgrepo):
 	Returns dictionary containing dates as keys, number of samples as values
 
 	"""
-	#subprocess.call(['hg', 'pull', '--cwd', hgrepo])
 	fix_repo(hgrepo)
 	changesets = subprocess.check_output(['hg','identify', '--cwd', hgrepo, '--num'])
+	print >> OUTPUT_FILE, 'Extracting date added information from ' + changesets.strip() + ' changesets'	
+	
+	# get logs for msk-impact repo
 	log = subprocess.check_output(['hg','log', '--cwd', hgrepo])
-
-	log_lines = log.split('\n')
-	log_lines = [l for l in log_lines if 'changeset:' in l or 'date:' in l]
+	log_lines = [l for l in log.split('\n') if 'changeset:' in l or 'date:' in l]
 
 	changeset_date_dict = create_date_dict(log_lines)
 	process_hg(changeset_date_dict, hgrepo)
@@ -309,7 +205,6 @@ def main():
 		sys.exit(2)
 
 	hgrepo = ''
-
 	# get the input
 	for o, a in opts:
 		if o == '--hgrepo':
@@ -321,8 +216,8 @@ def main():
 		usage()
 		sys.exit(2)
 
-	# make the graphs
-	make_graphs(hgrepo)
+	# generate the impact date added data
+	generate_impact_date_added_data(hgrepo)
 
 # do it up
 if __name__ == '__main__':
