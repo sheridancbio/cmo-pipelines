@@ -280,7 +280,7 @@ public class CVRClinicalRecord {
 
     public String getINSTITUTE() {
         // Assume MSKCC if not specified or -, the field from CVR is 'outside_institute'
-        if (this.institute != null) {
+        if (this.institute != null && !this.institute.isEmpty()) {
             return this.institute.equals("-") ? "MSKCC" : this.institute;
         }
         return "MSKCC";
