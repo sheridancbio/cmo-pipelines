@@ -50,10 +50,10 @@ def write_case_list_files(clinical_file_map, output_directory, study_id):
 		case_list_description = 'All tumors with cancer type ' + cancer_type
 		case_list_ids = '\t'.join(ids)
 		case_list_file.write('cancer_study_identifier : ' + study_id + '\n' +
-								'stable_id : ' + stable_id + '\n' + 
-								'case_list_name : ' + case_list_name + '\n' + 
-								'case_list_description : ' + case_list_description + '\n' +
-								'case_list_ids : ' + case_list_ids)
+								'stable_id: ' + stable_id + '\n' + 
+								'case_list_name: ' + case_list_name + '\n' + 
+								'case_list_description: ' + case_list_description + '\n' +
+								'case_list_ids: ' + case_list_ids)
 
 # ---------------------------------------------------------------
 # gets clin file and processes it 
