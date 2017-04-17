@@ -42,6 +42,12 @@ import org.mskcc.cmo.ks.darwin.pipeline.mskimpactbrainspinetimeline.MskimpactTim
 import org.mskcc.cmo.ks.darwin.pipeline.mskimpactdemographics.MskimpactPatientDemographicsProcessor;
 import org.mskcc.cmo.ks.darwin.pipeline.mskimpactdemographics.MskimpactPatientDemographicsWriter;
 import org.mskcc.cmo.ks.darwin.pipeline.mskimpactdemographics.MskimpactPatientDemographicsReader;
+import org.mskcc.cmo.ks.darwin.pipeline.mskimpactgeniepatient.MskimpactGeniePatientReader;
+import org.mskcc.cmo.ks.darwin.pipeline.mskimpactgeniepatient.MskimpactGeniePatientProcessor;
+import org.mskcc.cmo.ks.darwin.pipeline.mskimpactgeniepatient.MskimpactGeniePatientWriter;
+import org.mskcc.cmo.ks.darwin.pipeline.mskimpactgeniesample.MskimpactGenieSampleReader;
+import org.mskcc.cmo.ks.darwin.pipeline.mskimpactgeniesample.MskimpactGenieSampleProcessor;
+import org.mskcc.cmo.ks.darwin.pipeline.mskimpactgeniesample.MskimpactGenieSampleWriter;
 import org.mskcc.cmo.ks.darwin.pipeline.model.*;
 import org.mskcc.cmo.ks.darwin.pipeline.skcm_mskcc_2015_chanttimeline.Skcm_mskcc_2015_chantTimelineWriter;
 import org.mskcc.cmo.ks.darwin.pipeline.skcm_mskcc_2015_chanttimeline.Skcm_mskcc_2015_chantTimelineReader;
@@ -105,6 +111,8 @@ public class BatchConfiguration {
                 .start(mskimpactPatientDemographicsStep())
                 .next(mskimpactTimelineBrainSpineStep())
                 .next(mskimpactClinicalBrainSpineStep())
+                .next(mskimpactGeniePatientClinicalStep())
+                .next(mskimpactGenieSampleClinicalStep())
                 .build();
     }
 
@@ -172,14 +180,32 @@ public class BatchConfiguration {
                 .writer(skcm_mskcc_2015_chantTimelineWriter())
                .build();
     }
+    
+    @Bean
+    public Step mskimpactGeniePatientClinicalStep() {
+        return stepBuilderFactory.get("mskimpactGeniePatientClinicalStep")
+                .<MskimpactNAACCRClinical, String> chunk(chunkSize)
+                .reader(mskimpactGeniePatientReader())
+                .processor(mskimpactGeniePatientProcessor())
+                .writer(mskimpactGeniePatientWriter())
+                .build();
+    }
+    
+    @Bean
+    public Step mskimpactGenieSampleClinicalStep() {
+        return stepBuilderFactory.get("mskimpactGenieSampleClinicalStep")
+                .<MskimpactGenieClinical, String> chunk(chunkSize)
+                .reader(mskimpactGenieSampleReader())
+                .processor(mskimpactGenieSampleProcessor())
+                .writer(mskimpactGenieSampleWriter())
+                .build();
+    }    
 
     @Bean
     @StepScope
     public ItemStreamReader<MskimpactPatientDemographics> mskimpactPatientDemographicsReader() {
         return new MskimpactPatientDemographicsReader();
     }
-
-
 
     @Bean
     public MskimpactPatientDemographicsProcessor mskimpactPatientDemographicsProcessor() {
@@ -197,6 +223,40 @@ public class BatchConfiguration {
     public ItemStreamReader<MskimpactBrainSpineTimeline> mskimpactTimelineBrainSpineReader() {
         return new MskimpactTimelineBrainSpineReader();
     }
+    
+    @Bean
+    @StepScope
+    public ItemStreamReader<MskimpactNAACCRClinical> mskimpactGeniePatientReader() {
+        return new MskimpactGeniePatientReader();
+    }
+
+    @Bean
+    public MskimpactGeniePatientProcessor mskimpactGeniePatientProcessor() {
+        return new MskimpactGeniePatientProcessor();
+    }
+
+    @Bean
+    @StepScope
+    public ItemStreamWriter<String> mskimpactGeniePatientWriter() {
+        return new MskimpactGeniePatientWriter();
+    }
+    
+    @Bean
+    @StepScope
+    public ItemStreamReader<MskimpactGenieClinical> mskimpactGenieSampleReader() {
+        return new MskimpactGenieSampleReader();
+    }
+
+    @Bean
+    public MskimpactGenieSampleProcessor mskimpactGenieSampleProcessor() {
+        return new MskimpactGenieSampleProcessor();
+    }
+
+    @Bean
+    @StepScope
+    public ItemStreamWriter<String> mskimpactGenieSampleWriter() {
+        return new MskimpactGenieSampleWriter();
+    }    
 
     @Bean
     @StepScope
