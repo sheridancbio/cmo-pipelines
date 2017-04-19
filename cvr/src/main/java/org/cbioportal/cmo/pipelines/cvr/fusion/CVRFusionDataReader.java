@@ -120,7 +120,18 @@ public class CVRFusionDataReader implements ItemStreamReader<CVRFusionRecord> {
             String sampleId = result.getMetaData().getDmpSampleId();
             List<CVRSvVariant> variants = result.getSvVariants();
             for (CVRSvVariant variant : variants) {
-                CVRFusionRecord record = new CVRFusionRecord(variant, sampleId, false);
+
+                CVRFusionRecord record = null; // = new CVRFusionRecord(variant, sampleId, false);
+                try {
+                    record = new CVRFusionRecord(variant, sampleId, false);
+                }
+                catch (NullPointerException e) {
+                    // log error if both variant gene sites are not null
+                    if (variant.getSite1_Gene() != null && variant.getSite2_Gene() != null) {
+                        log.error("Error creating fusion record for sample, gene1-gene2 event: " + sampleId + ", " + variant.getSite1_Gene() + "-" + variant.getSite2_Gene());
+                    }
+                    continue;
+                }
                 String fusion = record.getHugo_Symbol() + "|" +record.getTumor_Sample_Barcode() + "|" + record.getFusion();
                 CVRFusionRecord recordReversed = new CVRFusionRecord(variant, sampleId, true);
                 if (!fusionsSeen.contains(fusion)) {

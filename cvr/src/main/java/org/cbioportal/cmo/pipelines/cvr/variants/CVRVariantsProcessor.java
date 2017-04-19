@@ -112,7 +112,7 @@ public class CVRVariantsProcessor implements ItemProcessor<CVRVariants, String> 
         } catch (org.springframework.web.client.RestClientException e) {
             String message = "Error getting seg data for sample: " + sampleId;
             log.warn(message);
-            return null;
+            return new CVRSegData();
         }
         return responseEntity.getBody();
     }

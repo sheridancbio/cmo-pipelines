@@ -138,7 +138,7 @@ public class CVRMergedResult {
     */
     @JsonProperty("cnv-intragenic-variants")
     public List<CVRCnvIntragenicVariant> getCnvIntragenicVariants() {
-        return cnvIntragenicVariants;
+        return cnvIntragenicVariants != null ? cnvIntragenicVariants : new ArrayList();
     }
 
     /**
@@ -158,7 +158,7 @@ public class CVRMergedResult {
     */
     @JsonProperty("cnv-variants")
     public List<CVRCnvVariant> getCnvVariants() {
-        return cnvVariants;
+        return cnvVariants != null ? cnvVariants : new ArrayList();
     }
 
     /**
@@ -218,7 +218,7 @@ public class CVRMergedResult {
     */
     @JsonProperty("snp-indel-exonic")
     public List<CVRSnp> getSnpIndelExonic() {
-        return snpIndelExonic;
+        return snpIndelExonic != null ? snpIndelExonic : new ArrayList();
     }
 
     /**
@@ -238,7 +238,7 @@ public class CVRMergedResult {
     */
     @JsonProperty("snp-indel-exonic-np")
     public List<CVRSnp> getSnpIndelExonicNp() {
-        return snpIndelExonicNp;
+        return snpIndelExonicNp != null ? snpIndelExonicNp : new ArrayList();
     }
 
     /**
@@ -258,7 +258,7 @@ public class CVRMergedResult {
     */
     @JsonProperty("snp-indel-silent")
     public List<CVRSnp> getSnpIndelSilent() {
-        return snpIndelSilent;
+        return snpIndelSilent != null ? snpIndelSilent : new ArrayList();
     }
 
     /**
@@ -278,7 +278,7 @@ public class CVRMergedResult {
     */
     @JsonProperty("snp-indel-silent-np")
     public List<CVRSnp> getSnpIndelSilentNp() {
-        return snpIndelSilentNp;
+        return snpIndelSilentNp != null ? snpIndelSilentNp : new ArrayList();
     }
 
     /**
@@ -298,7 +298,7 @@ public class CVRMergedResult {
     */
     @JsonProperty("sv-variants")
     public List<CVRSvVariant> getSvVariants() {
-        return svVariants;
+        return svVariants != null ? svVariants : new ArrayList();
     }
 
     /**

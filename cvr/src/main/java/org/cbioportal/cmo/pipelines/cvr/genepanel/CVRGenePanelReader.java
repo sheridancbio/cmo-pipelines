@@ -117,7 +117,10 @@ public class CVRGenePanelReader implements ItemStreamReader<CVRGenePanelRecord> 
             CVRGenePanelRecord record = new CVRGenePanelRecord(result.getMetaData());
             genePanelRecords.add(record);
         }
-        setGenePanelHeader(ec, genePanelRecords.get(0));
+        // only try setting header if gene panel records list is not empty
+        if (!genePanelRecords.isEmpty()) {
+            setGenePanelHeader(ec, genePanelRecords.get(0));
+        }        
     }
 
     @Override

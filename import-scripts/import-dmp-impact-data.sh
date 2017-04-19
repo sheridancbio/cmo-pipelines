@@ -16,7 +16,7 @@ mskimpact_notification_file=$(mktemp $tmp/mskimpact-portal-update-notification.$
 mskheme_notification_file=$(mktemp $tmp/mskheme-portal-update-notification.$now.XXXXXX)
 mskraindance_notification_file=$(mktemp $tmp/mskraindance-portal-update-notification.$now.XXXXXX)
 mixedpact_notification_file=$(mktemp $tmp/mixedpact-portal-update-notification.$now.XXXXXX)
-#mskarcher_notification_file=$(mktemp $tmp/mskarcher-portal-update-notification.$now.XXXXXX)
+mskarcher_notification_file=$(mktemp $tmp/mskarcher-portal-update-notification.$now.XXXXXX)
 
 # fetch clinical data mercurial
 echo "fetching updates from msk-impact repository..."
@@ -57,7 +57,7 @@ IMPORT_STATUS_IMPACT=0
 IMPORT_STATUS_HEME=0
 IMPORT_STATUS_RAINDANCE=0
 IMPORT_STATUS_MIXEDPACT=0
-#IMPORT_STATUS_ARCHER=0
+IMPORT_STATUS_ARCHER=0
 MERGE_FAIL=0
 IMPORT_FAIL_MIXEDPACT=0
 
@@ -86,6 +86,7 @@ else
 fi
 
 # fetch new/updated raindance samples using CVR Web service (must come after mercurial fetching). The -s flag skips segment data fetching
+echo "fetching CVR raindance data..."
 $JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -jar $PORTAL_HOME/lib/cvr_fetcher.jar -d $MSK_RAINDANCE_DATA_HOME -s -i mskraindance
 if [ $? -gt 0 ]; then
 	echo "CVR raindance fetch failed!"
@@ -95,11 +96,12 @@ if [ $? -gt 0 ]; then
 else
 	# raindance does not provide copy number or fusions data.
 	echo "removing unused files"
-	cd $MSK_RAINDANCE_DATA_HOME; rm data_CNA.txt; rm data_fusions.txt; rm data_SV.txt; rm mskraindance_data_cna_hg19.seg;
+	cd $MSK_RAINDANCE_DATA_HOME; rm data_CNA.txt; rm data_fusions.txt; rm data_SV.txt; rm mskraindance_data_cna_hg19.seg; mv data_gene_matrix.txt ignore_data_gene_matrix.txt
 	cd $MSK_RAINDANCE_DATA_HOME;$HG_BINARY commit -m "Latest Raindance dataset"
 fi
 
-echo "fetching CVR heme data ..."
+# fetch new/updated heme samples using CVR Web service (must come after mercurial fetching).
+echo "fetching CVR heme data..."
 $JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -jar $PORTAL_HOME/lib/cvr_fetcher.jar -d $MSK_HEMEPACT_DATA_HOME -i mskimpact_heme
 if [ $? -gt 0 ]; then
       echo "CVR heme fetch failed!"
@@ -111,15 +113,20 @@ else
 fi
 
 # fetch new/updated archer samples using CVR Web service (must come after mercurial fetching).
-#$JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -jar $PORTAL_HOME/lib/cvr_fetcher.jar -d $MSK_ARCHER_DATA_HOME -i mskarcher
-#if [ $? -gt 0 ]
-#then
-	#echo "CVR Archer fetch failed!"
-	#echo "This will not affect importing of mskimpact"
-	#cd $MSK_IMPACT_DATA_HOME;$HG_BINARY revert --all --no-backup;rm *.orig
-#else
-	#cd $MSK_IMPACT_DATA_HOME;$HG_BINARY commit -m "Latest archer dataset"
-#fi
+echo "fetching CVR archer data..."
+$JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -jar $PORTAL_HOME/lib/cvr_fetcher.jar -d $MSK_ARCHER_DATA_HOME -i mskarcher -s 
+if [ $? -gt 0 ]
+then
+	echo "CVR Archer fetch failed!"
+	echo "This will not affect importing of mskimpact"
+	cd $MSK_ARCHER_DATA_HOME;$HG_BINARY revert --all --no-backup;rm *.orig
+	IMPORT_STATUS_ARCHER=1
+else
+	# mskarcher does not provide copy number, mutations, or seg data, renaming gene matrix file until we get the mskarcher gene panel imported
+	echo "Removing unused files"
+	cd $MSK_ARCHER_DATA_HOME; rm data_CNA.txt; rm data_mutations_*; rm mskarcher_data_cna_hg19.seg; mv data_gene_matrix.txt ignore_data_gene_matrix.txt 
+	cd $MSK_ARCHER_DATA_HOME;$HG_BINARY commit -m "Latest archer dataset"
+fi
 
 # create case lists by cancer type
 rm $MSK_IMPACT_DATA_HOME/case_lists/*
@@ -204,7 +211,6 @@ fi
 #     fi
 # fi
 
-
 ## MSK-IMPACT, HEMEPACT, and RAINDANCE merge
 echo "Beginning merge of MSK-IMPACT, HEMEPACT, RAINDANCE data..."
 
@@ -230,8 +236,17 @@ if [ ! -f $MSK_RAINDANCE_DATA_HOME/meta_clinical.txt ]; then
     touch $MSK_RAINDANCE_DATA_HOME/meta_clinical.txt
 fi
 
+# if [ ! -f $MSK_ARCHER_DATA_HOME/meta_clinical.txt ]; then
+#     touch $MSK_ARCHER_DATA_HOME/meta_clinical.txt
+# fi
+
+# if [ ! -f $MSK_ARCHER_DATA_HOME/meta_SV.txt ]; then
+#     touch $MSK_ARCHER_DATA_HOME/meta_SV.txt
+# fi
+
 # merge data from both directories and check exit code
 $PYTHON_BINARY $PORTAL_HOME/scripts/merge.py -d $MSK_MIXEDPACT_DATA_HOME -i mixedpact -m "true" $MSK_IMPACT_DATA_HOME $MSK_HEMEPACT_DATA_HOME $MSK_RAINDANCE_DATA_HOME
+# $PYTHON_BINARY $PORTAL_HOME/scripts/merge.py -d $MSK_MIXEDPACT_DATA_HOME -i mixedpact -m "true" $MSK_IMPACT_DATA_HOME $MSK_HEMEPACT_DATA_HOME $MSK_RAINDANCE_DATA_HOME $MSK_ARCHER_DATA_HOME
 if [ $? -gt 0 ]; then
     echo "MIXEDPACT merge failed! Study will not be updated in the portal."
     MERGE_FAIL=1
@@ -264,6 +279,14 @@ fi
 if [ $(wc -l < $MSK_RAINDANCE_DATA_HOME/meta_clinical.txt) -eq 0 ]; then
     rm $MSK_RAINDANCE_DATA_HOME/meta_clinical.txt
 fi
+
+# if [ $(wc -l < $MSK_ARCHER_DATA_HOME/meta_clinical.txt) -eq 0 ]; then
+#     rm $MSK_ARCHER_DATA_HOME/meta_clinical.txt
+# fi
+
+# if [ $(wc -l < $MSK_ARCHER_DATA_HOME/meta_clinical.txt) -eq 0 ]; then
+#     rm $MSK_ARCHER_DATA_HOME/meta_clinical.txt
+# fi
 
 # update MIXEDPACT in portal only if merge and case list updates were succesful
 if [ $MERGE_FAIL -eq 0 ]; then
@@ -319,16 +342,38 @@ if [ $IMPORT_STATUS_IMPACT -gt 0 ]; then
 	echo -e "$EMAIL_BODY" | mail -s "MSKIMPACT Fetch Failure: Import" $email_list
 fi
 
-EMAIL_BODY="Failed to merge MSK-IMPACT and HEMEPACT data. Merged study will not be updated."
+EMAIL_BODY="The HEMEPACT study failed fetch. The original study will remain on the portal."
+# send email if fetch fails
+if [ $IMPORT_STATUS_HEME -gt 0 ]; then
+	echo -e "Sending email $EMAIL_BODY"
+	echo -e "$EMAIL_BODY" | mail -s "HEMEPACT Fetch Failure: Import" $email_list
+fi
+
+EMAIL_BODY="The RAINDANCE study failed fetch. The original study will remain on the portal."
+# send email if fetch fails
+if [ $IMPORT_STATUS_RAINDANCE -gt 0 ]; then
+	echo -e "Sending email $EMAIL_BODY"
+	echo -e "$EMAIL_BODY" | mail -s "RAINDANCE Fetch Failure: Import" $email_list
+fi
+
+EMAIL_BODY="The ARCHER study failed fetch. The original study will remain on the portal."
+# send email if fetch fails
+if [ $IMPORT_STATUS_ARCHER -gt 0 ]; then
+	echo -e "Sending email $EMAIL_BODY"
+	echo -e "$EMAIL_BODY" | mail -s "archer Fetch Failure: Import" $email_list
+fi
+
+EMAIL_BODY="Failed to merge MSK-IMPACT, HEMEPACT, and RAINDANCE data. Merged study will not be updated."
 if [ $MERGE_FAIL -gt 0 ]; then
     echo -e "Sending email $EMAIL_BODY"
     echo -e "$EMAIL_BODY" |  mail -s "MIXEDPACT Merge Failure: Study will not be updated." $email_list
 fi
 
 $JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -Xmx16g -ea -Dspring.profiles.active=dbcp -Djava.io.tmpdir="$tmp" -cp $PORTAL_HOME/lib/msk-dmp-importer.jar org.mskcc.cbio.importer.Admin --send-update-notification --portal mskimpact-portal --notification-file "$mskimpact_notification_file"
-#$JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -Xmx16g -ea -Dspring.profiles.active=dbcp -Djava.io.tmpdir="$tmp" -cp $PORTAL_HOME/lib/msk-dmp-importer.jar org.mskcc.cbio.importer.Admin --send-update-notification --portal mskraindance-portal --notification-file $mskraindance_notification_file
+$JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -Xmx16g -ea -Dspring.profiles.active=dbcp -Djava.io.tmpdir="$tmp" -cp $PORTAL_HOME/lib/msk-dmp-importer.jar org.mskcc.cbio.importer.Admin --send-update-notification --portal mskraindance-portal --notification-file $mskraindance_notification_file
 $JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -Xmx16g -ea -Dspring.profiles.active=dbcp -Djava.io.tmpdir="$tmp" -cp $PORTAL_HOME/lib/msk-dmp-importer.jar org.mskcc.cbio.importer.Admin --send-update-notification --portal mskheme-portal --notification-file $mskheme_notification_file
 $JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -Xmx16g -ea -Dspring.profiles.active=dbcp -Djava.io.tmpdir="$tmp" -cp $PORTAL_HOME/lib/msk-dmp-importer.jar org.mskcc.cbio.importer.Admin --send-update-notification --portal mixedpact-portal --notification-file "$mixedpact_notification_file"
+# $JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -Xmx16g -ea -Dspring.profiles.active=dbcp -Djava.io.tmpdir="$tmp" -cp $PORTAL_HOME/lib/msk-dmp-importer.jar org.mskcc.cbio.importer.Admin --send-update-notification --portal mskarcher-portal --notification-file "$mskarcher_notification_file"
 
 if [[ -d "$tmp" && "$tmp" != "/" ]]; then
 	rm -rf "$tmp"/*
