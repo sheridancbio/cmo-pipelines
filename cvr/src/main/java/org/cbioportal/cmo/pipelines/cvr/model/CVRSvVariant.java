@@ -76,7 +76,12 @@ import javax.annotation.Generated;
     "sv_variant_id",
     "tumor_read_count",
     "tumor_variant_count",
-    "variant_status_name"
+    "variant_status_name",
+    "gene1",
+    "gene2",
+    "exon1",
+    "exon2",
+    "sample_comment"
 })
 public class CVRSvVariant {
     @JsonProperty("annotation")
@@ -133,6 +138,16 @@ public class CVRSvVariant {
     private String tumorVariantCount;
     @JsonProperty("variant_status_name")
     private String variantStatusName;
+    @JsonProperty("gene1")
+    private String gene1;
+    @JsonProperty("gene2")
+    private String gene2;
+    @JsonProperty("exon1")
+    private String exon1;
+    @JsonProperty("exon2")
+    private String exon2;
+    @JsonProperty("sample_comment")
+    private String sampleComment;
     @JsonIgnore
     private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
@@ -250,7 +265,7 @@ public class CVRSvVariant {
     */
     @JsonProperty("comments")
     public String getComments() {
-        return comments;
+        return comments != null ? comments : sampleComment;
     }
 
     /**
@@ -470,7 +485,7 @@ public class CVRSvVariant {
     */
     @JsonProperty("site1_gene")
     public String getSite1_Gene() {
-        return site1Gene;
+        return site1Gene != null ? site1Gene : gene1;
     }
 
     /**
@@ -550,7 +565,7 @@ public class CVRSvVariant {
     */
     @JsonProperty("site2_gene")
     public String getSite2_Gene() {
-        return site2Gene;
+        return site2Gene != null ? site2Gene : gene2;
     }
 
     /**
@@ -751,5 +766,75 @@ public class CVRSvVariant {
     @JsonAnySetter
     public void setAdditionalProperty(String name, Object value) {
         this.additionalProperties.put(name, value);
+    }
+
+    /**
+     * @return the gene1
+     */
+    public String getGene1() {
+        return gene1;
+    }
+
+    /**
+     * @param gene1 the gene1 to set
+     */
+    public void setGene1(String gene1) {
+        this.gene1 = gene1;
+    }
+
+    /**
+     * @return the gene2
+     */
+    public String getGene2() {
+        return gene2;
+    }
+
+    /**
+     * @param gene2 the gene2 to set
+     */
+    public void setGene2(String gene2) {
+        this.gene2 = gene2;
+    }
+
+    /**
+     * @return the exon1
+     */
+    public String getExon1() {
+        return exon1;
+    }
+
+    /**
+     * @param exon1 the exon1 to set
+     */
+    public void setExon1(String exon1) {
+        this.exon1 = exon1;
+    }
+
+    /**
+     * @return the exon2
+     */
+    public String getExon2() {
+        return exon2;
+    }
+
+    /**
+     * @param exon2 the exon2 to set
+     */
+    public void setExon2(String exon2) {
+        this.exon2 = exon2;
+    }
+
+    /**
+     * @return the sampleComment
+     */
+    public String getSampleComment() {
+        return sampleComment;
+    }
+
+    /**
+     * @param sampleComment the sampleComment to set
+     */
+    public void setSampleComment(String sampleComment) {
+        this.sampleComment = sampleComment;
     }
 }

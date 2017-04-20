@@ -63,15 +63,15 @@ public class CVRFusionRecord {
         this.dnaSupport = "yes";
         this.rnaSupport = "unknown";
         this.method = "NA";
-        if (variant.getEvent_Info().contains("in frame")) {
+        if (variant.getEvent_Info() != null && variant.getEvent_Info().contains("in frame")) {
             this.frame = "in frame";
-        } else if (variant.getEvent_Info().contains("out of frame")) {
+        } else if (variant.getEvent_Info() != null && variant.getEvent_Info().contains("out of frame")) {
             this.frame = "out of frame";
         } else {
             this.frame = "unknown";
         }
         this.comments = variant.getAnnotation() + " " + variant.getComments();
-        this.comments = this.comments.replace("\r\n", "").replace("\r", "").replace("\n", "").replace("\t", "");
+        this.comments = this.comments.replaceAll("[\\t\\n\\r]+"," ");
     }
 
     public String getHugo_Symbol() {
