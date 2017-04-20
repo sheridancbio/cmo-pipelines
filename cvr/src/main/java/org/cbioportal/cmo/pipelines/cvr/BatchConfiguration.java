@@ -33,6 +33,7 @@
 package org.cbioportal.cmo.pipelines.cvr;
 
 import java.util.*;
+import org.apache.commons.logging.*;
 import org.cbioportal.cmo.pipelines.cvr.clinical.*;
 import org.cbioportal.cmo.pipelines.cvr.cna.*;
 import org.cbioportal.cmo.pipelines.cvr.consume.*;
@@ -48,6 +49,8 @@ import org.cbioportal.models.*;
 import org.springframework.batch.core.*;
 import org.springframework.batch.core.configuration.annotation.*;
 import org.springframework.batch.core.configuration.annotation.StepScope;
+import org.springframework.batch.core.job.builder.FlowBuilder;
+import org.springframework.batch.core.job.flow.*;
 import org.springframework.batch.item.*;
 import org.springframework.batch.item.support.CompositeItemWriter;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -76,6 +79,8 @@ public class BatchConfiguration {
 
     @Value("${chunk}")
     private int chunkInterval;
+    
+    private static final Log LOG = LogFactory.getLog(BatchConfiguration.class);
 
     @Bean
     public Job gmlJob() {
@@ -102,6 +107,14 @@ public class BatchConfiguration {
     @Bean
     public Job cvrJob() {
         return jobBuilderFactory.get(CVR_JOB)
+                .start(cvrJobFlow())
+                .next(checkMasterListFlow())
+                .build().build();
+    }
+    
+    @Bean
+    public Flow cvrJobFlow() {
+        return new FlowBuilder<Flow>("cvrJobFlow")
                 .start(cvrJsonStep())
                 .next(clinicalStep())
                 .next(mutationStep())
@@ -111,7 +124,6 @@ public class BatchConfiguration {
                 .next(fusionStep())
                 .next(segStep())
                 .next(genePanelStep())
-                .next(checkMasterListStep())
                 .build();
     }
 
@@ -265,6 +277,17 @@ public class BatchConfiguration {
                 .build();
     }
 
+    @Bean
+    public Flow checkMasterListFlow() {
+        return new FlowBuilder<Flow>("checkMasterListFlow")
+                .start(masterListJobExecutionDecider())
+                .on("RUN").to(checkMasterListStep())
+                .from(masterListJobExecutionDecider())
+                .on("SKIP")
+                .end()
+                .build();
+    }
+    
     @Bean
     public Step consumeSampleStep() {
         return stepBuilderFactory.get("consumeSampleStep")
@@ -586,5 +609,23 @@ public class BatchConfiguration {
     @StepScope
     public ItemStreamWriter<String> consumeSampleWriter() {
         return new ConsumeSampleWriter();
+    }
+    
+    @Bean
+    public JobExecutionDecider masterListJobExecutionDecider() {
+        return new JobExecutionDecider() {
+            @Override
+            public FlowExecutionStatus decide(JobExecution je, StepExecution se) {
+                String studyId = je.getJobParameters().getString("studyId");
+                if (studyId.equals("mskimpact")) {
+                    LOG.info("Executing master list check for study: " + studyId);
+                    return new FlowExecutionStatus("RUN");
+                }
+                else {
+                    LOG.info("Skipping master list check for study: " + studyId);
+                    return new FlowExecutionStatus("SKIP");
+                }
+            }
+        };
     }
 }
