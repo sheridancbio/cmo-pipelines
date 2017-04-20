@@ -68,24 +68,28 @@ public class EmailUtil {
         session = Session.getDefaultInstance(properties);
     }
 
-    public  void sendErrorEmail(List<Throwable> exceptions, String parameters) {
+    public void sendEmail(String subject, String body) {
         try {
             properties.setProperty("mail.smtp.host", server);
             MimeMessage message = new MimeMessage(session);
             message.setFrom(new InternetAddress(sender));
             message.addRecipient(Message.RecipientType.TO, new InternetAddress(recipient));
             message.setSubject(subject);
-            String body = "An error occured while running the CVR Pipeline with job parameters " + parameters + ".\n\n";
-            List<String> messages = new ArrayList<>();
-            for (Throwable exception : exceptions) {
-                messages.add(ExceptionUtils.getFullStackTrace(exception));
-            }
-            body += StringUtils.join(messages, "\n\n");
             message.setText(body);
             Transport.send(message);
         }
         catch (MessagingException mex) {
             mex.printStackTrace();
         }
+    }
+
+    public void sendErrorEmail(List<Throwable> exceptions, String parameters) {
+        String body = "An error occured while running the CVR Pipeline with job parameters " + parameters + ".\n\n";
+        List<String> messages = new ArrayList<>();
+        for (Throwable exception : exceptions) {
+            messages.add(ExceptionUtils.getFullStackTrace(exception));
+        }
+        body += StringUtils.join(messages, "\n\n");
+        sendEmail(subject, body);
     }
 }
