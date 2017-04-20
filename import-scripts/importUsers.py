@@ -96,7 +96,12 @@ MESSAGE_BCC_CMO = ["selcukls@mskcc.org", "bourquec@mskcc.org", "ravichak@mskcc.o
 
 MESSAGE_FROM_GENIE = "genie-cbioportal-access@cbio.mskcc.org" # schultz, grossb1, heinsz, info@aacrgenie.org
 MESSAGE_BCC_GENIE = ["schultz@cbio.mskcc.org", "grossb1@mskcc.org", "heinsz@mskcc.org", "ochoaa@mskcc.org", "sheridar@mskcc.org", "info@aacrgenie.org"]
+AACR_GENIE_EMAIL = 'info@aacrgenie.org'
 
+ERROR_EMAIL_SUBJECT_GENIE = "AACR Project GENIE cBioPortal - Failed to register"
+ERROR_EMAIL_BODY_GENIE = "Thank you for your interest in the AACR Project GENIE cBioPortal. There was a problem creating an account for you. Please check that you have a valid Google email account and try to register again. If the problem persists please send an email to" + AACR_GENIE_EMAIL  +"."
+ERROR_EMAIL_SUBJECT_CMO = "cBioPortal User Registration - Failed to register"
+ERROR_EMAIL_BODY_CMO = "Thank you for your interest in the cBioPortal. There was a problem creating an account for you. Please check that you have a valid Google email account and try to register again. If the problem persists please send an email to" + MESSAGE_FROM_CMO +"."
 
 # ------------------------------------------------------------------------------
 # class definitions
@@ -213,23 +218,26 @@ def get_worksheet_feed(client, ss, ws):
 # insert new users into table - this list does not contain users already in table
 
 def insert_new_users(cursor, new_user_list):
+    to_remove = []
 
+    for user in new_user_list:
+        print >> OUTPUT_FILE, "new user: %s" % user.google_email;
     try:
-        for user in new_user_list:
-            print >> OUTPUT_FILE, "new user: %s" % user.google_email;
-        cursor.executemany("insert into users values(%s, %s, %s)",
-                           [(user.google_email.lower(), user.name, user.enabled) for user in new_user_list])
-        for user in new_user_list:
-            # authorities is semicolon delimited
-            authorities = user.authorities
-            cursor.executemany("insert into authorities values(%s, %s)",
-                               [(user.google_email.lower(), authority) for authority in authorities])
+        user_name = user.name
+        if isinstance(user_name, unicode):
+            user_name = user_name.encode('utf-8')
+        cursor.execute("insert into users values('%s', '%s', '%s')" % (user.google_email.lower(), user_name, user.enabled)) 
+    except (MySQLdb.Error, UnicodeEncodeError) as e:
+        to_remove.append(user)
+    for user in new_user_list:
+        # authorities is semicolon delimited
+        authorities = user.authorities
+    try:
+        cursor.executemany("insert into authorities values(%s, %s)", [(user.google_email.lower(), authority) for authority in authorities])
     except MySQLdb.Error, msg:
         print >> OUTPUT_FILE, msg
         print >> ERROR_FILE, msg
-        return False
-
-    return True
+    return to_remove
 
 # ------------------------------------------------------------------------------
 # get current users from database
@@ -318,6 +326,15 @@ def get_new_user_map(spreadsheet, worksheet_feed, current_user_map, portal_name,
                         [portal_name + ':' + au for au in authorities.split(';')])
 
     return to_return
+
+def delete_row_from_spreadsheet(client, spreadsheet, worksheet_feed, email):
+    to_delete = ''
+    for entry in worksheet_feed.entry:
+        google_email = entry.custom[OPENID_EMAIL_KEY].text.strip().lower()
+        if google_email == email:
+            to_delete = entry 
+    if to_delete != '':
+        client.DeleteRow(to_delete)
 
 # ------------------------------------------------------------------------------
 # get all users from google spreadsheet.  note only inst & google email is returned
@@ -408,7 +425,7 @@ def get_portal_properties(portal_properties_filename):
 # adds new users from the google spreadsheet into the cgds portal database
 # returns new user map if users have been inserted, None otherwise
 
-def manage_users(spreadsheet, cursor, worksheet_feed, portal_name, mskcc_user_spreadsheet):
+def manage_users(client, spreadsheet, cursor, worksheet_feed, portal_name, mskcc_user_spreadsheet):
 
     # get map of current portal users
     print >> OUTPUT_FILE, 'Getting list of current portal users'
@@ -424,16 +441,11 @@ def manage_users(spreadsheet, cursor, worksheet_feed, portal_name, mskcc_user_sp
     new_user_map = get_new_user_map(spreadsheet, worksheet_feed, current_user_map, portal_name, mskcc_user_spreadsheet)
     if (len(new_user_map) > 0):
         print >> OUTPUT_FILE, 'We have %s new user(s) to add' % len(new_user_map)
-        success = insert_new_users(cursor, new_user_map.values())
-        if success:
-            print >> OUTPUT_FILE, 'Successfully inserted new users in database'
-            return new_user_map
-        else:
-            print >> OUTPUT_FILE, 'Error inserting new users in database'
-            return None
+        to_remove = insert_new_users(cursor, new_user_map.values())
+        return new_user_map, to_remove
     else:
         print >> OUTPUT_FILE, 'No new users to insert, exiting'
-        return None
+        return None, None
 
 # ------------------------------------------------------------------------------
 # updates user study access
@@ -497,9 +509,9 @@ def get_email_parameters(google_spreadsheet,client):
     print >> OUTPUT_FILE, 'Getting email parameters from google spreadsheet'
     email_worksheet_feed = get_worksheet_feed(client, google_spreadsheet, IMPORTER_WORKSHEET)
     for entry in email_worksheet_feed.entry:
-    	if entry.custom[SUBJECT_KEY].text is not None and entry.custom[BODY_KEY].text is not None:
-		subject = entry.custom[SUBJECT_KEY].text.strip()
-		body = entry.custom[BODY_KEY].text.strip()
+        if entry.custom[SUBJECT_KEY].text is not None and entry.custom[BODY_KEY].text is not None:
+            subject = entry.custom[SUBJECT_KEY].text.strip()
+            body = entry.custom[BODY_KEY].text.strip()
     return subject, body
 
 def get_portal_name_map(google_spreadsheet,client):
@@ -596,7 +608,7 @@ def main():
                                                 portal_properties.google_worksheet)
 
             # the 'guts' of the script
-            new_user_map = manage_users(google_spreadsheet, cursor, worksheet_feed, portal_name_map[google_spreadsheet], mskcc_user_spreadsheet)
+            new_user_map, to_remove = manage_users(client, google_spreadsheet, cursor, worksheet_feed, portal_name_map[google_spreadsheet], mskcc_user_spreadsheet)
 
             # update user authorities
             update_user_authorities(google_spreadsheet, cursor, worksheet_feed, portal_name_map[google_spreadsheet], mskcc_user_spreadsheet)
@@ -606,13 +618,22 @@ def main():
                 if send_email_confirm == 'true':
                     subject,body = get_email_parameters(google_spreadsheet,client)
                     for new_user_key in new_user_map.keys():
-                    	new_user = new_user_map[new_user_key]
-                    	print >> OUTPUT_FILE, ('Sending confirmation email to new user: %s at %s' %
-                                               (new_user.name, new_user.inst_email))
+                        new_user = new_user_map[new_user_key]
+                        from_field = MESSAGE_FROM_CMO
+                        bcc_field = MESSAGE_BCC_CMO
+                        error_subject = ERROR_EMAIL_SUBJECT_CMO
+                        error_body = ERROR_EMAIL_BODY_CMO
                         if sender == 'GENIE':
-                            send_mail([new_user.inst_email],subject,body, MESSAGE_FROM_GENIE, MESSAGE_BCC_GENIE)
+                            from_field = MESSAGE_FROM_GENIE
+                            bcc_field = MESSAGE_BCC_GENIE
+                            error_subject = ERROR_EMAIL_SUBJECT_GENIE
+                            error_body = ERROR_EMAIL_BODY_GENIE
+                        if new_user_key not in to_remove:
+                            print >> OUTPUT_FILE, ('Sending confirmation email to new user: %s at %s' %
+                                               (new_user.name, new_user.inst_email))
+                            send_mail([new_user.inst_email],subject,body, sender = from_field, bcc = bcc_field)
                         else:
-                            send_mail([new_user.inst_email],subject,body)
+                            send_mail([new_user_key], error_subject, error_body, sender = from_field, bcc = bcc_field)
 
             if google_spreadsheet == mskcc_user_spreadsheet:
                 add_unknown_users_to_spreadsheet(client, cursor, google_spreadsheet, portal_properties.google_worksheet,mskcc_user_spreadsheet)
