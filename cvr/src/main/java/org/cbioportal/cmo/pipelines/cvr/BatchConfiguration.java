@@ -37,12 +37,13 @@ import org.cbioportal.cmo.pipelines.cvr.clinical.*;
 import org.cbioportal.cmo.pipelines.cvr.cna.*;
 import org.cbioportal.cmo.pipelines.cvr.consume.*;
 import org.cbioportal.cmo.pipelines.cvr.fusion.*;
+import org.cbioportal.cmo.pipelines.cvr.genepanel.*;
+import org.cbioportal.cmo.pipelines.cvr.masterlist.*;
 import org.cbioportal.cmo.pipelines.cvr.model.*;
 import org.cbioportal.cmo.pipelines.cvr.mutation.*;
 import org.cbioportal.cmo.pipelines.cvr.seg.*;
 import org.cbioportal.cmo.pipelines.cvr.sv.*;
 import org.cbioportal.cmo.pipelines.cvr.variants.*;
-import org.cbioportal.cmo.pipelines.cvr.genepanel.*;
 import org.cbioportal.models.*;
 import org.springframework.batch.core.*;
 import org.springframework.batch.core.configuration.annotation.*;
@@ -110,6 +111,7 @@ public class BatchConfiguration {
                 .next(fusionStep())
                 .next(segStep())
                 .next(genePanelStep())
+                .next(checkMasterListStep())
                 .build();
     }
 
@@ -249,6 +251,17 @@ public class BatchConfiguration {
                 .reader(genePanelReader())
                 .processor(genePanelProcessor())
                 .writer(genePanelWriter())
+                .build();
+    }
+
+    @Bean
+    public Step checkMasterListStep() {
+        return stepBuilderFactory.get("checkMasterListStep")
+                .listener(masterListStepListener())
+                .<String, CVRRequeueRecord> chunk(chunkInterval)
+                .reader(masterListReader())
+                .processor(masterListProcessor())
+                .writer(masterListWriter())
                 .build();
     }
 
@@ -538,6 +551,29 @@ public class BatchConfiguration {
     @StepScope
     public ItemStreamWriter<String> genePanelWriter() {
         return new CVRGenePanelWriter();
+    }
+
+    @Bean
+    @StepScope
+    public ItemStreamReader<String> masterListReader() {
+        return new CVRMasterListReader();
+    }
+
+    @Bean
+    @StepScope
+    public CVRMasterListProcessor masterListProcessor() {
+        return new CVRMasterListProcessor();
+    }
+
+    @Bean
+    @StepScope
+    public ItemStreamWriter<CVRRequeueRecord> masterListWriter() {
+        return new CVRMasterListWriter();
+    }
+
+    @Bean
+    public StepExecutionListener masterListStepListener() {
+        return new CVRMasterListStepListener();
     }
 
     @Bean
