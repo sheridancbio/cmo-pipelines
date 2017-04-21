@@ -48,8 +48,8 @@ def write_case_list_files(clinical_file_map, output_directory, study_id):
 		stable_id = study_id + '_' + cancer_type_no_spaces
 		case_list_name = 'Tumor Type: ' + cancer_type
 		case_list_description = 'All tumors with cancer type ' + cancer_type
-		case_list_ids = '\t'.join(ids)
-		case_list_file.write('cancer_study_identifier : ' + study_id + '\n' +
+		case_list_ids = '\t'.join(list(set(ids)))
+		case_list_file.write('cancer_study_identifier: ' + study_id + '\n' +
 								'stable_id: ' + stable_id + '\n' + 
 								'case_list_name: ' + case_list_name + '\n' + 
 								'case_list_description: ' + case_list_description + '\n' +
@@ -64,7 +64,7 @@ def create_case_lists(clinical_file_name, output_directory, study_id):
 # ---------------------------------------------------------------
 # displays usage of program
 def usage():
-	print >> OUTPUT_FILE, 'create_case_lists_by_cancer_type.py --clinical-file <path/to/clinical/file> --output-directory <path/to/output/directory> study-id <cancer_study_identifier>'
+	print >> OUTPUT_FILE, 'create_case_lists_by_cancer_type.py --clinical-file <path/to/clinical/file> --output-directory <path/to/output/directory> --study-id <cancer_study_identifier>'
 
 # ---------------------------------------------------------------
 # the main
