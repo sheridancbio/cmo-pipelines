@@ -48,18 +48,19 @@ if [ $STUDY_ID == "genie" ]; then
     else:
         CLINICAL_SUPP_FILE="$MSK_IMPACT_DATA_DIRECTORY/genie_sequencing_date_dump.txt"
     fi
-
-    # in the case of genie data, the input data directory must be the msk-impact data home, where we expect to see darwin_genie_sample.txt and darwin_genie_patient.txt as well
-    # copy the darwin genie files to the output directory with different filenames
-    cp $MSK_IMPACT_DATA_DIRECTORY/darwin_genie_patient.txt $OUTPUT_DIRECTORY/data_clinical_supp_patient.txt
-    cp $MSK_IMPACT_DATA_DIRECTORY/darwin_genie_sample.txt $OUTPUT_DIRECTORY/data_clinical_supp_sample.txt
-
-    # run the generate clinical subset script to generate list of sample ids to subset from impact data - subset of sample ids will be written to given $SUBSET_FILENAME
-    $PYTHON_BINARY $PORTAL_HOME/scripts/generate-clinical-subset.py --study-id="genie" --clinical-file="$OUTPUT_DIRECTORY/data_clinical_supp_sample.txt" --clinical-supp-file="$CLINICAL_SUPP_FILE" --filter-criteria="$FILTER_CRITERIA" --subset-filename="$SUBSET_FILENAME" --anonymize-date='true' --clinical-patient-file="$OUTPUT_DIRECTORY/data_clinical_supp_patient.txt"
-    # expand data_clinical_supp_sample.txt with ONCOTREE_CODE, SAMPLE_TYPE from data_clinical.txt
-    $PYTHON_BINARY $PORTAL_HOME/scripts/expand-clinical-data.py --study-id="genie" --clinical-file="$OUTPUT_DIRECTORY/data_clinical_supp_sample.txt" --clinical-supp-file="$MSK_IMPACT_DATA_DIRECTORY/data_clinical.txt" --fields="ONCOTREE_CODE,SAMPLE_TYPE"
-    # generate subset of impact data using the subset file generated above
-    $PYTHON_BINARY $PORTAL_HOME/scripts/merge.py  -d $OUTPUT_DIRECTORY -i "genie" -s "$SUBSET_FILENAME" -x "true" -$MSK_IMPACT_DATA_DIRECTORY
+	# in the case of genie data, the input data directory must be the msk-impact data home, where we expect to see darwin_genie_sample.txt and darwin_genie_patient.txt as well
+	# copy the darwin genie files to the output directory with different filenames
+	cp $MSK_IMPACT_DATA_DIRECTORY/darwin_genie_patient.txt $OUTPUT_DIRECTORY/data_clinical_supp_patient.txt
+	cp $MSK_IMPACT_DATA_DIRECTORY/darwin_genie_sample.txt $OUTPUT_DIRECTORY/data_clinical_supp_sample.txt
+	
+	# run the generate clinical subset script to generate list of sample ids to subset from impact data - subset of sample ids will be written to given $SUBSET_FILENAME
+	$PYTHON_BINARY $PORTAL_HOME/scripts/generate-clinical-subset.py --study-id="genie" --clinical-file="$OUTPUT_DIRECTORY/data_clinical_supp_sample.txt" --clinical-supp-file="$CLINICAL_SUPP_FILE" --filter-criteria="$FILTER_CRITERIA" --subset-filename="$SUBSET_FILENAME" --anonymize-date='true' --clinical-patient-file="$OUTPUT_DIRECTORY/data_clinical_supp_patient.txt"
+	# expand data_clinical_supp_sample.txt with ONCOTREE_CODE, SAMPLE_TYPE from data_clinical.txt
+	$PYTHON_BINARY $PORTAL_HOME/scripts/expand-clinical-data.py --study-id="genie" --clinical-file="$OUTPUT_DIRECTORY/data_clinical_supp_sample.txt" --clinical-supp-file="$MSK_IMPACT_DATA_DIRECTORY/data_clinical.txt" --fields="ONCOTREE_CODE,SAMPLE_TYPE,GENE_PANEL"
+    sed 's/GENE_PANEL/SEQ_ASSAY_ID/' $OUTPUT_DIRECTORY/data_clinical_supp_sample.txt > $OUTPUT_DIRECTORY/data_clinical_supp_sample.txt.tmp
+    mv $OUTPUT_DIRECTORY/data_clinical_supp_sample.txt.tmp $OUTPUT_DIRECTORY/data_clinical_supp_sample.txt
+	# generate subset of impact data using the subset file generated above
+	$PYTHON_BINARY $PORTAL_HOME/scripts/merge.py  -d $OUTPUT_DIRECTORY -i "genie" -s "$SUBSET_FILENAME" -x "true" -$MSK_IMPACT_DATA_DIRECTORY
 else
     # generate subset list of sample ids based on filter criteria and subset MSK-IMPACT using generated list in $SUBSET_FILENAME
     $PYTHON_BINARY $PORTAL_HOME/scripts/generate-clinical-subset.py --study-id="$STUDY_ID" --clinical-file="$MSK_IMPACT_DATA_DIRECTORY/data_clinical.txt" --filter-criteria="$FILTER_CRITERIA" --subset-filename="$SUBSET_FILENAME"
