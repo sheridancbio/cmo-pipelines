@@ -91,6 +91,14 @@ if [[ -z $CANCER_STUDY_IDENTIFIER || -z $TEMP_CANCER_STUDY_IDENTIFIER || -z $BAC
 	exit 1
 fi
 
+# define validator notification filename based on cancer study id, remove if already exists, touch new file
+now=$(date "+%Y-%m-%d-%H-%M-%S")
+VALIDATION_NOTIFICATION_FILENAME=$(mktemp $TMP_DIRECTORY/validation_$CANCER_STUDY_IDENTIFIER.$now.XXXXXX)
+if [ -f $VALIDATION_NOTIFICATION_FILENAME ]; then
+	rm $VALIDATION_NOTIFICATION_FILENAME
+fi
+touch $VALIDATION_NOTIFICATION_FILENAME
+
 # variables for import temp study status
 IMPORT_FAIL=0
 VALIDATION_FAIL=0
@@ -116,7 +124,7 @@ if [ "$num_studies_updated" -ne 1 ]; then
 else
 	# validate
 	echo "Validating import..."
-	$JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -Xmx64g -ea -Dspring.profiles.active=dbcp -Djava.io.tmpdir="$TMP_DIRECTORY" -cp $IMPORTER_JAR org.mskcc.cbio.importer.Admin --validate-temp-study --temp-study-id $TEMP_CANCER_STUDY_IDENTIFIER --original-study-id $CANCER_STUDY_IDENTIFIER
+	$JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -Xmx64g -ea -Dspring.profiles.active=dbcp -Djava.io.tmpdir="$TMP_DIRECTORY" -cp $IMPORTER_JAR org.mskcc.cbio.importer.Admin --validate-temp-study --temp-study-id $TEMP_CANCER_STUDY_IDENTIFIER --original-study-id $CANCER_STUDY_IDENTIFIER --notification-file "$VALIDATION_NOTIFICATION_FILENAME"
 	if [ $? -gt 0 ]; then
 		echo "Failed to validate - deleting temp study '$TEMP_CANCER_STUDY_IDENTIFIER'"
 		$JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -Xmx64g -ea -Dspring.profiles.active=dbcp -Djava.io.tmpdir="$TMP_DIRECTORY" -cp $IMPORTER_JAR org.mskcc.cbio.importer.Admin --delete-cancer-study --cancer-study-ids $TEMP_CANCER_STUDY_IDENTIFIER
@@ -161,44 +169,42 @@ fi
 
 EMAIL_BODY="The $CANCER_STUDY_IDENTIFIER study failed import. The original study will remain on the portal."
 # send email if import fails
-if [ $IMPORT_FAIL -gt 0 ]
-then
+if [ $IMPORT_FAIL -gt 0 ]; then
 	echo -e "Sending email $EMAIL_BODY"
 	echo -e "$EMAIL_BODY" | mail -s "$CANCER_STUDY_IDENTIFIER Update Failure: Import" $EMAIL_LIST
 fi
 
-EMAIL_BODY="The $CANCER_STUDY_IDENTIFIER study failed to pass the validation step in import process. The original study will remain on the portal."
 # send email if validation fails
-if [ $VALIDATION_FAIL -gt 0 ]
-then
+if [ $VALIDATION_FAIL -gt 0 ]; then
+	if [ $(wc -l < $VALIDATION_NOTIFICATION_FILENAME) -eq 0 ]; then
+		EMAIL_BODY="The $CANCER_STUDY_IDENTIFIER study failed to pass the validation step in import process for some unknown reason. No data was saved to validation notification file $VALIDATION_NOTIFICATION_FILENAME. The original study will remain on the portal."
+	else
+		EMAIL_BODY=`cat $VALIDATION_NOTIFICATION_FILENAME`
+	fi
 	echo -e "Sending email $EMAIL_BODY"
 	echo -e "$EMAIL_BODY" | mail -s "$CANCER_STUDY_IDENTIFIER Update Failure: Validation" $EMAIL_LIST
 fi
 
 EMAIL_BODY="The $BACKUP_CANCER_STUDY_IDENTIFIER study failed to delete. $CANCER_STUDY_IDENTIFIER study did not finish updating."
-if [ $DELETE_FAIL -gt 0 ]
-then
+if [ $DELETE_FAIL -gt 0 ]; then
 	echo -e "Sending email $EMAIL_BODY"
 	echo -e "$EMAIL_BODY" | mail -s "$CANCER_STUDY_IDENTIFIER Update Failure: Deletion" $EMAIL_LIST
 fi
 
 EMAIL_BODY="Failed to backup $CANCER_STUDY_IDENTIFIER to $BACKUP_CANCER_STUDY_IDENTIFIER via renaming. $CANCER_STUDY_IDENTIFIER study did not finish updating."
-if [ $RENAME_BACKUP_FAIL -gt 0 ]
-then
+if [ $RENAME_BACKUP_FAIL -gt 0 ]; then
 	echo -e "Sending email $EMAIL_BODY"
 	echo -e "$EMAIL_BODY" | mail -s "$CANCER_STUDY_IDENTIFIER Update Failure: Renaming backup" $EMAIL_LIST
 fi
 
 EMAIL_BODY="Failed to rename temp study $TEMP_CANCER_STUDY_IDENTIFIER to $CANCER_STUDY_IDENTIFIER. $CANCER_STUDY_IDENTIFIER study did not finish updating."
-if [ $RENAME_FAIL -gt 0 ]
-then
+if [ $RENAME_FAIL -gt 0 ]; then
 	echo -e "Sending email $EMAIL_BODY"
 	echo -e "$EMAIL_BODY" | mail -s "$CANCER_STUDY_IDENTIFIER Update Failure: CRITICAL!! Renaming" $EMAIL_LIST
 fi
 
 EMAIL_BODY="Failed to update groups for backup study $BACKUP_CANCER_STUDY_IDENTIFIER."
-if [ $GROUPS_FAIL -gt 0 ]
-then
+if [ $GROUPS_FAIL -gt 0 ]; then
 	echo -e "Sending email $EMAIL_BODY"
 	echo -e "$EMAIL_BODY" | mail -s "$CANCER_STUDY_IDENTIFIER Update Failure: Groups update" $EMAIL_LIST
 fi
