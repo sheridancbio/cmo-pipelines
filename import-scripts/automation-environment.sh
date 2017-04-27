@@ -6,6 +6,9 @@ export MSK_RAINDANCE_DATA_HOME=/data/portal-cron/cbio-portal-data/msk-impact/rai
 export MSK_HEMEPACT_DATA_HOME=/data/portal-cron/cbio-portal-data/msk-impact/hemepact
 export MSK_ARCHER_DATA_HOME=/data/portal-cron/cbio-portal-data/msk-impact/mskarcher
 export MSK_MIXEDPACT_DATA_HOME=/data/portal-cron/cbio-portal-data/msk-impact/mixedpact
+export MSK_KINGS_DATA_HOME=/data/portal-cron/cbio-portal-data/msk-impact/msk_kingscounty
+export MSK_LEHIGH_DATA_HOME=/data/portal-cron/cbio-portal-data/msk-impact/msk_lehighvalley
+export MSK_QUEENS_DATA_HOME=/data/portal-cron/cbio-portal-data/msk-impact/msk_queenscancercenter
 export IMPACT_DATA_HOME=/data/portal-cron/cbio-portal-data/impact
 export FOUNDATION_DATA_HOME=/data/portal-cron/cbio-portal-data/foundation
 # CMO_DATA_HOME looks unused
