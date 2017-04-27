@@ -345,7 +345,7 @@ def process_header(data_filenames, sublist, merge_style):
 			if len(sublist) > 0:
 				new_header = []
 				for hdr in [hdr for hdr in get_header(fname) if hdr not in header]:
-					if hdr in NON_CASE_IDS or hdr in sublist:
+					if hdr.upper() in NON_CASE_IDS or hdr in sublist:
 						new_header.append(hdr)
 				header.extend(new_header)
 			else:

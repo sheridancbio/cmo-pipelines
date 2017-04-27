@@ -2,14 +2,16 @@ import sys
 import optparse
 import csv
 import os
+import re
 
 ERROR_FILE = sys.stderr
 OUTPUT_FILE = sys.stdout
 
 SUPPLEMENTAL_SAMPLE_CLINICAL_DATA = {}
 FILTERED_SAMPLE_IDS = set()
+IMPACT_SAMPLE_PATTERN = re.compile('P-\d*-T\d\d-IM\d*')
 
-def expand_clinical_data_main(clinical_filename, fields):
+def expand_clinical_data_main(clinical_filename, fields, impact_data_only):
 	""" Loads supplemental clinical data from data_clinical.txt and writes data to output directory. """
 	# add supp fields to header if not already exists
 	header = get_file_header(clinical_filename)
@@ -22,7 +24,9 @@ def expand_clinical_data_main(clinical_filename, fields):
 	data_reader = csv.DictReader(data_file, dialect = 'excel-tab')
 	output_data = ['\t'.join(header)]
 	for line in data_reader:
-		# update line with supplemental sample clinical data and format data as string for output file
+		if impact_data_only and not is_impact_sample(line['SAMPLE_ID'].strip()):
+			continue
+		# update line with supplemental sample clinical data and format data as string for output file		
 		line.update(SUPPLEMENTAL_SAMPLE_CLINICAL_DATA.get(line['SAMPLE_ID'].strip(), {}))
 		data = map(lambda v: line.get(v,''), header)
 		output_data.append('\t'.join(data))
@@ -51,6 +55,11 @@ def normalize_genie_sample_type(data):
 		data['SAMPLE_TYPE'] = '1'
 	return data
 
+def is_impact_sample(sample_id):
+	""" Determine whether sample id is from IMPACT """
+	if IMPACT_SAMPLE_PATTERN.match(sample_id):
+		return True
+	return False
 
 def get_file_header(filename):
 	""" Returns the file header. """
@@ -89,9 +98,13 @@ def main():
 		print >> ERROR_FILE, "No such file: " + clin_supp_file
 		usage()
 
+	impact_data_only = False
+	if study_id == 'genie':
+		impact_data_only = True
+
 	# load supplemental data from the clinical supp file
 	load_supplemental_clinical_data(clin_supp_file, fields, study_id)
-	expand_clinical_data_main(clin_file, fields)
+	expand_clinical_data_main(clin_file, fields, impact_data_only)
 
 
 
