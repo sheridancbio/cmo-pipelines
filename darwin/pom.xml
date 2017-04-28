@@ -5,6 +5,11 @@
     <artifactId>darwin</artifactId>
     <description>Darwin database pipeline</description>
     <version>0.1.0</version>
+
+    <packaging>jar</packaging>
+    <build>
+        <finalName>darwin_fetcher</finalName>
+    </build>
     
     <parent>
         <groupId>org.mskcc.cmo.ks</groupId>
@@ -89,9 +94,9 @@
             <version>4.19.26</version>
         </dependency>
     <dependency>
-	  <groupId>com.fasterxml.jackson.core</groupId>
-	  <artifactId>jackson-databind</artifactId>
-	</dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
+    </dependency>
         <dependency>
             <groupId>org.mskcc.cmo.ks.redcap.source</groupId>
             <artifactId>redcap_source</artifactId>

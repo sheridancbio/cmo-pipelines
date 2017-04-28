@@ -6,6 +6,11 @@
   <artifactId>cvr</artifactId>
   <version>0.1.0</version>
 
+  <packaging>jar</packaging>
+  <build>
+    <finalName>cvr_fetcher</finalName>
+  </build>
+
   <parent>
     <groupId>org.mskcc.cmo.ks</groupId>
     <artifactId>master</artifactId>
