@@ -1,6 +1,7 @@
 #!/bin/bash
 export PORTAL_DATA_HOME=/data/portal-cron/cbio-portal-data
 export PORTAL_HOME=/data/portal-cron
+export PORTAL_CONFIG_HOME=$PORTAL_DATA_HOME/portal-configuration
 export MSK_IMPACT_DATA_HOME=/data/portal-cron/cbio-portal-data/msk-impact/msk-impact
 export MSK_RAINDANCE_DATA_HOME=/data/portal-cron/cbio-portal-data/msk-impact/raindance
 export MSK_HEMEPACT_DATA_HOME=/data/portal-cron/cbio-portal-data/msk-impact/hemepact

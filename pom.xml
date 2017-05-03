@@ -12,8 +12,9 @@
     <module>gdd</module>
     <module>crdb</module>
     <module>darwin</module>
-    <module>redcap</module>
+    <module>redcap</module>    
     <module>cvr</module>
+    <module>gene</module>
   </modules>
 
   <!-- inherit defaults from spring boot -->
@@ -36,6 +37,14 @@
 
   <build>
     <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <source>1.8</source>
+          <target>1.8</target>
+        </configuration>
+      </plugin>
       <plugin>
         <!-- required to build an executable jar -->
         <groupId>org.springframework.boot</groupId>
