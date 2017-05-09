@@ -135,18 +135,44 @@ else
     cd $MSK_ARCHER_DATA_HOME;$HG_BINARY commit -m "Latest archer dataset"
 fi
 
-# create case lists by cancer type
-rm $MSK_IMPACT_DATA_HOME/case_lists/*
-$PYTHON_BINARY $PORTAL_HOME/scripts/oncotree_code_converter.py --oncotree-url "http://oncotree.mskcc.org/oncotree/api/tumor_types.txt" --clinical-file $MSK_IMPACT_DATA_HOME/data_clinical.txt
-$PYTHON_BINARY $PORTAL_HOME/scripts/create_case_lists_by_cancer_type.py --clinical-file="$MSK_IMPACT_DATA_HOME"/data_clinical.txt --output-directory="$MSK_IMPACT_DATA_HOME"/case_lists --study-id=mskimpact
-cd $MSK_IMPACT_DATA_HOME;$HG_BINARY add;$HG_BINARY commit -m "Latest MSK-IMPACT Dataset: Case Lists"
+# FUNCTIONS to generate case lists by cancer type and adding "DATE ADDED" information to clinical data 
+function addCancerTypeCaseLists {
+    STUDY_DATA_DIRECTORY=$1
+    STUDY_ID=$2
 
-$PYTHON_BINARY $PORTAL_HOME/scripts/impact_timeline.py --hgrepo=$MSK_IMPACT_DATA_HOME
-sed -i '/^\s*$/d' $MSK_IMPACT_DATA_HOME/data_clinical_supp_date.txt
-cd $MSK_IMPACT_DATA_HOME; rm *.orig
-rm $MSK_IMPACT_DATA_HOME/case_lists/*.orig
-cd $MSK_IMPACT_DATA_HOME;$HG_BINARY add;$HG_BINARY commit -m "Latest MSK-IMPACT Dataset: Sample Date Clinical File"
+    # remove current case lists and run oncotree converter before creating new cancer case lists
+    rm $STUDY_DATA_DIRECTORY/case_lists/*
+    $PYTHON_BINARY $PORTAL_HOME/scripts/oncotree_code_converter.py --oncotree-url "http://oncotree.mskcc.org/oncotree/api/tumor_types.txt" --clinical-file $STUDY_DATA_DIRECTORY/data_clinical.txt
+    $PYTHON_BINARY $PORTAL_HOME/scripts/create_case_lists_by_cancer_type.py --clinical-file="$STUDY_DATA_DIRECTORY/data_clinical.txt" --output-directory="$STUDY_DATA_DIRECTORY/case_lists" --study-id="$STUDY_ID"
+    cd $STUDY_DATA_DIRECTORY; $HG_BINARY add; $HG_BINARY commit -m "Latest $STUDY_ID Dataset: Case Lists"
+}
+function addDateAddedData {
+    STUDY_DATA_DIRECTORY=$1
+    STUDY_ID=$2
 
+    # add "date added" to clinical data file
+    $PYTHON_BINARY $PORTAL_HOME/scripts/impact_timeline.py --hgrepo=$STUDY_DATA_DIRECTORY
+    sed -i '/^\s*$/d' $STUDY_DATA_DIRECTORY/data_clinical_supp_date.txt
+    cd $STUDY_DATA_DIRECTORY; rm *.orig
+    rm $STUDY_DATA_DIRECTORY/case_lists/*.orig
+    cd $STUDY_DATA_DIRECTORY;$HG_BINARY add;$HG_BINARY commit -m "Latest $STUDY_ID Dataset: Sample Date Clinical File"
+}
+
+# generate case lists by cancer type and add "DATE ADDED" info to clinical data for MSK-IMPACT
+addCancerTypeCaseLists $MSK_IMPACT_DATA_HOME "mskimpact"
+addDateAddedData $MSK_IMPACT_DATA_HOME "mskimpact"
+
+# generate case lists by cancer type and add "DATE ADDED" info to clinical data for RAINDANCE
+addCancerTypeCaseLists $MSK_RAINDANCE_DATA_HOME "mskraindance"
+addDateAddedData $MSK_RAINDANCE_DATA_HOME "mskraindance"
+
+# generate case lists by cancer type and add "DATE ADDED" info to clinical data for HEMEPACT
+addCancerTypeCaseLists $MSK_HEMEPACT_DATA_HOME "mskimpact_heme"
+addDateAddedData $MSK_HEMEPACT_DATA_HOME "mskimpact_heme"
+
+# generate case lists by cancer type and add "DATE ADDED" info to clinical data for ARCHER
+addCancerTypeCaseLists $MSK_ARCHER_DATA_HOME "mskarcher"
+addDateAddedData $MSK_ARCHER_DATA_HOME "mskarcher"
 
 # check database version before importing anything
 echo "Checking if database version is compatible"
@@ -260,9 +286,7 @@ if [ $? -gt 0 ]; then
 else
     # if merge successful then copy case lists from MSK-IMPACT directory and change stable id
     echo "MIXEDPACT merge successful! Creating cancer type case lists..."
-    rm $MSK_MIXEDPACT_DATA_HOME/case_lists/*
-    $PYTHON_BINARY $PORTAL_HOME/scripts/oncotree_code_converter.py --oncotree-url "http://oncotree.mskcc.org/oncotree/api/tumor_types.txt" --clinical-file $MSK_MIXEDPACT_DATA_HOME/data_clinical.txt
-    $PYTHON_BINARY $PORTAL_HOME/scripts/create_case_lists_by_cancer_type.py --clinical-file="$MSK_MIXEDPACT_DATA_HOME"/data_clinical.txt --output-directory="$MSK_MIXEDPACT_DATA_HOME"/case_lists --study-id=mixedpact
+    addCancerTypeCaseLists $MSK_MIXEDPACT_DATA_HOME "mixedpact"
 fi
 
 
@@ -333,7 +357,7 @@ if [ $? -gt 0 ]; then
     MSK_KINGS_SUBSET_FAIL=1
 else
     echo "MSK Kings County subset successful!"
-    $PYTHON_BINARY $PORTAL_HOME/scripts/create_case_lists_by_cancer_type.py --clinical-file="$MSK_KINGS_DATA_HOME"/data_clinical.txt --output-directory="$MSK_KINGS_DATA_HOME"/case_lists --study-id=msk_kingscounty
+    addCancerTypeCaseLists $MSK_KINGS_DATA_HOME "msk_kingscounty"
 fi
 bash $PORTAL_HOME/scripts/subset-impact-data.sh -i=msk_lehighvalley -o=$MSK_LEHIGH_DATA_HOME -m=$MSK_MIXEDPACT_DATA_HOME -f="INSTITUTE=Lehigh Valley Health Network" -s=$tmp/lehigh_subset.txt
 if [ $? -gt 0 ]; then
@@ -341,7 +365,7 @@ if [ $? -gt 0 ]; then
     MSK_LEHIGH_SUBSET_FAIL=1
 else
     echo "MSK Lehigh Valley subset successful!"
-    $PYTHON_BINARY $PORTAL_HOME/scripts/create_case_lists_by_cancer_type.py --clinical-file="$MSK_LEHIGH_DATA_HOME"/data_clinical.txt --output-directory="$MSK_LEHIGH_DATA_HOME"/case_lists --study-id=msk_lehighvalley
+    addCancerTypeCaseLists $MSK_LEHIGH_DATA_HOME "msk_lehighvalley"
 fi
 bash $PORTAL_HOME/scripts/subset-impact-data.sh -i=msk_queenscancercenter -o=$MSK_QUEENS_DATA_HOME -m=$MSK_MIXEDPACT_DATA_HOME -f="INSTITUTE=Queens Cancer Center,Queens Hospital Cancer Center" -s=$tmp/queens_subset.txt
 if [ $? -gt 0 ]; then
@@ -349,7 +373,7 @@ if [ $? -gt 0 ]; then
     MSK_QUEENS_SUBSET_FAIL=1
 else
     echo "MSK Queens Cancer Center subset successful!"
-    $PYTHON_BINARY $PORTAL_HOME/scripts/create_case_lists_by_cancer_type.py --clinical-file="$MSK_QUEENS_DATA_HOME"/data_clinical.txt --output-directory="$MSK_QUEENS_DATA_HOME"/case_lists --study-id=msk_queenscancercenter
+    addCancerTypeCaseLists $MSK_QUEENS_DATA_HOME "msk_queenscancercenter"
 fi
 
 # remove the meta clinical file from mixedpact
