@@ -4,7 +4,6 @@
 
 echo $(date)
 tmp=$PORTAL_HOME/tmp/import-cron-dmp-msk
-num_studies_updated=0
 email_list="heinsz@mskcc.org, sheridar@mskcc.org, grossb1@mskcc.org, ochoaa@mskcc.org, wilsonm2@mskcc.org"
 
 if [[ -d "$tmp" && "$tmp" != "/" ]]; then
@@ -414,7 +413,7 @@ else
     IMPORT_FAIL_QUEENS=1
 fi
 # commit or revert changes for QUEENSCANCERCENTER
-if [ $IMPORT_FAIL_QUEENS-gt 0 ]; then
+if [ $IMPORT_FAIL_QUEENS -gt 0 ]; then
     echo "QUEENSCANCERCENTER subset and/or updates failed! Reverting data to last commit."
     cd $MSK_QUEENS_DATA_HOME;$HG_BINARY revert --all --no-backup;
     rm $MSK_QUEENS_DATA_HOME/*.orig
@@ -427,14 +426,9 @@ fi
 ## END Subset MIXEDPACT on INSTITUTE
 
 # redeploy war
-if [ $num_studies_updated -gt 0 ]; then
-    echo "'$num_studies_updated' studies have been updated, requesting redeployment of msk portal war..."
-    ssh -i $HOME/.ssh/id_rsa_tomcat_restarts_key cbioportal_importer@dashi.cbio.mskcc.org touch /srv/data/portal-cron/msk-tomcat-restart
-    ssh -i $HOME/.ssh/id_rsa_tomcat_restarts_key cbioportal_importer@dashi2.cbio.mskcc.org touch /srv/data/portal-cron/msk-tomcat-restart
-else
-    # echo "No studies have been updated, skipping redeploy of msk portal war..."
-    echo "No studies have been updated.."
-fi
+echo "Requesting redeployment of msk portal war..."
+ssh -i $HOME/.ssh/id_rsa_tomcat_restarts_key cbioportal_importer@dashi.cbio.mskcc.org touch /srv/data/portal-cron/msk-tomcat-restart
+ssh -i $HOME/.ssh/id_rsa_tomcat_restarts_key cbioportal_importer@dashi2.cbio.mskcc.org touch /srv/data/portal-cron/msk-tomcat-restart
 
 # check updated data back into mercurial
 echo "Pushing DMP-IMPACT updates back to msk-impact repository..."
