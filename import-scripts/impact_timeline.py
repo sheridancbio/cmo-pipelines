@@ -144,7 +144,9 @@ def process_hg(changeset_date_dict, hgrepo):
     # or whose data have been redacted at an earlier date
     for changeset, date in reversed(sorted(changeset_date_dict.items())):
     	# reverts clinical file to specificied changeset 
-        subprocess.call(['hg', 'revert', '-r', str(changeset), clin_filename, '--cwd', hgrepo, '--no-backup'])		
+        subprocess.call(['hg', 'revert', '-r', str(changeset), clin_filename, '--cwd', hgrepo, '--no-backup'])
+        if not os.path.exists(clin_filename):
+        	continue
         try:
             clin_file = open(os.path.join(hgrepo, CLINICAL_FILENAME), 'rU')
         except IOError:
