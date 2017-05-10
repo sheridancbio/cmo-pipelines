@@ -426,10 +426,6 @@ def copy_files(filenames, sublist, output_directory, study_id, cancer_type):
             if cancer_type not in fname and fname != 'data_clinical.txt':
                 file_ok_to_copy = False
 
-        # do not copy files that already exist
-        if os.path.isfile(os.path.join(output_directory, fname)):
-            file_ok_to_copy = False
-
         if file_ok_to_copy:
             if 'clinical' in fname and len(sublist) > 0:
                 count += 1
