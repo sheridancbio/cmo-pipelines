@@ -35,11 +35,11 @@ case $i in
 esac
 done
 echo "Input arguments: "
-echo "\tSTUDY_ID="$STUDY_ID
-echo "\tOUTPUT_DIRECTORY="$OUTPUT_DIRECTORY
-echo "\tMSK_IMPACT_DATA_DIRECTORY="$MSK_IMPACT_DATA_DIRECTORY
-echo "\tFILTER_CRITERIA="$FILTER_CRITERIA
-echo "\tSUBSET_FILENAME="$SUBSET_FILENAME
+echo -e "\tSTUDY_ID="$STUDY_ID
+echo -e "\tOUTPUT_DIRECTORY="$OUTPUT_DIRECTORY
+echo -e "\tMSK_IMPACT_DATA_DIRECTORY="$MSK_IMPACT_DATA_DIRECTORY
+echo -e "\tFILTER_CRITERIA="$FILTER_CRITERIA
+echo -e "\tSUBSET_FILENAME="$SUBSET_FILENAME
 
 if [ $STUDY_ID == "genie" ]; then
     # once cvr pipeline captures SEQ_DATE, we can get rid of this if/else block

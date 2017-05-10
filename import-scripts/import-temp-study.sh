@@ -1,12 +1,12 @@
 #!/bin/bash
 
-# temp sudy import arguments
-# (1): cancer study id [ mskimpact | mskimpact_heme | mskraindance | mskarcher | mixedpact ]
-# (2): temp study id [ temporary_mskimpact | temporary_mskimpact_heme | temporary_mskraindance | temporary_mskarcher | temporary_mixedpact ]
-# (3): backup study id [ yesterday_mskimpact | yesterday_mskimpact_heme | yesterday_mskraindance | yesterday_mskarcher | yesterday_mixedpact ]
-# (4): portal name [ mskimpact-portal | mskheme-portal | mskraindance-portal | mskarcher-portal | mixedpact-portal ]
-# (5): study path [ $MSK_IMPACT_DATA_HOME | $MSK_HEMEPACT_DATA_HOME | $MSK_RAINDANCE_DATA_HOME | $MSK_ARCHER_DATA_HOME | $MSK_MIXEDPACT_DATA_HOME ]
-# (6): notification file [ $mskimpact_notification_file | $mskheme_notification_file | $mskraindance_notification_file | $mixedpact_notification_file ]
+# Temp study importer arguments
+# (1): cancer study id [ mskimpact | mskimpact_heme | mskraindance | mskarcher | mixedpact | msk_kingscounty | msk_lehighvalley | msk_queenscancercenter ]
+# (2): temp study id [ temporary_mskimpact | temporary_mskimpact_heme | temporary_mskraindance | temporary_mskarcher | temporary_mixedpact | temporary_msk_kingscounty | temporary_msk_lehighvalley | temporary_msk_queenscancercenter ]
+# (3): backup study id [ yesterday_mskimpact | yesterday_mskimpact_heme | yesterday_mskraindance | yesterday_mskarcher | yesterday_mixedpact | yesterday_msk_kingscounty | yesterday_msk_lehighvalley | yesterday_msk_queenscancercenter ]
+# (4): portal name [ mskimpact-portal | mskheme-portal | mskraindance-portal | mskarcher-portal | mixedpact-portal |  msk-kingscounty-portal | msk-lehighvalley-portal | msk-queenscancercenter-portal ]
+# (5): study path [ $MSK_IMPACT_DATA_HOME | $MSK_HEMEPACT_DATA_HOME | $MSK_RAINDANCE_DATA_HOME | $MSK_ARCHER_DATA_HOME | $MSK_MIXEDPACT_DATA_HOME | $MSK_KINGS_DATA_HOME | $MSK_LEHIGH_DATA_HOME | $MSK_QUEENS_DATA_HOME ]
+# (6): notification file [ $mskimpact_notification_file | $mskheme_notification_file | $mskraindance_notification_file | $mixedpact_notification_file | $kingscounty_notification_file | $lehighvalley_notification_file | $queenscancercenter_notification_file ]
 # (7): tmp directory
 # (8): email list
 # (9): importer jar
@@ -34,51 +34,52 @@ function usage {
 	echo -e "\t-j | --importer-jar          importer jar"
 }
 
+echo "Input arguments:"
 for i in "$@"; do
 case $i in
     -i=*|--study-id=*)
     CANCER_STUDY_IDENTIFIER="${i#*=}"
-    echo "study id=$CANCER_STUDY_IDENTIFIER"
+    echo -e "\tstudy id=$CANCER_STUDY_IDENTIFIER"
     shift
     ;;
     -t=*|--temp-study-id=*)
     TEMP_CANCER_STUDY_IDENTIFIER="${i#*=}"
-    echo "temp id=$TEMP_CANCER_STUDY_IDENTIFIER"
+    echo -e "\ttemp id=$TEMP_CANCER_STUDY_IDENTIFIER"
     shift
     ;;
     -b=*|--backup-study-id=*)
     BACKUP_CANCER_STUDY_IDENTIFIER="${i#*=}"
-    echo "backup id=$BACKUP_CANCER_STUDY_IDENTIFIER"
+    echo -e "\tbackup id=$BACKUP_CANCER_STUDY_IDENTIFIER"
     shift
     ;;
     -p=*|--portal-name=*)
     PORTAL_NAME="${i#*=}"
-    echo "portal name=$PORTAL_NAME"
+    echo -e "\tportal name=$PORTAL_NAME"
     shift
     ;;
     -s=*|--study-path=*)
     STUDY_PATH="${i#*=}"
-    echo "study path=$STUDY_PATH"
+    echo -e "\tstudy path=$STUDY_PATH"
     shift
     ;;
     -n=*|--notification-file=*)
     NOTIFICATION_FILE="${i#*=}"
-    echo "notifcation file=$NOTIFICATION_FILE"
+    echo -e "\tnotifcation file=$NOTIFICATION_FILE"
     shift
     ;;
     -d=*|--tmp-directory=*)
     TMP_DIRECTORY="${i#*=}"
-    echo "tmp dir=$TMP_DIRECTORY"
+    echo -e "\ttmp dir=$TMP_DIRECTORY"
     shift
     ;;
     -e=*|--email-list=*)
     EMAIL_LIST="${i#*=}"
-    echo "email list=$EMAIL_LIST"
+    echo -e "\temail list=$EMAIL_LIST"
     shift
     ;;
     -j=*|--importer-jar=*)
     IMPORTER_JAR="${i#*=}"
-    echo "importer jar=$IMPORTER_JAR"
+    echo -e "\timporter jar=$IMPORTER_JAR"
     shift
     ;;
     *)
