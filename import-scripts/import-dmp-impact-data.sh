@@ -48,8 +48,7 @@ function addCancerTypeCaseLists {
     # remove current case lists and run oncotree converter before creating new cancer case lists
     rm $STUDY_DATA_DIRECTORY/case_lists/*
     $PYTHON_BINARY $PORTAL_HOME/scripts/oncotree_code_converter.py --oncotree-url "http://oncotree.mskcc.org/oncotree/api/tumor_types.txt" --clinical-file $STUDY_DATA_DIRECTORY/data_clinical.txt
-    $PYTHON_BINARY $PORTAL_HOME/scripts/create_case_lists_by_cancer_type.py --clinical-file="$STUDY_DATA_DIRECTORY/data_clinical.txt" --output-directory="$STUDY_DATA_DIRECTORY/case_lists" --study-id="$STUDY_ID"
-    cd $STUDY_DATA_DIRECTORY; $HG_BINARY add; $HG_BINARY commit -m "Latest $STUDY_ID Dataset: Case Lists"
+    $PYTHON_BINARY $PORTAL_HOME/scripts/create_case_lists_by_cancer_type.py --clinical-file="$STUDY_DATA_DIRECTORY/data_clinical.txt" --output-directory="$STUDY_DATA_DIRECTORY/case_lists" --study-id="$STUDY_ID"    
 }
 
 # Function for adding "DATE ADDED" information to clinical data 
@@ -61,8 +60,7 @@ function addDateAddedData {
     $PYTHON_BINARY $PORTAL_HOME/scripts/impact_timeline.py --hgrepo=$STUDY_DATA_DIRECTORY
     sed -i '/^\s*$/d' $STUDY_DATA_DIRECTORY/data_clinical_supp_date.txt
     cd $STUDY_DATA_DIRECTORY; rm *.orig
-    rm $STUDY_DATA_DIRECTORY/case_lists/*.orig
-    cd $STUDY_DATA_DIRECTORY;$HG_BINARY add;$HG_BINARY commit -m "Latest $STUDY_ID Dataset: Sample Date Clinical File"
+    rm $STUDY_DATA_DIRECTORY/case_lists/*.orig    
 }
 
 # Function for restarting tomcats
@@ -173,19 +171,27 @@ fi
 
 # generate case lists by cancer type and add "DATE ADDED" info to clinical data for MSK-IMPACT
 addCancerTypeCaseLists $MSK_IMPACT_DATA_HOME "mskimpact"
+cd $STUDY_DATA_DIRECTORY; $HG_BINARY add; $HG_BINARY commit -m "Latest MSK-IMPACT Dataset: Case Lists"
 addDateAddedData $MSK_IMPACT_DATA_HOME "mskimpact"
+cd $STUDY_DATA_DIRECTORY;$HG_BINARY add;$HG_BINARY commit -m "Latest MSK-IMPACT Dataset: Sample Date Clinical File"
 
 # generate case lists by cancer type and add "DATE ADDED" info to clinical data for RAINDANCE
 addCancerTypeCaseLists $MSK_RAINDANCE_DATA_HOME "mskraindance"
+cd $STUDY_DATA_DIRECTORY; $HG_BINARY add; $HG_BINARY commit -m "Latest RAINDANCE Dataset: Case Lists"
 addDateAddedData $MSK_RAINDANCE_DATA_HOME "mskraindance"
+cd $STUDY_DATA_DIRECTORY;$HG_BINARY add;$HG_BINARY commit -m "Latest RAINDANCE Dataset: Sample Date Clinical File"
 
 # generate case lists by cancer type and add "DATE ADDED" info to clinical data for HEMEPACT
 addCancerTypeCaseLists $MSK_HEMEPACT_DATA_HOME "mskimpact_heme"
+cd $STUDY_DATA_DIRECTORY; $HG_BINARY add; $HG_BINARY commit -m "Latest HEMEPACT Dataset: Case Lists"
 addDateAddedData $MSK_HEMEPACT_DATA_HOME "mskimpact_heme"
+cd $STUDY_DATA_DIRECTORY;$HG_BINARY add;$HG_BINARY commit -m "Latest HEMEPACT Dataset: Sample Date Clinical File"
 
 # generate case lists by cancer type and add "DATE ADDED" info to clinical data for ARCHER
 addCancerTypeCaseLists $MSK_ARCHER_DATA_HOME "mskarcher"
+cd $STUDY_DATA_DIRECTORY; $HG_BINARY add; $HG_BINARY commit -m "Latest ARCHER Dataset: Case Lists"
 addDateAddedData $MSK_ARCHER_DATA_HOME "mskarcher"
+cd $STUDY_DATA_DIRECTORY;$HG_BINARY add;$HG_BINARY commit -m "Latest ARCHER Dataset: Sample Date Clinical File"
 
 # check database version before importing anything
 echo "Checking if database version is compatible"
@@ -325,7 +331,6 @@ else
     echo "MIXEDPACT merge successful! Creating cancer type case lists..."
     addCancerTypeCaseLists $MSK_MIXEDPACT_DATA_HOME "mixedpact"
 fi
-
 
 # check that meta_clinical.txt and meta_SV.txt are actually empty files before deleting from IMPACT, HEME, and RAINDANCE studies
 if [ $(wc -l < $MSK_IMPACT_DATA_HOME/meta_clinical.txt) -eq 0 ]; then
