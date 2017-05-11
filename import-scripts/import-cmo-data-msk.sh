@@ -30,8 +30,8 @@ if [ $DB_VERSION_FAIL -eq 0 ]; then
     # redeploy war
     if [ $num_studies_updated -gt 0 ]; then
 	    echo "'$num_studies_updated' studies have been updated, requesting redeployment of msk portal war..."
-    	ssh -i $HOME/.ssh/id_rsa_tomcat_restarts_key cbioportal_importer@dashi.cbio.mskcc.org touch /srv/data/portal-cron/msk-tomcat-restart
-        ssh -i $HOME/.ssh/id_rsa_tomcat_restarts_key cbioportal_importer@dashi2.cbio.mskcc.org touch /srv/data/portal-cron/msk-tomcat-restart
+        ssh -i $HOME/.ssh/id_rsa_msk_tomcat_restarts_key cbioportal_importer@dashi.cbio.mskcc.org touch /srv/data/portal-cron/msk-tomcat-restart
+        ssh -i $HOME/.ssh/id_rsa_msk_tomcat_restarts_key cbioportal_importer@dashi2.cbio.mskcc.org touch /srv/data/portal-cron/msk-tomcat-restart
 	    echo "'$num_studies_updated' studies have been updated (no longer need to restart schultz-tomcat server...)"
     else
 	    echo "No studies have been updated, skipping redeploy of msk portal war..."
