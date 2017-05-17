@@ -63,6 +63,7 @@ public class CVRClinicalRecord {
     private String somaticStatus;
     private String seqDate;
     private String ageAtSeqReport;
+    private String archer;
 
     private final String DEFAULT_SAMPLE_CLASS = "Tumor";
 
@@ -90,6 +91,7 @@ public class CVRClinicalRecord {
         this.somaticStatus = metaData.getSomaticStatus();
         this.seqDate = metaData.getDateTumorSequencing();
         this.ageAtSeqReport = "NA";
+        this.archer = "NO";
     }
 
     public CVRClinicalRecord(GMLMetaData metaData) {
@@ -113,6 +115,7 @@ public class CVRClinicalRecord {
         this.msiScore = "";
         this.msiType = "";
         this.institute = "";
+        this.archer = "NO";
     }
 
     public CVRClinicalRecord() {
@@ -305,6 +308,14 @@ public class CVRClinicalRecord {
     public void setAGE_AT_SEQ_REPORT(String ageAtSeqReport) {
         this.ageAtSeqReport = ageAtSeqReport;
     }
+    
+    public String getARCHER() {
+        return archer != null ? archer : "NO";
+    }
+
+    public void setARCHER(String archer) {
+        this.archer = archer;
+    }    
 
     private String resolveSampleType(Integer isMetastasis) {
         if (isMetastasis != null)
@@ -337,6 +348,7 @@ public class CVRClinicalRecord {
         fieldNames.add("INSTITUTE");
         fieldNames.add("SOMATIC_STATUS");
         fieldNames.add("AGE_AT_SEQ_REPORT");
+        fieldNames.add("ARCHER");
         return fieldNames;
     }
     

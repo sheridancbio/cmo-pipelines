@@ -37,6 +37,7 @@ import org.cbioportal.cmo.pipelines.cvr.cna.*;
 import org.cbioportal.cmo.pipelines.cvr.consume.*;
 import org.cbioportal.cmo.pipelines.cvr.fusion.*;
 import org.cbioportal.cmo.pipelines.cvr.genepanel.*;
+import org.cbioportal.cmo.pipelines.cvr.linkedimpactcase.*;
 import org.cbioportal.cmo.pipelines.cvr.masterlist.CvrMasterListTasklet;
 import org.cbioportal.cmo.pipelines.cvr.model.*;
 import org.cbioportal.cmo.pipelines.cvr.mutation.*;
@@ -49,6 +50,8 @@ import org.cbioportal.models.*;
 import java.util.*;
 import org.springframework.batch.core.*;
 import org.springframework.batch.core.configuration.annotation.*;
+import org.springframework.batch.core.job.builder.FlowBuilder;
+import org.springframework.batch.core.job.flow.*;
 import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.batch.item.*;
 import org.springframework.batch.item.support.CompositeItemWriter;
@@ -104,8 +107,16 @@ public class BatchConfiguration {
     @Bean
     public Job cvrJob() {
         return jobBuilderFactory.get(CVR_JOB)
+                .start(cvrJobFlow())
+                .build().build();
+    }
+    
+    @Bean 
+    public Flow cvrJobFlow() {
+        return new FlowBuilder<Flow>("cvrJobFlow")
                 .start(cvrMasterListStep())
                 .next(cvrJsonStep())
+                .next(linkedMskimpactCaseFlow())
                 .next(clinicalStep())
                 .next(mutationStep())
                 .next(unfilteredMutationStep())
@@ -116,6 +127,13 @@ public class BatchConfiguration {
                 .next(genePanelStep())
                 .next(cvrRequeueStep())
                 .build();
+    }
+    
+    @Bean 
+    public Flow linkedMskimpactCaseFlow() {
+        return new FlowBuilder<Flow>("linkedMskimpactCaseFlow")
+                .start(linkedMskimpactCaseDecider()).on("RUN").to(linkedMskimpactCaseStep())
+                .from(linkedMskimpactCaseDecider()).on("SKIP").end().build();
     }
 
     @Bean
@@ -180,6 +198,16 @@ public class BatchConfiguration {
                 .reader(clinicalDataReader())
                 .processor(clinicalDataProcessor())
                 .writer(compositeClinicalDataWriter())
+                .build();
+    }
+    
+    @Bean
+    public Step linkedMskimpactCaseStep() {
+        return stepBuilderFactory.get("linkedMskimpactCaseStep")
+                .<LinkedMskimpactCaseRecord, String> chunk(chunkInterval)
+                .reader(linkedMskimpactCaseReader())
+                .processor(linkedMskimpactCaseProcessor())
+                .writer(linkedMskimpactCaseWriter())
                 .build();
     }
 
@@ -437,6 +465,23 @@ public class BatchConfiguration {
     public ItemStreamWriter<CompositeCnaRecord> newCnaDataWriter() {
         return new CVRNewCnaDataWriter();
     }
+    
+    @Bean
+    @StepScope
+    public ItemStreamReader<LinkedMskimpactCaseRecord> linkedMskimpactCaseReader() {
+        return new LinkedMskimpactCaseReader();
+    }
+    
+    @Bean
+    public LinkedMskimpactCaseProcessor linkedMskimpactCaseProcessor() {
+        return new LinkedMskimpactCaseProcessor();
+    }
+    
+    @Bean
+    @StepScope
+    public ItemStreamWriter<String> linkedMskimpactCaseWriter() {
+        return new LinkedMskimpactCaseWriter();
+    }
 
     @Bean
     @StepScope
@@ -590,4 +635,19 @@ public class BatchConfiguration {
         return new ConsumeSampleWriter();
     }
     
+    @Bean
+    public JobExecutionDecider linkedMskimpactCaseDecider() {
+        return new JobExecutionDecider() {
+            @Override
+            public FlowExecutionStatus decide(JobExecution je, StepExecution se) {
+                String studyId = je.getJobParameters().getString("studyId");
+                if (studyId.equals("mskarcher")) {
+                    return new FlowExecutionStatus("RUN");
+                }
+                else {
+                    return new FlowExecutionStatus("SKIP");
+                }
+            }                    
+        };
+    }
 }

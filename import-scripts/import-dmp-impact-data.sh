@@ -202,6 +202,10 @@ cd $STUDY_DATA_DIRECTORY; $HG_BINARY add; $HG_BINARY commit -m "Latest ARCHER Da
 addDateAddedData $MSK_ARCHER_DATA_HOME "mskarcher"
 cd $STUDY_DATA_DIRECTORY;$HG_BINARY add;$HG_BINARY commit -m "Latest ARCHER Dataset: Sample Date Clinical File"
 
+# Merge Archer fusion data into the impact cohort
+$PYTHON_BINARY $PORTAL_HOME/scripts/archer_fusions_merger.py --archer-fusions $MSK_ARCHER_DATA_HOME/data_fusions.txt --linked-mskimpact-cases-filename $MSK_ARCHER_DATA_HOME/linked_mskimpact_cases.txt --msk-fusions $MSK_IMPACT_DATA_HOME/data_fusions.txt --clinical-filname $MSK_IMPACT_DATA_HOME/data_clinical.txt --archer-samples-filename $tmp/archer_ids.txt
+cd $MSK_IMPACT_DATA_HOME; $HG_BINARY add; $HG_BINARY commit -m "Adding ARCHER fusions to MSKIMPACT"
+
 # check database version before importing anything
 echo "Checking if database version is compatible"
 echo $(date)
@@ -328,17 +332,16 @@ if [ ! -f $MSK_RAINDANCE_DATA_HOME/meta_clinical.txt ]; then
     touch $MSK_RAINDANCE_DATA_HOME/meta_clinical.txt
 fi
 
-# if [ ! -f $MSK_ARCHER_DATA_HOME/meta_clinical.txt ]; then
-#     touch $MSK_ARCHER_DATA_HOME/meta_clinical.txt
-# fi
+if [ ! -f $MSK_ARCHER_DATA_HOME/meta_clinical.txt ]; then
+    touch $MSK_ARCHER_DATA_HOME/meta_clinical.txt
+fi
 
-# if [ ! -f $MSK_ARCHER_DATA_HOME/meta_SV.txt ]; then
-#     touch $MSK_ARCHER_DATA_HOME/meta_SV.txt
-# fi
+if [ ! -f $MSK_ARCHER_DATA_HOME/meta_SV.txt ]; then
+    touch $MSK_ARCHER_DATA_HOME/meta_SV.txt
+fi
 
 # merge data from both directories and check exit code
-$PYTHON_BINARY $PORTAL_HOME/scripts/merge.py -d $MSK_MIXEDPACT_DATA_HOME -i mixedpact -m "true" $MSK_IMPACT_DATA_HOME $MSK_HEMEPACT_DATA_HOME $MSK_RAINDANCE_DATA_HOME
-# $PYTHON_BINARY $PORTAL_HOME/scripts/merge.py -d $MSK_MIXEDPACT_DATA_HOME -i mixedpact -m "true" $MSK_IMPACT_DATA_HOME $MSK_HEMEPACT_DATA_HOME $MSK_RAINDANCE_DATA_HOME $MSK_ARCHER_DATA_HOME
+$PYTHON_BINARY $PORTAL_HOME/scripts/merge.py -d $MSK_MIXEDPACT_DATA_HOME -i mixedpact -m "true" -e $tmp/archer_ids.txt $MSK_IMPACT_DATA_HOME $MSK_HEMEPACT_DATA_HOME $MSK_RAINDANCE_DATA_HOME $MSK_ARCHER_DATA_HOME
 if [ $? -gt 0 ]; then
     echo "MIXEDPACT merge failed! Study will not be updated in the portal."
     echo $(date)
@@ -371,13 +374,13 @@ if [ $(wc -l < $MSK_RAINDANCE_DATA_HOME/meta_clinical.txt) -eq 0 ]; then
     rm $MSK_RAINDANCE_DATA_HOME/meta_clinical.txt
 fi
 
-# if [ $(wc -l < $MSK_ARCHER_DATA_HOME/meta_clinical.txt) -eq 0 ]; then
-#     rm $MSK_ARCHER_DATA_HOME/meta_clinical.txt
-# fi
+if [ $(wc -l < $MSK_ARCHER_DATA_HOME/meta_clinical.txt) -eq 0 ]; then
+    rm $MSK_ARCHER_DATA_HOME/meta_clinical.txt
+fi
 
-# if [ $(wc -l < $MSK_ARCHER_DATA_HOME/meta_clinical.txt) -eq 0 ]; then
-#     rm $MSK_ARCHER_DATA_HOME/meta_clinical.txt
-# fi
+if [ $(wc -l < $MSK_ARCHER_DATA_HOME/meta_clinical.txt) -eq 0 ]; then
+    rm $MSK_ARCHER_DATA_HOME/meta_clinical.txt
+fi
 
 # update MIXEDPACT in portal only if merge and case list updates were succesful
 if [ $MERGE_FAIL -eq 0 ]; then

@@ -57,6 +57,7 @@ public class CVRUtilities {
     public final String CLINICAL_FILE = "data_clinical.txt";
     public final String SEQ_DATE_CLINICAL_FILE = "seq_date.txt";
     public final String DARWIN_AGE_FILE = "darwin_age.txt";
+    public final String CORRESPONDING_ID_FILE = "linked_mskimpact_cases.txt";
     public final String CNA_FILE = "data_CNA.txt";
     public final String SEG_FILE = "_data_cna_hg19.seg";
     public final String FUSION_FILE = "data_fusions.txt";

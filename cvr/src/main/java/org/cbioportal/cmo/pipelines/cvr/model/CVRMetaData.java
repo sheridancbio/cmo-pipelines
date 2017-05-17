@@ -61,6 +61,7 @@ import javax.annotation.Generated;
     "gender",
     "gene-panel",
     "is_metastasis",
+    "linked_mskimpact_case",
     "legacy_patient_id",
     "legacy_sample_id",
     "metastasis_site",
@@ -89,6 +90,8 @@ public class CVRMetaData {
     private Integer cbxSampleId;
     @JsonProperty("date_tumor_sequencing")
     private String dateTumorSequencing;
+    @JsonProperty("linked_mskimpact_case")
+    private String linkedMskimpactCase;
     @JsonProperty("dmp_alys_task_id")
     private Integer dmpAlysTaskId;
     @JsonProperty("dmp_alys_task_name")
@@ -164,6 +167,7 @@ public class CVRMetaData {
     * @param soStatusName
     * @param alys2sampleId
     * @param cbxPatientId
+    * @param linkedMskimpactCase
     * @param metastasisSite
     * @param dmpPatientId
     * @param mrevComments
@@ -180,7 +184,7 @@ public class CVRMetaData {
     * @param legacySampleId
     * @param tumorTypeName
     */
-    public CVRMetaData(Integer alys2sampleId, Integer cbxPatientId, Integer cbxSampleId, String dateTumorSequencing, Integer dmpAlysTaskId, String dmpAlysTaskName, String dmpPatientId, String dmpSampleId, Integer dmpSampleSoId, Integer gender, String genePanel, Integer isMetastasis, String legacyPatientId, String legacySampleId, String metastasisSite, String mrevComments, String msiComment, String msiScore, String msiType, String outsideInstitute, String primarySite, Integer retrieveStatus, Integer sampleCoverage, String soComments, String soStatusName, String somaticStatus, String tumorPurity, String tumorTypeCode, String tumorTypeName) {
+    public CVRMetaData(Integer alys2sampleId, Integer cbxPatientId, Integer cbxSampleId, String dateTumorSequencing, String linkedMskimpactCase, Integer dmpAlysTaskId, String dmpAlysTaskName, String dmpPatientId, String dmpSampleId, Integer dmpSampleSoId, Integer gender, String genePanel, Integer isMetastasis, String legacyPatientId, String legacySampleId, String metastasisSite, String mrevComments, String msiComment, String msiScore, String msiType, String outsideInstitute, String primarySite, Integer retrieveStatus, Integer sampleCoverage, String soComments, String soStatusName, String somaticStatus, String tumorPurity, String tumorTypeCode, String tumorTypeName) {
         this.alys2sampleId = alys2sampleId;
         this.cbxPatientId = cbxPatientId;
         this.cbxSampleId = cbxSampleId;
@@ -210,6 +214,7 @@ public class CVRMetaData {
         this.tumorPurity = tumorPurity;
         this.tumorTypeCode = tumorTypeCode;
         this.tumorTypeName = tumorTypeName;
+        this.linkedMskimpactCase = linkedMskimpactCase;
     }
 
     @JsonProperty("somatic_status")
@@ -311,6 +316,26 @@ public class CVRMetaData {
     public Integer getDmpAlysTaskId() {
         return dmpAlysTaskId;
     }
+    
+    /**
+    *
+    * @return
+    * The correspondingImpactCase
+    */
+    @JsonProperty("linked_mskimpact_case")
+    public String getLinkedMskimpactCase() {
+        return linkedMskimpactCase;
+    }
+
+    /**
+    *
+    * @param linkedMskimpactCase
+    * The linked_mskimpact_case
+    */
+    @JsonProperty("linked_mskimpact_case")
+    public void setLinkedMskimpactCase(String linkedMskimpactCase) {
+        this.linkedMskimpactCase = linkedMskimpactCase;
+    }    
 
     /**
     *
