@@ -357,11 +357,11 @@ public class MskimpactPatientDemographics {
         List<String> fieldNames = new ArrayList<>();
         fieldNames.add("PATIENT_ID");
         fieldNames.add("DARWIN_PATIENT_AGE");
-        fieldNames.add("DARWIN_RACE");
-        fieldNames.add("DARWIN_RELIGION");
-        fieldNames.add("DARWIN_SEX");
+        fieldNames.add("RACE");
+        fieldNames.add("RELIGION");
+        fieldNames.add("SEX");
         fieldNames.add("DARWIN_VITAL_STATUS");
-        fieldNames.add("DARWIN_AGE_AT_DIAGNOSIS");
+        fieldNames.add("AGE_AT_DIAGNOSIS");
         fieldNames.add("OS_STATUS");
         fieldNames.add("OS_MONTHS");
 

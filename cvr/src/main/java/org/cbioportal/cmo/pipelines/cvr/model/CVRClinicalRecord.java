@@ -51,7 +51,6 @@ public class CVRClinicalRecord {
     private String genePanel;
     private String otherSampleId;
     private String otherPatientId;
-    private String sex;
     private String soComments;
     private String sampleCoverage;
     private String tumorPurity;
@@ -78,7 +77,6 @@ public class CVRClinicalRecord {
         this.genePanel = metaData.getGenePanel();
         this.otherSampleId = metaData.getLegacySampleId();
         this.otherPatientId = metaData.getLegacyPatientId();
-        this.sex = this.resolveSex(metaData.getGender());
         this.soComments = metaData.getSoComments();
         this.sampleCoverage = String.valueOf(metaData.getSampleCoverage());
         this.tumorPurity = metaData.getTumorPurity();
@@ -103,7 +101,6 @@ public class CVRClinicalRecord {
         this.genePanel = metaData.getGenePanel();
         this.otherSampleId = metaData.getLegacySampleId();
         this.otherPatientId = metaData.getLegacyPatientId();
-        this.sex = this.resolveSex(metaData.getGender());
         this.soComments = metaData.getSoComments();
         this.sampleCoverage = String.valueOf(metaData.getSampleCoverage());
         this.tumorPurity = "";
@@ -206,14 +203,6 @@ public class CVRClinicalRecord {
         this.otherPatientId = otherPatientId;
     }
 
-    public String getSEX() {
-        return this.sex != null ? this.sex : "";
-    }
-
-    public void setSEX(String sex) {
-        this.sex = sex;
-    }
-
     public String getSO_COMMENTS() {
         return this.soComments != null ? this.soComments : "";
     }
@@ -313,13 +302,6 @@ public class CVRClinicalRecord {
 
     }
 
-    private String resolveSex(Integer sex) {
-        if (sex != null) {
-            return sex == 0 ? "Female" : "Male";
-        }
-        return "NA";
-    }
-
     public static List<String> getFieldNames() {
         List<String> fieldNames = new ArrayList<String>();
         fieldNames.add("SAMPLE_ID");
@@ -333,7 +315,6 @@ public class CVRClinicalRecord {
         fieldNames.add("GENE_PANEL");
         fieldNames.add("OTHER_SAMPLE_ID");
         fieldNames.add("OTHER_PATIENT_ID");
-        fieldNames.add("SEX");
         fieldNames.add("SO_COMMENTS");
         fieldNames.add("SAMPLE_COVERAGE");
         fieldNames.add("TUMOR_PURITY");
