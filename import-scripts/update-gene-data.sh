@@ -64,6 +64,20 @@ runGeneUpdatePipeline "cgds_genie"
 export SPRING_CONFIG_LOCATION=$PORTAL_CONFIG_HOME/properties/update-gene/application-pancan.properties
 runGeneUpdatePipeline "cgds_pancan"
 
+echo "Restarting triage-tomcat server..."
+/usr/bin/sudo /etc/init.d/triage-tomcat7 restart
+
+echo "Restarting schultz-tomcat servers..."
+ssh -i $HOME/.ssh/id_rsa_msk_tomcat_restarts_key cbioportal_importer@dashi.cbio.mskcc.org touch /srv/data/portal-cron/msk-tomcat-restart
+ssh -i $HOME/.ssh/id_rsa_msk_tomcat_restarts_key cbioportal_importer@dashi2.cbio.mskcc.org touch /srv/data/portal-cron/msk-tomcat-restart
+
+echo "Restarting public-tomcat servers..."
+ssh -i $HOME/.ssh/id_rsa_public_tomcat_restarts_key cbioportal_importer@dashi.cbio.mskcc.org touch /srv/data/portal-cron/public-tomcat-restart
+ssh -i $HOME/.ssh/id_rsa_public_tomcat_restarts_key cbioportal_importer@dashi2.cbio.mskcc.org touch /srv/data/portal-cron/public-tomcat-restart
+
+echo "Restarting pancan-tomcat servers..."
+ssh -i $HOME/.ssh/id_rsa_pancan_tomcat_restarts_key cbioportal_importer@dashi.cbio.mskcc.org touch /srv/data/portal-cron/pancan-tomcat-restart
+ssh -i $HOME/.ssh/id_rsa_pancan_tomcat_restarts_key cbioportal_importer@dashi2.cbio.mskcc.org touch /srv/data/portal-cron/pancan-tomcat-restart
 
 echo "Removing gene data files downloaded..."
 rm $tmp/Homo_sapiens.gene_info
