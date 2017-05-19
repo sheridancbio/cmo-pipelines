@@ -40,9 +40,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 import org.apache.log4j.Logger;
 import java.util.*;
+import javax.annotation.Resource;
 import static com.querydsl.core.alias.Alias.$;
 import static com.querydsl.core.alias.Alias.alias;
-import javax.annotation.Resource;
 /**
  *
  * @author jake
@@ -59,6 +59,15 @@ public class MskimpactPatientDemographicsReader implements ItemStreamReader<Mski
 
     @Value("${darwin.pathology_dmp_view}")
     private String pathologyDmpView;
+
+    @Value("${darwin.naaccr.ethnicity_mapping_table}")
+    private String naacrEthnicityMappingTable;
+
+    @Value("${darwin.naaccr.race_mapping_table}")
+    private String naacrRaceMappingTable;
+
+    @Value("${darwin.naaccr.sex_mapping_table}")
+    private String naacrSexMappingTable;
 
     @Value("#{jobParameters[studyID]}")
     private String studyID;
@@ -83,14 +92,53 @@ public class MskimpactPatientDemographicsReader implements ItemStreamReader<Mski
     @Transactional
     private List<MskimpactPatientDemographics> getDarwinDemographicsResults(){
         log.info("Start of Darwin Patient Demographics View Import...");
+        
+        Map<Integer, String> naaccrEthnicityMap = new HashMap<>();
+        Map<Integer, String> naaccrRaceMap = new HashMap<>();
+        Map<Integer, String> naaccrSexMap = new HashMap<>();
+
+        log.info("Query NAACR tables for code mappings...");
+        NAACCREthnicityMapping qNAACCREthnicityMapping = alias(NAACCREthnicityMapping.class, naacrEthnicityMappingTable);
+        NAACCRRaceMapping qNAACCRRaceMapping = alias(NAACCRRaceMapping.class, naacrRaceMappingTable);
+        NAACCRSexMapping qNAACCRSexMapping = alias(NAACCRSexMapping.class, naacrSexMappingTable);
+        List<NAACCREthnicityMapping> naaccrEthnicityMappings = darwinQueryFactory.selectDistinct(Projections.constructor(NAACCREthnicityMapping.class,
+                $(qNAACCREthnicityMapping.getNECM_CODE()),
+                $(qNAACCREthnicityMapping.getNECM_CBIOPORTAL_LABEL())))
+                .from($(qNAACCREthnicityMapping))
+                .fetch();
+        List<NAACCRRaceMapping> naaccrRaceMappings = darwinQueryFactory.selectDistinct(Projections.constructor(NAACCRRaceMapping.class,
+                $(qNAACCRRaceMapping.getNRCM_CODE()),
+                $(qNAACCRRaceMapping.getNRCM_CBIOPORTAL_LABEL())))
+                .from($(qNAACCRRaceMapping))
+                .fetch();
+        List<NAACCRSexMapping> naaccrSexMappings = darwinQueryFactory.selectDistinct(Projections.constructor(NAACCRSexMapping.class,
+                $(qNAACCRSexMapping.getNSCM_CODE()),
+                $(qNAACCRSexMapping.getNSCM_CBIOPORTAL_LABEL())))
+                .from($(qNAACCRSexMapping))
+                .fetch();
+        
+        // Make maps out of the NAACCR lists for quick lookups
+        for (NAACCREthnicityMapping ethnicityMapping : naaccrEthnicityMappings) {
+            naaccrEthnicityMap.put(ethnicityMapping.getNECM_CODE(), ethnicityMapping.getNECM_CBIOPORTAL_LABEL());
+        }
+        for (NAACCRRaceMapping raceMapping : naaccrRaceMappings) {
+            naaccrRaceMap.put(raceMapping.getNRCM_CODE(), raceMapping.getNRCM_CBIOPORTAL_LABEL());
+        }
+        for (NAACCRSexMapping sexMapping : naaccrSexMappings) {
+            naaccrSexMap.put(sexMapping.getNSCM_CODE(), sexMapping.getNSCM_CBIOPORTAL_LABEL());
+        }        
+
+        log.info("Query darwin tables for patient/sample demographics data...");
+        MskimpactNAACCRClinical qMskimpactNAACCRClinical = alias(MskimpactNAACCRClinical.class, patientDemographicsView);
         MskimpactPatientDemographics qMskImpactPatientDemographics = alias(MskimpactPatientDemographics.class, patientDemographicsView);
         MskimpactPatientIcdoRecord qMskImpactPatientIcdoRecord = alias(MskimpactPatientIcdoRecord.class, patientIcdoView);
         MskimpactLatestActivity qMskImpactLatestActivity = alias(MskimpactLatestActivity.class, latestActivityView);
         MskimpactPathologyDmp qMskimpactPathologyDmp = alias(MskimpactPathologyDmp.class, pathologyDmpView);
         List<MskimpactPatientDemographics> darwinDemographicsResults = darwinQueryFactory.selectDistinct(Projections.constructor(MskimpactPatientDemographics.class,
                 $(qMskImpactPatientDemographics.getDMP_ID_DEMO()),
-                $(qMskImpactPatientDemographics.getGENDER()),
-                $(qMskImpactPatientDemographics.getRACE()),
+                $(qMskImpactPatientDemographics.getPT_NAACCR_SEX_CODE()),
+                $(qMskImpactPatientDemographics.getPT_NAACCR_RACE_CODE_PRIMARY()),
+                $(qMskImpactPatientDemographics.getPT_NAACCR_ETHNICITY_CODE()),
                 $(qMskImpactPatientDemographics.getRELIGION()),
                 $(qMskImpactPatientDemographics.getPT_VITAL_STATUS()),
                 $(qMskImpactPatientDemographics.getPT_BIRTH_YEAR()),
@@ -109,6 +157,13 @@ public class MskimpactPatientDemographicsReader implements ItemStreamReader<Mski
                 .orderBy($(qMskImpactPatientIcdoRecord.getTM_DX_YEAR()).asc())
                 .where($(qMskimpactPathologyDmp.getSAMPLE_ID_PATH_DMP()).like(studyIdRegexMap.get(studyID)))
                 .fetch();
+        
+        // Translate the NAACCR codes for each result
+        for (MskimpactPatientDemographics result : darwinDemographicsResults) {
+            result.setGENDER(naaccrSexMap.getOrDefault(Integer.parseInt(result.getPT_NAACCR_SEX_CODE()), "NA"));
+            result.setRACE(naaccrRaceMap.getOrDefault(Integer.parseInt(result.getPT_NAACCR_RACE_CODE_PRIMARY()), "NA"));
+            result.setETHNICITY(naaccrEthnicityMap.getOrDefault(Integer.parseInt(result.getPT_NAACCR_ETHNICITY_CODE()), "NA"));
+        }
         return darwinDemographicsResults;
     }
 
