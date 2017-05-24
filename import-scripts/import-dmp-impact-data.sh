@@ -38,7 +38,7 @@ done
 cd $MSK_IMPACT_DATA_HOME;$HG_BINARY commit -m "Latest MSK-IMPACT Dataset: newline fix"
 
 # -----------------------------------------------------------------------------------------------------------
-## FUNCTIONS 
+## FUNCTIONS
 
 # Function to generate case lists by cancer type
 function addCancerTypeCaseLists {
@@ -48,10 +48,10 @@ function addCancerTypeCaseLists {
     # remove current case lists and run oncotree converter before creating new cancer case lists
     rm $STUDY_DATA_DIRECTORY/case_lists/*
     $PYTHON_BINARY $PORTAL_HOME/scripts/oncotree_code_converter.py --oncotree-url "http://oncotree.mskcc.org/oncotree/api/tumor_types.txt" --clinical-file $STUDY_DATA_DIRECTORY/data_clinical.txt
-    $PYTHON_BINARY $PORTAL_HOME/scripts/create_case_lists_by_cancer_type.py --clinical-file="$STUDY_DATA_DIRECTORY/data_clinical.txt" --output-directory="$STUDY_DATA_DIRECTORY/case_lists" --study-id="$STUDY_ID"    
+    $PYTHON_BINARY $PORTAL_HOME/scripts/create_case_lists_by_cancer_type.py --clinical-file="$STUDY_DATA_DIRECTORY/data_clinical.txt" --output-directory="$STUDY_DATA_DIRECTORY/case_lists" --study-id="$STUDY_ID"
 }
 
-# Function for adding "DATE ADDED" information to clinical data 
+# Function for adding "DATE ADDED" information to clinical data
 function addDateAddedData {
     STUDY_DATA_DIRECTORY=$1
     STUDY_ID=$2
@@ -60,13 +60,14 @@ function addDateAddedData {
     $PYTHON_BINARY $PORTAL_HOME/scripts/impact_timeline.py --hgrepo=$STUDY_DATA_DIRECTORY
     sed -i '/^\s*$/d' $STUDY_DATA_DIRECTORY/data_clinical_supp_date.txt
     cd $STUDY_DATA_DIRECTORY; rm *.orig
-    rm $STUDY_DATA_DIRECTORY/case_lists/*.orig    
+    rm $STUDY_DATA_DIRECTORY/case_lists/*.orig
 }
 
 # Function for restarting tomcats
 function restartTomcats {
     # redeploy war
     echo "Requesting redeployment of msk portal war..."
+    echo $(date)
     ssh -i $HOME/.ssh/id_rsa_msk_tomcat_restarts_key cbioportal_importer@dashi.cbio.mskcc.org touch /srv/data/portal-cron/msk-tomcat-restart
     ssh -i $HOME/.ssh/id_rsa_msk_tomcat_restarts_key cbioportal_importer@dashi2.cbio.mskcc.org touch /srv/data/portal-cron/msk-tomcat-restart
 }
@@ -75,16 +76,19 @@ function restartTomcats {
 # -----------------------------------------------------------------------------------------------------------
 # fetch CRDB data
 echo "fetching CRDB data"
+echo $(date)
 $JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -jar $PORTAL_HOME/lib/crdb_fetcher.jar -stage $MSK_IMPACT_DATA_HOME
 cd $MSK_IMPACT_DATA_HOME;$HG_BINARY commit -m "Latest MSK-IMPACT Dataset: CRDB"
 
 # fetch Darwin data
 
 echo "fetching Darwin data"
+echo $(date)
 $JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -jar $PORTAL_HOME/lib/darwin_fetcher.jar -d $MSK_IMPACT_DATA_HOME -s mskimpact
 cd $MSK_IMPACT_DATA_HOME;$HG_BINARY commit -m "Latest MSK-IMPACT Dataset: Darwin"
 
 echo "fetching Darwin heme data"
+echo $(date)
 $JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -jar $PORTAL_HOME/lib/darwin_fetcher.jar -d $MSK_HEMEPACT_DATA_HOME -s mskimpact_heme
 cd $MSK_HEMEPACT_DATA_HOME;$HG_BINARY commit -m "Latest MSK-IMPACT Dataset: Darwin heme"
 
@@ -105,6 +109,7 @@ IMPORT_FAIL_QUEENS=0
 
 # fetch new/updated IMPACT samples using CVR Web service   (must come after mercurial fetching)
 echo "fetching samples from CVR Web service  ..."
+echo $(date)
 $JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -jar $PORTAL_HOME/lib/cvr_fetcher.jar -d $MSK_IMPACT_DATA_HOME -i mskimpact
 if [ $? -gt 0 ]; then
     echo "CVR fetch failed!"
@@ -117,6 +122,7 @@ fi
 
 # fetch new/updated IMPACT germline samples using CVR Web service   (must come after normal cvr fetching)
 echo "fetching CVR GML data ..."
+echo $(date)
 $JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -jar $PORTAL_HOME/lib/cvr_fetcher.jar -d $MSK_IMPACT_DATA_HOME -g -i mskimpact
 if [ $? -gt 0 ]; then
     echo "CVR Germline fetch failed!"
@@ -129,6 +135,7 @@ fi
 
 # fetch new/updated raindance samples using CVR Web service (must come after mercurial fetching). The -s flag skips segment data fetching
 echo "fetching CVR raindance data..."
+echo $(date)
 $JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -jar $PORTAL_HOME/lib/cvr_fetcher.jar -d $MSK_RAINDANCE_DATA_HOME -s -i mskraindance
 if [ $? -gt 0 ]; then
     echo "CVR raindance fetch failed!"
@@ -144,6 +151,7 @@ fi
 
 # fetch new/updated heme samples using CVR Web service (must come after mercurial fetching).
 echo "fetching CVR heme data..."
+echo $(date)
 $JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -jar $PORTAL_HOME/lib/cvr_fetcher.jar -d $MSK_HEMEPACT_DATA_HOME -i mskimpact_heme
 if [ $? -gt 0 ]; then
       echo "CVR heme fetch failed!"
@@ -156,6 +164,7 @@ fi
 
 # fetch new/updated archer samples using CVR Web service (must come after mercurial fetching).
 echo "fetching CVR archer data..."
+echo $(date)
 $JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -jar $PORTAL_HOME/lib/cvr_fetcher.jar -d $MSK_ARCHER_DATA_HOME -i mskarcher -s
 if [ $? -gt 0 ]; then
     echo "CVR Archer fetch failed!"
@@ -195,6 +204,7 @@ cd $STUDY_DATA_DIRECTORY;$HG_BINARY add;$HG_BINARY commit -m "Latest ARCHER Data
 
 # check database version before importing anything
 echo "Checking if database version is compatible"
+echo $(date)
 $JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -ea -Dspring.profiles.active=dbcp -Djava.io.tmpdir="$tmp" -cp $PORTAL_HOME/lib/msk-dmp-importer.jar org.mskcc.cbio.importer.Admin --check-db-version
 if [ $? -gt 0 ]; then
     echo "Database version expected by portal does not match version in database!"
@@ -222,10 +232,11 @@ fi
 ## TEMP STUDY IMPORT: MSKIMPACT
 RESTART_AFTER_IMPACT_IMPORT=1
 if [ $IMPORT_STATUS_IMPACT -eq 0 ]; then
+    echo $(date)
     bash $PORTAL_HOME/scripts/import-temp-study.sh --study-id="mskimpact" --temp-study-id="temporary_mskimpact" --backup-study-id="yesterday_mskimpact" --portal-name="mskimpact-portal" --study-path="$MSK_IMPACT_DATA_HOME" --notification-file="$mskimpact_notification_file" --tmp-directory="$tmp" --email-list="$email_list" --importer-jar="$PORTAL_HOME/lib/msk-dmp-importer.jar"
     # set flag 'RESTART_AFTER_IMPACT_IMPORT' to 0 if MSKIMPACT did not update successfully
-    if [ $? -gt 0 ]; then 
-        RESTART_AFTER_IMPACT_IMPORT=0        
+    if [ $? -gt 0 ]; then
+        RESTART_AFTER_IMPACT_IMPORT=0
     fi
 else
     if [ $DB_VERSION_FAIL -gt 0 ]; then
@@ -236,9 +247,10 @@ else
 fi
 
 ## TOMCAT RESTART
-# restart tomcat only if the MSK-IMPACT update was succesful 
-if [ $RESTART_AFTER_IMPACT_IMPORT -eq 0 ]; then 
+# restart tomcat only if the MSK-IMPACT update was succesful
+if [ $RESTART_AFTER_IMPACT_IMPORT -eq 0 ]; then
     echo "Failed to update MSK-IMPACT - next tomcat restart will execute after successful updates to other MSK clinical pipelines and/or MSK affiliate studies..."
+    echo $(date)
 else
     restartTomcats
 fi
@@ -247,6 +259,7 @@ fi
 RESTART_AFTER_DMP_PIPELINES_IMPORT=0
 ## TEMP STUDY IMPORT: MSKIMPACT_HEME
 if [ $IMPORT_STATUS_HEME -eq 0 ]; then
+    echo $(date)
     bash $PORTAL_HOME/scripts/import-temp-study.sh --study-id="mskimpact_heme" --temp-study-id="temporary_mskimpact_heme" --backup-study-id="yesterday_mskimpact_heme" --portal-name="mskheme-portal" --study-path="$MSK_HEMEPACT_DATA_HOME" --notification-file="$mskheme_notification_file" --tmp-directory="$tmp" --email-list="$email_list" --importer-jar="$PORTAL_HOME/lib/msk-dmp-importer.jar"
     if [ $? -eq 0 ]; then
         RESTART_AFTER_DMP_PIPELINES_IMPORT=1
@@ -261,6 +274,7 @@ fi
 
 ## TEMP STUDY IMPORT: MSKRAINDANCE
 if [ $IMPORT_STATUS_RAINDANCE -eq 0 ]; then
+    echo $(date)
     bash $PORTAL_HOME/scripts/import-temp-study.sh --study-id="mskraindance" --temp-study-id="temporary_mskraindance" --backup-study-id="yesterday_mskraindance" --portal-name="mskraindance-portal" --study-path="$MSK_RAINDANCE_DATA_HOME" --notification-file="$mskraindance_notification_file" --tmp-directory="$tmp" --email-list="$email_list" --importer-jar="$PORTAL_HOME/lib/msk-dmp-importer.jar"
     if [ $? -eq 0 ]; then
         RESTART_AFTER_DMP_PIPELINES_IMPORT=1
@@ -275,6 +289,7 @@ fi
 
 # TEMP STUDY IMPORT: MSKARCHER
 if [ $IMPORT_STATUS_ARCHER -eq 0 ]; then
+    echo $(date)
     bash $PORTAL_HOME/scripts/import-temp-study.sh --study-id="mskarcher" --temp-study-id="temporary_mskarcher" --backup-study-id="yesterday_mskarcher" --portal-name="mskarcher-portal" --study-path="$MSK_ARCHER_DATA_HOME" --notification-file="$mskarcher_notification_file" --tmp-directory="$tmp" --email-list="$email_list" --importer-jar="$PORTAL_HOME/lib/msk-dmp-importer.jar"
     if [ $? -eq 0 ]; then
         RESTART_AFTER_DMP_PIPELINES_IMPORT=1
@@ -289,6 +304,7 @@ fi
 
 ## MSK-IMPACT, HEMEPACT, and RAINDANCE merge
 echo "Beginning merge of MSK-IMPACT, HEMEPACT, RAINDANCE data..."
+echo $(date)
 
 # first touch meta_clinical.txt and meta_SV.txt in each directory if not already exists
 if [ ! -f $MSK_IMPACT_DATA_HOME/meta_clinical.txt ]; then
@@ -325,10 +341,12 @@ $PYTHON_BINARY $PORTAL_HOME/scripts/merge.py -d $MSK_MIXEDPACT_DATA_HOME -i mixe
 # $PYTHON_BINARY $PORTAL_HOME/scripts/merge.py -d $MSK_MIXEDPACT_DATA_HOME -i mixedpact -m "true" $MSK_IMPACT_DATA_HOME $MSK_HEMEPACT_DATA_HOME $MSK_RAINDANCE_DATA_HOME $MSK_ARCHER_DATA_HOME
 if [ $? -gt 0 ]; then
     echo "MIXEDPACT merge failed! Study will not be updated in the portal."
+    echo $(date)
     MERGE_FAIL=1
 else
     # if merge successful then copy case lists from MSK-IMPACT directory and change stable id
     echo "MIXEDPACT merge successful! Creating cancer type case lists..."
+    echo $(date)
     addCancerTypeCaseLists $MSK_MIXEDPACT_DATA_HOME "mixedpact"
 fi
 
@@ -364,6 +382,7 @@ fi
 # update MIXEDPACT in portal only if merge and case list updates were succesful
 if [ $MERGE_FAIL -eq 0 ]; then
     echo "Importing MIXEDPACT study..."
+    echo $(date)
     bash $PORTAL_HOME/scripts/import-temp-study.sh --study-id="mixedpact" --temp-study-id="temporary_mixedpact" --backup-study-id="yesterday_mixedpact" --portal-name="mixedpact-portal" --study-path="$MSK_MIXEDPACT_DATA_HOME" --notification-file="$mixedpact_notification_file" --tmp-directory="$tmp" --email-list="$email_list" --importer-jar="$PORTAL_HOME/lib/msk-dmp-importer.jar"
     if [ $? -gt 0 ]; then
         IMPORT_FAIL_MIXEDPACT=1
@@ -393,8 +412,9 @@ fi
 #   MSKRAINDANCE
 #   MSKARCHER
 #   MIXEDPACT
-if [ $RESTART_AFTER_DMP_PIPELINES_IMPORT -eq 0 ]; then 
+if [ $RESTART_AFTER_DMP_PIPELINES_IMPORT -eq 0 ]; then
     echo "Failed to update HEMEPACT, RAINDANCE, ARCHER, and MIXEDPACT - next tomcat restart will execute after successful updates to MSK affiliate studies..."
+    echo $(date)
 else
     restartTomcats
 fi
@@ -442,6 +462,7 @@ RESTART_AFTER_MSK_AFFILIATE_IMPORT=0
 # update msk_kingscounty in portal only if subset was successful
 if [ $MSK_KINGS_SUBSET_FAIL -eq 0 ]; then
     echo "Importing msk_kingscounty study..."
+    echo $(date)
     bash $PORTAL_HOME/scripts/import-temp-study.sh --study-id="msk_kingscounty" --temp-study-id="temporary_msk_kingscounty" --backup-study-id="yesterday_msk_kingscounty" --portal-name="msk-kingscounty-portal" --study-path="$MSK_KINGS_DATA_HOME" --notification-file="$kingscounty_notification_file" --tmp-directory="$tmp" --email-list="$email_list" --importer-jar="$PORTAL_HOME/lib/msk-dmp-importer.jar"
     if [ $? -gt 0 ]; then
         IMPORT_FAIL_KINGS=1
@@ -466,6 +487,7 @@ fi
 # update msk_lehighvalley in portal only if subset was successful
 if [ $MSK_LEHIGH_SUBSET_FAIL -eq 0 ]; then
     echo "Importing msk_lehighvalley study..."
+    echo $(date)
     bash $PORTAL_HOME/scripts/import-temp-study.sh --study-id="msk_lehighvalley" --temp-study-id="temporary_msk_lehighvalley" --backup-study-id="yesterday_msk_lehighvalley" --portal-name="msk-lehighvalley-portal" --study-path="$MSK_LEHIGH_DATA_HOME" --notification-file="$lehighvalley_notification_file" --tmp-directory="$tmp" --email-list="$email_list" --importer-jar="$PORTAL_HOME/lib/msk-dmp-importer.jar"
     if [ $? -gt 0 ]; then
         IMPORT_FAIL_LEHIGH=1
@@ -490,6 +512,7 @@ fi
 # update msk_queenscancercenter in portal only if subset was successful
 if [ $MSK_QUEENS_SUBSET_FAIL -eq 0 ]; then
     echo "Importing msk_queenscancercenter study..."
+    echo $(date)
     bash $PORTAL_HOME/scripts/import-temp-study.sh --study-id="msk_queenscancercenter" --temp-study-id="temporary_msk_queenscancercenter" --backup-study-id="yesterday_msk_queenscancercenter" --portal-name="msk-queenscancercenter-portal" --study-path="$MSK_QUEENS_DATA_HOME" --notification-file="$queenscancercenter_notification_file" --tmp-directory="$tmp" --email-list="$email_list" --importer-jar="$PORTAL_HOME/lib/msk-dmp-importer.jar"
     if [ $? -gt 0 ]; then
         IMPORT_FAIL_QUEENS=1
@@ -518,7 +541,7 @@ fi
 #   MSK_KINGSCOUNTY
 #   MSK_LEHIGHVALLEY
 #   MSK_QUEENSCANCERCENTER
-if [ $RESTART_AFTER_MSK_AFFILIATE_IMPORT -eq 0 ]; then 
+if [ $RESTART_AFTER_MSK_AFFILIATE_IMPORT -eq 0 ]; then
     echo "Failed to update all MSK affiliate studies"
 else
     restartTomcats
@@ -526,6 +549,7 @@ fi
 
 # check updated data back into mercurial
 echo "Pushing DMP-IMPACT updates back to msk-impact repository..."
+echo $(date)
 cd $MSK_IMPACT_DATA_HOME;$HG_BINARY push
 
 ### FAILURE EMAIL ###
@@ -589,6 +613,8 @@ if [ $MSK_QUEENS_SUBSET_FAIL -gt 0 ]; then
     echo -e "$EMAIL_BODY" |  mail -s "QUEENSCANCERCENTER Subset Failure: Study will not be updated." $email_list
 fi
 
+echo "Sending notification emails.."
+echo $(date)
 $JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -Xmx16g -ea -Dspring.profiles.active=dbcp -Djava.io.tmpdir="$tmp" -cp $PORTAL_HOME/lib/msk-dmp-importer.jar org.mskcc.cbio.importer.Admin --send-update-notification --portal mskimpact-portal --notification-file "$mskimpact_notification_file"
 $JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -Xmx16g -ea -Dspring.profiles.active=dbcp -Djava.io.tmpdir="$tmp" -cp $PORTAL_HOME/lib/msk-dmp-importer.jar org.mskcc.cbio.importer.Admin --send-update-notification --portal mskraindance-portal --notification-file $mskraindance_notification_file
 $JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -Xmx16g -ea -Dspring.profiles.active=dbcp -Djava.io.tmpdir="$tmp" -cp $PORTAL_HOME/lib/msk-dmp-importer.jar org.mskcc.cbio.importer.Admin --send-update-notification --portal mskheme-portal --notification-file $mskheme_notification_file
@@ -597,3 +623,5 @@ $JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,add
 $JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -Xmx16g -ea -Dspring.profiles.active=dbcp -Djava.io.tmpdir="$tmp" -cp $PORTAL_HOME/lib/msk-dmp-importer.jar org.mskcc.cbio.importer.Admin --send-update-notification --portal msk-kingscounty-portal --notification-file "$kingscounty_notification_file"
 $JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -Xmx16g -ea -Dspring.profiles.active=dbcp -Djava.io.tmpdir="$tmp" -cp $PORTAL_HOME/lib/msk-dmp-importer.jar org.mskcc.cbio.importer.Admin --send-update-notification --portal msk-lehighvalley-portal --notification-file "$lehighvalley_notification_file"
 $JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -Xmx16g -ea -Dspring.profiles.active=dbcp -Djava.io.tmpdir="$tmp" -cp $PORTAL_HOME/lib/msk-dmp-importer.jar org.mskcc.cbio.importer.Admin --send-update-notification --portal msk-queenscancercenter-portal --notification-file "$queenscancercenter_notification_file"
+echo "Fetching and importing of clinical datasets complete!"
+echo $(date)
