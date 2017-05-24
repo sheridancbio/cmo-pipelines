@@ -45,6 +45,7 @@ public class MskimpactPatientDemographics {
     private String DMP_ID_DEMO;
     private String GENDER;
     private String RACE;
+    private String ETHNICITY;
     private String RELIGION;
     private Integer AGE_AT_DATE_OF_DEATH_IN_DAYS;
     private Integer AGE_AT_LAST_KNOWN_ALIVE_IN_DAYS;
@@ -62,39 +63,18 @@ public class MskimpactPatientDemographics {
     private Integer TM_DX_YEAR;
     private String OS_STATUS;
     private String OS_MONTHS;
+    private String PT_NAACCR_ETHNICITY_CODE;
+    private String PT_NAACCR_RACE_CODE_PRIMARY;
+    private String PT_NAACCR_SEX_CODE;
     private Map<String, Object> additionalProperties = new HashMap<>();
 
-    public MskimpactPatientDemographics() {
-    }
-
-    public MskimpactPatientDemographics(String PT_ID_DEMO, String DMP_ID_DEMO, String GENDER,
-            String RACE, String RELIGION, Integer AGE_AT_DATE_OF_DEATH_IN_DAYS, String DEATH_SOURCE_DESCRIPTION,
-            String PT_COUNTRY, String PT_STATE, String PT_ZIP3_CD, Integer PT_BIRTH_YEAR, String PT_SEX_DESC,
-            String PT_VITAL_STATUS, String PT_MARITAL_STS_DESC, Integer PT_DEATH_YEAR, String PT_MRN_CREATE_YEAR, Integer TM_DX_YEAR) {
-        this.PT_ID_DEMO =  StringUtils.isNotEmpty(PT_ID_DEMO) ? PT_ID_DEMO : "NA";
-        this.DMP_ID_DEMO =  StringUtils.isNotEmpty(DMP_ID_DEMO) ? DMP_ID_DEMO : "NA";
-        this.GENDER =  StringUtils.isNotEmpty(GENDER) ? GENDER : "NA";
-        this.RACE =  StringUtils.isNotEmpty(RACE) ? RACE : "NA";
-        this.RELIGION =  StringUtils.isNotEmpty(RELIGION) ? RELIGION : "NA";
-        this.AGE_AT_DATE_OF_DEATH_IN_DAYS = AGE_AT_DATE_OF_DEATH_IN_DAYS != null ? AGE_AT_DATE_OF_DEATH_IN_DAYS : -1;
-        this.DEATH_SOURCE_DESCRIPTION =  StringUtils.isNotEmpty(DEATH_SOURCE_DESCRIPTION) ? DEATH_SOURCE_DESCRIPTION : "NA";
-        this.PT_COUNTRY =  StringUtils.isNotEmpty(PT_COUNTRY) ? PT_COUNTRY : "NA";
-        this.PT_STATE =  StringUtils.isNotEmpty(PT_STATE) ? PT_STATE : "NA";
-        this.PT_ZIP3_CD =  StringUtils.isNotEmpty(PT_ZIP3_CD) ? PT_ZIP3_CD : "NA";
-        this.PT_BIRTH_YEAR = PT_BIRTH_YEAR != null ? PT_BIRTH_YEAR : -1;
-        this.PT_SEX_DESC =  StringUtils.isNotEmpty(PT_SEX_DESC) ? PT_SEX_DESC : "NA";
-        this.PT_VITAL_STATUS =  StringUtils.isNotEmpty(PT_VITAL_STATUS) ? PT_VITAL_STATUS : "NA";
-        this.PT_MARITAL_STS_DESC =  StringUtils.isNotEmpty(PT_MARITAL_STS_DESC) ? PT_MARITAL_STS_DESC : "NA";
-        this.PT_DEATH_YEAR = PT_DEATH_YEAR != null ? PT_DEATH_YEAR : -1;
-        this.PT_MRN_CREATE_YEAR =  StringUtils.isNotEmpty(PT_MRN_CREATE_YEAR) ? PT_MRN_CREATE_YEAR : "NA";
-        this.TM_DX_YEAR = TM_DX_YEAR != null ? TM_DX_YEAR : -1;
-        this.OS_STATUS = this.PT_VITAL_STATUS;
-    }
+    public MskimpactPatientDemographics() {}
     
-    public MskimpactPatientDemographics(String DMP_ID_DEMO, String GENDER, String RACE, String RELIGION, String PT_VITAL_STATUS, Integer PT_BIRTH_YEAR, Integer PT_DEATH_YEAR, Integer TM_DX_YEAR, Integer AGE_AT_LAST_KNOWN_ALIVE_IN_DAYS, Integer AGE_AT_TM_DX_DATE_IN_DAYS, Integer AGE_AT_DATE_OF_DEATH_IN_DAYS){
+    public MskimpactPatientDemographics(String DMP_ID_DEMO, String PT_NAACCR_SEX_CODE, String PT_NAACCR_RACE_CODE_PRIMARY, String PT_NAACCR_ETHNICITY_CODE, String RELIGION, String PT_VITAL_STATUS, Integer PT_BIRTH_YEAR, Integer PT_DEATH_YEAR, Integer TM_DX_YEAR, Integer AGE_AT_LAST_KNOWN_ALIVE_IN_DAYS, Integer AGE_AT_TM_DX_DATE_IN_DAYS, Integer AGE_AT_DATE_OF_DEATH_IN_DAYS){
         this.DMP_ID_DEMO =  StringUtils.isNotEmpty(DMP_ID_DEMO) ? DMP_ID_DEMO : "NA";
-        this.GENDER =  StringUtils.isNotEmpty(GENDER) ? GENDER : "NA";
-        this.RACE =  StringUtils.isNotEmpty(RACE) ? RACE : "NA";
+        this.PT_NAACCR_SEX_CODE =  StringUtils.isNotEmpty(PT_NAACCR_SEX_CODE) ? PT_NAACCR_SEX_CODE : "-1";
+        this.PT_NAACCR_RACE_CODE_PRIMARY =  StringUtils.isNotEmpty(PT_NAACCR_RACE_CODE_PRIMARY) ? PT_NAACCR_RACE_CODE_PRIMARY : "-1";
+        this.PT_NAACCR_ETHNICITY_CODE =  StringUtils.isNotEmpty(PT_NAACCR_ETHNICITY_CODE) ? PT_NAACCR_ETHNICITY_CODE : "-1";
         this.RELIGION =  StringUtils.isNotEmpty(RELIGION) ? RELIGION : "NA";
         this.PT_VITAL_STATUS =  StringUtils.isNotEmpty(PT_VITAL_STATUS) ? PT_VITAL_STATUS : "NA";
         this.TM_DX_YEAR = TM_DX_YEAR != null ? TM_DX_YEAR : -1;
@@ -104,17 +84,6 @@ public class MskimpactPatientDemographics {
         this.AGE_AT_LAST_KNOWN_ALIVE_IN_DAYS = AGE_AT_LAST_KNOWN_ALIVE_IN_DAYS;
         this.AGE_AT_TM_DX_DATE_IN_DAYS = AGE_AT_TM_DX_DATE_IN_DAYS;
         this.AGE_AT_DATE_OF_DEATH_IN_DAYS = AGE_AT_DATE_OF_DEATH_IN_DAYS;
-    }
-    public MskimpactPatientDemographics(String DMP_ID_DEMO, String GENDER, String RACE, String RELIGION, String PT_VITAL_STATUS, Integer PT_BIRTH_YEAR, Integer PT_DEATH_YEAR){
-        this.DMP_ID_DEMO =  StringUtils.isNotEmpty(DMP_ID_DEMO) ? DMP_ID_DEMO : "NA";
-        this.GENDER =  StringUtils.isNotEmpty(GENDER) ? GENDER : "NA";
-        this.RACE =  StringUtils.isNotEmpty(RACE) ? RACE : "NA";
-        this.RELIGION =  StringUtils.isNotEmpty(RELIGION) ? RELIGION : "NA";
-        this.PT_VITAL_STATUS =  StringUtils.isNotEmpty(PT_VITAL_STATUS) ? PT_VITAL_STATUS : "NA";
-        this.TM_DX_YEAR = -1;
-        this.PT_BIRTH_YEAR = PT_BIRTH_YEAR != null ? PT_BIRTH_YEAR : -1;
-        this.PT_DEATH_YEAR = PT_DEATH_YEAR != null ? PT_DEATH_YEAR : -1;
-        this.OS_STATUS = this.PT_VITAL_STATUS;
     }
     
     public Integer getTM_DX_YEAR() {
@@ -345,6 +314,7 @@ public class MskimpactPatientDemographics {
         fieldNames.add("RACE");
         fieldNames.add("RELIGION");
         fieldNames.add("GENDER");
+        fieldNames.add("ETHNICITY");
         fieldNames.add("PT_VITAL_STATUS");
         fieldNames.add("AGE_AT_DIAGNOSIS");
         fieldNames.add("OS_STATUS");
@@ -360,6 +330,7 @@ public class MskimpactPatientDemographics {
         fieldNames.add("RACE");
         fieldNames.add("RELIGION");
         fieldNames.add("SEX");
+        fieldNames.add("ETHNICITY");
         fieldNames.add("DARWIN_VITAL_STATUS");
         fieldNames.add("AGE_AT_DIAGNOSIS");
         fieldNames.add("OS_STATUS");
@@ -375,6 +346,62 @@ public class MskimpactPatientDemographics {
 
     public Map<String, Object> getAdditionalProperties() {
         return this.additionalProperties;
+    }
+
+    /**
+     * @return the PT_NAACCR_ETHNICITY_CODE
+     */
+    public String getPT_NAACCR_ETHNICITY_CODE() {
+        return PT_NAACCR_ETHNICITY_CODE;
+    }
+
+    /**
+     * @param PT_NAACCR_ETHNICITY_CODE the PT_NAACCR_ETHNICITY_CODE to set
+     */
+    public void setPT_NAACCR_ETHNICITY_CODE(String PT_NAACCR_ETHNICITY_CODE) {
+        this.PT_NAACCR_ETHNICITY_CODE = PT_NAACCR_ETHNICITY_CODE;
+    }
+
+    /**
+     * @return the PT_NAACCR_RACE_CODE_PRIMARY
+     */
+    public String getPT_NAACCR_RACE_CODE_PRIMARY() {
+        return PT_NAACCR_RACE_CODE_PRIMARY;
+    }
+
+    /**
+     * @param PT_NAACCR_RACE_CODE_PRIMARY the NAACCR_RACE_CODE to set
+     */
+    public void setPT_NAACCR_RACE_CODE_PRIMARY(String PT_NAACCR_RACE_CODE_PRIMARY) {
+        this.PT_NAACCR_RACE_CODE_PRIMARY = PT_NAACCR_RACE_CODE_PRIMARY;
+    }
+
+    /**
+     * @return the PT_NAACCR_SEX_CODE
+     */
+    public String getPT_NAACCR_SEX_CODE() {
+        return PT_NAACCR_SEX_CODE;
+    }
+
+    /**
+     * @param PT_NAACCR_SEX_CODE the PT_NAACCR_SEX_CODE to set
+     */
+    public void setPT_NAACCR_SEX_CODE(String PT_NAACCR_SEX_CODE) {
+        this.PT_NAACCR_SEX_CODE = PT_NAACCR_SEX_CODE;
+    }
+
+    /**
+     * @return the ETHNICITY
+     */
+    public String getETHNICITY() {
+        return ETHNICITY;
+    }
+
+    /**
+     * @param ETHNICITY the ETHNICITY to set
+     */
+    public void setETHNICITY(String ETHNICITY) {
+        this.ETHNICITY = ETHNICITY;
     }
 
 }
