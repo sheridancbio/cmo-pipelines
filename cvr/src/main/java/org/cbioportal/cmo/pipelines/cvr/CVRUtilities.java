@@ -165,7 +165,7 @@ public class CVRUtilities {
         String[] symbols = propertyValue.split("\t");
         return Arrays.asList(symbols);
     }
-    
+
     public List<String> processFileComments(File dataFile, boolean withAllSampleIds) throws FileNotFoundException, IOException {
         List<String> comments  = new ArrayList();
         BufferedReader reader  = new BufferedReader(new FileReader(dataFile));
@@ -181,21 +181,21 @@ public class CVRUtilities {
             }
         }
         reader.close();
-        
+
         return comments;
     }
-    
+
     public boolean isDuplicateRecord(MutationRecord snp, List<AnnotatedRecord> annotatedRecords) {
         if (annotatedRecords == null || annotatedRecords.isEmpty()) {
             return false;
         }
-        
+
         for (AnnotatedRecord record : annotatedRecords) {
-            if (record.getChromosome().equals(snp.getChromosome()) && 
+            if (record.getChromosome().equals(snp.getChromosome()) &&
                     record.getStart_Position().equals(snp.getStart_Position()) &&
                     record.getEnd_Position().equals(snp.getEnd_Position()) &&
                     record.getReference_Allele().equals(snp.getReference_Allele()) &&
-                    record.getTumor_Seq_Allele2().equals(snp.getTumor_Seq_Allele2()) && 
+                    record.getTumor_Seq_Allele2().equals(snp.getTumor_Seq_Allele2()) &&
                     record.getHugo_Symbol().equals(snp.getHugo_Symbol())) {
                 return true;
             }
@@ -336,10 +336,10 @@ public class CVRUtilities {
         String sequencer = "";
         String tumorSampleUUID = "";
         String matchedNormSampleUUID = "";
-        String tRefCount = String.valueOf(snp.getDepth()- snp.getAlleleDepth());
-        String nRefCount = "";
-        String tAltCount = String.valueOf(snp.getAlleleDepth());
-        String nAltCount = "";
+        String tRefCount = "";
+        String nRefCount = String.valueOf(snp.getDepth() - snp.getAlleleDepth());
+        String tAltCount = "";
+        String nAltCount = String.valueOf(snp.getAlleleDepth());
         String cDNA_Change = snp.getCDNAChange();
         String aminoAcidChange = snp.getAaChange();
         String transcript = snp.getTranscriptId();
