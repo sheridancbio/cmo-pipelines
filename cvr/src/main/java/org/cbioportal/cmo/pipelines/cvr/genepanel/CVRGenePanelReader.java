@@ -61,6 +61,7 @@ public class CVRGenePanelReader implements ItemStreamReader<CVRGenePanelRecord> 
     public CVRUtilities cvrUtilities;
 
     private List<CVRGenePanelRecord> genePanelRecords = new ArrayList();
+    private Set<String> processedRecords = new HashSet();
     Logger log = Logger.getLogger(CVRGenePanelReader.class);
 
     @Override
@@ -134,7 +135,13 @@ public class CVRGenePanelReader implements ItemStreamReader<CVRGenePanelRecord> 
     @Override
     public CVRGenePanelRecord read() throws Exception {
         if (!genePanelRecords.isEmpty()) {
-            return genePanelRecords.remove(0);
+            CVRGenePanelRecord record = genePanelRecords.remove(0);
+            // if we've already seen this sample id, skip it by just calling read again.
+            if (processedRecords.contains(record.getSAMPLE_ID())) {
+                return read();
+            }
+            processedRecords.add(record.getSAMPLE_ID());
+            return record;
         }
         return null;
     }
