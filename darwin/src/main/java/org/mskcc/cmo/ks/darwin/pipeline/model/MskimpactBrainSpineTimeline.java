@@ -363,7 +363,7 @@ public class MskimpactBrainSpineTimeline {
         fieldNames.add("PATIENT_ID");
         fieldNames.add("START_DATE");
         fieldNames.add("EVENT_TYPE");
-        fieldNames.add("SPECIMEN_REFERENCE_NUMBER");
+        fieldNames.add("SAMPLE_ID"); // specimen reference number should be sample id
         fieldNames.add("SPECIMEN_SITE");
         fieldNames.add("SPECIMEN_TYPE");
         fieldNames.add("SOURCE");
