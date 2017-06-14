@@ -315,8 +315,6 @@ public class MskimpactPatientDemographics {
         fieldNames.add("RELIGION");
         fieldNames.add("GENDER");
         fieldNames.add("ETHNICITY");
-        fieldNames.add("PT_VITAL_STATUS");
-        fieldNames.add("AGE_AT_DIAGNOSIS");
         fieldNames.add("OS_STATUS");
         fieldNames.add("OS_MONTHS");
 
@@ -326,13 +324,11 @@ public class MskimpactPatientDemographics {
     public List<String> getHeaders() {
         List<String> fieldNames = new ArrayList<>();
         fieldNames.add("PATIENT_ID");
-        fieldNames.add("DARWIN_PATIENT_AGE");
+        fieldNames.add("AGE_CURRENT"); // DARWIN_PATIENT_AGE has been renamed
         fieldNames.add("RACE");
         fieldNames.add("RELIGION");
         fieldNames.add("SEX");
         fieldNames.add("ETHNICITY");
-        fieldNames.add("DARWIN_VITAL_STATUS");
-        fieldNames.add("AGE_AT_DIAGNOSIS");
         fieldNames.add("OS_STATUS");
         fieldNames.add("OS_MONTHS");
 

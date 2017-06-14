@@ -195,9 +195,9 @@ public class MskimpactBrainSpineClinical {
         List<String> fieldNames = new ArrayList<>();
         fieldNames.add("SAMPLE_ID");
         fieldNames.add("AGE");
-        fieldNames.add("SEX");
-        fieldNames.add("OS_STATUS");
-        fieldNames.add("OS_MONTHS");
+        fieldNames.add("SEX_DMT");
+        fieldNames.add("OS_STATUS_DMT");
+        fieldNames.add("OS_MONTHS_DMT");
         fieldNames.add("DFS_STATUS");
         fieldNames.add("DFS_MONTHS");
         fieldNames.add("HISTOLOGICAL_DIAGNOSIS");
