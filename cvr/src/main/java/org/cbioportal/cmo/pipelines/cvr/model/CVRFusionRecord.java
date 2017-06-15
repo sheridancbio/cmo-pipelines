@@ -55,11 +55,13 @@ public class CVRFusionRecord {
     }
 
     public CVRFusionRecord(CVRSvVariant variant, String sampleId, boolean reversed) {
-        this.hugoSymbol = reversed ? variant.getSite2_Gene() : variant.getSite1_Gene();
+        String site1GeneTrimmed = variant.getSite1_Gene().trim();
+        String site2GeneTrimmed = variant.getSite2_Gene().trim();
+        this.hugoSymbol = reversed ? site2GeneTrimmed : site1GeneTrimmed;
         this.entrezGeneId = "0";
         this.center = "MSKCC-DMP";
         this.tumorSampleBarcode = sampleId;
-        this.fusion = variant.getSite1_Gene().equals(variant.getSite2_Gene()) ? variant.getSite1_Gene() + "-intragenic" : variant.getSite2_Gene() + "-" + variant.getSite1_Gene() + " fusion";
+        this.fusion = site1GeneTrimmed.equals(site2GeneTrimmed) ? site1GeneTrimmed + "-intragenic" : site2GeneTrimmed + "-" + site1GeneTrimmed + " fusion";
         this.dnaSupport = "yes";
         this.rnaSupport = "unknown";
         this.method = "NA";
