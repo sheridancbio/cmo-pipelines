@@ -54,7 +54,7 @@ public class CVRFusionFieldSetMapper implements  FieldSetMapper<CVRFusionRecord>
         for (int i = 0; i < fields.size(); i++) {
             String field = fields.get(i);
             try {
-                record.getClass().getMethod("set" + field, String.class).invoke(record, fs.readString(i));
+                record.getClass().getMethod("set" + field, String.class).invoke(record, fs.readString(i).trim());
             } catch (Exception e) {
                 if (e.getClass().equals(NoSuchMethodException.class)) {
                     log.info("No set method exists for " + field);
