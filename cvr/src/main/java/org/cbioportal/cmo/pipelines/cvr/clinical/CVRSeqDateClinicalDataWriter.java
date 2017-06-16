@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Memorial Sloan-Kettering Cancer Center.
+ * Copyright (c) 2016 - 2017 Memorial Sloan-Kettering Cancer Center.
  *
  * This library is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS
@@ -29,70 +29,69 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-package org.mskcc.cmo.ks.darwin.pipeline.skcm_mskcc_2015_chanttimeline;
+package org.cbioportal.cmo.pipelines.cvr.clinical;
 
-import org.mskcc.cmo.ks.darwin.pipeline.model.Skcm_mskcc_2015_chantClinicalRecord;
-import org.mskcc.cmo.ks.redcap.source.MetadataManager;
-import org.springframework.batch.item.*;
-import org.springframework.batch.item.file.*;
-import org.springframework.core.io.*;
-import org.springframework.batch.item.file.transform.PassThroughLineAggregator;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.beans.factory.annotation.Autowired;
 import java.io.*;
 import java.util.*;
-import java.nio.file.Paths;
 import org.apache.commons.lang.StringUtils;
-import org.mskcc.cmo.ks.darwin.pipeline.model.Skcm_mskcc_2015_chantTimelineAdjuvantTx;
+import org.cbioportal.cmo.pipelines.cvr.CVRUtilities;
+import org.cbioportal.cmo.pipelines.cvr.model.CVRClinicalRecord;
+import org.springframework.batch.item.*;
+import org.springframework.batch.item.file.*;
+import org.springframework.batch.item.file.transform.PassThroughLineAggregator;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.*;
+import org.cbioportal.cmo.pipelines.cvr.model.CompositeClinicalRecord;
+import org.springframework.beans.factory.annotation.Autowired;
 
 
 /**
  *
  * @author heinsz
  */
-public class Skcm_mskcc_2015_chantTimelineWriter implements ItemStreamWriter<String> {
-    
-    @Value("#{jobParameters[outputDirectory]}")
-    private String outputDirectory;
-    
-    @Value("${darwin.skcm_mskcc_2015_chant_timeline_filename}")
-    private String filename;    
-    
-    private FlatFileItemWriter<String> flatFileItemWriter = new FlatFileItemWriter();
-    
-    private File stagingFile;
-    
+public class CVRSeqDateClinicalDataWriter implements ItemStreamWriter<CompositeClinicalRecord> {
+
+    @Value("#{jobParameters[stagingDirectory]}")
+    private String stagingDirectory;
+
+    @Autowired
+    public CVRUtilities cvrUtilities;
+
+    private FlatFileItemWriter<String> flatFileItemWriter = new FlatFileItemWriter<>();
+
+    // Set up the writer and print the json from CVR to a file
     @Override
-    public void open(ExecutionContext executionContext) throws ItemStreamException {
+    public void open(ExecutionContext ec) throws ItemStreamException {
+        File stagingFile = new File(stagingDirectory, cvrUtilities.SEQ_DATE_CLINICAL_FILE);
         PassThroughLineAggregator aggr = new PassThroughLineAggregator();
         flatFileItemWriter.setLineAggregator(aggr);
-        flatFileItemWriter.setHeaderCallback(new FlatFileHeaderCallback(){
+        flatFileItemWriter.setHeaderCallback(new FlatFileHeaderCallback() {
             @Override
             public void writeHeader(Writer writer) throws IOException {
-                writer.write(StringUtils.join(new Skcm_mskcc_2015_chantTimelineAdjuvantTx().getFieldNames(), "\t"));
+                writer.write(StringUtils.join(CVRClinicalRecord.getSeqDateFieldNames(), "\t"));
             }
         });
-        stagingFile = new File(outputDirectory, filename);
         flatFileItemWriter.setResource(new FileSystemResource(stagingFile));
-        flatFileItemWriter.open(executionContext);        
+        flatFileItemWriter.open(ec);
     }
-    
+
     @Override
-    public void update(ExecutionContext executionContext) throws ItemStreamException {}
-    
+    public void update(ExecutionContext ec) throws ItemStreamException {
+    }
+
     @Override
     public void close() throws ItemStreamException {
         flatFileItemWriter.close();
     }
-    
+
     @Override
-    public void write(List<? extends String> items) throws Exception {
+    public void write(List<? extends CompositeClinicalRecord> items) throws Exception {
         List<String> writeList = new ArrayList<>();
-        for (String result : items) {
-            writeList.add(result);
+        for (CompositeClinicalRecord item : items) {
+            if (item.getSeqDateRecord()!= null) {
+                writeList.add(item.getSeqDateRecord());
+            }
         }
-        
         flatFileItemWriter.write(writeList);
     }
-    
 }

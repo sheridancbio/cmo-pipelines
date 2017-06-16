@@ -34,7 +34,7 @@ package org.mskcc.cmo.ks.darwin.pipeline.mskimpactgeniesample;
 import java.io.*;
 import java.util.*;
 import org.apache.commons.lang.StringUtils;
-import org.mskcc.cmo.ks.darwin.pipeline.model.MskimpactGenieClinical;
+import org.mskcc.cmo.ks.darwin.pipeline.model.MskimpactPatientDemographics;
 import org.springframework.batch.item.*;
 import org.springframework.batch.item.file.*;
 import org.springframework.batch.item.file.transform.PassThroughLineAggregator;
@@ -54,7 +54,7 @@ public class MskimpactGenieSampleWriter implements ItemStreamWriter<String> {
 
     private List<String> writeList = new ArrayList<>();
     private FlatFileItemWriter<String> flatFileItemWriter = new FlatFileItemWriter<>();
-    private String stagingFile;
+    private File stagingFile;
 
     @Override
     public void open(ExecutionContext executionContext) throws ItemStreamException {
@@ -63,10 +63,10 @@ public class MskimpactGenieSampleWriter implements ItemStreamWriter<String> {
         flatFileItemWriter.setHeaderCallback(new FlatFileHeaderCallback(){
             @Override
             public void writeHeader(Writer writer) throws IOException{
-                writer.write(StringUtils.join(new MskimpactGenieClinical().getHeaders(), "\t"));
+                writer.write(StringUtils.join(new MskimpactPatientDemographics().getAgeHeaders(), "\t"));
             }
         });
-        stagingFile = outputDirectory + File.separator + datasetFilename;
+        stagingFile = new File(outputDirectory, datasetFilename);
         flatFileItemWriter.setResource(new FileSystemResource(stagingFile));
         flatFileItemWriter.open(executionContext);
     }

@@ -35,15 +35,18 @@ package org.cbioportal.cmo.pipelines.cvr.model;
 public class CompositeClinicalRecord {
     private String newClinicalRecord;
     private String oldClinicalRecord;
+    private String seqDateRecord;
 
     public CompositeClinicalRecord() {
         this.newClinicalRecord = "";
         this.oldClinicalRecord = "";
+        this.seqDateRecord = "";
     }
 
-    public CompositeClinicalRecord(String newClinicalRecord, String oldClinicalRecord) {
+    public CompositeClinicalRecord(String newClinicalRecord, String oldClinicalRecord, String seqDateRecord) {
         this.newClinicalRecord = newClinicalRecord;
         this.oldClinicalRecord = oldClinicalRecord;
+        this.seqDateRecord = seqDateRecord;
     }
 
     public void setNewClinicalRecord(String newClinicalRecord) {
@@ -51,7 +54,7 @@ public class CompositeClinicalRecord {
     }
 
     public String getNewClinicalRecord() {
-        return this.newClinicalRecord != ""  ? this.newClinicalRecord : null;
+        return newClinicalRecord.isEmpty() ? null : newClinicalRecord;
     }
 
     public void setOldClinicalRecord(String oldClinicalRecord) {
@@ -59,6 +62,14 @@ public class CompositeClinicalRecord {
     }
 
     public String getOldClinicalRecord() {
-        return this.oldClinicalRecord != ""  ? this.oldClinicalRecord : null;
+        return oldClinicalRecord.isEmpty() ? null : oldClinicalRecord;
+    }
+    
+    public void setSeqDateRecord(String seqDateRecord) {
+        this.seqDateRecord = seqDateRecord;
+    }
+    
+    public String getSeqDateRecord() {
+        return seqDateRecord.isEmpty() ? null : seqDateRecord;
     }
 }

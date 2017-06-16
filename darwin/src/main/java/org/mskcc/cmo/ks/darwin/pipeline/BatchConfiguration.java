@@ -32,6 +32,7 @@
 
 package org.mskcc.cmo.ks.darwin.pipeline;
 
+import org.mskcc.cmo.ks.darwin.pipeline.age.*;
 import org.mskcc.cmo.ks.darwin.pipeline.model.*;
 import org.mskcc.cmo.ks.darwin.pipeline.mskimpactbrainspineclinical.*;
 import org.mskcc.cmo.ks.darwin.pipeline.mskimpactbrainspinetimeline.*;
@@ -50,8 +51,7 @@ import org.springframework.context.annotation.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.batch.item.support.CompositeItemProcessor;
-import org.springframework.batch.item.support.CompositeItemWriter;
+import org.springframework.batch.item.support.*;
 import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
 /**
  *
@@ -97,6 +97,7 @@ public class BatchConfiguration {
     public Job mskimpactJob() {
         return jobBuilderFactory.get(MSKIMPACT_JOB)
                 .start(mskimpactPatientDemographicsStep())
+                .next(mskimpactAgeStep())                
                 .next(mskimpactTimelineBrainSpineStep())
                 .next(mskimpactClinicalBrainSpineStep())
             //.next(mskimpactMedicalTherapyStep())
@@ -198,7 +199,17 @@ public class BatchConfiguration {
                 .processor(mskimpactGenieSampleProcessor())
                 .writer(mskimpactGenieSampleWriter())
                 .build();
-    }    
+    }
+    
+    @Bean
+    public Step mskimpactAgeStep() {
+        return stepBuilderFactory.get("mskimpactAgeStep")
+                .<MskimpactPatientDemographics, String> chunk(chunkSize)
+                .reader(mskimpactAgeReader())
+                .processor(mskimpactAgeProcessor())
+                .writer(mskimpactAgeWriter())
+                .build();
+    }
 
     @Bean
     @StepScope
@@ -274,6 +285,23 @@ public class BatchConfiguration {
     public ItemStreamWriter<String> mskimpactGeniePatientWriter() {
         return new MskimpactGeniePatientWriter();
     }
+    
+    @Bean
+    @StepScope
+    public ItemStreamReader<MskimpactPatientDemographics> mskimpactAgeReader() {
+        return new MskimpactAgeReader();
+    }
+
+    @Bean
+    public MskimpactAgeProcessor mskimpactAgeProcessor() {
+        return new MskimpactAgeProcessor();
+    }
+
+    @Bean
+    @StepScope
+    public ItemStreamWriter<String> mskimpactAgeWriter() {
+        return new MskimpactAgeWriter();
+    }    
     
     @Bean
     @StepScope

@@ -54,7 +54,7 @@ public class MskimpactBrainSpineClinicalWriter implements ItemStreamWriter<Strin
     
     private List<String> writeList = new ArrayList<>();
     private FlatFileItemWriter<String> flatFileItemWriter = new FlatFileItemWriter<>();
-    private String stagingFile;
+    private File stagingFile;
     
     @Override
     public void open(ExecutionContext executionContext) throws ItemStreamException{
@@ -66,7 +66,7 @@ public class MskimpactBrainSpineClinicalWriter implements ItemStreamWriter<Strin
                 writer.write(StringUtils.join(new MskimpactBrainSpineClinical().getHeaders(), "\t"));
             }
         });
-        stagingFile = outputDirectory + File.separator + datasetFilename;
+        stagingFile = new File(outputDirectory, datasetFilename);
         flatFileItemWriter.setResource(new FileSystemResource(stagingFile));
         flatFileItemWriter.open(executionContext);
     }
