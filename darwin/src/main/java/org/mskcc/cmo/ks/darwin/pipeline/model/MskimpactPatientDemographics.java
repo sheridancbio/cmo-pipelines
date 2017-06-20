@@ -288,12 +288,18 @@ public class MskimpactPatientDemographics {
                 if (i >= 90){
                     return "90";
                 }
+                else if (i <= 18) {
+                    return "18";
+                }
                 return i.toString();
             }
             Integer i = currentYear-this.PT_BIRTH_YEAR;
             //Age > 90 is considered identifying
             if (i >= 90) {
                 return "90";
+            }
+            else if (i <= 18) {
+                return "18";
             }
             return i.toString();
         }
