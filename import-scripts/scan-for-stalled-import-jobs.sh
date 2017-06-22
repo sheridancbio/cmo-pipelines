@@ -12,9 +12,9 @@ if [ $myuid -eq -1 ]; then
     exit 1
 fi
 ex1="CMD" #exclude the header from ps
-ex2="grep\|ps" #exclude grep and ps commands
+ex2="grep\|ps\|tail" #exclude grep and ps and tail commands
 ex3="importUsers[a-zA-Z0-9-]*.py\|users[a-zA-Z0-9-]*\.sh" #exclude strings from import user scripts
-ex4="triage" #exclude triage imports
+ex4="triage\|hot-deploy" #exclude triage or hot-deploy imports
 ex5="stalled" #exclude this command (scan-for-stalled-import-jobs.sh)
 
 importprocesses=`export COLUMNS=24000 ; ps --user $myuid -o pid,start_time,cutime,cmd | grep import | grep -ve "$ex1\|$ex2\|$ex3\|$ex4\|$ex5"`
