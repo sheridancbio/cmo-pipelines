@@ -104,12 +104,10 @@ public class CVRUnfilteredMutationDataReader implements ItemStreamReader<Annotat
                     log.warn("Failed to annotate a record from json! Sample: " + sampleId + " Variant: " + record.getChromosome() + ":" + record.getStart_Position() + record.getReference_Allele() + ">" + record.getTumor_Seq_Allele2());
                     annotatedRecord = cvrUtilities.buildCVRAnnotatedRecord(record);
                 }
-                Map<String, String> additionalProperties = annotatedRecord.getAdditionalProperties();
-                additionalProperties.put("IS_NEW", cvrUtilities.IS_NEW);
-                record.setAdditionalProperties(additionalProperties);
+                annotatedRecord.getAdditionalProperties().put("IS_NEW", cvrUtilities.IS_NEW);
                 mutationRecords.add(annotatedRecord);
-                header.addAll(record.getHeaderWithAdditionalFields());
-                additionalPropertyKeys.addAll(record.getAdditionalProperties().keySet());
+                header.addAll(annotatedRecord.getHeaderWithAdditionalFields());
+                additionalPropertyKeys.addAll(annotatedRecord.getAdditionalProperties().keySet());
                 mutationMap.getOrDefault(annotatedRecord.getTumor_Sample_Barcode(), new ArrayList()).add(annotatedRecord);
             }
         }
