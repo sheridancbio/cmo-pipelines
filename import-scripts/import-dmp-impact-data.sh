@@ -145,7 +145,7 @@ if [ $? -gt 0 ]; then
 else
     # raindance does not provide copy number or fusions data.
     echo "removing unused files"
-    cd $MSK_RAINDANCE_DATA_HOME; rm data_CNA.txt; rm data_fusions.txt; rm data_SV.txt; rm mskraindance_data_cna_hg19.seg; mv data_gene_matrix.txt ignore_data_gene_matrix.txt
+    cd $MSK_RAINDANCE_DATA_HOME; rm data_CNA.txt; rm data_fusions.txt; rm data_SV.txt; rm mskraindance_data_cna_hg19.seg
     cd $MSK_RAINDANCE_DATA_HOME;$HG_BINARY commit -m "Latest Raindance dataset"
 fi
 

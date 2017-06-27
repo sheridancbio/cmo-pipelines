@@ -32,30 +32,23 @@
 
 package org.cbioportal.cmo.pipelines.cvr.seg;
 
+import org.cbioportal.cmo.pipelines.cvr.*;
+import org.cbioportal.cmo.pipelines.cvr.model.*;
+
+import java.io.*;
+import java.util.*;
+import org.apache.log4j.Logger;
+import org.springframework.batch.item.*;
+import org.springframework.batch.item.file.FlatFileItemReader;
+import org.springframework.batch.item.file.mapping.DefaultLineMapper;
+import org.springframework.batch.item.file.transform.DelimitedLineTokenizer;
+import org.springframework.beans.factory.annotation.*;
+import org.springframework.core.io.FileSystemResource;
+
 /**
  *
  * @author jake-rose
  */
-
-import java.io.File;
-import java.io.IOException;
-import java.util.*;
-import org.apache.log4j.Logger;
-import org.cbioportal.cmo.pipelines.cvr.CVRUtilities;
-import org.cbioportal.cmo.pipelines.cvr.model.CVRData;
-import org.cbioportal.cmo.pipelines.cvr.model.CVRMergedResult;
-import org.cbioportal.cmo.pipelines.cvr.model.CVRSegData;
-import org.cbioportal.cmo.pipelines.cvr.model.CVRSegRecord;
-import org.springframework.batch.item.ExecutionContext;
-import org.springframework.batch.item.ItemStreamException;
-import org.springframework.batch.item.ItemStreamReader;
-import org.springframework.batch.item.file.FlatFileItemReader;
-import org.springframework.batch.item.file.mapping.DefaultLineMapper;
-import org.springframework.batch.item.file.transform.DelimitedLineTokenizer;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.FileSystemResource;
-
 public class CVRSegDataReader implements ItemStreamReader<CVRSegRecord> {
 
     @Value("#{jobParameters[stagingDirectory]}")
@@ -66,6 +59,9 @@ public class CVRSegDataReader implements ItemStreamReader<CVRSegRecord> {
     
     @Autowired
     public CVRUtilities cvrUtilities;
+    
+    @Autowired
+    private CvrSampleListUtil cvrSampleListUtil;
 
     private List<CVRSegRecord> cvrSegRecords = new ArrayList();
 
@@ -104,7 +100,7 @@ public class CVRSegDataReader implements ItemStreamReader<CVRSegRecord> {
             try {
                 CVRSegRecord to_add;
                 while ((to_add = reader.read()) != null && to_add.getID() !=  null) {
-                    if (!cvrUtilities.getNewIds().contains(to_add.getID())) {
+                    if (!cvrSampleListUtil.getNewDmpSamples().contains(to_add.getID())) {
                         cvrSegRecords.add(to_add);
                     }
                 }
@@ -143,7 +139,6 @@ public class CVRSegDataReader implements ItemStreamReader<CVRSegRecord> {
                             log.warn("No such method 'set" + field + "' for CVRSegRecord");
                         }
                     }
-                    cvrSegRecord.setIsNew(cvrUtilities.IS_NEW);
                     cvrSegRecords.add(cvrSegRecord);
                 }
             }
@@ -153,7 +148,12 @@ public class CVRSegDataReader implements ItemStreamReader<CVRSegRecord> {
     @Override
     public CVRSegRecord read() throws Exception {
         if (!cvrSegRecords.isEmpty()) {
-            return cvrSegRecords.remove(0);
+            CVRSegRecord record = cvrSegRecords.remove(0);
+            if (!cvrSampleListUtil.getPortalSamples().contains(record.getID())) {
+                cvrSampleListUtil.addSampleRemoved(record.getID());
+                return read();
+            }
+            return record;
         }
         return null;
     }

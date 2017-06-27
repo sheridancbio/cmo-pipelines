@@ -32,10 +32,13 @@
 
 package org.cbioportal.cmo.pipelines.cvr.clinical;
 
+import org.cbioportal.cmo.pipelines.cvr.model.*;
+import org.cbioportal.cmo.pipelines.cvr.CvrSampleListUtil;
+
 import java.util.*;
 import org.apache.commons.lang.StringUtils;
-import org.cbioportal.cmo.pipelines.cvr.model.*;
 import org.springframework.batch.item.ItemProcessor;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  *
@@ -43,6 +46,9 @@ import org.springframework.batch.item.ItemProcessor;
  */
 public class CVRClinicalDataProcessor implements ItemProcessor<CVRClinicalRecord, CompositeClinicalRecord> {
 
+    @Autowired
+    public CvrSampleListUtil cvrSampleListUtil;
+    
     @Override
     public CompositeClinicalRecord process(CVRClinicalRecord i) throws Exception {
         List<String> record = new ArrayList<>();
@@ -50,7 +56,7 @@ public class CVRClinicalDataProcessor implements ItemProcessor<CVRClinicalRecord
             record.add(i.getClass().getMethod("get" + field).invoke(i).toString().replaceAll("[\\t\\n\\r]+"," "));
         }
         CompositeClinicalRecord compRecord = new CompositeClinicalRecord();
-        if (!i.getIsNew().isEmpty()) {
+        if (cvrSampleListUtil.getNewDmpSamples().contains(i.getSAMPLE_ID())) {
             compRecord.setNewClinicalRecord(StringUtils.join(record, "\t").trim());
         } else {
             compRecord.setOldClinicalRecord(StringUtils.join(record, "\t").trim());

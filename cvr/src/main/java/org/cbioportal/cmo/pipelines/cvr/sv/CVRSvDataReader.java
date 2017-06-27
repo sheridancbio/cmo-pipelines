@@ -32,23 +32,17 @@
 
 package org.cbioportal.cmo.pipelines.cvr.sv;
 
-import java.io.File;
-import java.io.IOException;
+import org.cbioportal.cmo.pipelines.cvr.*;
+import org.cbioportal.cmo.pipelines.cvr.model.*;
+
+import java.io.*;
 import java.util.*;
 import org.apache.log4j.Logger;
-import org.cbioportal.cmo.pipelines.cvr.CVRUtilities;
-import org.cbioportal.cmo.pipelines.cvr.model.CVRData;
-import org.cbioportal.cmo.pipelines.cvr.model.CVRMergedResult;
-import org.cbioportal.cmo.pipelines.cvr.model.CVRSvRecord;
-import org.cbioportal.cmo.pipelines.cvr.model.CVRSvVariant;
-import org.springframework.batch.item.ExecutionContext;
-import org.springframework.batch.item.ItemStreamException;
-import org.springframework.batch.item.ItemStreamReader;
+import org.springframework.batch.item.*;
 import org.springframework.batch.item.file.FlatFileItemReader;
 import org.springframework.batch.item.file.mapping.DefaultLineMapper;
 import org.springframework.batch.item.file.transform.DelimitedLineTokenizer;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.*;
 import org.springframework.core.io.FileSystemResource;
 /**
  *
@@ -60,6 +54,9 @@ public class CVRSvDataReader implements ItemStreamReader<CVRSvRecord> {
 
     @Autowired
     public CVRUtilities cvrUtilities;
+    
+    @Autowired
+    public CvrSampleListUtil cvrSampleListUtil;
 
     private List<CVRSvRecord> svRecords = new ArrayList();
 
@@ -97,7 +94,7 @@ public class CVRSvDataReader implements ItemStreamReader<CVRSvRecord> {
             try {
                 CVRSvRecord to_add;
                 while ((to_add = reader.read()) != null) {
-                    if (!cvrUtilities.getNewIds().contains(to_add.getSampleId()) && to_add.getSampleId()!= null) {
+                    if (!cvrSampleListUtil.getNewDmpSamples().contains(to_add.getSampleId()) && to_add.getSampleId()!= null) {
                         to_add.setSite1_Gene(to_add.getSite1_Gene().trim());
                         to_add.setSite2_Gene(to_add.getSite2_Gene().trim());
                         svRecords.add(to_add);
@@ -115,7 +112,6 @@ public class CVRSvDataReader implements ItemStreamReader<CVRSvRecord> {
             List<CVRSvVariant> variants = result.getSvVariants();
             for (CVRSvVariant variant : variants) {
                 CVRSvRecord record = new CVRSvRecord(variant, sampleId);
-                record.setIsNew(cvrUtilities.IS_NEW);
                 svRecords.add(record);
             }
         }
@@ -132,7 +128,12 @@ public class CVRSvDataReader implements ItemStreamReader<CVRSvRecord> {
     @Override
     public CVRSvRecord read() throws Exception {
         if (!svRecords.isEmpty()) {
-            return svRecords.remove(0);
+            CVRSvRecord record = svRecords.remove(0);
+            if (!cvrSampleListUtil.getPortalSamples().contains(record.getSampleId())) {
+                cvrSampleListUtil.addSampleRemoved(record.getSampleId());
+                return read();
+            }
+            return record;
         }
         return null;
     }

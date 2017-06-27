@@ -32,20 +32,15 @@
 
 package org.cbioportal.cmo.pipelines.cvr.mutation;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.Writer;
+import org.cbioportal.cmo.pipelines.cvr.*;
+
+import java.io.*;
 import java.util.*;
 import org.apache.commons.lang.StringUtils;
-import org.cbioportal.cmo.pipelines.cvr.CVRUtilities;
-import org.springframework.batch.item.ExecutionContext;
-import org.springframework.batch.item.ItemStreamException;
-import org.springframework.batch.item.ItemStreamWriter;
-import org.springframework.batch.item.file.FlatFileHeaderCallback;
-import org.springframework.batch.item.file.FlatFileItemWriter;
+import org.springframework.batch.item.*;
+import org.springframework.batch.item.file.*;
 import org.springframework.batch.item.file.transform.PassThroughLineAggregator;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.*;
 import org.springframework.core.io.FileSystemResource;
 
 /**
@@ -65,6 +60,9 @@ public class CVRMutationDataWriter implements ItemStreamWriter<String> {
 
     @Autowired
     public CVRUtilities cvrUtilities;
+    
+    @Autowired
+    private CvrSampleListUtil cvrSampleListUtil;
 
     private FlatFileItemWriter<String> flatFileItemWriter = new FlatFileItemWriter<>();
 
@@ -81,12 +79,12 @@ public class CVRMutationDataWriter implements ItemStreamWriter<String> {
                 if  (commentLines != null && !commentLines.isEmpty()) {
                     for (String comment : commentLines) {
                         if (comment.startsWith("#sequenced_samples")) {
-                            comment = "#sequenced_samples: " + StringUtils.join(cvrUtilities.getAllIds(), " ") + "\n";
+                            comment = "#sequenced_samples: " + StringUtils.join(cvrSampleListUtil.getPortalSamples(), " ") + "\n";
                         }
                         writer.write(comment);
                     }
                 } else {
-                    String comment = "#sequenced_samples: " + StringUtils.join(cvrUtilities.getAllIds(), " ") + "\n";
+                    String comment = "#sequenced_samples: " + StringUtils.join(cvrSampleListUtil.getPortalSamples(), " ") + "\n";
                     writer.write(comment);
                 }
                 writer.write(StringUtils.join(header , "\t"));

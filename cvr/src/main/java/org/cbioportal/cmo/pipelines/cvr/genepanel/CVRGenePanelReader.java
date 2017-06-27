@@ -32,21 +32,17 @@
 
 package org.cbioportal.cmo.pipelines.cvr.genepanel;
 
-import java.io.File;
-import java.io.IOException;
+import org.cbioportal.cmo.pipelines.cvr.*;
+import org.cbioportal.cmo.pipelines.cvr.model.*;
+
+import java.io.*;
 import java.util.*;
 import org.apache.log4j.Logger;
-import org.cbioportal.cmo.pipelines.cvr.CVRUtilities;
-import org.cbioportal.cmo.pipelines.cvr.model.*;
-import org.springframework.batch.item.ExecutionContext;
-import org.springframework.batch.item.ItemStreamException;
-import org.springframework.batch.item.ItemStreamReader;
-import org.springframework.batch.item.file.FlatFileItemReader;
-import org.springframework.batch.item.file.LineCallbackHandler;
+import org.springframework.batch.item.*;
+import org.springframework.batch.item.file.*;
 import org.springframework.batch.item.file.mapping.DefaultLineMapper;
 import org.springframework.batch.item.file.transform.DelimitedLineTokenizer;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.*;
 import org.springframework.core.io.FileSystemResource;
 
 /**
@@ -60,8 +56,12 @@ public class CVRGenePanelReader implements ItemStreamReader<CVRGenePanelRecord> 
     @Autowired
     public CVRUtilities cvrUtilities;
 
+    @Autowired
+    public CvrSampleListUtil cvrSampleListUtil;
+    
     private List<CVRGenePanelRecord> genePanelRecords = new ArrayList();
     private Set<String> processedRecords = new HashSet();
+    
     Logger log = Logger.getLogger(CVRGenePanelReader.class);
 
     @Override
@@ -102,7 +102,7 @@ public class CVRGenePanelReader implements ItemStreamReader<CVRGenePanelRecord> 
             try {
                 CVRGenePanelRecord to_add;
                 while ((to_add = reader.read()) != null) {
-                    if (!cvrUtilities.getNewIds().contains(to_add.getSAMPLE_ID()) && to_add.getSAMPLE_ID() != null) {
+                    if (!cvrSampleListUtil.getNewDmpSamples().contains(to_add.getSAMPLE_ID()) && to_add.getSAMPLE_ID() != null) {
                         genePanelRecords.add(to_add);
                     }
                 }
@@ -136,7 +136,11 @@ public class CVRGenePanelReader implements ItemStreamReader<CVRGenePanelRecord> 
     public CVRGenePanelRecord read() throws Exception {
         if (!genePanelRecords.isEmpty()) {
             CVRGenePanelRecord record = genePanelRecords.remove(0);
-            // if we've already seen this sample id, skip it by just calling read again.
+            // if we've already seen this sample id or sample id is not in master list then skip it by just calling read again.
+            if (!cvrSampleListUtil.getPortalSamples().contains(record.getSAMPLE_ID())) {
+                cvrSampleListUtil.addSampleRemoved(record.getSAMPLE_ID());
+                return read();
+            }
             if (processedRecords.contains(record.getSAMPLE_ID())) {
                 return read();
             }

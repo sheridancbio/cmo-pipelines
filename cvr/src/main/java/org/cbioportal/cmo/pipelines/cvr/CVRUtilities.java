@@ -32,22 +32,16 @@
 
 package org.cbioportal.cmo.pipelines.cvr;
 
+import org.cbioportal.cmo.pipelines.cvr.model.*;
+import org.cbioportal.models.*;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.util.*;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
-import org.cbioportal.cmo.pipelines.cvr.model.*;
-import org.cbioportal.cmo.pipelines.cvr.model.CVRData;
-import org.cbioportal.cmo.pipelines.cvr.model.GMLData;
-import org.cbioportal.models.*;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.*;
 
 /**
  *
@@ -70,6 +64,7 @@ public class CVRUtilities {
     public static final String GML_FILE = "cvr_gml_data.json";
     public final String GENE_PANEL = "gene_panels/impact468_gene_panel.txt";
     public final String IS_NEW = "NEWRECORD";
+    public static final Integer DEFAULT_MAX_NUM_SAMPLES_TO_REMOVE = -1;
 
     private final String CENTER_MSKCC = "MSKCC";
     private final String DEFAULT_BUILD_NUMBER = "37";
@@ -77,14 +72,24 @@ public class CVRUtilities {
     private final String VALIDATION_STATUS_UNKNOWN = "Unknown";
     private final String DEFAULT_IMPACT_SEQUENCER = "MSK-IMPACT";
 
-    private final List<String> variationList = createVariationList();
-    private Set<String> newIds = new HashSet<>();
-    private Set<String> allIds = new HashSet<>();
     Logger log = Logger.getLogger(CVRUtilities.class);
     private String genesStableId;
     private String genesDescription;
     private String genesCancerStudyId;
     private List<String> geneSymbols;
+    
+    private List<String> variationList = new ArrayList();
+    @Autowired
+    private void createVariationList() {
+        // the order in which these are added is important!
+        List<String> list = new ArrayList();
+        list.add("INS");
+        list.add("SNP");
+        list.add("DNP");
+        list.add("TNP");
+        list.add("ONP");
+        this.variationList = list;
+    }
 
     @Bean
     public CVRUtilities CVRUtilities() {
@@ -92,22 +97,6 @@ public class CVRUtilities {
     }
 
     public CVRUtilities() {
-    }
-
-    public void addNewId(String id) {
-        newIds.add(id);
-    }
-
-    public Set<String> getNewIds() {
-        return newIds;
-    }
-
-    public Set<String> getAllIds() {
-        return allIds;
-    }
-
-    public void addAllIds(String id) {
-        allIds.add(id);
     }
 
     public CVRData readJson(File cvrFile) throws IOException {
@@ -120,19 +109,19 @@ public class CVRUtilities {
     }
 
     public String getGenesStableId() {
-        return this.genesStableId;
+        return genesStableId;
     }
 
     public String getGenesDescription() {
-        return this.genesDescription;
+        return genesDescription;
     }
 
     public String getGeneCancerStudyId() {
-        return this.genesCancerStudyId;
+        return genesCancerStudyId;
     }
 
     public List<String> getGeneSymbols() {
-        return this.geneSymbols;
+        return geneSymbols;
     }
 
     public void importGenePanel(String geneFileName) throws Exception {
@@ -166,19 +155,12 @@ public class CVRUtilities {
         return Arrays.asList(symbols);
     }
 
-    public List<String> processFileComments(File dataFile, boolean withAllSampleIds) throws FileNotFoundException, IOException {
+    public List<String> processFileComments(File dataFile) throws FileNotFoundException, IOException {
         List<String> comments  = new ArrayList();
         BufferedReader reader  = new BufferedReader(new FileReader(dataFile));
         String line;
         while ((line = reader.readLine()) != null && line.startsWith("#")) {
             comments.add(line);
-            if (withAllSampleIds && line.startsWith("#sequenced_samples")) {
-                for (String sample : line.split(":")[1].split(" ")) {
-                    if (!sample.trim().isEmpty()) {
-                        addAllIds(sample);
-                    }
-                }
-            }
         }
         reader.close();
 
@@ -390,15 +372,5 @@ public class CVRUtilities {
         }
         return "UNK";
     }
-
-    private List<String> createVariationList() {
-        // the order in which these are added is important!
-        List<String> list = new ArrayList();
-        list.add("INS");
-        list.add("SNP");
-        list.add("DNP");
-        list.add("TNP");
-        list.add("ONP");
-        return list;
-    }
+    
 }

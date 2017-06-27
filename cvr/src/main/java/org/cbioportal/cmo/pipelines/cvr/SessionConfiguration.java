@@ -83,6 +83,18 @@ public class SessionConfiguration {
     
     @Value("${dmp.tokens.retrieve_variants.archer}")
     private String retrieveVariantsArcher;
+    
+    @Value("${dmp.tokens.retrieve_master_list.impact}")
+    private String dmpMasterListImpact;
+    
+    @Value("${dmp.tokens.retrieve_master_list.rdts}")
+    private String dmpMasterListRaindance;
+    
+    @Value("${dmp.tokens.retrieve_master_list.heme}")
+    private String dmpMasterListHeme;
+    
+    @Value("${dmp.tokens.retrieve_master_list.archer}")
+    private String dmpMasterListArcher;
 
     Logger log = Logger.getLogger(SessionConfiguration.class);
 
@@ -137,6 +149,17 @@ public class SessionConfiguration {
         map.put("mskraindance", retrieveVariantsRaindance);
         map.put("mskimpact_heme", retrieveVariantsHeme);
         map.put("mskarcher", retrieveVariantsArcher);
+        
+        return map;
+    }
+    
+    @Bean(name="masterListTokensMap")
+    public Map<String, String> masterListTokensMap() {
+        Map<String, String> map = new HashMap<>();
+        map.put("mskimpact", dmpMasterListImpact);
+        map.put("mskraindance", dmpMasterListRaindance);
+        map.put("mskimpact_heme", dmpMasterListHeme);
+        map.put("mskarcher", dmpMasterListArcher);
         
         return map;
     }

@@ -32,11 +32,12 @@
 
 package org.cbioportal.cmo.pipelines.cvr.variants;
 
+import org.cbioportal.cmo.pipelines.cvr.CvrSampleListUtil;
+import org.cbioportal.cmo.pipelines.cvr.model.*;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.*;
 import org.apache.log4j.Logger;
-import org.cbioportal.cmo.pipelines.cvr.CVRUtilities;
-import org.cbioportal.cmo.pipelines.cvr.model.*;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.beans.factory.annotation.*;
 
@@ -49,7 +50,7 @@ public class GMLVariantsProcessor implements ItemProcessor<GMLVariant, String> {
     Logger log = Logger.getLogger(GMLVariantsProcessor.class);
 
     @Autowired
-    public CVRUtilities cvrUtilities;
+    public CvrSampleListUtil cvrSampleListUtil;
 
     @Override
     public String process(GMLVariant g) throws Exception {
@@ -59,7 +60,7 @@ public class GMLVariantsProcessor implements ItemProcessor<GMLVariant, String> {
         for (Map.Entry<String, GMLResult> pair : results.entrySet()) {
             GMLResult result = pair.getValue();
             String patientId = result.getMetaData().getDmpPatientId();
-            cvrUtilities.addNewId(patientId);
+            cvrSampleListUtil.addNewDmpGmlPatient(patientId);
             gmlData.addResult(result);
         }
         return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(gmlData);

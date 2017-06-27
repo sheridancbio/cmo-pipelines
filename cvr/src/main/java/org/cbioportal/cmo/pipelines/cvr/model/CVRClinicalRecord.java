@@ -61,7 +61,6 @@ public class CVRClinicalRecord {
     private String msiType;
     private String institute;
     private String somaticStatus;
-    private String isNew;
 
     private final String DEFAULT_SAMPLE_CLASS = "Tumor";
 
@@ -285,14 +284,6 @@ public class CVRClinicalRecord {
 
     public void setSOMATIC_STATUS(String somaticStatus) {
         this.somaticStatus = somaticStatus;
-    }
-
-    public void setIsNew(String isNew) {
-        this.isNew = isNew;
-    }
-
-    public String getIsNew() {
-        return this.isNew != null ? this.isNew : "";
     }
 
     private String resolveSampleType(Integer isMetastasis) {
