@@ -77,7 +77,7 @@ public class CRDBDatasetReader implements ItemStreamReader<CRDBDataset> {
         System.out.println("Beginning CRDB Dataset View import...");
         
         CRDBDataset qCRDBD = alias(CRDBDataset.class, crdbDatasetView);  
-        List<CRDBDataset> crdbDatasetResults = crdbQueryFactory.select(
+        List<CRDBDataset> crdbDatasetResults = crdbQueryFactory.selectDistinct(
                 Projections.constructor(CRDBDataset.class, $(qCRDBD.getDMP_ID()), 
                     $(qCRDBD.getCONSENT_DATE_DAYS()), $(qCRDBD.getPRIM_DISEASE_12245()), 
                     $(qCRDBD.getINITIAL_SX_DAYS()), $(qCRDBD.getINITIAL_DX_DAYS()), 
