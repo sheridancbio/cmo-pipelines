@@ -68,7 +68,7 @@ public class MskimpactTimelineBrainSpineReader implements ItemStreamReader<Mskim
     private List<MskimpactBrainSpineTimeline> getDarwinTimelineResults(){
         log.info("Start of Darwin Timeline Brain Spine View import...");
         MskimpactBrainSpineTimeline qDTR = alias(MskimpactBrainSpineTimeline.class, timelineBrainSpineView);
-        List<MskimpactBrainSpineTimeline> darwinTimelineResults = darwinQueryFactory.select(Projections.constructor(MskimpactBrainSpineTimeline.class, $(qDTR.getDMT_PATIENT_ID_BRAINSPINETMLN()),
+        List<MskimpactBrainSpineTimeline> darwinTimelineResults = darwinQueryFactory.selectDistinct(Projections.constructor(MskimpactBrainSpineTimeline.class, $(qDTR.getDMT_PATIENT_ID_BRAINSPINETMLN()),
                         $(qDTR.getDMP_PATIENT_ID_MIN_BRAINSPINETMLN()),
                         $(qDTR.getDMP_PATIENT_ID_MAX_BRAINSPINETMLN()), $(qDTR.getDMP_PATIENT_ID_COUNT_BRAINSPINETMLN()),
                         $(qDTR.getDMP_PATIENT_ID_ALL_BRAINSPINETMLN()), $(qDTR.getSTART_DATE()), $(qDTR.getSTOP_DATE()),

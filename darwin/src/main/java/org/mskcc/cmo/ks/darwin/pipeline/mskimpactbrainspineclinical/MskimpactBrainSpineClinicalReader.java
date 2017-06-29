@@ -76,7 +76,7 @@ public class MskimpactBrainSpineClinicalReader implements ItemStreamReader<Mskim
     private List<MskimpactBrainSpineClinical> getClinicalBrainSpineResults(){
         log.info("Start of Clinical Brain Spine View Import...");
         MskimpactBrainSpineClinical qCBSR = alias(MskimpactBrainSpineClinical.class, clinicalBrainSpineView);
-        List<MskimpactBrainSpineClinical> clinicalBrainSpineResults = darwinQueryFactory.select(Projections.constructor(MskimpactBrainSpineClinical.class,
+        List<MskimpactBrainSpineClinical> clinicalBrainSpineResults = darwinQueryFactory.selectDistinct(Projections.constructor(MskimpactBrainSpineClinical.class,
                 $(qCBSR.getDMP_PATIENT_ID_BRAINSPINECLIN()),
                 $(qCBSR.getDMP_SAMPLE_ID_BRAINSPINECLIN()),
                 $(qCBSR.getAGE()),
