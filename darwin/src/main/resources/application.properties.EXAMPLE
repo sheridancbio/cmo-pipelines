@@ -41,6 +41,10 @@ darwin.timeline_bs_imaging=data_timeline_diagnostics_caisis_gbm.txt
 darwin.timeline_bs_surgery=data_timeline_surgery_caisis_gbm.txt
 darwin.clinical_view=DMT_CLINICAL_BRAINSPINE_V
 darwin.clinical_filename=data_clinical_supp_caisis_gbm.txt
+darwin.medicaltherapy.pharmacy_druglist=IPILIMUMAB;PEMBROLIZUMAB;NIVOLUMAB;ATEZOLIZUMAB # drug names should be in all UPPERCASE
+darwin.medicaltherapy_timeline_filename=data_timeline_medical_therapy.txt
+darwin.medicaltherapy_clinical_filename=data_clinical_supp_medical_therapy.txt
+darwin.medicaltherapy.skip_negative_dosage_records=true
 
 # For redcap metadata clinical attributes header generation
 metadata_project=
