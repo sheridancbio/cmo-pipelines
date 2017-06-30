@@ -62,6 +62,9 @@ public class GMLMutationDataReader implements ItemStreamReader<AnnotatedRecord> 
     public CvrSampleListUtil cvrSampleListUtil;
     
     private final Map<String, List<String>> patientSampleMap = cvrSampleListUtil.getGmlPatientSampleMap();
+    
+    @Value("#{jobParameters[forceAnnotation]}")
+    private boolean forceAnnotation;
 
     @Autowired
     public CVRUtilities cvrUtilities;
@@ -105,7 +108,7 @@ public class GMLMutationDataReader implements ItemStreamReader<AnnotatedRecord> 
                         MutationRecord record = cvrUtilities.buildGMLMutationRecord(snp, sampleId);
                         AnnotatedRecord annotatedRecord;
                         try {
-                            annotatedRecord = annotator.annotateRecord(record, false, "mskcc", false);
+                            annotatedRecord = annotator.annotateRecord(record, false, "mskcc", forceAnnotation);
                         }
                         catch (HttpServerErrorException e) {
                             log.warn("Failed to annotate a record from json! Sample: " + sampleId + " Variant: " + record.getChromosome() + ":" + record.getStart_Position() + record.getReference_Allele() + ">" + record.getTumor_Seq_Allele2());
@@ -148,7 +151,7 @@ public class GMLMutationDataReader implements ItemStreamReader<AnnotatedRecord> 
                 while ((to_add = reader.read()) != null && to_add.getTumor_Sample_Barcode() != null) {
                     AnnotatedRecord to_add_annotated;
                     try {
-                        to_add_annotated = annotator.annotateRecord(to_add, false, "mskcc", false);
+                        to_add_annotated = annotator.annotateRecord(to_add, false, "mskcc", forceAnnotation);
                     }
                     catch (HttpServerErrorException e) {
                         log.warn("Failed to annotate a record from existing file! Sample: " + to_add.getTumor_Sample_Barcode() + " Variant: " + to_add.getChromosome() + ":" + to_add.getStart_Position() + to_add.getReference_Allele() + ">" + to_add.getTumor_Seq_Allele2());
