@@ -32,27 +32,15 @@
 
 package org.mskcc.cmo.ks.darwin.pipeline;
 
-import org.mskcc.cmo.ks.darwin.pipeline.mskimpactbrainspineclinical.MskimpactBrainSpineClinicalWriter;
-import org.mskcc.cmo.ks.darwin.pipeline.mskimpactbrainspineclinical.MskimpactBrainSpineClinicalReader;
-import org.mskcc.cmo.ks.darwin.pipeline.mskimpactbrainspineclinical.MskimpactBrainSpineClinicalProcessor;
-import org.mskcc.cmo.ks.darwin.pipeline.mskimpactbrainspinetimeline.MskimpactTimelineBrainSpineReader;
-import org.mskcc.cmo.ks.darwin.pipeline.mskimpactbrainspinetimeline.MskimpactTimelineBrainSpineModelToCompositeProcessor;
-import org.mskcc.cmo.ks.darwin.pipeline.mskimpactbrainspinetimeline.MskimpactTimelineBrainSpineCompositeToCompositeProcessor;
-import org.mskcc.cmo.ks.darwin.pipeline.mskimpactbrainspinetimeline.MskimpactTimelineBrainSpineWriter;
-import org.mskcc.cmo.ks.darwin.pipeline.mskimpactdemographics.MskimpactPatientDemographicsProcessor;
-import org.mskcc.cmo.ks.darwin.pipeline.mskimpactdemographics.MskimpactPatientDemographicsWriter;
-import org.mskcc.cmo.ks.darwin.pipeline.mskimpactdemographics.MskimpactPatientDemographicsReader;
-import org.mskcc.cmo.ks.darwin.pipeline.mskimpactgeniepatient.MskimpactGeniePatientReader;
-import org.mskcc.cmo.ks.darwin.pipeline.mskimpactgeniepatient.MskimpactGeniePatientProcessor;
-import org.mskcc.cmo.ks.darwin.pipeline.mskimpactgeniepatient.MskimpactGeniePatientWriter;
-import org.mskcc.cmo.ks.darwin.pipeline.mskimpactgeniesample.MskimpactGenieSampleReader;
-import org.mskcc.cmo.ks.darwin.pipeline.mskimpactgeniesample.MskimpactGenieSampleProcessor;
-import org.mskcc.cmo.ks.darwin.pipeline.mskimpactgeniesample.MskimpactGenieSampleWriter;
 import org.mskcc.cmo.ks.darwin.pipeline.model.*;
-import org.mskcc.cmo.ks.darwin.pipeline.skcm_mskcc_2015_chanttimeline.Skcm_mskcc_2015_chantTimelineWriter;
-import org.mskcc.cmo.ks.darwin.pipeline.skcm_mskcc_2015_chanttimeline.Skcm_mskcc_2015_chantTimelineReader;
-import org.mskcc.cmo.ks.darwin.pipeline.skcm_mskcc_2015_chanttimeline.Skcm_mskcc_2015_chantTimelineProcessor;
+import org.mskcc.cmo.ks.darwin.pipeline.mskimpactbrainspineclinical.*;
+import org.mskcc.cmo.ks.darwin.pipeline.mskimpactbrainspinetimeline.*;
+import org.mskcc.cmo.ks.darwin.pipeline.mskimpactdemographics.*;
+import org.mskcc.cmo.ks.darwin.pipeline.mskimpactgeniepatient.*;
+import org.mskcc.cmo.ks.darwin.pipeline.mskimpactgeniesample.*;
+import org.mskcc.cmo.ks.darwin.pipeline.skcm_mskcc_2015_chanttimeline.*;
 import org.mskcc.cmo.ks.darwin.pipeline.skcm_mskcc_2015_chantclinical.*;
+import org.mskcc.cmo.ks.darwin.pipeline.mskimpact_medicaltherapy.*;
 
 import java.util.*;
 import org.springframework.batch.core.*;
@@ -111,6 +99,7 @@ public class BatchConfiguration {
                 .start(mskimpactPatientDemographicsStep())
                 .next(mskimpactTimelineBrainSpineStep())
                 .next(mskimpactClinicalBrainSpineStep())
+            //.next(mskimpactMedicalTherapyStep())
                 .next(mskimpactGeniePatientClinicalStep())
                 .next(mskimpactGenieSampleClinicalStep())
                 .build();
@@ -158,6 +147,16 @@ public class BatchConfiguration {
                 .reader(readerDarwinClinicalBrainSpine())
                 .processor(processorDarwinClinicalBrainSpine())
                 .writer(writerDarwinClinicalBrainSpine())
+                .build();
+    }
+
+    @Bean
+    public Step mskimpactMedicalTherapyStep() {
+        return stepBuilderFactory.get("mskimpactMedicalTherapyStep")
+                .<List<MskimpactMedicalTherapy>, MskimpactMedicalTherapy> chunk(chunkSize)
+                .reader(mskimpactMedicalTherapyReader())
+                .processor(mskimpactMedicalTherapyProcessor())
+                .writer(mskimpactMedicalTherapyCompositeWriter())
                 .build();
     }
 
@@ -223,6 +222,41 @@ public class BatchConfiguration {
     public ItemStreamReader<MskimpactBrainSpineTimeline> mskimpactTimelineBrainSpineReader() {
         return new MskimpactTimelineBrainSpineReader();
     }
+
+    @Bean
+    @StepScope
+    public ItemStreamReader<List<MskimpactMedicalTherapy>> mskimpactMedicalTherapyReader() {
+        return new MskimpactMedicalTherapyReader();
+    }
+
+    @Bean
+    public MskimpactMedicalTherapyProcessor mskimpactMedicalTherapyProcessor() {
+        return new MskimpactMedicalTherapyProcessor();
+    }
+
+    @Bean
+    @StepScope
+    public MskimpactMedicalTherapyClinicalWriter mskimpactMedicalTherapyClinicalWriter() {
+        return new MskimpactMedicalTherapyClinicalWriter();
+    }
+
+    @Bean
+    @StepScope
+    public MskimpactMedicalTherapyTimelineWriter mskimpactMedicalTherapyTimelineWriter() {
+        return new MskimpactMedicalTherapyTimelineWriter();
+    }
+
+    @Bean
+    @StepScope
+    public CompositeItemWriter<MskimpactMedicalTherapy> mskimpactMedicalTherapyCompositeWriter() {
+        List<ItemStreamWriter> writerDelegates = new ArrayList<>();
+        writerDelegates.add(mskimpactMedicalTherapyClinicalWriter());
+        writerDelegates.add(mskimpactMedicalTherapyTimelineWriter());
+        CompositeItemWriter writer = new CompositeItemWriter<>();
+        writer.setDelegates(writerDelegates);
+        return writer;
+    }
+    
     
     @Bean
     @StepScope
