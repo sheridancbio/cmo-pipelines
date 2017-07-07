@@ -32,20 +32,17 @@
 
 package org.cbioportal.cmo.pipelines.cvr.variants;
 
+import org.cbioportal.cmo.pipelines.cvr.CvrSampleListUtil;
+import org.cbioportal.cmo.pipelines.cvr.model.*;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.*;
 import java.util.Iterator;
 import org.apache.log4j.Logger;
-import org.cbioportal.cmo.pipelines.cvr.CVRUtilities;
-import org.cbioportal.cmo.pipelines.cvr.model.*;
+
 import org.springframework.batch.item.ItemProcessor;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.springframework.beans.factory.annotation.*;
+import org.springframework.http.*;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
@@ -67,14 +64,14 @@ public class CVRVariantsProcessor implements ItemProcessor<CVRVariants, String> 
     @Value("#{jobParameters[skipSeg]}")
     private boolean skipSeg;
 
-    Logger log = Logger.getLogger(CVRVariantsProcessor.class);
-
     @Autowired
-    public CVRUtilities cvrUtilities;
+    public CvrSampleListUtil cvrSampleListUtil;
 
     private String dmpSegmentUrl;
 
     HttpEntity<LinkedMultiValueMap<String, Object>> requestEntity = getRequestEntity();
+    
+    Logger log = Logger.getLogger(CVRVariantsProcessor.class);
 
     // Need to call get_seg_data against the CVR webservice for every sample, then merge the results together (CVRMergedResult)
     // All of these get put into the cvrData object, which contains everything and is what get sent to the writer
@@ -88,8 +85,8 @@ public class CVRVariantsProcessor implements ItemProcessor<CVRVariants, String> 
         while (it.hasNext()) {
             Map.Entry pair = (Map.Entry)it.next();
             String sampleId = (String)pair.getKey();
-            cvrUtilities.addNewId(sampleId);
-            cvrUtilities.addAllIds(sampleId);
+            cvrSampleListUtil.addNewDmpSample(sampleId);
+            
             CVRResult result = (CVRResult)pair.getValue();
             CVRSegData segData = new CVRSegData();
             if (!skipSeg) {

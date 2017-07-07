@@ -32,29 +32,27 @@
 
 package org.cbioportal.cmo.pipelines.cvr;
 
-import java.util.*;
-import org.apache.commons.logging.*;
 import org.cbioportal.cmo.pipelines.cvr.clinical.*;
 import org.cbioportal.cmo.pipelines.cvr.cna.*;
 import org.cbioportal.cmo.pipelines.cvr.consume.*;
 import org.cbioportal.cmo.pipelines.cvr.fusion.*;
 import org.cbioportal.cmo.pipelines.cvr.genepanel.*;
-import org.cbioportal.cmo.pipelines.cvr.masterlist.*;
+import org.cbioportal.cmo.pipelines.cvr.masterlist.CvrMasterListTasklet;
 import org.cbioportal.cmo.pipelines.cvr.model.*;
 import org.cbioportal.cmo.pipelines.cvr.mutation.*;
+import org.cbioportal.cmo.pipelines.cvr.requeue.*;
 import org.cbioportal.cmo.pipelines.cvr.seg.*;
 import org.cbioportal.cmo.pipelines.cvr.sv.*;
 import org.cbioportal.cmo.pipelines.cvr.variants.*;
 import org.cbioportal.models.*;
+
+import java.util.*;
 import org.springframework.batch.core.*;
 import org.springframework.batch.core.configuration.annotation.*;
-import org.springframework.batch.core.configuration.annotation.StepScope;
-import org.springframework.batch.core.job.builder.FlowBuilder;
-import org.springframework.batch.core.job.flow.*;
+import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.batch.item.*;
 import org.springframework.batch.item.support.CompositeItemWriter;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.*;
 import org.springframework.context.annotation.*;
 
 /**
@@ -80,12 +78,11 @@ public class BatchConfiguration {
     @Value("${chunk}")
     private int chunkInterval;
     
-    private static final Log LOG = LogFactory.getLog(BatchConfiguration.class);
-
     @Bean
     public Job gmlJob() {
         return jobBuilderFactory.get(GML_JOB)
-                .start(gmlJsonStep())
+                .start(cvrMasterListStep())
+                .next(gmlJsonStep())
                 .next(gmlClinicalStep())
                 .next(gmlMutationStep())
                 .build();
@@ -107,15 +104,8 @@ public class BatchConfiguration {
     @Bean
     public Job cvrJob() {
         return jobBuilderFactory.get(CVR_JOB)
-                .start(cvrJobFlow())
-                .next(checkMasterListFlow())
-                .build().build();
-    }
-    
-    @Bean
-    public Flow cvrJobFlow() {
-        return new FlowBuilder<Flow>("cvrJobFlow")
-                .start(cvrJsonStep())
+                .start(cvrMasterListStep())
+                .next(cvrJsonStep())
                 .next(clinicalStep())
                 .next(mutationStep())
                 .next(unfilteredMutationStep())
@@ -124,6 +114,7 @@ public class BatchConfiguration {
                 .next(fusionStep())
                 .next(segStep())
                 .next(genePanelStep())
+                .next(cvrRequeueStep())
                 .build();
     }
 
@@ -140,11 +131,6 @@ public class BatchConfiguration {
         return jobBuilderFactory.get(CONSUME_SAMPLES_JOB)
                 .start(consumeSampleStep())
                 .build();
-    }
-
-    @Bean
-    public GMLClinicalStepListener gmlClinicalStepListener() {
-        return new GMLClinicalStepListener();
     }
 
     @Bean
@@ -170,7 +156,6 @@ public class BatchConfiguration {
     @Bean
     public Step gmlClinicalStep() {
         return stepBuilderFactory.get("gmlClinicalStep")
-                .listener(gmlClinicalStepListener())
                 .<CVRClinicalRecord, CompositeClinicalRecord> chunk(chunkInterval)
                 .reader(gmlClinicalDataReader())
                 .processor(clinicalDataProcessor())
@@ -267,33 +252,26 @@ public class BatchConfiguration {
     }
 
     @Bean
-    public Step checkMasterListStep() {
-        return stepBuilderFactory.get("checkMasterListStep")
-                .listener(masterListStepListener())
-                .<String, CVRRequeueRecord> chunk(chunkInterval)
-                .reader(masterListReader())
-                .processor(masterListProcessor())
-                .writer(masterListWriter())
+    public Step cvrRequeueStep() {
+        return stepBuilderFactory.get("cvrRequeueStep")
+                .listener(cvrRequeueListener())
+                .tasklet(cvrRequeueTasklet())
                 .build();
     }
 
-    @Bean
-    public Flow checkMasterListFlow() {
-        return new FlowBuilder<Flow>("checkMasterListFlow")
-                .start(masterListJobExecutionDecider())
-                .on("RUN").to(checkMasterListStep())
-                .from(masterListJobExecutionDecider())
-                .on("SKIP")
-                .end()
-                .build();
-    }
-    
     @Bean
     public Step consumeSampleStep() {
         return stepBuilderFactory.get("consumeSampleStep")
                 .<String, String> chunk(chunkInterval)
                 .reader(consumeSampleReader())
                 .writer(consumeSampleWriter())
+                .build();
+    }
+
+    @Bean
+    public Step cvrMasterListStep() {
+        return stepBuilderFactory.get("cvrMasterListStep")
+                .tasklet(cvrMasterListTasklet())
                 .build();
     }
 
@@ -575,28 +553,22 @@ public class BatchConfiguration {
     public ItemStreamWriter<String> genePanelWriter() {
         return new CVRGenePanelWriter();
     }
-
+    
     @Bean
     @StepScope
-    public ItemStreamReader<String> masterListReader() {
-        return new CVRMasterListReader();
+    public Tasklet cvrMasterListTasklet() {
+        return new CvrMasterListTasklet();
+    }
+    
+    @Bean
+    @StepScope
+    public Tasklet cvrRequeueTasklet() {
+        return new CvrRequeueTasklet();
     }
 
     @Bean
-    @StepScope
-    public CVRMasterListProcessor masterListProcessor() {
-        return new CVRMasterListProcessor();
-    }
-
-    @Bean
-    @StepScope
-    public ItemStreamWriter<CVRRequeueRecord> masterListWriter() {
-        return new CVRMasterListWriter();
-    }
-
-    @Bean
-    public StepExecutionListener masterListStepListener() {
-        return new CVRMasterListStepListener();
+    public StepExecutionListener cvrRequeueListener() {
+        return new CvrRequeueListener();
     }
 
     @Bean
@@ -611,21 +583,4 @@ public class BatchConfiguration {
         return new ConsumeSampleWriter();
     }
     
-    @Bean
-    public JobExecutionDecider masterListJobExecutionDecider() {
-        return new JobExecutionDecider() {
-            @Override
-            public FlowExecutionStatus decide(JobExecution je, StepExecution se) {
-                String studyId = je.getJobParameters().getString("studyId");
-                if (studyId.equals("mskimpact")) {
-                    LOG.info("Executing master list check for study: " + studyId);
-                    return new FlowExecutionStatus("RUN");
-                }
-                else {
-                    LOG.info("Skipping master list check for study: " + studyId);
-                    return new FlowExecutionStatus("SKIP");
-                }
-            }
-        };
-    }
 }

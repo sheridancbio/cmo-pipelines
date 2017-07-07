@@ -32,23 +32,16 @@
 
 package org.cbioportal.cmo.pipelines.cvr.cna;
 
+import org.cbioportal.cmo.pipelines.cvr.*;
+import org.cbioportal.cmo.pipelines.cvr.model.*;
+
 import java.io.*;
-import java.io.IOException;
 import java.util.*;
 import org.apache.commons.collections.map.MultiKeyMap;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
-import org.cbioportal.cmo.pipelines.cvr.CVRUtilities;
-import org.cbioportal.cmo.pipelines.cvr.model.CVRCnvIntragenicVariant;
-import org.cbioportal.cmo.pipelines.cvr.model.CVRCnvVariant;
-import org.cbioportal.cmo.pipelines.cvr.model.CVRData;
-import org.cbioportal.cmo.pipelines.cvr.model.CVRMergedResult;
-import org.cbioportal.cmo.pipelines.cvr.model.CompositeCnaRecord;
-import org.springframework.batch.item.ExecutionContext;
-import org.springframework.batch.item.ItemStreamException;
-import org.springframework.batch.item.ItemStreamReader;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.batch.item.*;
+import org.springframework.beans.factory.annotation.*;
 
 /**
  *
@@ -61,8 +54,9 @@ public class CVRCnaDataReader implements ItemStreamReader<CompositeCnaRecord>{
 
     @Autowired
     public CVRUtilities cvrUtilities;
-
-    Logger log = Logger.getLogger(CVRCnaDataReader.class);
+    
+    @Autowired
+    public CvrSampleListUtil cvrSampleListUtil;
 
     private MultiKeyMap cnaMap = new MultiKeyMap();
     private Set<String> genes = new HashSet<>();
@@ -70,7 +64,9 @@ public class CVRCnaDataReader implements ItemStreamReader<CompositeCnaRecord>{
     private Set<String> newSamples = new HashSet<>();
 
     private List<CompositeCnaRecord> cnaRecords = new ArrayList();
-
+    
+    Logger log = Logger.getLogger(CVRCnaDataReader.class);
+    
     @Override
     public void open(ExecutionContext ec) throws ItemStreamException {
         CVRData cvrData = new CVRData();        
@@ -115,7 +111,7 @@ public class CVRCnaDataReader implements ItemStreamReader<CompositeCnaRecord>{
                 throw new ItemStreamException(e);
             }
         }
-        
+
         // CNA data is processed on a gene per row basis, making it very different from the other data types.
         // This also means we can't exactly model it with a java class easily. For now, process CNA data as strings.
         processExistingCnaFile();
@@ -185,34 +181,37 @@ public class CVRCnaDataReader implements ItemStreamReader<CompositeCnaRecord>{
         File cnaFile = new File(stagingDirectory, cvrUtilities.CNA_FILE);
         if (!cnaFile.exists()) {
             log.info("CNA file does not exist yet: " + cnaFile.getName());
+            return;
         }
-        else {
-            try {
-                BufferedReader reader = new BufferedReader(new FileReader(cnaFile));
-                List<String> header = Arrays.asList(reader.readLine().split("\t"));
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    List<String> data = Arrays.asList(line.split("\t"));
-                    try {
-                        for (int i = 1; i < header.size(); i++) {
-                            if (!cvrUtilities.getNewIds().contains(header.get(i))) {
-                                samples.add(header.get(i));
-                                genes.add(data.get(0));
-                                cnaMap.put(data.get(0), header.get(i), data.get(i));
-                            }
+        try {
+            BufferedReader reader = new BufferedReader(new FileReader(cnaFile));
+            List<String> header = Arrays.asList(reader.readLine().split("\t"));
+            String line;
+            while ((line = reader.readLine()) != null) {
+                List<String> data = Arrays.asList(line.split("\t"));
+                try {
+                    for (int i = 1; i < header.size(); i++) {
+                        if (!cvrSampleListUtil.getPortalSamples().contains(header.get(i))) {
+                            cvrSampleListUtil.addSampleRemoved(header.get(i));
+                            continue;
+                        }
+                        if (!cvrSampleListUtil.getNewDmpSamples().contains(header.get(i))) {
+                            samples.add(header.get(i));
+                            genes.add(data.get(0));
+                            cnaMap.put(data.get(0), header.get(i), data.get(i));
                         }
                     }
-                    catch (ArrayIndexOutOfBoundsException e) {
-                        String message = "# Fields in row " + data.get(0) + "=" + data.size() +" does not match # fields in header: " + header.size();
-                        log.error(message);
-                        throw new ItemStreamException(e);
-                    }
-
                 }
+                catch (ArrayIndexOutOfBoundsException e) {
+                    String message = "# Fields in row " + data.get(0) + "=" + data.size() +" does not match # fields in header: " + header.size();
+                    log.error(message);
+                    throw new ItemStreamException(e);
+                }
+
             }
-            catch (Exception e) {
-                log.error("Error loading data from: " + cnaFile.getName());
-            }
+        }
+        catch (Exception e) {
+            log.error("Error loading data from: " + cnaFile.getName());
         }
     }
 }

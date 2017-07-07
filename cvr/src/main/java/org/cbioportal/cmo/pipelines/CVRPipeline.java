@@ -32,22 +32,21 @@
 
 package org.cbioportal.cmo.pipelines;
 
-/**
- *
- * @author heinsz
- */
+import org.cbioportal.cmo.pipelines.cvr.*;
 
 import java.util.*;
 import org.apache.commons.cli.*;
 import org.apache.log4j.Logger;
-import org.cbioportal.cmo.pipelines.cvr.*;
 import org.springframework.batch.core.*;
 import org.springframework.batch.core.launch.JobLauncher;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 
+/**
+ *
+ * @author heinsz
+ */
 @SpringBootApplication
 public class CVRPipeline {
 
@@ -63,7 +62,8 @@ public class CVRPipeline {
             .addOption("m", "gmljson", false, "Only gml json")
             .addOption("i", "study_id", true, "Study identifier (i.e., mskimpact, raindance, archer, etc.)")
             .addOption("t", "test", false, "Flag for running pipeline in testing mode so that samples are not consumed")
-            .addOption("c", "consume_samples", true, "Path to CVR json filename");
+            .addOption("c", "consume_samples", true, "Path to CVR json filename")
+            .addOption("r", "max_samples_to_remove", true, "The max number of samples that can be removed from data");
         return gnuOptions;
     }
 
@@ -73,7 +73,16 @@ public class CVRPipeline {
         System.exit(exitStatus);
     }
 
-    private static void launchCvrPipelineJob(String[] args, String directory, String studyId, Boolean json, Boolean gml, Boolean gmljson, Boolean skipSeg) throws Exception {
+    private static void launchCvrPipelineJob(String[] args, String directory, String studyId, Boolean json, Boolean gml, 
+            Boolean gmljson, Boolean skipSeg, boolean testingMode, Integer maxNumSamplesToRemove) throws Exception {
+        // log wether in testing mode or not
+        if (testingMode) {
+            log.warn("CvrPipelineJob running in TESTING MODE - samples will NOT be requeued.");
+        }
+        else {
+            log.warn("CvrPipelineJob running in PRODUCTION MODE - samples will be requeued.");
+        }
+        
         SpringApplication app = new SpringApplication(CVRPipeline.class);
         ConfigurableApplicationContext ctx= app.run(args);
         JobLauncher jobLauncher = ctx.getBean(JobLauncher.class);
@@ -82,7 +91,9 @@ public class CVRPipeline {
         String jobName;
         JobParametersBuilder builder = new JobParametersBuilder();
         builder.addString("stagingDirectory", directory)
-                .addString("studyId", studyId);
+                .addString("studyId", studyId)
+                .addString("testingMode", String.valueOf(testingMode))
+                .addString("maxNumSamplesToRemove", String.valueOf(maxNumSamplesToRemove));
         if (json) {
             jobName = BatchConfiguration.JSON_JOB;
         }
@@ -158,9 +169,20 @@ public class CVRPipeline {
             launchConsumeSamplesJob(args, commandLine.getOptionValue("c"), commandLine.hasOption("t"));
         }
         else {
+            Integer maxNumSamplesToRemove = CVRUtilities.DEFAULT_MAX_NUM_SAMPLES_TO_REMOVE;
+            try {
+                if (commandLine.hasOption("r")) {
+                    maxNumSamplesToRemove = Integer.valueOf(commandLine.getOptionValue("r"));
+                }
+            }
+            catch (NumberFormatException e) {
+                e.printStackTrace();
+                throw new RuntimeException("Cannot parse argument as integer: " + commandLine.getOptionValue("r"));
+            }
+            
             launchCvrPipelineJob(args, commandLine.getOptionValue("d"), commandLine.getOptionValue("i"),
                 commandLine.hasOption("j"), commandLine.hasOption("g"), commandLine.hasOption("m"),
-                commandLine.hasOption("s"));
+                commandLine.hasOption("s"), commandLine.hasOption("t"), maxNumSamplesToRemove);
         }
     }
 }

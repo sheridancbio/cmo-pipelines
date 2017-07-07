@@ -32,22 +32,18 @@
 
 package org.cbioportal.cmo.pipelines.cvr.clinical;
 
-import java.io.File;
-import java.io.IOException;
+import org.cbioportal.cmo.pipelines.cvr.*;
+import org.cbioportal.cmo.pipelines.cvr.model.*;
+
+import java.io.*;
 import java.util.*;
 import org.apache.log4j.Logger;
-import org.cbioportal.cmo.pipelines.cvr.CVRUtilities;
-import org.cbioportal.cmo.pipelines.cvr.model.CVRClinicalRecord;
-import org.cbioportal.cmo.pipelines.cvr.model.CVRData;
-import org.cbioportal.cmo.pipelines.cvr.model.CVRMergedResult;
-import org.springframework.batch.item.ExecutionContext;
-import org.springframework.batch.item.ItemStreamException;
-import org.springframework.batch.item.ItemStreamReader;
+
+import org.springframework.batch.item.*;
 import org.springframework.batch.item.file.FlatFileItemReader;
 import org.springframework.batch.item.file.mapping.DefaultLineMapper;
 import org.springframework.batch.item.file.transform.DelimitedLineTokenizer;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.*;
 import org.springframework.core.io.FileSystemResource;
 
 /**
@@ -61,6 +57,9 @@ public class CVRClinicalDataReader implements ItemStreamReader<CVRClinicalRecord
 
     @Autowired
     public CVRUtilities cvrUtilities;
+    
+    @Autowired
+    public CvrSampleListUtil cvrSampleListUtil;
 
     private List<CVRClinicalRecord> clinicalRecords = new ArrayList();
 
@@ -98,9 +97,9 @@ public class CVRClinicalDataReader implements ItemStreamReader<CVRClinicalRecord
             try {
                 CVRClinicalRecord to_add;
                 while ((to_add = reader.read()) != null) {
-                    if (!cvrUtilities.getNewIds().contains(to_add.getSAMPLE_ID()) && to_add.getSAMPLE_ID() != null) {
+                    if (!cvrSampleListUtil.getNewDmpSamples().contains(to_add.getSAMPLE_ID()) && to_add.getSAMPLE_ID() != null) {
                         clinicalRecords.add(to_add);
-                        cvrUtilities.addAllIds(to_add.getSAMPLE_ID());
+                        cvrSampleListUtil.addPortalSample(to_add.getSAMPLE_ID());
                     }
                 }                
             }
@@ -113,9 +112,11 @@ public class CVRClinicalDataReader implements ItemStreamReader<CVRClinicalRecord
 
         for (CVRMergedResult result : cvrData.getResults()) {
             CVRClinicalRecord record = new CVRClinicalRecord(result.getMetaData());
-            record.setIsNew(cvrUtilities.IS_NEW);
             clinicalRecords.add(record);
         }
+        // updates portalSamplesNotInDmpList and dmpSamplesNotInPortal sample lists
+        // portalSamples list is only updated if threshold check for max num samples to remove passes
+        cvrSampleListUtil.updateSampleLists();
     }
 
     @Override
@@ -129,7 +130,14 @@ public class CVRClinicalDataReader implements ItemStreamReader<CVRClinicalRecord
     @Override
     public CVRClinicalRecord read() throws Exception {
         if (!clinicalRecords.isEmpty()) {
-            return clinicalRecords.remove(0);
+            CVRClinicalRecord record = clinicalRecords.remove(0);
+            // portal samples may or may not be filtered by 'portalSamplesNotInDmp' is threshold check above
+            // so we want to skip samples that aren't in this list
+            if (!cvrSampleListUtil.getPortalSamples().contains(record.getSAMPLE_ID())) {
+                cvrSampleListUtil.addSampleRemoved(record.getSAMPLE_ID());
+                return read();
+            }
+            return record;
         }
         return null;
     }

@@ -39,24 +39,15 @@ import java.util.*;
  * @author jake
  */
 public class CVRSegRecord {
+
     private String chromosome;
     private String start;
     private String end;
     private String num_mark;
     private String seg_mean;
     private String id;
-    private String isNew;
 
-    public CVRSegRecord() {
-    }
-
-    public void setIsNew(String isNew) {
-        this.isNew = isNew;
-    }
-
-    public String getIsNew() {
-        return this.isNew != null ? this.isNew : "";
-    }
+    public CVRSegRecord() {}
 
     public String getchrom() {
         return this.chromosome != null ? this.chromosome : "";

@@ -32,22 +32,16 @@
 
 package org.cbioportal.cmo.pipelines.cvr.seg;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.Writer;
+import org.cbioportal.cmo.pipelines.cvr.CVRUtilities;
+import org.cbioportal.cmo.pipelines.cvr.model.*;
+
+import java.io.*;
 import java.util.*;
 import org.apache.commons.lang.StringUtils;
-import org.cbioportal.cmo.pipelines.cvr.CVRUtilities;
-import org.cbioportal.cmo.pipelines.cvr.model.CVRSegRecord;
-import org.cbioportal.cmo.pipelines.cvr.model.CompositeSegRecord;
-import org.springframework.batch.item.ExecutionContext;
-import org.springframework.batch.item.ItemStreamException;
-import org.springframework.batch.item.ItemStreamWriter;
-import org.springframework.batch.item.file.FlatFileHeaderCallback;
-import org.springframework.batch.item.file.FlatFileItemWriter;
+import org.springframework.batch.item.*;
+import org.springframework.batch.item.file.*;
 import org.springframework.batch.item.file.transform.PassThroughLineAggregator;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.*;
 import org.springframework.core.io.FileSystemResource;
 
 /**

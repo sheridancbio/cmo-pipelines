@@ -32,23 +32,20 @@
 
 package org.cbioportal.cmo.pipelines.cvr.mutation;
 
+import org.cbioportal.annotator.*;
+import org.cbioportal.cmo.pipelines.cvr.*;
+import org.cbioportal.cmo.pipelines.cvr.model.*;
+import org.cbioportal.models.*;
+
 import java.io.*;
 import java.util.*;
 import org.apache.log4j.Logger;
-import org.cbioportal.annotator.*;
-import org.cbioportal.cmo.pipelines.cvr.CVRUtilities;
-import org.cbioportal.cmo.pipelines.cvr.model.*;
-import org.cbioportal.models.AnnotatedRecord;
-import org.cbioportal.models.MutationRecord;
-import org.springframework.batch.item.ExecutionContext;
-import org.springframework.batch.item.ItemStreamException;
-import org.springframework.batch.item.ItemStreamReader;
-import org.springframework.batch.item.file.FlatFileItemReader;
-import org.springframework.batch.item.file.LineCallbackHandler;
+
+import org.springframework.batch.item.*;
+import org.springframework.batch.item.file.*;
 import org.springframework.batch.item.file.mapping.DefaultLineMapper;
 import org.springframework.batch.item.file.transform.DelimitedLineTokenizer;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.*;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.web.client.HttpServerErrorException;
 
@@ -62,6 +59,9 @@ public class CVRMutationDataReader implements ItemStreamReader<AnnotatedRecord> 
 
     @Autowired
     public CVRUtilities cvrUtilities;
+    
+    @Autowired
+    private CvrSampleListUtil cvrSampleListUtil;
 
     @Autowired
     private Annotator annotator;
@@ -105,7 +105,6 @@ public class CVRMutationDataReader implements ItemStreamReader<AnnotatedRecord> 
                         log.warn("Failed to annotate a record from json! Sample: " + sampleId + " Variant: " + record.getChromosome() + ":" + record.getStart_Position() + record.getReference_Allele() + ">" + record.getTumor_Seq_Allele2());
                         annotatedRecord = cvrUtilities.buildCVRAnnotatedRecord(record);
                     }
-                    annotatedRecord.getAdditionalProperties().put("IS_NEW", cvrUtilities.IS_NEW);
                     mutationRecords.add(annotatedRecord);
                     header.addAll(annotatedRecord.getHeaderWithAdditionalFields());
                     additionalPropertyKeys.addAll(annotatedRecord.getAdditionalProperties().keySet());
@@ -140,7 +139,7 @@ public class CVRMutationDataReader implements ItemStreamReader<AnnotatedRecord> 
             try {
                 MutationRecord to_add;
                 while ((to_add = reader.read()) != null && to_add.getTumor_Sample_Barcode() != null) {
-                    if (!cvrUtilities.getNewIds().contains(to_add.getTumor_Sample_Barcode()) && 
+                    if (!cvrSampleListUtil.getNewDmpSamples().contains(to_add.getTumor_Sample_Barcode()) && 
                             !cvrUtilities.isDuplicateRecord(to_add, mutationMap.get(to_add.getTumor_Sample_Barcode()))) {
                         AnnotatedRecord to_add_annotated;
                         try {
@@ -152,11 +151,10 @@ public class CVRMutationDataReader implements ItemStreamReader<AnnotatedRecord> 
                         mutationRecords.add(to_add_annotated);
                         mutationMap.getOrDefault(to_add_annotated.getTumor_Sample_Barcode(), new ArrayList()).add(to_add_annotated);
                         header.addAll(to_add_annotated.getHeaderWithAdditionalFields());
-                        cvrUtilities.addAllIds(to_add.getTumor_Sample_Barcode());
                         additionalPropertyKeys.addAll(to_add_annotated.getAdditionalProperties().keySet());
                     }
                 }
-                ec.put("commentLines", cvrUtilities.processFileComments(mutationFile, false));
+                ec.put("commentLines", cvrUtilities.processFileComments(mutationFile));
             } catch (Exception e) {
                 log.error("Error loading data from mutation file: " + mutationFile.getName());
                 throw new ItemStreamException(e);
@@ -178,6 +176,10 @@ public class CVRMutationDataReader implements ItemStreamReader<AnnotatedRecord> 
     public AnnotatedRecord read() throws Exception {
         if (!mutationRecords.isEmpty()) {
             AnnotatedRecord annotatedRecord = mutationRecords.remove(0);
+            if (!cvrSampleListUtil.getPortalSamples().contains(annotatedRecord.getTumor_Sample_Barcode())) {
+                cvrSampleListUtil.addSampleRemoved(annotatedRecord.getTumor_Sample_Barcode());
+                return read();
+            }
             for (String additionalProperty : additionalPropertyKeys) {
                 Map<String, String> additionalProperties = annotatedRecord.getAdditionalProperties();
                 if (!additionalProperties.keySet().contains(additionalProperty)) {

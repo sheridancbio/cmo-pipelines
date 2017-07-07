@@ -32,21 +32,18 @@
 
 package org.cbioportal.cmo.pipelines.cvr.clinical;
 
-import java.io.File;
-import java.io.IOException;
+import org.cbioportal.cmo.pipelines.cvr.*;
+import org.cbioportal.cmo.pipelines.cvr.model.*;
+
+import java.io.*;
 import java.util.*;
 import org.apache.log4j.Logger;
-import org.cbioportal.cmo.pipelines.cvr.CVRUtilities;
-import org.cbioportal.cmo.pipelines.cvr.model.CVRClinicalRecord;
-import org.cbioportal.cmo.pipelines.cvr.model.GMLData;
-import org.springframework.batch.item.ExecutionContext;
-import org.springframework.batch.item.ItemStreamException;
-import org.springframework.batch.item.ItemStreamReader;
+
+import org.springframework.batch.item.*;
 import org.springframework.batch.item.file.FlatFileItemReader;
 import org.springframework.batch.item.file.mapping.DefaultLineMapper;
 import org.springframework.batch.item.file.transform.DelimitedLineTokenizer;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.*;
 import org.springframework.core.io.FileSystemResource;
 
 /**
@@ -61,6 +58,9 @@ public class GMLClinicalDataReader implements ItemStreamReader<CVRClinicalRecord
     @Autowired
     public CVRUtilities cvrUtilities;
 
+    @Autowired
+    public CvrSampleListUtil cvrSampleListUtil;
+    
     private List<CVRClinicalRecord> clinicalRecords = new ArrayList();
 
     Logger log = Logger.getLogger(GMLClinicalDataReader.class);
@@ -98,30 +98,28 @@ public class GMLClinicalDataReader implements ItemStreamReader<CVRClinicalRecord
             try {
                 CVRClinicalRecord to_add;
                 while ((to_add = reader.read()) != null) {
-                    if (patientSampleMap.containsKey(to_add.getPATIENT_ID())) {
-                        patientSampleMap.get(to_add.getPATIENT_ID()).add(to_add.getSAMPLE_ID());
-                    } else {
-                        List<String> sampleList = new ArrayList<>();
-                        sampleList.add(to_add.getSAMPLE_ID());
-                        patientSampleMap.put(to_add.getPATIENT_ID(), sampleList);
-                    }
-                    for (String id : cvrUtilities.getNewIds()) {
+                    cvrSampleListUtil.updateGmlPatientSampleMap(to_add.getPATIENT_ID(), to_add.getSAMPLE_ID());
+                    
+                    for (String id : cvrSampleListUtil.getNewDmpGmlPatients()) {
                         if (id.contains(to_add.getPATIENT_ID())) {
                             to_add.set12_245_PARTC_CONSENTED("YES");
                             break;
                         }
                     }
                     clinicalRecords.add(to_add);
-                    cvrUtilities.addAllIds(to_add.getSAMPLE_ID());
+                    cvrSampleListUtil.addPortalSample(to_add.getSAMPLE_ID());
                 }
             } catch (Exception e) {
                 log.error("Error loading clinical data from: " + clinicalFile.getName());
                 throw new ItemStreamException(e);
             }
-            ec.put("patientSampleMap", patientSampleMap);
             reader.close();
         }
+        // updates portalSamplesNotInDmpList and dmpSamplesNotInPortal sample lists
+        // portalSamples list is only updated if threshold check for max num samples to remove passes
+        cvrSampleListUtil.updateSampleLists();    
     }
+    
     @Override
     public void update(ExecutionContext ec) throws ItemStreamException {
     }
@@ -133,7 +131,12 @@ public class GMLClinicalDataReader implements ItemStreamReader<CVRClinicalRecord
     @Override
     public CVRClinicalRecord read() throws Exception {
         if (!clinicalRecords.isEmpty()) {
-            return clinicalRecords.remove(0);
+            CVRClinicalRecord record = clinicalRecords.remove(0);
+            if (!cvrSampleListUtil.getPortalSamples().contains(record.getSAMPLE_ID())) {
+                cvrSampleListUtil.addSampleRemoved(record.getSAMPLE_ID());
+                return read();
+            }
+            return record;
         }
         return null;
     }

@@ -32,8 +32,7 @@
 
 package org.cbioportal.cmo.pipelines.cvr.model;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 
 /**
@@ -72,7 +71,6 @@ public class CVRSvRecord {
     private String tumor_read_count;
     private String tumor_variant_count;
     private String variant_status_name;
-    private String isNew;
 
     public CVRSvRecord() {
     }
@@ -330,15 +328,7 @@ public class CVRSvRecord {
     public void setVariant_Status_Name(String variantStatusName){
         this.variant_status_name = variantStatusName;
     }
-
-    public void setIsNew(String isNew){
-        this.isNew = isNew;
-    }
-
-    public String getIsNew(){
-        return this.isNew != null ? this.isNew : "";
-    }
-
+    
     public static List<String> getFieldNames() {
         List<String> fieldNames = new ArrayList<String>();
         fieldNames.add("SampleId");

@@ -32,18 +32,23 @@
 
 package org.cbioportal.cmo.pipelines.cvr.sv;
 
-import java.util.ArrayList;
-import java.util.List;
+import org.cbioportal.cmo.pipelines.cvr.model.*;
+import org.cbioportal.cmo.pipelines.cvr.CvrSampleListUtil;
+
+import java.util.*;
 import org.apache.commons.lang.StringUtils;
-import org.cbioportal.cmo.pipelines.cvr.model.CVRSvRecord;
-import org.cbioportal.cmo.pipelines.cvr.model.CompositeSvRecord;
 import org.springframework.batch.item.ItemProcessor;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  *
  * @author heinsz
  */
 public class CVRSvDataProcessor implements ItemProcessor<CVRSvRecord, CompositeSvRecord> {
+
+    @Autowired
+    public CvrSampleListUtil cvrSampleListUtil;
+
     @Override
     public CompositeSvRecord process(CVRSvRecord i) throws Exception {
         List<String> record = new ArrayList<>();
@@ -51,7 +56,7 @@ public class CVRSvDataProcessor implements ItemProcessor<CVRSvRecord, CompositeS
             record.add(i.getClass().getMethod("get" + field).invoke(i).toString().replaceAll("[\\t\\n\\r]+"," "));
         }
         CompositeSvRecord compRecord = new CompositeSvRecord();
-        if (!i.getIsNew().isEmpty()) {
+        if (cvrSampleListUtil.getNewDmpSamples().contains(i.getSampleId())) {
             compRecord.setNewSvRecord(StringUtils.join(record, "\t").trim());
         } else {
             compRecord.setOldSvRecord(StringUtils.join(record, "\t").trim());

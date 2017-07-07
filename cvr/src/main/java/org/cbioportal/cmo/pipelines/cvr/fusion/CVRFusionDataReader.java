@@ -32,23 +32,17 @@
 
 package org.cbioportal.cmo.pipelines.cvr.fusion;
 
-import java.io.File;
-import java.io.IOException;
+import org.cbioportal.cmo.pipelines.cvr.*;
+import org.cbioportal.cmo.pipelines.cvr.model.*;
+
+import java.io.*;
 import java.util.*;
 import org.apache.log4j.Logger;
-import org.cbioportal.cmo.pipelines.cvr.CVRUtilities;
-import org.cbioportal.cmo.pipelines.cvr.model.CVRData;
-import org.cbioportal.cmo.pipelines.cvr.model.CVRFusionRecord;
-import org.cbioportal.cmo.pipelines.cvr.model.CVRMergedResult;
-import org.cbioportal.cmo.pipelines.cvr.model.CVRSvVariant;
-import org.springframework.batch.item.ExecutionContext;
-import org.springframework.batch.item.ItemStreamException;
-import org.springframework.batch.item.ItemStreamReader;
+import org.springframework.batch.item.*;
 import org.springframework.batch.item.file.FlatFileItemReader;
 import org.springframework.batch.item.file.mapping.DefaultLineMapper;
 import org.springframework.batch.item.file.transform.DelimitedLineTokenizer;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.*;
 import org.springframework.core.io.FileSystemResource;
 
 /**
@@ -62,9 +56,13 @@ public class CVRFusionDataReader implements ItemStreamReader<CVRFusionRecord> {
 
     @Autowired
     public CVRUtilities cvrUtilities;
+    
+    @Autowired
+    public CvrSampleListUtil cvrSampleListUtil;
 
     private List<CVRFusionRecord> fusionRecords = new ArrayList();
     private Set<String> fusionsSeen = new HashSet();
+    
     Logger log = Logger.getLogger(CVRFusionDataReader.class);
 
     @Override
@@ -100,7 +98,7 @@ public class CVRFusionDataReader implements ItemStreamReader<CVRFusionRecord> {
             try {
                 CVRFusionRecord to_add;
                 while ((to_add = reader.read()) != null) {
-                    if (!cvrUtilities.getNewIds().contains(to_add.getTumor_Sample_Barcode()) && to_add.getTumor_Sample_Barcode() != null) {
+                    if (!cvrSampleListUtil.getNewDmpSamples().contains(to_add.getTumor_Sample_Barcode()) && to_add.getTumor_Sample_Barcode() != null) {
                         String fusion = to_add.getHugo_Symbol() + "|" +to_add.getTumor_Sample_Barcode() + "|" + to_add.getFusion();
                         if (!fusionsSeen.contains(fusion)) {
                             fusionRecords.add(to_add);
@@ -121,7 +119,7 @@ public class CVRFusionDataReader implements ItemStreamReader<CVRFusionRecord> {
             List<CVRSvVariant> variants = result.getSvVariants();
             for (CVRSvVariant variant : variants) {
 
-                CVRFusionRecord record = null; // = new CVRFusionRecord(variant, sampleId, false);
+                CVRFusionRecord record = null;
                 try {
                     record = new CVRFusionRecord(variant, sampleId, false);
                 }
@@ -160,7 +158,12 @@ public class CVRFusionDataReader implements ItemStreamReader<CVRFusionRecord> {
     @Override
     public CVRFusionRecord read() throws Exception {
         if (!fusionRecords.isEmpty()) {
-            return fusionRecords.remove(0);
+            CVRFusionRecord record = fusionRecords.remove(0);
+            if (!cvrSampleListUtil.getPortalSamples().contains(record.getTumor_Sample_Barcode())) {
+                cvrSampleListUtil.addSampleRemoved(record.getTumor_Sample_Barcode());
+                return read();
+            }
+            return record;
         }
         return null;
     }

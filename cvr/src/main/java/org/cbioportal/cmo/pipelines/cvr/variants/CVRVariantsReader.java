@@ -32,12 +32,11 @@
 
 package org.cbioportal.cmo.pipelines.cvr.variants;
 
+import org.cbioportal.cmo.pipelines.cvr.model.*;
+
 import java.util.*;
 import javax.annotation.Resource;
-import org.cbioportal.cmo.pipelines.cvr.model.*;
-import org.springframework.batch.item.ExecutionContext;
-import org.springframework.batch.item.ItemStreamException;
-import org.springframework.batch.item.ItemStreamReader;
+import org.springframework.batch.item.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.util.LinkedMultiValueMap;
