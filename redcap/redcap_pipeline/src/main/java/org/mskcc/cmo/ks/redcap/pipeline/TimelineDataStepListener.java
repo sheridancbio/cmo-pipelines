@@ -30,34 +30,34 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 package org.mskcc.cmo.ks.redcap.pipeline;
-import org.mskcc.cmo.ks.redcap.source.ClinicalDataSource;
+
 import org.apache.log4j.Logger;
+import org.mskcc.cmo.ks.redcap.source.ClinicalDataSource;
 import org.springframework.batch.core.ExitStatus;
 import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.core.StepExecutionListener;
 import org.springframework.beans.factory.annotation.Autowired;
+
 /**
  *
  * @author heinsz
  */
-public class ClinicalDataStepListener implements StepExecutionListener {
+public class TimelineDataStepListener implements StepExecutionListener {
     private final Logger log = Logger.getLogger(ClinicalDataStepListener.class);
     @Autowired
-    public ClinicalDataSource clinicalDataSource;    
+    public ClinicalDataSource clinicalDataSource;  
+    
     @Override
     public void beforeStep(StepExecution se) {
-        log.info("Starting a clinical data step");
+       log.info("Starting a timelinel data step");
     }
 
     @Override
     public ExitStatus afterStep(StepExecution se) {
-        log.info("Checking if more data to process...");
-        if (clinicalDataSource.hasMoreClinicalData()) {
-            return new ExitStatus("CLINICAL");
-        }
         if (clinicalDataSource.hasMoreTimelineData()) {
             return new ExitStatus("TIMELINE");
         }
-        return ExitStatus.COMPLETED;
+        return new ExitStatus("FINISHED");
     }
+    
 }
