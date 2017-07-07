@@ -72,6 +72,11 @@ public class BatchConfiguration {
         return new ClinicalDataStepListener();
     }
     
+    @Bean
+    public TimelineDataStepListener timelineDataStepListener() {
+        return new TimelineDataStepListener();
+    }
+    
     // Will keep calling clinicalDataStep or timelineDataStep based on the exit status from the clinicalDataStepListener
    @Bean
     public Job redcapJob() {
@@ -103,7 +108,7 @@ public class BatchConfiguration {
     @Bean
     public Step timelineDataStep() {
         return stepBuilderFactory.get("timelineDataStep")
-                .listener(clinicalDataStepListener())
+                .listener(timelineDataStepListener())
                 .<Map<String, String>, String> chunk(chunkInterval)
                 .reader(timelineReader())
                 .processor(timelineProcessor())
