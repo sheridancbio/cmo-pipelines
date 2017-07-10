@@ -53,16 +53,19 @@ import org.springframework.web.client.HttpServerErrorException;
  * @author heinsz
  */
 public class CVRUnfilteredMutationDataReader implements ItemStreamReader<AnnotatedRecord> {
-    
+
     @Value("#{jobParameters[stagingDirectory]}")
     private String stagingDirectory;
+
+    @Value("#{jobParameters[forceAnnotation]}")
+    private boolean forceAnnotation;
 
     @Autowired
     public CVRUtilities cvrUtilities;
 
     @Autowired
     private CvrSampleListUtil cvrSampleListUtil;
-    
+
     @Autowired
     private Annotator annotator;
 
@@ -76,7 +79,7 @@ public class CVRUnfilteredMutationDataReader implements ItemStreamReader<Annotat
 
     @Override
     public void open(ExecutionContext ec) throws ItemStreamException {
-        CVRData cvrData = new CVRData();        
+        CVRData cvrData = new CVRData();
         // load cvr data from cvr_data.json file
         File cvrFile = new File(stagingDirectory, cvrUtilities.CVR_FILE);
         try {
@@ -85,7 +88,7 @@ public class CVRUnfilteredMutationDataReader implements ItemStreamReader<Annotat
             log.error("Error reading file: " + cvrFile.getName());
             throw new ItemStreamException(e);
         }
-        
+
         Set<String> header = new LinkedHashSet<>();
         for (CVRMergedResult result : cvrData.getResults()) {
             String sampleId = result.getMetaData().getDmpSampleId();
@@ -99,7 +102,7 @@ public class CVRUnfilteredMutationDataReader implements ItemStreamReader<Annotat
                 MutationRecord record = cvrUtilities.buildCVRMutationRecord(snp, sampleId, somaticStatus);
                 AnnotatedRecord annotatedRecord = new AnnotatedRecord();
                 try {
-                    annotatedRecord = annotator.annotateRecord(record, false, "mskcc", false);
+                    annotatedRecord = annotator.annotateRecord(record, false, "mskcc", forceAnnotation);
                 } catch (HttpServerErrorException e) {
                     log.warn("Failed to annotate a record from json! Sample: " + sampleId + " Variant: " + record.getChromosome() + ":" + record.getStart_Position() + record.getReference_Allele() + ">" + record.getTumor_Seq_Allele2());
                     annotatedRecord = cvrUtilities.buildCVRAnnotatedRecord(record);
@@ -117,12 +120,12 @@ public class CVRUnfilteredMutationDataReader implements ItemStreamReader<Annotat
             log.info("File does not exist - skipping data loading from mutation file: " + mutationFile.getName());
         }
         else {
-            log.info("Loading mutation data from: " + mutationFile.getName());            
+            log.info("Loading mutation data from: " + mutationFile.getName());
             final DelimitedLineTokenizer tokenizer = new DelimitedLineTokenizer(DelimitedLineTokenizer.DELIMITER_TAB);
             DefaultLineMapper<MutationRecord> mapper = new DefaultLineMapper<>();
             mapper.setLineTokenizer(tokenizer);
             mapper.setFieldSetMapper(new CVRMutationFieldSetMapper());
-            
+
             FlatFileItemReader<MutationRecord> reader = new FlatFileItemReader<>();
             reader.setResource(new FileSystemResource(mutationFile));
             reader.setLineMapper(mapper);
@@ -134,15 +137,15 @@ public class CVRUnfilteredMutationDataReader implements ItemStreamReader<Annotat
                 }
             });
             reader.open(ec);
-                        
+
             try {
                 MutationRecord to_add;
                 while ((to_add = reader.read()) != null && to_add.getTumor_Sample_Barcode() != null) {
-                    if (!cvrSampleListUtil.getNewDmpSamples().contains(to_add.getTumor_Sample_Barcode()) && 
+                    if (!cvrSampleListUtil.getNewDmpSamples().contains(to_add.getTumor_Sample_Barcode()) &&
                             !cvrUtilities.isDuplicateRecord(to_add, mutationMap.get(to_add.getTumor_Sample_Barcode()))) {
                         AnnotatedRecord to_add_annotated;
                         try {
-                            to_add_annotated = annotator.annotateRecord(to_add, false, "mskcc", false);
+                            to_add_annotated = annotator.annotateRecord(to_add, false, "mskcc", forceAnnotation);
                         } catch (HttpServerErrorException e) {
                             log.warn("Failed to annotate a record from existing file! Sample: " + to_add.getTumor_Sample_Barcode() + " Variant: " + to_add.getChromosome() + ":" + to_add.getStart_Position() + to_add.getReference_Allele() + ">" + to_add.getTumor_Seq_Allele2());
                             to_add_annotated = cvrUtilities.buildCVRAnnotatedRecord(to_add);

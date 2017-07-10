@@ -63,7 +63,8 @@ public class CVRPipeline {
             .addOption("i", "study_id", true, "Study identifier (i.e., mskimpact, raindance, archer, etc.)")
             .addOption("t", "test", false, "Flag for running pipeline in testing mode so that samples are not consumed")
             .addOption("c", "consume_samples", true, "Path to CVR json filename")
-            .addOption("r", "max_samples_to_remove", true, "The max number of samples that can be removed from data");
+            .addOption("r", "max_samples_to_remove", true, "The max number of samples that can be removed from data")
+            .addOption("f", "force_annotation", false, "Flag for forcing reannotation of samples");
         return gnuOptions;
     }
 
@@ -74,7 +75,7 @@ public class CVRPipeline {
     }
 
     private static void launchCvrPipelineJob(String[] args, String directory, String studyId, Boolean json, Boolean gml, 
-            Boolean gmljson, Boolean skipSeg, boolean testingMode, Integer maxNumSamplesToRemove) throws Exception {
+            Boolean gmljson, Boolean skipSeg, boolean testingMode, Integer maxNumSamplesToRemove, Boolean forceAnnotation) throws Exception {
         // log wether in testing mode or not
         if (testingMode) {
             log.warn("CvrPipelineJob running in TESTING MODE - samples will NOT be requeued.");
@@ -93,7 +94,8 @@ public class CVRPipeline {
         builder.addString("stagingDirectory", directory)
                 .addString("studyId", studyId)
                 .addString("testingMode", String.valueOf(testingMode))
-                .addString("maxNumSamplesToRemove", String.valueOf(maxNumSamplesToRemove));
+                .addString("maxNumSamplesToRemove", String.valueOf(maxNumSamplesToRemove))
+                .addString("forceAnnotation", String.valueOf(forceAnnotation));
         if (json) {
             jobName = BatchConfiguration.JSON_JOB;
         }
@@ -182,7 +184,8 @@ public class CVRPipeline {
             
             launchCvrPipelineJob(args, commandLine.getOptionValue("d"), commandLine.getOptionValue("i"),
                 commandLine.hasOption("j"), commandLine.hasOption("g"), commandLine.hasOption("m"),
-                commandLine.hasOption("s"), commandLine.hasOption("t"), maxNumSamplesToRemove);
+                commandLine.hasOption("s"), commandLine.hasOption("t"), maxNumSamplesToRemove,
+                commandLine.hasOption("f"));
         }
     }
 }
