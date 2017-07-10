@@ -49,31 +49,31 @@ import org.springframework.core.io.FileSystemResource;
  * @author heinsz
  */
 public class ClinicalPatientDataWriter implements ItemStreamWriter<ClinicalDataComposite> {
-    
+
     @Value("#{jobParameters[directory]}")
     private String directory;
-    
+
     @Value("#{jobParameters[mergeClinicalDataSources]}")
     private boolean mergeClinicalDataSources;
-    
+
     @Value("#{stepExecutionContext['studyId']}")
     private String studyId;
-    
+
     @Value("#{stepExecutionContext['writeClinicalPatient']}")
     private boolean writeClinicalPatient;
 
     @Value("#{stepExecutionContext['patientHeader']}")
     private Map<String, List<String>> header;
-    
+
     private File stagingFile;
     private Set<String> patientsProcessed = new HashSet();
     private Set<String> skippedPatients = new HashSet();
-    private String outputFilename = "data_clinical_patient";    
+    private String outputFilename = "data_clinical_patient";
     private FlatFileItemWriter<String> flatFileItemWriter = new FlatFileItemWriter<String>();
     private List<String> writeList = new ArrayList<>();
-    
+
     private final Logger log = Logger.getLogger(ClinicalPatientDataWriter.class);
-            
+
     @Override
     public void open(ExecutionContext ec) throws ItemStreamException {
         if (writeClinicalPatient) {
@@ -89,27 +89,30 @@ public class ClinicalPatientDataWriter implements ItemStreamWriter<ClinicalDataC
             flatFileItemWriter.setResource( new FileSystemResource(stagingFile));
             flatFileItemWriter.setHeaderCallback(new FlatFileHeaderCallback() {
                 @Override
-                public void writeHeader(Writer writer) throws IOException {                
+                public void writeHeader(Writer writer) throws IOException {
                     writer.write("#" + getMetaLine(header.get("display_names")) + "\n");
                     writer.write("#" + getMetaLine(header.get("descriptions")) + "\n");
                     writer.write("#" +getMetaLine(header.get("datatypes")) + "\n");
                     writer.write("#" + getMetaLine(header.get("priorities")) + "\n");
                     writer.write(getMetaLine(header.get("header")));
-                }                
-            });  
+                }
+            });
             flatFileItemWriter.open(ec);
         }
     }
 
     @Override
-    public void update(ExecutionContext ec) throws ItemStreamException {}
+    public void update(ExecutionContext ec) throws ItemStreamException {
+        if (writeClinicalPatient) {
+            ec.put("clinicalPatientFile", stagingFile.getName());
+        }
+    }
 
     @Override
-    public void close() throws ItemStreamException {        
+    public void close() throws ItemStreamException {
         if (writeClinicalPatient) {
             flatFileItemWriter.close();
         }
-        
     }
 
     @Override
@@ -121,18 +124,18 @@ public class ClinicalPatientDataWriter implements ItemStreamWriter<ClinicalDataC
                     if (skippedPatients.add(composite.getData().get("PATIENT_ID"))) {
                         log.warn("Clinical data for patient " + composite.getData().get("PATIENT_ID")
                             + " has already been added - skipping record.");
-                    }                    
+                    }
                     continue;
                 }
                 writeList.add(composite.getPatientResult());
-            }        
+            }
             flatFileItemWriter.write(writeList);
-        }        
-    }   
-    
+        }
+    }
+
     private String getMetaLine(List<String> metaData) {
         int pidIndex = header.get("header").indexOf("PATIENT_ID");
-        return metaData.remove(pidIndex) + "\t" + StringUtils.join(metaData, "\t");        
+        return metaData.remove(pidIndex) + "\t" + StringUtils.join(metaData, "\t");
     }
-    
+
 }

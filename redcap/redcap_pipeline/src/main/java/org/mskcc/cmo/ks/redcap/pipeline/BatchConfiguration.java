@@ -39,11 +39,10 @@ import org.springframework.batch.core.configuration.annotation.*;
 import org.springframework.context.annotation.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.batch.core.configuration.annotation.StepScope;
+import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.batch.item.support.CompositeItemProcessor;
 import org.springframework.batch.item.support.CompositeItemWriter;
-import org.springframework.batch.core.job.flow.*;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.batch.core.job.flow.FlowExecutionStatus;
 
 /**
  *
@@ -54,57 +53,57 @@ import org.springframework.batch.core.job.flow.FlowExecutionStatus;
 @EnableBatchProcessing
 @ComponentScan(basePackages="org.mskcc.cmo.ks.redcap.source.internal")
 public class BatchConfiguration {
-    public static final String REDCAP_JOB = "redcapJob";   
-    
-    private final Logger log = Logger.getLogger(BatchConfiguration.class);    
-    
+    public static final String REDCAP_JOB = "redcapJob";
+
+    private final Logger log = Logger.getLogger(BatchConfiguration.class);
+
     @Value("${chunk}")
-    private Integer chunkInterval;      
+    private Integer chunkInterval;
 
     @Autowired
     public JobBuilderFactory jobBuilderFactory;
-    
+
     @Autowired
     public StepBuilderFactory stepBuilderFactory;
-    
+
     @Bean
     public ClinicalDataStepListener clinicalDataStepListener() {
         return new ClinicalDataStepListener();
     }
-    
+
     @Bean
     public TimelineDataStepListener timelineDataStepListener() {
         return new TimelineDataStepListener();
     }
-    
+
     // Will keep calling clinicalDataStep or timelineDataStep based on the exit status from the clinicalDataStepListener
-   @Bean
+    @Bean
     public Job redcapJob() {
         return jobBuilderFactory.get(REDCAP_JOB)
                 .start(clinicalDataStep())
-                        .on("CLINICAL")
-                        .to(clinicalDataStep())
+                    .on("CLINICAL")
+                    .to(clinicalDataStep())
+                .on("TIMELINE")
+                    .to(timelineDataStep())
                     .on("TIMELINE")
-                        .to(timelineDataStep())
-                        .on("TIMELINE")
-                        .to(timelineDataStep())
-                    .on("FINISHED")
-                    .end()
+                    .to(timelineDataStep())
+                .on("FINISHED")
+                .to(metaFileStep())
                 .end()
                 .build();
     }
-    
+
     @Bean
     public Step clinicalDataStep() {
         return stepBuilderFactory.get("clinicalDataStep")
-                .listener(clinicalDataStepListener())                
+                .listener(clinicalDataStepListener())
                 .<Map<String, String>, ClinicalDataComposite> chunk(chunkInterval)
                 .reader(clinicalDataReader())
                 .processor(clinicalDataprocessor())
                 .writer(clinicalDatawriter())
                 .build();
     }
-    
+
     @Bean
     public Step timelineDataStep() {
         return stepBuilderFactory.get("timelineDataStep")
@@ -114,19 +113,24 @@ public class BatchConfiguration {
                 .processor(timelineProcessor())
                 .writer(timelineWriter())
                 .build();
-    }    
-    
+    }
+
+    @Bean
+    public Step metaFileStep() {
+        return stepBuilderFactory.get("metaFileStep").tasklet(metaFileStepTasklet()).build();
+    }
+
     @Bean
     @StepScope
     public ItemStreamReader<Map<String, String>> clinicalDataReader() {
-        return new ClinicalDataReader();        
+        return new ClinicalDataReader();
     }
-    
+
     // Using a composite processor pattern to avoid having to hit redcap api more than needed.
-    // Sample processor/writer leads into the patient processor writer - the composite result object is passed along 
+    // Sample processor/writer leads into the patient processor writer - the composite result object is passed along
     // which contains the data necessary for the next processor/writer and the result of the processors.
     // The writers pull out the data they need from the composite result.
-    
+
     @Bean
     @StepScope
     public ItemProcessor clinicalDataprocessor() {
@@ -137,7 +141,7 @@ public class BatchConfiguration {
         processor.setDelegates(delegates);
         return processor;
     }
-    
+
     @Bean
     @StepScope
     public CompositeItemWriter<ClinicalDataComposite> clinicalDatawriter() {
@@ -148,51 +152,58 @@ public class BatchConfiguration {
         writer.setDelegates(delegates);
         return writer;
     }
-    
+
     @Bean
     @StepScope
     public ClinicalSampleDataProcessor sampleProcessor() {
         ClinicalSampleDataProcessor sampleProcessor = new ClinicalSampleDataProcessor();
         return sampleProcessor;
     }
-    
+
     @Bean
     @StepScope
     public ClinicalPatientDataProcessor patientProcessor() {
         ClinicalPatientDataProcessor patientProcessor = new ClinicalPatientDataProcessor();
         return patientProcessor;
     }
-    
+
     @Bean
     @StepScope
     public ClinicalSampleDataWriter sampleWriter() {
         ClinicalSampleDataWriter sampleWriter = new ClinicalSampleDataWriter();
         return sampleWriter;
     }
-    
+
     @Bean
     @StepScope
     public ClinicalPatientDataWriter patientWriter() {
         ClinicalPatientDataWriter patientWriter = new ClinicalPatientDataWriter();
         return patientWriter;
     }
-    
+
     // timeline processor / writers
     @Bean
     @StepScope
     public ItemStreamReader<Map<String, String>> timelineReader() {
-        return new TimelineReader();        
+        return new TimelineReader();
     }
-    
+
     @Bean
     @StepScope
     public TimelineProcessor timelineProcessor() {
         return new TimelineProcessor();
     }
-    
+
     @Bean
     @StepScope
     public TimelineWriter timelineWriter() {
         return new TimelineWriter();
-    }    
+    }
+
+    @Bean
+    @StepScope
+    public Tasklet metaFileStepTasklet() {
+        return new MetaFileStepTasklet();
+    }
+
 }
