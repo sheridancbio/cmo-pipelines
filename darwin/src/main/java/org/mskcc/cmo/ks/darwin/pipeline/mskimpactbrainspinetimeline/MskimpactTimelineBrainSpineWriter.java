@@ -62,11 +62,11 @@ public class MskimpactTimelineBrainSpineWriter implements ItemStreamWriter<Mskim
     
     private List<String> writeList = new ArrayList<>();
     private final FlatFileItemWriter<String> flatFileItemWriter = new FlatFileItemWriter<>();
-    private String stagingFile;
+    private File stagingFile;
     
     @Override
     public void open(ExecutionContext executionContext) throws ItemStreamException{
-        stagingFile = outputDirectory + File.separator + "data_timeline_" + type.toString().toLowerCase() + "_caisis_gbm.txt";
+        stagingFile = new File(outputDirectory, "data_timeline_" + type.toString().toLowerCase() + "_caisis_gbm.txt");
         PassThroughLineAggregator aggr = new PassThroughLineAggregator();
         flatFileItemWriter.setLineAggregator(aggr);
         flatFileItemWriter.setHeaderCallback(new FlatFileHeaderCallback(){

@@ -5,6 +5,7 @@
     <artifactId>darwin</artifactId>
     <description>Darwin database pipeline</description>
     <version>0.1.0</version>
+    <groupId>org.mskcc.cmo.ks.darwin</groupId>
 
     <packaging>jar</packaging>
     <build>

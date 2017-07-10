@@ -64,7 +64,7 @@ def update_data_with_sequencing_date(study_id, clinical_filename):
 
 def filter_samples_by_sequencing_date(clinical_supp_filename, sequencing_date_limit, anonymize_date, impact_data_only):
 	""" Generates list of sample IDs from sequencing date file meeting the sequencing date limit criteria. """
-	seq_date_limit = datetime.strptime(sequencing_date_limit, '%Y/%m/%d %H:%M:%S')
+	seq_date_limit = datetime.strptime(sequencing_date_limit, '%a, %d %b %Y %H:%M:%S')
 
 	data_file = open(clinical_supp_filename, 'rU')
 	data_reader = csv.DictReader(data_file, dialect = 'excel-tab')

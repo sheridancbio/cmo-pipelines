@@ -32,40 +32,36 @@
 
 package org.cbioportal.cmo.pipelines.cvr.clinical;
 
-import org.cbioportal.cmo.pipelines.cvr.model.*;
-import org.cbioportal.cmo.pipelines.cvr.CvrSampleListUtil;
-
-import java.util.*;
-import org.apache.commons.lang.StringUtils;
-import org.springframework.batch.item.ItemProcessor;
-import org.springframework.beans.factory.annotation.Autowired;
+import java.util.List;
+import org.apache.log4j.Logger;
+import org.cbioportal.cmo.pipelines.cvr.model.MskimpactAge;
+import org.springframework.batch.item.file.mapping.FieldSetMapper;
+import org.springframework.batch.item.file.transform.FieldSet;
+import org.springframework.validation.BindException;
 
 /**
  *
  * @author heinsz
  */
-public class CVRClinicalDataProcessor implements ItemProcessor<CVRClinicalRecord, CompositeClinicalRecord> {
+public class MskimpactAgeFieldSetMapper implements  FieldSetMapper<MskimpactAge>{
 
-    @Autowired
-    public CvrSampleListUtil cvrSampleListUtil;
-    
+    Logger log = Logger.getLogger(CVRClinicalFieldSetMapper.class);
+
     @Override
-    public CompositeClinicalRecord process(CVRClinicalRecord i) throws Exception {
-        List<String> record = new ArrayList<>();
-        List<String> seqDateRecord = new ArrayList<>();
-        for (String field : CVRClinicalRecord.getFieldNames()) {
-            record.add(i.getClass().getMethod("get" + field).invoke(i).toString().replaceAll("[\\t\\n\\r]+"," "));
+    public MskimpactAge mapFieldSet(FieldSet fs) throws BindException {
+        MskimpactAge record = new MskimpactAge();        
+        List<String> fields = MskimpactAge.getFieldNames();
+
+        for (int i = 0; i < fields.size(); i++) {
+            String field = fields.get(i);
+            try {
+                record.getClass().getMethod("set" + field, String.class).invoke(record, fs.readString(i));
+            } catch (Exception e) {
+                if (e.getClass().equals(NoSuchMethodException.class)) {
+                    log.info("No set method exists for " + field);
+                }
+            }
         }
-        for (String field : CVRClinicalRecord.getSeqDateFieldNames()) {
-            seqDateRecord.add(i.getClass().getMethod("get" + field).invoke(i).toString().replaceAll("[\\t\\n\\r]+"," "));
-        }
-        CompositeClinicalRecord compRecord = new CompositeClinicalRecord();
-        if (cvrSampleListUtil.getNewDmpSamples().contains(i.getSAMPLE_ID())) {
-            compRecord.setNewClinicalRecord(StringUtils.join(record, "\t").trim());
-        } else {
-            compRecord.setOldClinicalRecord(StringUtils.join(record, "\t").trim());
-        }
-        compRecord.setSeqDateRecord(StringUtils.join(seqDateRecord, "\t").trim());
-        return compRecord;
+        return record;
     }
 }

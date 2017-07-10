@@ -366,12 +366,19 @@ public class BatchConfiguration {
     public ItemStreamWriter<CompositeClinicalRecord> newClinicalDataWriter() {
         return new CVRNewClinicalDataWriter();
     }
+    
+    @Bean
+    @StepScope
+    public ItemStreamWriter<CompositeClinicalRecord> seqDateClinicalDataWriter() {
+        return new CVRSeqDateClinicalDataWriter();
+    }    
 
     @Bean
     @StepScope
     public CompositeItemWriter<CompositeClinicalRecord> compositeClinicalDataWriter() {
         List<ItemStreamWriter> writerDelegates = new ArrayList<>();
         writerDelegates.add(newClinicalDataWriter());
+        writerDelegates.add(seqDateClinicalDataWriter());
         writerDelegates.add(allClinicalDataWriter());
         CompositeItemWriter writer = new CompositeItemWriter<>();
         writer.setDelegates(writerDelegates);

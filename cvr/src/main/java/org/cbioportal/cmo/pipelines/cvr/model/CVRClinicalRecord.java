@@ -61,6 +61,8 @@ public class CVRClinicalRecord {
     private String msiType;
     private String institute;
     private String somaticStatus;
+    private String seqDate;
+    private String ageAtSeqReport;
 
     private final String DEFAULT_SAMPLE_CLASS = "Tumor";
 
@@ -86,6 +88,8 @@ public class CVRClinicalRecord {
         this.msiType = metaData.getMsiType();
         this.institute = metaData.getOutsideInstitute();
         this.somaticStatus = metaData.getSomaticStatus();
+        this.seqDate = metaData.getDateTumorSequencing();
+        this.ageAtSeqReport = "NA";
     }
 
     public CVRClinicalRecord(GMLMetaData metaData) {
@@ -286,6 +290,22 @@ public class CVRClinicalRecord {
         this.somaticStatus = somaticStatus;
     }
 
+    public String getSEQ_DATE() {
+        return seqDate != null ? seqDate : "";
+    }
+
+    public void setSEQ_DATE(String seqDate) {
+        this.seqDate = seqDate;
+    }
+
+    public String getAGE_AT_SEQ_REPORT() {
+        return ageAtSeqReport != null ? ageAtSeqReport : "NA";
+    }
+
+    public void setAGE_AT_SEQ_REPORT(String ageAtSeqReport) {
+        this.ageAtSeqReport = ageAtSeqReport;
+    }
+
     private String resolveSampleType(Integer isMetastasis) {
         if (isMetastasis != null)
             return isMetastasis == 0 ? "Primary" : "Metastasis";
@@ -316,6 +336,15 @@ public class CVRClinicalRecord {
         fieldNames.add("MSI_TYPE");
         fieldNames.add("INSTITUTE");
         fieldNames.add("SOMATIC_STATUS");
+        fieldNames.add("AGE_AT_SEQ_REPORT");
+        return fieldNames;
+    }
+    
+    public static List<String> getSeqDateFieldNames() {
+        List<String> fieldNames = new ArrayList<String>();
+        fieldNames.add("SAMPLE_ID");
+        fieldNames.add("PATIENT_ID");
+        fieldNames.add("SEQ_DATE");
         return fieldNames;
     }
 }

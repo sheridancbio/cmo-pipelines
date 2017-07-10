@@ -52,6 +52,7 @@ import javax.annotation.Generated;
     "alys2sample_id",
     "cbx_patient_id",
     "cbx_sample_id",
+    "date_tumor_sequencing",
     "dmp_alys_task_id",
     "dmp_alys_task_name",
     "dmp_patient_id",
@@ -86,6 +87,8 @@ public class CVRMetaData {
     private Integer cbxPatientId;
     @JsonProperty("cbx_sample_id")
     private Integer cbxSampleId;
+    @JsonProperty("date_tumor_sequencing")
+    private String dateTumorSequencing;
     @JsonProperty("dmp_alys_task_id")
     private Integer dmpAlysTaskId;
     @JsonProperty("dmp_alys_task_name")
@@ -169,6 +172,7 @@ public class CVRMetaData {
     * @param msiType
     * @param outsideInstitute
     * @param cbxSampleId
+    * @param dateTumorSequencing
     * @param dmpAlysTaskName
     * @param legacyPatientId
     * @param gender
@@ -176,10 +180,11 @@ public class CVRMetaData {
     * @param legacySampleId
     * @param tumorTypeName
     */
-    public CVRMetaData(Integer alys2sampleId, Integer cbxPatientId, Integer cbxSampleId, Integer dmpAlysTaskId, String dmpAlysTaskName, String dmpPatientId, String dmpSampleId, Integer dmpSampleSoId, Integer gender, String genePanel, Integer isMetastasis, String legacyPatientId, String legacySampleId, String metastasisSite, String mrevComments, String msiComment, String msiScore, String msiType, String outsideInstitute, String primarySite, Integer retrieveStatus, Integer sampleCoverage, String soComments, String soStatusName, String somaticStatus, String tumorPurity, String tumorTypeCode, String tumorTypeName) {
+    public CVRMetaData(Integer alys2sampleId, Integer cbxPatientId, Integer cbxSampleId, String dateTumorSequencing, Integer dmpAlysTaskId, String dmpAlysTaskName, String dmpPatientId, String dmpSampleId, Integer dmpSampleSoId, Integer gender, String genePanel, Integer isMetastasis, String legacyPatientId, String legacySampleId, String metastasisSite, String mrevComments, String msiComment, String msiScore, String msiType, String outsideInstitute, String primarySite, Integer retrieveStatus, Integer sampleCoverage, String soComments, String soStatusName, String somaticStatus, String tumorPurity, String tumorTypeCode, String tumorTypeName) {
         this.alys2sampleId = alys2sampleId;
         this.cbxPatientId = cbxPatientId;
         this.cbxSampleId = cbxSampleId;
+        this.dateTumorSequencing = dateTumorSequencing;
         this.dmpAlysTaskId = dmpAlysTaskId;
         this.dmpAlysTaskName = dmpAlysTaskName;
         this.dmpPatientId = dmpPatientId;
@@ -206,7 +211,7 @@ public class CVRMetaData {
         this.tumorTypeCode = tumorTypeCode;
         this.tumorTypeName = tumorTypeName;
     }
-        
+
     @JsonProperty("somatic_status")
     public String getSomaticStatus() {
         return somaticStatus;
@@ -275,6 +280,26 @@ public class CVRMetaData {
     @JsonProperty("cbx_sample_id")
     public void setCbxSampleId(Integer cbxSampleId) {
         this.cbxSampleId = cbxSampleId;
+    }
+
+    /**
+    *
+    * @return
+    * The dateTumorSequencing
+    */
+    @JsonProperty("date_tumor_sequencing")
+    public String getDateTumorSequencing() {
+        return dateTumorSequencing;
+    }
+
+    /**
+    *
+    * @param dateTumorSequencing
+    * The date_tumor_sequencing
+    */
+    @JsonProperty("date_tumor_sequencing")
+    public void setDateTumorSequencing(String dateTumorSequencing) {
+        this.dateTumorSequencing = dateTumorSequencing;
     }
 
     /**

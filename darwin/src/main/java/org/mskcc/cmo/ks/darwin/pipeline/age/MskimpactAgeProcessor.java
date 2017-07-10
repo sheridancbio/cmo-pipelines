@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 - 2017 Memorial Sloan-Kettering Cancer Center.
+ * Copyright (c) 2016-2017 Memorial Sloan-Kettering Cancer Center.
  *
  * This library is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS
@@ -29,43 +29,24 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-
-package org.cbioportal.cmo.pipelines.cvr.clinical;
-
-import org.cbioportal.cmo.pipelines.cvr.model.*;
-import org.cbioportal.cmo.pipelines.cvr.CvrSampleListUtil;
+package org.mskcc.cmo.ks.darwin.pipeline.age;
 
 import java.util.*;
 import org.apache.commons.lang.StringUtils;
+import org.mskcc.cmo.ks.darwin.pipeline.model.*;
 import org.springframework.batch.item.ItemProcessor;
-import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  *
  * @author heinsz
  */
-public class CVRClinicalDataProcessor implements ItemProcessor<CVRClinicalRecord, CompositeClinicalRecord> {
+public class MskimpactAgeProcessor implements ItemProcessor<MskimpactPatientDemographics, String>{
 
-    @Autowired
-    public CvrSampleListUtil cvrSampleListUtil;
-    
     @Override
-    public CompositeClinicalRecord process(CVRClinicalRecord i) throws Exception {
+    public String process(MskimpactPatientDemographics i) throws Exception {
         List<String> record = new ArrayList<>();
-        List<String> seqDateRecord = new ArrayList<>();
-        for (String field : CVRClinicalRecord.getFieldNames()) {
-            record.add(i.getClass().getMethod("get" + field).invoke(i).toString().replaceAll("[\\t\\n\\r]+"," "));
-        }
-        for (String field : CVRClinicalRecord.getSeqDateFieldNames()) {
-            seqDateRecord.add(i.getClass().getMethod("get" + field).invoke(i).toString().replaceAll("[\\t\\n\\r]+"," "));
-        }
-        CompositeClinicalRecord compRecord = new CompositeClinicalRecord();
-        if (cvrSampleListUtil.getNewDmpSamples().contains(i.getSAMPLE_ID())) {
-            compRecord.setNewClinicalRecord(StringUtils.join(record, "\t").trim());
-        } else {
-            compRecord.setOldClinicalRecord(StringUtils.join(record, "\t").trim());
-        }
-        compRecord.setSeqDateRecord(StringUtils.join(seqDateRecord, "\t").trim());
-        return compRecord;
+        record.add(i.getDMP_ID_DEMO());
+        record.add(i.getYearsSinceBirth());
+        return StringUtils.join(record, "\t");
     }
 }

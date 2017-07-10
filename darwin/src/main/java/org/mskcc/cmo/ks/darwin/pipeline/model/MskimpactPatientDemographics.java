@@ -69,7 +69,7 @@ public class MskimpactPatientDemographics {
     private Map<String, Object> additionalProperties = new HashMap<>();
 
     public MskimpactPatientDemographics() {}
-    
+
     public MskimpactPatientDemographics(String DMP_ID_DEMO, String PT_NAACCR_SEX_CODE, String PT_NAACCR_RACE_CODE_PRIMARY, String PT_NAACCR_ETHNICITY_CODE, String RELIGION, String PT_VITAL_STATUS, Integer PT_BIRTH_YEAR, Integer PT_DEATH_YEAR, Integer TM_DX_YEAR, Integer AGE_AT_LAST_KNOWN_ALIVE_IN_DAYS, Integer AGE_AT_TM_DX_DATE_IN_DAYS, Integer AGE_AT_DATE_OF_DEATH_IN_DAYS){
         this.DMP_ID_DEMO =  StringUtils.isNotEmpty(DMP_ID_DEMO) ? DMP_ID_DEMO : "NA";
         this.PT_NAACCR_SEX_CODE =  StringUtils.isNotEmpty(PT_NAACCR_SEX_CODE) ? PT_NAACCR_SEX_CODE : "-1";
@@ -86,6 +86,12 @@ public class MskimpactPatientDemographics {
         this.AGE_AT_DATE_OF_DEATH_IN_DAYS = AGE_AT_DATE_OF_DEATH_IN_DAYS;
     }
     
+    public MskimpactPatientDemographics(String DMP_ID_DEMO, Integer PT_BIRTH_YEAR, Integer PT_DEATH_YEAR) {
+        this.DMP_ID_DEMO = StringUtils.isNotEmpty(DMP_ID_DEMO) ? DMP_ID_DEMO : "NA";
+        this.PT_BIRTH_YEAR = PT_BIRTH_YEAR != null ? PT_BIRTH_YEAR : -1;
+        this.PT_DEATH_YEAR = PT_DEATH_YEAR != null ? PT_DEATH_YEAR : -1;
+    }
+
     public Integer getTM_DX_YEAR() {
         return TM_DX_YEAR;
     }
@@ -93,7 +99,7 @@ public class MskimpactPatientDemographics {
     public void setTM_DX_YEAR(Integer TM_DX_YEAR) {
         this.TM_DX_YEAR = TM_DX_YEAR != null ? TM_DX_YEAR : -1;
     }
-    
+
     public String getAGE_AT_DIAGNOSIS(){
         if(this.PT_BIRTH_YEAR>-1 && this.TM_DX_YEAR>-1 && this.TM_DX_YEAR>this.PT_BIRTH_YEAR){
                 Integer i = this.TM_DX_YEAR - this.PT_BIRTH_YEAR;
@@ -172,8 +178,8 @@ public class MskimpactPatientDemographics {
 
     public void setAGE_AT_TM_DX_DATE_IN_DAYS(Integer AGE_AT_TM_DX_DATE_IN_DAYS) {
         this.AGE_AT_TM_DX_DATE_IN_DAYS = AGE_AT_TM_DX_DATE_IN_DAYS != null ? AGE_AT_TM_DX_DATE_IN_DAYS : -1;
-    }    
-    
+    }
+
     public String getDEATH_SOURCE_DESCRIPTION() {
         return DEATH_SOURCE_DESCRIPTION;
     }
@@ -253,33 +259,33 @@ public class MskimpactPatientDemographics {
     public void setPT_MRN_CREATE_YEAR(String PT_MRN_CREATE_YEAR) {
         this.PT_MRN_CREATE_YEAR =  StringUtils.isNotEmpty(PT_MRN_CREATE_YEAR) ? PT_MRN_CREATE_YEAR : "NA";
     }
-    
+
     public String getOS_STATUS(){
         return OS_STATUS.trim().equals("ALIVE") ? "LIVING" : "DECEASED";
     }
-    
+
     public void setOS_STATUS(String OS_STATUS) {
         this.OS_STATUS = StringUtils.isNotEmpty(OS_STATUS) ? OS_STATUS.trim() : "NA";
     }
-    
+
     public String getOS_MONTHS() {
         if (getOS_STATUS().equals("LIVING")) {
             if (AGE_AT_LAST_KNOWN_ALIVE_IN_DAYS != null && AGE_AT_TM_DX_DATE_IN_DAYS != null) {
                 return String.format("%.3f", (AGE_AT_LAST_KNOWN_ALIVE_IN_DAYS - AGE_AT_TM_DX_DATE_IN_DAYS) / 30.4167);
-            }            
+            }
         }
         else {
             if (AGE_AT_DATE_OF_DEATH_IN_DAYS != null && AGE_AT_TM_DX_DATE_IN_DAYS != null) {
                 return String.format("%.3f", (AGE_AT_DATE_OF_DEATH_IN_DAYS - AGE_AT_TM_DX_DATE_IN_DAYS) / 30.4167);
-            }            
+            }
         }
         return "NA";
     }
-    
+
     public void setOS_MONTHS() {
         this.OS_MONTHS = StringUtils.isNotEmpty(OS_MONTHS) ? OS_MONTHS : "NA";
     }
-    
+
     public String getDARWIN_PATIENT_AGE(){
         if(this.PT_BIRTH_YEAR>-1){
             if(this.PT_DEATH_YEAR>-1){
@@ -307,13 +313,20 @@ public class MskimpactPatientDemographics {
             return "NA";
         }
     }
+    
+    public String getYearsSinceBirth() {
+        if (PT_BIRTH_YEAR > -1) {
+            return String.valueOf(currentYear - PT_BIRTH_YEAR);
+        }
+        return "NA";
+    }
 
     @Override
     public String toString() {
         return ToStringBuilder.reflectionToString(this);
     }
 
-    public List<String> getFieldNames() {
+    public static List<String> getFieldNames() {
         List<String> fieldNames = new ArrayList<>();
         fieldNames.add("DMP_ID_DEMO");
         fieldNames.add("DARWIN_PATIENT_AGE");
@@ -327,7 +340,7 @@ public class MskimpactPatientDemographics {
         return fieldNames;
 
     }
-    public List<String> getHeaders() {
+    public static List<String> getHeaders() {
         List<String> fieldNames = new ArrayList<>();
         fieldNames.add("PATIENT_ID");
         fieldNames.add("AGE_CURRENT"); // DARWIN_PATIENT_AGE has been renamed
@@ -340,6 +353,13 @@ public class MskimpactPatientDemographics {
 
         return fieldNames;
 
+    }
+    
+    public static List<String> getAgeHeaders() {
+        List<String> fieldNames = new ArrayList<>();
+        fieldNames.add("PATIENT_ID");
+        fieldNames.add("AGE");
+        return fieldNames;
     }
 
     public void setAdditionalProperty(String name, Object value) {

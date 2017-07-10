@@ -53,7 +53,7 @@ public class MskimpactMedicalTherapyClinicalWriter implements ItemStreamWriter<M
     @Value("${darwin.medicaltherapy_clinical_filename}")
     private String outputFilename;
 
-    private String stagingFile;
+    private File stagingFile;
 
     private List<String> writeList = new ArrayList<>();
     private FlatFileItemWriter<String> flatFileItemWriter = new FlatFileItemWriter<>();
@@ -68,7 +68,7 @@ public class MskimpactMedicalTherapyClinicalWriter implements ItemStreamWriter<M
                 writer.write("PATIENT_ID\tIMMUNE_TREATMENT");
             }
         });
-        stagingFile = outputDirectory + File.separator + outputFilename;
+        stagingFile = new File(outputDirectory, outputFilename);
         flatFileItemWriter.setResource(new FileSystemResource(stagingFile));
         flatFileItemWriter.open(executionContext);
     }
