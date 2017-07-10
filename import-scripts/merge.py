@@ -130,7 +130,7 @@ SEQUENCED_SAMPLES = []
 # ------------------------------------------------------------------------------
 # Functions
 
-def merge_studies(file_types, sublist, output_directory, study_id, cancer_type, exclude_supp_data):
+def merge_studies(file_types, sublist, excluded_samples_list, output_directory, study_id, cancer_type, exclude_supp_data):
     """
         Goes through all the potential file types and calls correct function for those types.
         Normal merge, profile merge, and straight copy are the possibilities
@@ -155,7 +155,7 @@ def merge_studies(file_types, sublist, output_directory, study_id, cancer_type, 
                 else:
                     merge_style = MERGE_STYLES[PROFILE]
 
-                merge_files(files, file_types[META_FILE_MAP[file_type][0]], file_type, sublist, output_directory, merge_style, study_id)
+                merge_files(files, file_types[META_FILE_MAP[file_type][0]], file_type, sublist, excluded_samples_list, output_directory, merge_style, study_id)
             elif file_type == SUPP_DATA and not exclude_supp_data:
                 # multiple studies may have the same file basename for other filetypes i.e., data_mutations_unfiltered.txt
                 # we need to figure out which files to pair
@@ -174,7 +174,7 @@ def merge_studies(file_types, sublist, output_directory, study_id, cancer_type, 
                         print >> OUTPUT_FILE, 'Merging files matching "supplemental" filename pattern:', other_file_pattern
                         for f in other_files:
                             print >> OUTPUT_FILE, '\t' + f
-                        merge_files('', other_files, file_type, sublist, output_directory, MERGE_STYLES[NORMAL], study_id)
+                        merge_files('', other_files, file_type, sublist, excluded_samples_list, output_directory, MERGE_STYLES[NORMAL], study_id)
 
                 # copy files over to output directory if list not empty
                 if len(files_to_copy) == 0:
@@ -182,15 +182,15 @@ def merge_studies(file_types, sublist, output_directory, study_id, cancer_type, 
                 print >> OUTPUT_FILE, 'Copying supplemental files meeting criteria from:'
                 for f in files_to_copy:
                     print >> OUTPUT_FILE, '\t' + f
-                copy_files(files_to_copy, sublist, output_directory, study_id, cancer_type)
+                copy_files(files_to_copy, sublist, excluded_samples_list, output_directory, study_id, cancer_type)
 
-def merge_files(meta_filenames, data_filenames, file_type, sublist, output_directory, merge_style, study_id):
+def merge_files(meta_filenames, data_filenames, file_type, sublist, excluded_samples_list, output_directory, merge_style, study_id):
     """
         Merges files together by adding data from each file to a dictionary/list that contains all
         of the information. After all data from every file from a type is accumulated, it gets written
         out to a file.
     """
-    new_header = process_header(data_filenames, sublist, merge_style)
+    new_header = process_header(data_filenames, sublist, excluded_samples_list, merge_style)
 
     if file_type in [SEG_HG18_META_PATTERN, SEG_HG19_META_PATTERN]:
         output_filename = os.path.join(output_directory, study_id + META_FILE_MAP[file_type][0])
@@ -208,7 +208,7 @@ def merge_files(meta_filenames, data_filenames, file_type, sublist, output_direc
     for f in data_filenames:
         # update sequenced samples tag if data_mutations* file
         if MUTATION_FILE_PREFIX in f:
-            update_sequenced_samples(f, sublist)
+            update_sequenced_samples(f, sublist, excluded_samples_list)
 
         # now merge data from file
         file_header = get_header(f)
@@ -230,6 +230,9 @@ def merge_files(meta_filenames, data_filenames, file_type, sublist, output_direc
                 if len(sublist) > 0:
                     # determine whether sample id in values is in sublist
                     if len([True for val in data.values() if val in sublist]) == 0:
+                        found = False                        
+                elif len(excluded_samples_list) > 0:                    
+                    if len([True for val in data.values() if val in excluded_samples_list]) > 0:
                         found = False
                 if found:
                     rows.append(normal_row(data, new_header))
@@ -243,11 +246,11 @@ def merge_files(meta_filenames, data_filenames, file_type, sublist, output_direc
         write_normal(rows, output_filename, new_header)
 
     print >> OUTPUT_FILE, 'Validating merge for: ' + output_filename
-    validate_merge(data_filenames, output_filename, sublist, merge_style)
+    validate_merge(data_filenames, output_filename, sublist, excluded_samples_list, merge_style)
 
-def validate_merge(data_filenames, merged_filename, sublist, merge_style):
+def validate_merge(data_filenames, merged_filename, sublist, excluded_samples_list, merge_style):
     merged_file_summary = get_datafile_counts_summary(merged_filename, sublist, merge_style)
-    merged_header = process_header(data_filenames, sublist, merge_style)
+    merged_header = process_header(data_filenames, sublist, excluded_samples_list, merge_style)
 
     # check that the merged header constructed from the data files matches the length of the header written to the merged file
     if len(merged_header) != merged_file_summary['num_cols']:
@@ -259,7 +262,7 @@ def validate_merge(data_filenames, merged_filename, sublist, merge_style):
     total_rows = 0
     merged_gene_ids = []
     for filename in data_filenames:
-        datafile_summaries[filename] = get_datafile_counts_summary(filename, sublist, merge_style)
+        datafile_summaries[filename] = get_datafile_counts_summary(filename, sublist, excluded_samples_list, merge_style)
         if merge_style is MERGE_STYLES[PROFILE]:
             new_gene_keys = [gene for gene in datafile_summaries[filename]['gene_ids'] if not gene in merged_gene_ids]
             merged_gene_ids.extend(new_gene_keys)
@@ -276,7 +279,7 @@ def validate_merge(data_filenames, merged_filename, sublist, merge_style):
 
     print 'Validation succeeded!\n'
 
-def get_datafile_counts_summary(filename, sublist, merge_style):
+def get_datafile_counts_summary(filename, sublist, excluded_samples_list, merge_style):
     """ Summarizes the basic data file info (num cols, num rows, gene ids). """
     header = get_header(filename)
     data_file = open(filename, 'rU')
@@ -285,6 +288,8 @@ def get_datafile_counts_summary(filename, sublist, merge_style):
     # filter header if necessary
     if merge_style is MERGE_STYLES[PROFILE] and len(sublist) > 0:
         header = [hdr for hdr in header if hdr.upper() in NON_CASE_IDS or hdr in sublist]
+    elif merge_style is MERGE_STYLES[PROFILE] and len(excluded_samples_list) > 0:
+        header = [hdr for hdr in header if hdr not in excluded_samples_list]
 
     # figure out relevant row count
     # if no sublist then number of rows is the total rows minus the header
@@ -298,6 +303,11 @@ def get_datafile_counts_summary(filename, sublist, merge_style):
             for row in filedata[1:]:
                 if len([True for sid in sublist if sid in row]) > 0:
                     num_rows += 1
+        elif len(excluded_samples_list) > 0:
+            num_rows = len(filedata) - 1
+            for row in filedata[1:]:
+                if len([True for sid in excluded_samples_list if sid in row]) > 0:
+                    num_rows -= 1            
         else:
             num_rows = len(filedata) - 1
     data_file.close()
@@ -306,7 +316,7 @@ def get_datafile_counts_summary(filename, sublist, merge_style):
     summary_info = {'num_cols':len(header), 'num_rows':num_rows, 'gene_ids':gene_ids}
     return summary_info
 
-def update_sequenced_samples(filename, sublist):
+def update_sequenced_samples(filename, sublist, excluded_samples_list):
     """ Updates the SEQUENCED_SAMPLES list. """
     data_file = open(filename, 'rU')
     comments = [x for x in data_file.readlines() if x.startswith('#')]
@@ -318,6 +328,8 @@ def update_sequenced_samples(filename, sublist):
         sequenced_samples = map(lambda x: process_datum(x), re.split('[: ]', c)[1:])
         if len(sublist) > 0:
             sequenced_samples = [sid for sid in sequenced_samples if sid in sublist]
+        elif len(excluded_samples_list) > 0:
+            sequenced_samples = [sid for sid in sequenced_samples if sid not in excluded_samples_list]
         SEQUENCED_SAMPLES.extend(sequenced_samples)
     data_file.close()
 
@@ -337,7 +349,7 @@ def get_header(filename):
     header = map(str.strip, filedata[0].split('\t'))
     return header
 
-def process_header(data_filenames, sublist, merge_style):
+def process_header(data_filenames, sublist, excluded_samples_list, merge_style):
     """ Handles header merging, accumulating all column names """
     header = []
     if merge_style is MERGE_STYLES[PROFILE]:
@@ -346,6 +358,10 @@ def process_header(data_filenames, sublist, merge_style):
             if len(sublist) > 0:
                 for hdr in [hdr for hdr in get_header(fname) if hdr not in header]:
                     if hdr.upper() in NON_CASE_IDS or hdr in sublist:
+                        new_header.append(hdr)
+            elif len(excluded_samples_list) > 0:
+                for hdr in [hdr for hdr in get_header(fname) if hdr not in header]:
+                    if hdr.upper() not in excluded_samples_list:
                         new_header.append(hdr)
             else:
                 new_header = [hdr for hdr in get_header(fname) if hdr not in header]
@@ -406,7 +422,7 @@ def write_normal(rows, output_filename, new_header):
         output_file.write('\t'.join(row) + '\n')
     output_file.close()
 
-def copy_files(filenames, sublist, output_directory, study_id, cancer_type):
+def copy_files(filenames, sublist, excluded_samples_list, output_directory, study_id, cancer_type):
     """
         Copies over files that aren't explicitly handled by this script (clinical, timeline, etc.).
         If there are subsets involved, only copy those rows. Else just copy the file.
@@ -571,7 +587,7 @@ def organize_files(studies, file_types, merge_clinical):
                 file_types[SUPP_DATA].append(study_file)
 
 def usage():
-    print >> OUTPUT_FILE, 'merge.py --subset [/path/to/subset] --output-directory [/path/to/output] --study-id [study id] --cancer-type [cancer type] --merge-clinical [true/false] --exclude-supplemental-data [true/false] <path/to/study path/to/study ...>'
+    print >> OUTPUT_FILE, 'merge.py --subset [/path/to/subset] --output-directory [/path/to/output] --study-id [study id] --cancer-type [cancer type] --merge-clinical [true/false] --exclude-supplemental-data [/path/to/exclude_list] <path/to/study path/to/study ...>'
 
 def main():
     """ Handle command line args, checks the directories exist, then calls passes things along to the other functions """
@@ -579,6 +595,7 @@ def main():
     # get command line stuff
     parser = optparse.OptionParser()
     parser.add_option('-s', '--subset', action = 'store', dest = 'subset')
+    parser.add_option('-e', '--exluded-samples', action = 'store', dest = 'excludedsamples')
     parser.add_option('-d', '--output-directory', action = 'store', dest = 'outputdir')
     parser.add_option('-i', '--study-id', action = 'store', dest = 'studyid')
     parser.add_option('-t', '--cancer-type', action = 'store', dest = 'cancertype')
@@ -588,6 +605,7 @@ def main():
     (options, args) = parser.parse_args()
 
     subsetlist = options.subset
+    excluded_samples = options.excludedsamples
     output_directory = options.outputdir
     study_id = options.studyid
     cancer_type = options.cancertype
@@ -600,6 +618,10 @@ def main():
     if subsetlist is not None:
         if not os.path.exists(subsetlist):
             print >> ERROR_FILE, 'ID list cannot be found: ' + subsetlist
+            sys.exit(2)
+    if excluded_samples is not None:
+        if not os.path.exists(excluded_samples):
+            print >> ERROR_FILE, 'Excluded samples list cannot be found: ' + excluded_samples
             sys.exit(2)
 
     # check directories exist
@@ -664,9 +686,15 @@ def main():
     sublist = []
     if subsetlist is not None:
         sublist = [line.strip() for line in open(subsetlist,'rU').readlines()]
+    if excluded_samples is not None:
+        excluded_samples_list = [line.strip() for line in open(subsetlist, 'rU').readlines()]
+
+    if subsetlist is not None and excluded_samples is not None:
+        print >> ERROR_FILE, 'Cannot specify a subset list and an exclude samples list! Please use one option or the other.'
+        sys.exit(2)
 
     # merge the studies
-    merge_studies(file_types, sublist, output_directory, study_id, cancer_type, exclude_supp_data)
+    merge_studies(file_types, sublist, excluded_samples_list, output_directory, study_id, cancer_type, exclude_supp_data)
 
 # do the main
 if __name__ == '__main__':
