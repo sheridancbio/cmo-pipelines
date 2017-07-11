@@ -64,7 +64,7 @@ public class CVRMutationDataReader implements ItemStreamReader<AnnotatedRecord> 
     public CVRUtilities cvrUtilities;
     
     @Autowired
-    private CvrSampleListUtil cvrSampleListUtil;
+    public CvrSampleListUtil cvrSampleListUtil;
 
     @Autowired
     private Annotator annotator;

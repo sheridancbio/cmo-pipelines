@@ -61,8 +61,6 @@ public class GMLMutationDataReader implements ItemStreamReader<AnnotatedRecord> 
     @Autowired
     public CvrSampleListUtil cvrSampleListUtil;
     
-    private final Map<String, List<String>> patientSampleMap = cvrSampleListUtil.getGmlPatientSampleMap();
-    
     @Value("#{jobParameters[forceAnnotation]}")
     private boolean forceAnnotation;
 
@@ -97,7 +95,7 @@ public class GMLMutationDataReader implements ItemStreamReader<AnnotatedRecord> 
         Set<String> germlineSamples = new HashSet<>();
         for (GMLResult result : gmlData.getResults()) {
             String patientId = result.getMetaData().getDmpPatientId();
-            List<String> samples = patientSampleMap.get(patientId);
+            List<String> samples = cvrSampleListUtil.getGmlPatientSampleMap().get(patientId);
             List<GMLSnp> snps = result.getSnpIndelGml();
             if (samples != null && snps != null) {
                 for (GMLSnp snp : snps) {
