@@ -11,6 +11,7 @@ import java.io.Writer;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import org.apache.commons.lang.StringUtils;
@@ -27,20 +28,20 @@ import org.springframework.core.io.FileSystemResource;
  *
  * @author heinsz
  */
-public class TimelineWriter  implements ItemStreamWriter<String> {    
+public class TimelineWriter  implements ItemStreamWriter<String> {
     @Value("#{jobParameters[directory]}")
     private String directory;
-    
+
     @Value("#{stepExecutionContext['combinedHeader']}")
     private List<String> combinedHeader;
-    
+
     @Value("#{stepExecutionContext['studyId']}")
     private String studyId;
-    
+
     private String outputFilename = "data_timeline_";
-    private File stagingFile;    
-    private FlatFileItemWriter<String> flatFileItemWriter = new FlatFileItemWriter<String>();   
-    
+    private File stagingFile;
+    private FlatFileItemWriter<String> flatFileItemWriter = new FlatFileItemWriter<String>();
+
     @Override
     public void open(ExecutionContext ec) throws ItemStreamException {
         this.stagingFile = new File(directory, outputFilename + studyId + ".txt");
@@ -49,15 +50,17 @@ public class TimelineWriter  implements ItemStreamWriter<String> {
         flatFileItemWriter.setResource(new FileSystemResource(stagingFile));
         flatFileItemWriter.setHeaderCallback(new FlatFileHeaderCallback() {
             @Override
-            public void writeHeader(Writer writer) throws IOException {                
+            public void writeHeader(Writer writer) throws IOException {
                 writer.write(getHeaderLine(combinedHeader));
-            }                
-        });  
+            }
+        });
         flatFileItemWriter.open(ec);
     }
-    
+
     @Override
-    public void update(ExecutionContext ec) throws ItemStreamException {}
+    public void update(ExecutionContext ec) throws ItemStreamException {
+        ec.put("timelineFile", stagingFile.getName());
+    }
 
     @Override
     public void close() throws ItemStreamException {
@@ -68,7 +71,7 @@ public class TimelineWriter  implements ItemStreamWriter<String> {
     public void write(List<? extends String> items) throws Exception {
          flatFileItemWriter.write(items);
     }
-    
+
     private String getHeaderLine(List<String> metaData) {
         List<String> header = new ArrayList();
         Integer sidIndex = metaData.indexOf("SAMPLE_ID");
@@ -85,6 +88,6 @@ public class TimelineWriter  implements ItemStreamWriter<String> {
             }
         }
         return StringUtils.join(header, "\t");
-    }       
-    
+    }
+
 }

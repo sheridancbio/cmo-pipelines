@@ -31,6 +31,7 @@
 */
 package org.mskcc.cmo.ks.redcap.pipeline;
 
+import java.util.*;
 import org.apache.log4j.Logger;
 import org.mskcc.cmo.ks.redcap.source.ClinicalDataSource;
 import org.springframework.batch.core.ExitStatus;
@@ -45,8 +46,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 public class TimelineDataStepListener implements StepExecutionListener {
     private final Logger log = Logger.getLogger(ClinicalDataStepListener.class);
     @Autowired
-    public ClinicalDataSource clinicalDataSource;  
-    
+    public ClinicalDataSource clinicalDataSource;
+
     @Override
     public void beforeStep(StepExecution se) {
        log.info("Starting a timelinel data step");
@@ -54,10 +55,16 @@ public class TimelineDataStepListener implements StepExecutionListener {
 
     @Override
     public ExitStatus afterStep(StepExecution se) {
+        List<String> timelineFiles = (List<String>)se.getJobExecution().getExecutionContext().get("timelineFiles");
+        if (timelineFiles == null) {
+            timelineFiles = new ArrayList<>();
+        }
+        timelineFiles.add((String)se.getExecutionContext().get("timelineFile"));
+        se.getJobExecution().getExecutionContext().put("timelineFiles", timelineFiles);
         if (clinicalDataSource.hasMoreTimelineData()) {
             return new ExitStatus("TIMELINE");
         }
         return new ExitStatus("FINISHED");
     }
-    
+
 }

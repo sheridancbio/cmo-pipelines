@@ -30,6 +30,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 package org.mskcc.cmo.ks.redcap.pipeline;
+import java.util.*;
 import org.mskcc.cmo.ks.redcap.source.ClinicalDataSource;
 import org.apache.log4j.Logger;
 import org.springframework.batch.core.ExitStatus;
@@ -43,7 +44,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 public class ClinicalDataStepListener implements StepExecutionListener {
     private final Logger log = Logger.getLogger(ClinicalDataStepListener.class);
     @Autowired
-    public ClinicalDataSource clinicalDataSource;    
+    public ClinicalDataSource clinicalDataSource;
     @Override
     public void beforeStep(StepExecution se) {
         log.info("Starting a clinical data step");
@@ -52,6 +53,24 @@ public class ClinicalDataStepListener implements StepExecutionListener {
     @Override
     public ExitStatus afterStep(StepExecution se) {
         log.info("Checking if more data to process...");
+        boolean writeClinicalSample = (boolean)se.getExecutionContext().get("writeClinicalSample");
+        boolean writeClinicalPatient = (boolean)se.getExecutionContext().get("writeClinicalPatient");
+        if (writeClinicalSample) {
+            List<String> clinicalSampleFiles = (List<String>)se.getJobExecution().getExecutionContext().get("clinicalSampleFiles");
+            if (clinicalSampleFiles == null) {
+                clinicalSampleFiles = new ArrayList<>();
+            }
+            clinicalSampleFiles.add((String)se.getExecutionContext().get("clinicalSampleFile"));
+            se.getJobExecution().getExecutionContext().put("clinicalSampleFiles", clinicalSampleFiles);
+        }
+        if (writeClinicalPatient) {
+            List<String> clinicalPatientFiles = (List<String>)se.getJobExecution().getExecutionContext().get("clinicalPatientFiles");
+            if (clinicalPatientFiles == null) {
+                clinicalPatientFiles = new ArrayList<>();
+            }
+            clinicalPatientFiles.add((String)se.getExecutionContext().get("clinicalPatientFile"));
+            se.getJobExecution().getExecutionContext().put("clinicalPatientFiles", clinicalPatientFiles);
+        }
         if (clinicalDataSource.hasMoreClinicalData()) {
             return new ExitStatus("CLINICAL");
         }
