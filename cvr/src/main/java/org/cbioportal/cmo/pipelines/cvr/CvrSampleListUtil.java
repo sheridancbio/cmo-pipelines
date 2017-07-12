@@ -110,7 +110,6 @@ public class CvrSampleListUtil {
      * @return the portalSamples
      */
     public Set<String> getPortalSamples() {
-        this.portalSamples.removeAll(portalSamplesNotInDmp);        
         return portalSamples;
     }
 
@@ -231,7 +230,7 @@ public class CvrSampleListUtil {
         updatePortalSamplesNotInDmp();
         updateDmpSamplesNotInPortal();
         
-        boolean maxSamplesToRemoveThresholdExceeded = (maxNumSamplesToRemove > 0 && portalSamplesNotInDmp.size() >= maxNumSamplesToRemove);
+        boolean maxSamplesToRemoveThresholdExceeded = (maxNumSamplesToRemove <= 0 || (maxNumSamplesToRemove > 0 && portalSamplesNotInDmp.size() >= maxNumSamplesToRemove));
         if (maxSamplesToRemoveThresholdExceeded) {
             String message;
             if (maxNumSamplesToRemove > 0) {
@@ -246,19 +245,15 @@ public class CvrSampleListUtil {
         }
         else {
             portalSamples.removeAll(portalSamplesNotInDmp);
-            log.info("updateSampleLists(),  Number of samples in 'portalSamplesNotInDmp' passes threshold check - samples not in 'dmpMasterList' will be removed from the data");
+            String message = "updateSampleLists(),  Number of samples in 'portalSamplesNotInDmp' passes threshold check - ";
+            if (portalSamplesNotInDmp.size() == 0) {
+                message += "'portalSamplesNotInDmp' list is empty, no sample data will be removed";
+            }
+            else {
+                message += "'portalSamplesNotInDmp' contains " + String.valueOf(portalSamplesNotInDmp.size()) + " samples. Data for these samples will be removed";
+            }
+            log.info(message);
         }
-    }
-    
-    public boolean isMaxSamplesToRemoveThresholdExceeded() {
-        boolean exceeded = (maxNumSamplesToRemove > 0 && portalSamplesNotInDmp.size() >= maxNumSamplesToRemove);
-        if (!exceeded) {
-            portalSamples.removeAll(portalSamplesNotInDmp);
-        }
-        else {
-            saveSampleListStats();
-        }
-        return exceeded;
     }
 
     /**
