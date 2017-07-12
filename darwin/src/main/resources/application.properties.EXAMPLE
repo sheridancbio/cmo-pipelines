@@ -5,11 +5,11 @@ darwin.server=
 darwin.port=
 darwin.database=
 darwin.schema=
-darwin.driver=com.ibm.db2.jcc.DB2SimpleDataSource
 
 #DB2 Connection
 darwin.username=
 darwin.password=
+darwin.connection_string=
 
 #Darwin properties
 darwin.chunk_size=10
@@ -25,20 +25,22 @@ darwin.skcm_mskcc_2015_chant.primary_view=MEL_PRIMARY_V
 darwin.skcm_mskcc_2015_chant.impact_view=MEL_IMPACT_V
 darwin.skcm_mskcc_2015_chant.metastat_sites_view=MEL_METASTAT_SITES_V
 darwin.skcm_mskcc_2015_chant.systemic_tx=MEL_SYSTEMIC_TX_V
+darwin.skcm_mskcc_2015_chant.adjuvant_tx_view=MEL_ADJUVANT_TX_V
+darwin.skcm_mskcc_2015_chant.rad_therapy_view=MEL_RAD_THERAPY_V
 darwin.demographics_filename=data_clinical_supp_darwin_demographics.txt
 darwin.genie_patient_filename=darwin_genie_patient.txt
-darwin.skcm_mskcc_2015_chant_clinical_filename=data_clinical_supp_darwin_skcm_mskcc_2015_chant.txt
-darwin.skcm_mskcc_2015_chant_timeline_filename=data_timeline_skcm_mskcc_2015_chant_txt
+darwin.genie_sample_filename=darwin_genie_sample.txt
+darwin.age_filename=darwin_age.txt
+darwin.skcm_mskcc_2015_chant_clinical_sample_filename=data_clinical_sample_darwin_skcm_mskcc_2015_chant.txt
+darwin.skcm_mskcc_2015_chant_clinical_patient_filename=data_clinical_patient_darwin_skcm_mskcc_2015_chant.txt
+darwin.skcm_mskcc_2015_chant_timeline_filename=data_timeline_skcm_mskcc_2015_chant.txt
 darwin.icdo_view=ICDO_V
-darwin.icdo_filename=darwinIcdoRecords.txt
 darwin.timeline_view=DMT_TIMELINE_BRAINSPINE_V
-darwin.timeline_bs_status=data_timeline_status_caisis_gbm.txt
-darwin.timeline_bs_specimen=data_timeline_specimen_caisis_gbm.txt
-darwin.timeline_bs_treatment=data_timeline_treatment_caisis_gbm.txt
-darwin.timeline_bs_imaging=data_timeline_diagnostics_caisis_gbm.txt
-darwin.timeline_bs_surgery=data_timeline_surgery_caisis_gbm.txt
+#between prefix and suffix brainspine caisis timeline filenames vary over these types: {diagnosis, specimen, status, surgery, treatment}
+darwin.brainspine_timeline_filename_prefix=data_timeline_
+darwin.brainspine_timeline_filename_suffix=_caisis_gbm.txt
 darwin.clinical_view=DMT_CLINICAL_BRAINSPINE_V
-darwin.clinical_filename=data_clinical_supp_caisis_gbm.txt
+darwin.brainspine_clinical_filename=data_clinical_supp_caisis_gbm.txt
 darwin.medicaltherapy.pharmacy_druglist=IPILIMUMAB;PEMBROLIZUMAB;NIVOLUMAB;ATEZOLIZUMAB # drug names should be in all UPPERCASE
 darwin.medicaltherapy_timeline_filename=data_timeline_medical_therapy.txt
 darwin.medicaltherapy_clinical_filename=data_clinical_supp_medical_therapy.txt
@@ -50,7 +52,34 @@ darwin.mskraindance_suffix=%-T%
 darwin.mskarcher_suffix=%-A%
 
 # For redcap metadata clinical attributes header generation
+redcap_url=
+mapping_token=
 metadata_project=
 namespace_project=
 
-#NOTE: runs with two settings, -d </path/to/output_directory> -s [Cancer Study ID (mskimpact for default)]
+# Absoulte URL to the redcap web application
+redcap_base_url=
+redcap_api_url_path=
+# Relative URL path to the erase_project_data php module
+redcap_erase_project_data_url_path=
+redcap_username=
+redcap_password=
+redcap_login_hidden_input_name=
+
+# RedCap mapping token for ID_MAPPING - any tables that we want to access need to be in this project
+mapping_token=
+# The name of the RedCap project that contains the metadata about the clinical attributes in RedCap
+metadata_project=
+# The name of the RedCap project that contains the namespace mapping of external column headers to normalized
+namespace_project=
+
+# The name of the RedCap project into which clinical data should be imported
+redcap.project_title_for_patient_demographics_import=mskimpact_data_clinical_darwin_demographics
+redcap.project_title_for_darwin_skcm_2015_chant_clinical_sample_import=darwin_skcm_2015_chant_clinical_sample  ####this needs to be mapped
+redcap.project_title_for_darwin_skcm_2015_chant_timeline_import=darwin_skcm_2015_chant_timeline  ####this needs to be mapped
+redcap.project_title_for_darwin_medical_therapy_clinical_import=darwin_medical_therapy_clinical  ####medical therapy is not yet running .. this project does not yet exist
+redcap.project_title_for_darwin_medical_therapy_timeline_import=darwin_medical_therapy_timeline  ####medical therapy is not yet running .. this project does not yet exist
+redcap.project_title_for_darwin_mskimpact_brain_spine_clinical_data_import=mskimpact_clinical_caisis
+#between prefix and suffix brainspine caisis timeline project titles vary over these types: {diagnosis, specimen, status, surgery, treatment}
+redcap.project_title_for_darwin_mskimpact_brain_spine_timeline_import_prefix=mskimpact_timeline_
+redcap.project_title_for_darwin_mskimpact_brain_spine_timeline_import_suffix=_caisis

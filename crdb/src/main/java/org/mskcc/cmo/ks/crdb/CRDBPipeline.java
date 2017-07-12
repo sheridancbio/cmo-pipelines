@@ -43,7 +43,7 @@ import org.springframework.batch.core.launch.JobLauncher;
 
 /**
  * Pipeline for running the CRDB clinical data job.
- * 
+ *
  * @author ochoaa
  */
 
@@ -51,41 +51,41 @@ import org.springframework.batch.core.launch.JobLauncher;
 public class CRDBPipeline {
 
     private static Options getOptions(String[] args) {
-        Options gnuOptions = new Options();
-        gnuOptions.addOption("h", "help", false, "shows this help document and quits.")
+        Options options = new Options();
+        options.addOption("h", "help", false, "shows this help document and quits.")
             .addOption("stage", "staging", true, "Staging directory");
-        return gnuOptions;
+        return options;
     }
 
-    private static void help(Options gnuOptions, int exitStatus) {
+    private static void help(Options options, int exitStatus) {
         HelpFormatter helpFormatter = new HelpFormatter();
-        helpFormatter.printHelp("CRDBPipeline", gnuOptions);
+        helpFormatter.printHelp("CRDBPipeline", options);
         System.exit(exitStatus);
     }
 
     private static void launchJob(String[] args, String stagingDirectory) throws Exception {
         SpringApplication app = new SpringApplication(CRDBPipeline.class);
         ConfigurableApplicationContext ctx = app.run(args);
-        JobLauncher jobLauncher = ctx.getBean(JobLauncher.class);        
+        JobLauncher jobLauncher = ctx.getBean(JobLauncher.class);
 
-        Job crdbJob = ctx.getBean(BatchConfiguration.CRDB_IMPACT_JOB, Job.class);        
+        Job crdbJob = ctx.getBean(BatchConfiguration.CRDB_IMPACT_JOB, Job.class);
         JobParameters jobParameters = new JobParametersBuilder()
                 .addString("stagingDirectory", stagingDirectory)
-                .toJobParameters();  
-        JobExecution jobExecution = jobLauncher.run(crdbJob, jobParameters); 
+                .toJobParameters();
+        JobExecution jobExecution = jobLauncher.run(crdbJob, jobParameters);
 
         System.out.println("Shutting down CRDBPipeline.");
-        ctx.close();        
+        ctx.close();
     }
-    
+
     public static void main(String[] args) throws Exception {
-        Options gnuOptions = CRDBPipeline.getOptions(args);
-        CommandLineParser parser = new GnuParser();
-        CommandLine commandLine = parser.parse(gnuOptions, args);
+        Options options = CRDBPipeline.getOptions(args);
+        CommandLineParser parser = new DefaultParser();
+        CommandLine commandLine = parser.parse(options, args);
         if (commandLine.hasOption("h") ||
             !commandLine.hasOption("stage")) {
-            help(gnuOptions, 0);
+            help(options, 0);
         }
-        launchJob(args, commandLine.getOptionValue("stage"));        
+        launchJob(args, commandLine.getOptionValue("stage"));
     }
 }

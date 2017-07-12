@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Memorial Sloan-Kettering Cancer Center.
+ * Copyright (c) 2016 - 2017 Memorial Sloan-Kettering Cancer Center.
  *
  * This library is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS
@@ -39,6 +39,6 @@ import java.util.Map;
  * @author heinsz
  */
 
-public interface MetadataManager {             
+public interface MetadataManager {
     Map<String, List<String>> getFullHeader(List<String> header);
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 - 2017 Memorial Sloan-Kettering Cancer Center.
+ * Copyright (c) 2017 Memorial Sloan-Kettering Cancer Center.
  *
  * This library is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS
@@ -30,53 +30,46 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-package org.mskcc.cmo.ks.redcap.pipeline;
+package org.mskcc.cmo.ks.crdb.pipeline;
 
-import java.util.*;
+import java.io.*;
 import org.apache.log4j.Logger;
-import org.mskcc.cmo.ks.redcap.source.*;
-import org.springframework.batch.item.ExecutionContext;
-import org.springframework.batch.item.ItemStreamException;
-import org.springframework.batch.item.ItemStreamReader;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
+import org.mskcc.cmo.ks.redcap.source.ClinicalDataSource;
+import org.springframework.batch.core.*;
+import org.springframework.beans.factory.annotation.*;
 
-/**
- *
- * @author heinsz
- */
-public class TimelineReader implements ItemStreamReader<Map<String, String>> {
+public class CRDBDatasetListener implements StepExecutionListener {
+
+    Logger log = Logger.getLogger(CRDBDatasetListener.class);
 
     @Autowired
     public ClinicalDataSource clinicalDataSource;
 
-    @Value("#{jobParameters[stableId]}")
-    public String stableId;
+    @Value("${crdb.dataset_filename}")
+    private String datasetFilename;
 
-    private final Logger log = Logger.getLogger(ClinicalDataReader.class);
-
-    public List<Map<String, String>> records = new ArrayList<>();
+    @Value("${redcap.project_title_for_crdb_clinical_data_import}")
+    public String redcapProjectTitle;
 
     @Override
-    public void open(ExecutionContext ec) throws ItemStreamException {
-        String projectTitle = clinicalDataSource.getNextTimelineProjectTitle(stableId);
-        ec.put("projectId", projectTitle);
-        log.info("Getting timeline header for project: " + projectTitle);
-        ec.put("combinedHeader", clinicalDataSource.getTimelineHeader(stableId));
-        records = clinicalDataSource.getTimelineData(stableId);
+    public void beforeStep(StepExecution stepExecution) {
     }
 
     @Override
-    public void update(ExecutionContext ec) throws ItemStreamException {}
-
-    @Override
-    public void close() throws ItemStreamException {}
-
-    @Override
-    public Map<String, String> read() throws Exception {
-        if (!records.isEmpty()) {
-            return records.remove(0);
+    public ExitStatus afterStep(StepExecution stepExecution) {
+        String stagingDirectory = stepExecution.getJobExecution().getJobParameters().getString("stagingDirectory");
+        File datasetFile = new File(stagingDirectory, datasetFilename);
+        if (datasetFile.exists()) {
+            try {
+                String canonicalDatasetFilename = datasetFile.getCanonicalPath();
+                clinicalDataSource.importClinicalDataFile(redcapProjectTitle, canonicalDatasetFilename, true);
+            } catch (IOException e) {
+                log.error("Error: could not persist clinical file \"" + datasetFilename + "\" in directory \"" + stagingDirectory + "\" to RedCap : IO error locating/reading file");
+            }
+        } else {
+            log.error("Error: could not persist clinical file \"" + datasetFilename + "\" in directory \"" + stagingDirectory + "\" to RedCap : file does not exist");
         }
-        return null;
+        return ExitStatus.COMPLETED;
     }
+
 }

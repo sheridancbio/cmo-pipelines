@@ -31,21 +31,22 @@
 */
 package org.mskcc.cmo.ks.darwin.pipeline.mskimpactbrainspinetimeline;
 
-import org.mskcc.cmo.ks.darwin.pipeline.model.MskimpactBrainSpineCompositeTimeline;
-import org.mskcc.cmo.ks.darwin.pipeline.model.MskimpactBrainSpineTimeline;
-
 import java.util.*;
 import org.apache.commons.lang.StringUtils;
 import org.mskcc.cmo.ks.darwin.pipeline.BatchConfiguration;
+import org.mskcc.cmo.ks.darwin.pipeline.model.MskimpactBrainSpineCompositeTimeline;
+import org.mskcc.cmo.ks.darwin.pipeline.model.MskimpactBrainSpineTimeline;
+import org.mskcc.cmo.ks.darwin.pipeline.mskimpactbrainspinetimeline.BrainSpineTimelineType;
 import org.springframework.batch.item.ItemProcessor;
+
 /**
  *
  * @author jake
  */
 public class MskimpactTimelineBrainSpineModelToCompositeProcessor implements ItemProcessor<MskimpactBrainSpineTimeline, MskimpactBrainSpineCompositeTimeline>{
-    private BatchConfiguration.BrainSpineTimelineType type;
+    private BrainSpineTimelineType type;
     
-    public MskimpactTimelineBrainSpineModelToCompositeProcessor(BatchConfiguration.BrainSpineTimelineType type) {
+    public MskimpactTimelineBrainSpineModelToCompositeProcessor(BrainSpineTimelineType type) {
         this.type = type;
     }
     @Override

@@ -50,12 +50,14 @@ import org.springframework.beans.factory.annotation.Value;
  */
 public class MetaFileStepTasklet implements Tasklet {
 
-    @Value("#{jobParameters[redcap_project]}")
+    @Value("#{jobParameters[redcapProject]}")
     private String cancerStudyIdentifier;
 
     @Value("#{jobParameters[directory]}")
     private String directory;
-
+    
+    @Value("#{jobParameters[mergeClinicalDataSources]}")
+    private boolean mergeClinicalDataSources;
 
     @Override
     public RepeatStatus execute(StepContribution sc, ChunkContext cc) throws Exception {
@@ -69,8 +71,14 @@ public class MetaFileStepTasklet implements Tasklet {
         for (String clinicalPatientFile : clinicalPatientFiles) {
             createMetaFile(clinicalPatientFile, "PATIENT_ATTRIBUTES", "clinical");
         }
-        for (String timelineFile : timelineFiles) {
-            createMetaFile(timelineFile, "TIMELINE", "timeline");
+        // only want to ever create one timeline file
+        if (!timelineFiles.isEmpty() && mergeClinicalDataSources) {
+            createMetaFile("data_timeline.txt", "TIMELINE", "timeline");
+        }
+        else {
+            for (String timelineFile : timelineFiles) {
+                createMetaFile(timelineFile, "TIMELINE", "timeline");
+            }
         }
         return RepeatStatus.FINISHED;
     }
