@@ -110,10 +110,10 @@ IMPORT_FAIL_QUEENS=0
 # fetch new/updated IMPACT samples using CVR Web service   (must come after mercurial fetching)
 echo "fetching samples from CVR Web service  ..."
 echo $(date)
-$JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -jar $PORTAL_HOME/lib/cvr_fetcher.jar -d $MSK_IMPACT_DATA_HOME -i mskimpact
+$JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -jar $PORTAL_HOME/lib/cvr_fetcher.jar -d $MSK_IMPACT_DATA_HOME -i mskimpact -r 150
 if [ $? -gt 0 ]; then
     echo "CVR fetch failed!"
-    cd $MSK_IMPACT_DATA_HOME;$HG_BINARY revert --all --no-backup;rm *.orig
+    cd $MSK_IMPACT_DATA_HOME;$HG_BINARY update -C;rm *.orig
     IMPORT_STATUS_IMPACT=1
 else
     echo "committing cvr data"
@@ -126,7 +126,7 @@ echo $(date)
 $JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -jar $PORTAL_HOME/lib/cvr_fetcher.jar -d $MSK_IMPACT_DATA_HOME -g -i mskimpact
 if [ $? -gt 0 ]; then
     echo "CVR Germline fetch failed!"
-    cd $MSK_IMPACT_DATA_HOME;$HG_BINARY revert --all --no-backup;rm *.orig
+    cd $MSK_IMPACT_DATA_HOME;$HG_BINARY update -C;rm *.orig
     IMPORT_STATUS_IMPACT=1
 else
     echo "committing CVR germline data"
@@ -140,7 +140,7 @@ $JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,add
 if [ $? -gt 0 ]; then
     echo "CVR raindance fetch failed!"
     echo "This will not affect importing of mskimpact"
-    cd $MSK_RAINDANCE_DATA_HOME;$HG_BINARY revert --all --no-backup;rm *.orig
+    cd $MSK_RAINDANCE_DATA_HOME;$HG_BINARY update -C;rm *.orig
     IMPORT_STATUS_RAINDANCE=1
 else
     # raindance does not provide copy number or fusions data.
@@ -149,14 +149,14 @@ else
     cd $MSK_RAINDANCE_DATA_HOME;$HG_BINARY commit -m "Latest Raindance dataset"
 fi
 
-# fetch new/updated heme samples using CVR Web service (must come after mercurial fetching).
+# fetch new/updated heme samples using CVR Web service (must come after mercurial fetching). Threshold is set to 50 since heme contains only 190 samples (07/12/2017)
 echo "fetching CVR heme data..."
 echo $(date)
-$JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -jar $PORTAL_HOME/lib/cvr_fetcher.jar -d $MSK_HEMEPACT_DATA_HOME -i mskimpact_heme
+$JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -jar $PORTAL_HOME/lib/cvr_fetcher.jar -d $MSK_HEMEPACT_DATA_HOME -i mskimpact_heme -r 50
 if [ $? -gt 0 ]; then
       echo "CVR heme fetch failed!"
       echo "This will not affect importing of mskimpact"
-      cd $MSK_HEMEPACT_DATA_HOME;$HG_BINARY revert --all --no-backup;rm *.orig
+      cd $MSK_HEMEPACT_DATA_HOME;$HG_BINARY update -C;rm *.orig
       IMPORT_STATUS_HEME=1
 else
       cd $MSK_HEMEPACT_DATA_HOME;$HG_BINARY commit -m "Latest heme dataset"
@@ -169,7 +169,7 @@ $JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,add
 if [ $? -gt 0 ]; then
     echo "CVR Archer fetch failed!"
     echo "This will not affect importing of mskimpact"
-    cd $MSK_ARCHER_DATA_HOME;$HG_BINARY revert --all --no-backup;rm *.orig
+    cd $MSK_ARCHER_DATA_HOME;$HG_BINARY update -C;rm *.orig
     IMPORT_STATUS_ARCHER=1
 else
     # mskarcher does not provide copy number, mutations, or seg data, renaming gene matrix file until we get the mskarcher gene panel imported
@@ -400,7 +400,7 @@ fi
 # commit or revert changes for MIXEDPACT
 if [ $IMPORT_FAIL_MIXEDPACT -gt 0 ]; then
     echo "MIXEDPACT merge and/or updates failed! Reverting data to last commit."
-    cd $MSK_MIXEDPACT_DATA_HOME;$HG_BINARY revert --all --no-backup;
+    cd $MSK_MIXEDPACT_DATA_HOME;$HG_BINARY update -C
     rm $MSK_MIXEDPACT_DATA_HOME/*.orig
     rm $MSK_MIXEDPACT_DATA_HOME/case_lists/*.orig
 else
@@ -479,7 +479,7 @@ fi
 # commit or revert changes for KINGSCOUNTY
 if [ $IMPORT_FAIL_KINGS -gt 0 ]; then
     echo "KINGSCOUNTY subset and/or updates failed! Reverting data to last commit."
-    cd $MSK_KINGS_DATA_HOME;$HG_BINARY revert --all --no-backup;
+    cd $MSK_KINGS_DATA_HOME;$HG_BINARY update -C
     rm $MSK_KINGS_DATA_HOME/*.orig
     rm $MSK_KINGS_DATA_HOME/case_lists/*.orig
 else
@@ -504,7 +504,7 @@ fi
 # commit or revert changes for LEHIGHVALLEY
 if [ $IMPORT_FAIL_LEHIGH -gt 0 ]; then
     echo "LEHIGHVALLEY subset and/or updates failed! Reverting data to last commit."
-    cd $MSK_LEHIGH_DATA_HOME;$HG_BINARY revert --all --no-backup;
+    cd $MSK_LEHIGH_DATA_HOME;$HG_BINARY update -C
     rm $MSK_LEHIGH_DATA_HOME/*.orig
     rm $MSK_LEHIGH_DATA_HOME/case_lists/*.orig
 else
@@ -529,7 +529,7 @@ fi
 # commit or revert changes for QUEENSCANCERCENTER
 if [ $IMPORT_FAIL_QUEENS -gt 0 ]; then
     echo "QUEENSCANCERCENTER subset and/or updates failed! Reverting data to last commit."
-    cd $MSK_QUEENS_DATA_HOME;$HG_BINARY revert --all --no-backup;
+    cd $MSK_QUEENS_DATA_HOME;$HG_BINARY update -C
     rm $MSK_QUEENS_DATA_HOME/*.orig
     rm $MSK_QUEENS_DATA_HOME/case_lists/*.orig
 else

@@ -56,7 +56,12 @@ public class CvrMasterListTasklet implements Tasklet {
         Set<String> dmpMasterList = new HashSet<>();
         try {
             dmpMasterList = generateDmpMasterList();
-            log.info("DMP master list for " + studyId + " contains " + String.valueOf(dmpMasterList.size()) + " samples");
+            if (dmpMasterList.size() > 0) {
+                log.info("DMP master list for " + studyId + " contains " + String.valueOf(dmpMasterList.size()) + " samples");
+            }
+            else {
+                log.warn("No sample IDs were returned using DMP master list endpoint for study " + studyId);
+            }
         }
         catch (HttpClientErrorException e) {
             log.warn("Error occurred while retrieving master list for " + studyId + " - the default master list will be set to samples already in portal.\n" 
