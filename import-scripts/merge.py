@@ -249,7 +249,7 @@ def merge_files(meta_filenames, data_filenames, file_type, sublist, excluded_sam
     validate_merge(data_filenames, output_filename, sublist, excluded_samples_list, merge_style)
 
 def validate_merge(data_filenames, merged_filename, sublist, excluded_samples_list, merge_style):
-    merged_file_summary = get_datafile_counts_summary(merged_filename, sublist, merge_style)
+    merged_file_summary = get_datafile_counts_summary(merged_filename, sublist, excluded_samples_list, merge_style)
     merged_header = process_header(data_filenames, sublist, excluded_samples_list, merge_style)
 
     # check that the merged header constructed from the data files matches the length of the header written to the merged file
@@ -684,10 +684,11 @@ def main():
 
     #subset list
     sublist = []
+    excluded_samples_list = []
     if subsetlist is not None:
         sublist = [line.strip() for line in open(subsetlist,'rU').readlines()]
     if excluded_samples is not None:
-        excluded_samples_list = [line.strip() for line in open(subsetlist, 'rU').readlines()]
+        excluded_samples_list = [line.strip() for line in open(excluded_samples, 'rU').readlines()]
 
     if subsetlist is not None and excluded_samples is not None:
         print >> ERROR_FILE, 'Cannot specify a subset list and an exclude samples list! Please use one option or the other.'
