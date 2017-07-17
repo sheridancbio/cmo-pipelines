@@ -203,7 +203,7 @@ addDateAddedData $MSK_ARCHER_DATA_HOME "mskarcher"
 cd $STUDY_DATA_DIRECTORY;$HG_BINARY add;$HG_BINARY commit -m "Latest ARCHER Dataset: Sample Date Clinical File"
 
 # Merge Archer fusion data into the impact cohort
-$PYTHON_BINARY $PORTAL_HOME/scripts/archer_fusions_merger.py --archer-fusions $MSK_ARCHER_DATA_HOME/data_fusions.txt --linked-mskimpact-cases-filename $MSK_ARCHER_DATA_HOME/linked_mskimpact_cases.txt --msk-fusions $MSK_IMPACT_DATA_HOME/data_fusions.txt --clinical-filname $MSK_IMPACT_DATA_HOME/data_clinical.txt --archer-samples-filename $tmp/archer_ids.txt
+$PYTHON_BINARY $PORTAL_HOME/scripts/archer_fusions_merger.py --archer-fusions $MSK_ARCHER_DATA_HOME/data_fusions.txt --linked-mskimpact-cases-filename $MSK_ARCHER_DATA_HOME/linked_mskimpact_cases.txt --msk-fusions $MSK_IMPACT_DATA_HOME/data_fusions.txt --clinical-filename $MSK_IMPACT_DATA_HOME/data_clinical.txt --archer-samples-filename $tmp/archer_ids.txt
 cd $MSK_IMPACT_DATA_HOME; $HG_BINARY add; $HG_BINARY commit -m "Adding ARCHER fusions to MSKIMPACT"
 
 # check database version before importing anything
