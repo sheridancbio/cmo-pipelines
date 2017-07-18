@@ -92,10 +92,10 @@ MSKCC_EMAIL_SUFFIX = "@mskcc.org"
 SKI_EMAIL_SUFFIX = "@sloankettering.edu"
 SMTP_SERVER = "cbio.mskcc.org"
 MESSAGE_FROM_CMO = "cbioportal-access@cbio.mskcc.org"
-MESSAGE_BCC_CMO = ["selcukls@mskcc.org", "bourquec@mskcc.org", "raop@mskcc.org", "ravichak@mskcc.org", "melcerm@mskcc.org", "jgao@cbio.mskcc.org", "schultz@cbio.mskcc.org", "grossb1@mskcc.org", "heinsz@mskcc.org", "ochoaa@mskcc.org", "sheridar@mskcc.org"]
+MESSAGE_BCC_CMO = ["cbioportal-access@cbio.mskcc.org"]
 
-MESSAGE_FROM_GENIE = "genie-cbioportal-access@cbio.mskcc.org" # schultz, grossb1, heinsz, info@aacrgenie.org
-MESSAGE_BCC_GENIE = ["schultz@cbio.mskcc.org", "grossb1@mskcc.org", "heinsz@mskcc.org", "ochoaa@mskcc.org", "sheridar@mskcc.org", "info@aacrgenie.org"]
+MESSAGE_FROM_GENIE = "genie-cbioportal-access@cbio.mskcc.org"
+MESSAGE_BCC_GENIE = ["genie-cbioportal-access@cbio.mskcc.org"]
 AACR_GENIE_EMAIL = 'info@aacrgenie.org'
 
 ERROR_EMAIL_SUBJECT_GENIE = "AACR Project GENIE cBioPortal - Failed to register"

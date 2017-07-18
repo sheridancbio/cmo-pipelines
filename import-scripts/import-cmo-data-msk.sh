@@ -6,7 +6,7 @@ tmp=$PORTAL_HOME/tmp/import-cron-cmo-msk
 if [[ -d "$tmp" && "$tmp" != "/" ]]; then
 	rm -rf "$tmp"/*
 fi
-email_list="heinsz@mskcc.org, sheridar@mskcc.org, grossb1@mskcc.org, ochoaa@mskcc.org, wilsonm2@mskcc.org"
+email_list="cbioportal-cmo-importer@cbio.mskcc.org"
 now=$(date "+%Y-%m-%d-%H-%M-%S")
 msk_automation_notification_file=$(mktemp $tmp/msk-automation-portal-update-notification.$now.XXXXXX)
 

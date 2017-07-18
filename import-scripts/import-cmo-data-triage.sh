@@ -7,7 +7,7 @@ tmp=$PORTAL_HOME/tmp/import-cron-cmo-triage
 if [[ -d "$tmp" && "$tmp" != "/" ]]; then
 	rm -rf "$tmp"/*
 fi
-email_list="heinsz@mskcc.org, sheridar@mskcc.org, grossb1@mskcc.org, ochoaa@mskcc.org, wilsonm2@mskcc.org"
+email_list="cbioportal-cmo-importer@cbio.mskcc.org"
 now=$(date "+%Y-%m-%d-%H-%M-%S")
 triage_notification_file=$(mktemp $tmp/triage-portal-update-notification.$now.XXXXXX)
 

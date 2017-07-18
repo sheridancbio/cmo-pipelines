@@ -4,7 +4,7 @@ tmp=$PORTAL_HOME/tmp/update-gene-data
 if [[ -d "$tmp" && "$tmp" != "/" ]]; then
 	rm -rf "$tmp"/*
 fi
-email_list="heinsz@mskcc.org, sheridar@mskcc.org, grossb1@mskcc.org, ochoaa@mskcc.org, wilsonm2@mskcc.org"
+email_list="cbioportal-pipelines@cbio.mskcc.org"
 
 echo "Updating portal configuration repository..."
 cd $PORTAL_CONFIG_HOME; $HG_BINARY pull -u 

@@ -1,4 +1,4 @@
-MAILTO=wilson@cbio.mskcc.org,heinsz@mskcc.org,grossb1@mskcc.org
+MAILTO=cbioportal-pipelines@cbio.mskcc.org
 */15 * * * * . /data/portal-cron/scripts/automation-environment.sh;/data/portal-cron/scripts/import-portal-users.sh > /dev/null 2>&1
 * * * * * /usr/bin/flock -n /data/portal-cron/cron-lock/import-users.lock -c ". /data/portal-cron/scripts/automation-environment.sh;/data/portal-cron/scripts/import-portal-users-genie.sh > /dev/null 2>&1"
 # MSK-IMPACT fetch occurs at 3AM - do not overlap this job with it as mercurial conflicts can occur
