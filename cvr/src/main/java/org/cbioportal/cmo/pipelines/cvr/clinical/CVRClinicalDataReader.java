@@ -75,7 +75,8 @@ public class CVRClinicalDataReader implements ItemStreamReader<CVRClinicalRecord
         processClinicalFile(ec);      
         processJsonFile();
         if (studyId.equals("mskimpact")) {
-            processAgeFile(ec);            
+            processAgeFile(ec);
+            processSeqDateFile(ec);
         }
         // updates portalSamplesNotInDmpList and dmpSamplesNotInPortal sample lists
         // portalSamples list is only updated if threshold check for max num samples to remove passes
@@ -211,6 +212,47 @@ public class CVRClinicalDataReader implements ItemStreamReader<CVRClinicalRecord
         }
         catch (Exception e) {
             log.error("Error reading data from age file: " + mskimpactAgeFile.getName());
+            throw new ItemStreamException(e);
+        }
+        finally {
+            reader.close();
+        }
+    }
+    
+    private void processSeqDateFile(ExecutionContext ec) {
+        File mskimpactSeqDateFile = new File(stagingDirectory, cvrUtilities.SEQ_DATE_CLINICAL_FILE);
+        if (!mskimpactSeqDateFile.exists()) {
+            log.error("File does not exist - skipping data loading from seq date file: " + mskimpactSeqDateFile.getName());
+			return;
+        }
+        log.info("Loading seq date data from: " + mskimpactSeqDateFile.getName());
+        DelimitedLineTokenizer tokenizer = new DelimitedLineTokenizer(DelimitedLineTokenizer.DELIMITER_TAB);
+        DefaultLineMapper<MskimpactSeqDate> mapper = new DefaultLineMapper<>();
+        mapper.setLineTokenizer(tokenizer);
+        mapper.setFieldSetMapper(new MskimpactSeqDateFieldSetMapper());
+        FlatFileItemReader<MskimpactSeqDate> reader = new FlatFileItemReader<>();
+        reader.setResource(new FileSystemResource(mskimpactSeqDateFile));
+        reader.setLineMapper(mapper);
+        reader.setLinesToSkip(1);
+        reader.open(ec);
+        
+        MskimpactSeqDate mskimpactSeqDate;
+        try{
+            while ((mskimpactSeqDate = reader.read()) != null) {
+                // using the same patient - record map for now. If patients start to have significant number
+                // of samples, we might want a separate sampleToRecordMap for performance
+                if (patientToRecordMap.keySet().contains(mskimpactSeqDate.getPATIENT_ID())) {
+                    for(CVRClinicalRecord record : patientToRecordMap.get(mskimpactSeqDate.getPATIENT_ID())) {
+                        if (record.getSAMPLE_ID().equals(mskimpactSeqDate.getSAMPLE_ID())) {
+                            record.setSEQ_DATE(mskimpactSeqDate.getSEQ_DATE());
+                            continue;
+                        }
+                    }
+                }
+            }
+        }
+        catch (Exception e) {
+            log.error("Error reading data from seq date file: " + mskimpactSeqDateFile.getName());
             throw new ItemStreamException(e);
         }
         finally {

@@ -56,7 +56,7 @@ public class CVRClinicalDataProcessor implements ItemProcessor<CVRClinicalRecord
         for (String field : CVRClinicalRecord.getFieldNames()) {
             record.add(i.getClass().getMethod("get" + field).invoke(i).toString().replaceAll("[\\t\\n\\r]+"," "));
         }
-        for (String field : CVRClinicalRecord.getSeqDateFieldNames()) {
+        for (String field : MskimpactSeqDate.getFieldNames()) {
             seqDateRecord.add(i.getClass().getMethod("get" + field).invoke(i).toString().replaceAll("[\\t\\n\\r]+"," "));
         }
         CompositeClinicalRecord compRecord = new CompositeClinicalRecord();

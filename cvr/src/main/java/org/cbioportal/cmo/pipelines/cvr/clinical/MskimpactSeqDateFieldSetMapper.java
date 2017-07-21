@@ -29,52 +29,37 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-package org.cbioportal.cmo.pipelines.cvr.model;
+package org.cbioportal.cmo.pipelines.cvr.clinical;
 
-import java.util.*;
+import java.util.List;
+import org.apache.log4j.Logger;
+import org.cbioportal.cmo.pipelines.cvr.model.MskimpactSeqDate;
+import org.springframework.batch.item.file.mapping.FieldSetMapper;
+import org.springframework.batch.item.file.transform.FieldSet;
+import org.springframework.validation.BindException;
 
 /**
  *
  * @author heinsz
  */
-public class MskimpactAge {
-    private String PATIENT_ID;
-    private String AGE;
-    
-    public MskimpactAge() {}
+public class MskimpactSeqDateFieldSetMapper implements  FieldSetMapper<MskimpactSeqDate> {
+    Logger log = Logger.getLogger(CVRClinicalFieldSetMapper.class);
 
-    /**
-     * @return the PATIENT_ID
-     */
-    public String getPATIENT_ID() {
-        return PATIENT_ID;
-    }
+    @Override
+    public MskimpactSeqDate mapFieldSet(FieldSet fs) throws BindException {
+        MskimpactSeqDate record = new MskimpactSeqDate();        
+        List<String> fields = MskimpactSeqDate.getFieldNames();
 
-    /**
-     * @param PATIENT_ID the PATIENT_ID to set
-     */
-    public void setPATIENT_ID(String PATIENT_ID) {
-        this.PATIENT_ID = PATIENT_ID;
-    }
-
-    /**
-     * @return the AGE
-     */
-    public String getAGE() {
-        return AGE;
-    }
-
-    /**
-     * @param AGE the AGE to set
-     */
-    public void setAGE(String AGE) {
-        this.AGE = AGE;
-    }
-    
-    public static List<String> getFieldNames() {
-        List<String> fieldNames = new ArrayList<>();
-        fieldNames.add("PATIENT_ID");
-        fieldNames.add("AGE");
-        return fieldNames;
+        for (int i = 0; i < fields.size(); i++) {
+            String field = fields.get(i);
+            try {
+                record.getClass().getMethod("set" + field, String.class).invoke(record, fs.readString(i));
+            } catch (Exception e) {
+                if (e.getClass().equals(NoSuchMethodException.class)) {
+                    log.info("No set method exists for " + field);
+                }
+            }
+        }
+        return record;
     }
 }
