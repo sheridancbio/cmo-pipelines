@@ -37,11 +37,24 @@ import java.util.*;
  *
  * @author heinsz
  */
-public class MskimpactAge {
+public class MskimpactSeqDate {
+    private String SAMPLE_ID;
     private String PATIENT_ID;
-    private String AGE;
-    
-    public MskimpactAge() {}
+    private String SEQ_DATE;
+
+    /**
+     * @return the SAMPLE_ID
+     */
+    public String getSAMPLE_ID() {
+        return SAMPLE_ID;
+    }
+
+    /**
+     * @param SAMPLE_ID the SAMPLE_ID to set
+     */
+    public void setSAMPLE_ID(String SAMPLE_ID) {
+        this.SAMPLE_ID = SAMPLE_ID;
+    }
 
     /**
      * @return the PATIENT_ID
@@ -58,23 +71,24 @@ public class MskimpactAge {
     }
 
     /**
-     * @return the AGE
+     * @return the SEQ_DATE
      */
-    public String getAGE() {
-        return AGE;
+    public String getSEQ_DATE() {
+        return SEQ_DATE;
     }
 
     /**
-     * @param AGE the AGE to set
+     * @param SEQ_DATE the SEQ_DATE to set
      */
-    public void setAGE(String AGE) {
-        this.AGE = AGE;
+    public void setSEQ_DATE(String SEQ_DATE) {
+        this.SEQ_DATE = SEQ_DATE;
     }
     
     public static List<String> getFieldNames() {
         List<String> fieldNames = new ArrayList<>();
+        fieldNames.add("SAMPLE_ID");
         fieldNames.add("PATIENT_ID");
-        fieldNames.add("AGE");
+        fieldNames.add("SEQ_DATE");
         return fieldNames;
     }
 }
