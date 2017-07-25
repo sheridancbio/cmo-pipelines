@@ -38,7 +38,6 @@ import org.mskcc.cmo.ks.darwin.pipeline.mskimpactbrainspineclinical.*;
 import org.mskcc.cmo.ks.darwin.pipeline.mskimpactbrainspinetimeline.*;
 import org.mskcc.cmo.ks.darwin.pipeline.mskimpactdemographics.*;
 import org.mskcc.cmo.ks.darwin.pipeline.mskimpactgeniepatient.*;
-import org.mskcc.cmo.ks.darwin.pipeline.mskimpactgeniesample.*;
 import org.mskcc.cmo.ks.darwin.pipeline.skcm_mskcc_2015_chanttimeline.*;
 import org.mskcc.cmo.ks.darwin.pipeline.skcm_mskcc_2015_chantclinical.*;
 import org.mskcc.cmo.ks.darwin.pipeline.mskimpact_medicaltherapy.*;
@@ -102,7 +101,6 @@ public class BatchConfiguration {
                 .next(mskimpactClinicalBrainSpineStep())
             //.next(mskimpactMedicalTherapyStep())
                 .next(mskimpactGeniePatientClinicalStep())
-                .next(mskimpactGenieSampleClinicalStep())
                 .build();
     }
 
@@ -188,16 +186,6 @@ public class BatchConfiguration {
                 .reader(mskimpactGeniePatientReader())
                 .processor(mskimpactGeniePatientProcessor())
                 .writer(mskimpactGeniePatientWriter())
-                .build();
-    }
-    
-    @Bean
-    public Step mskimpactGenieSampleClinicalStep() {
-        return stepBuilderFactory.get("mskimpactGenieSampleClinicalStep")
-                .<MskimpactGenieClinical, String> chunk(chunkSize)
-                .reader(mskimpactGenieSampleReader())
-                .processor(mskimpactGenieSampleProcessor())
-                .writer(mskimpactGenieSampleWriter())
                 .build();
     }
     
@@ -301,23 +289,6 @@ public class BatchConfiguration {
     @StepScope
     public ItemStreamWriter<String> mskimpactAgeWriter() {
         return new MskimpactAgeWriter();
-    }    
-    
-    @Bean
-    @StepScope
-    public ItemStreamReader<MskimpactGenieClinical> mskimpactGenieSampleReader() {
-        return new MskimpactGenieSampleReader();
-    }
-
-    @Bean
-    public MskimpactGenieSampleProcessor mskimpactGenieSampleProcessor() {
-        return new MskimpactGenieSampleProcessor();
-    }
-
-    @Bean
-    @StepScope
-    public ItemStreamWriter<String> mskimpactGenieSampleWriter() {
-        return new MskimpactGenieSampleWriter();
     }    
 
     @Bean

@@ -38,7 +38,6 @@ package org.mskcc.cmo.ks.darwin.pipeline.model;
 public class MskimpactPathology {
     private String ptIdPathology;
     private String dmpIdPathology;
-    private String rptIdPathology;
     private String ageAtPathologyReportInDays;
     private String pathologyReportProcedureYear;
     private String pathologyReportType;
@@ -63,15 +62,7 @@ public class MskimpactPathology {
     public void setDMP_ID_PATHOLOGY(String dmpIdPathology) {
         this.dmpIdPathology = dmpIdPathology;
     }
-
-    public String getRPT_ID_PATHOLOGY() {
-        return rptIdPathology;
-    }
-
-    public void setRPT_ID_PATHOLOGY(String rptIdPathology) {
-        this.rptIdPathology = rptIdPathology;
-    }
-
+    
     public String getAGE_AT_PATHOLOGY_REPORT_PROCEDURE_DATE_IN_DAYS() {
         return ageAtPathologyReportInDays;
     }
