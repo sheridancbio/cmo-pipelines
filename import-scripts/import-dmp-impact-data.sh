@@ -106,6 +106,8 @@ IMPORT_FAIL_MIXEDPACT=0
 IMPORT_FAIL_KINGS=0
 IMPORT_FAIL_LEHIGH=0
 IMPORT_FAIL_QUEENS=0
+IMPORT_FAIL_LYMPHOMA=0
+LYMPHOMA_SUPER_COHORT_SUBSET_FAIL=0
 
 # fetch new/updated IMPACT samples using CVR Web service   (must come after mercurial fetching)
 echo "fetching samples from CVR Web service  ..."
@@ -460,7 +462,7 @@ if [ $(wc -l < $MSK_MIXEDPACT_DATA_HOME/meta_clinical.txt) -eq 0 ]; then
     rm $MSK_MIXEDPACT_DATA_HOME/meta_clinical.txt
 fi
 
-# set 'RESTART_AFTER_MSK_AFFILIATE_IMPORT' flag to 1 if RAINDANCE, ARCHER, HEMEPACT, or MIXEDPACT succesfully update
+# set 'RESTART_AFTER_MSK_AFFILIATE_IMPORT' flag to 1 if Kings County, Lehigh Valley, or Queens Cancer Center succesfully update
 RESTART_AFTER_MSK_AFFILIATE_IMPORT=0
 # update msk_kingscounty in portal only if subset was successful
 if [ $MSK_KINGS_SUBSET_FAIL -eq 0 ]; then
@@ -538,6 +540,120 @@ else
 fi
 
 ## END Subset MIXEDPACT on INSTITUTE
+
+# Create lymphoma "super" cohort
+# Subset MSK-IMPACT and HEMEPACT by Cancer Type
+
+# first touch meta_clinical.txt and meta_SV.txt in mskimpact, hemepact, and fmibat if not already exists - need these to generate merged subsets
+if [ ! -f $MSK_IMPACT_DATA_HOME/meta_clinical.txt ]; then
+    touch $MSK_IMPACT_DATA_HOME/meta_clinical.txt
+fi
+
+if [ ! -f $MSK_IMPACT_DATA_HOME/meta_SV.txt ]; then
+    touch $MSK_IMPACT_DATA_HOME/meta_SV.txt
+fi
+
+if [ ! -f $MSK_HEMEPACT_DATA_HOME/meta_clinical.txt ]; then
+    touch $MSK_HEMEPACT_DATA_HOME/meta_clinical.txt
+fi
+
+if [ ! -f $MSK_HEMEPACT_DATA_HOME/meta_SV.txt ]; then
+    touch $MSK_HEMEPACT_DATA_HOME/meta_SV.txt
+fi
+
+if [ ! -f $FMI_BATLEVI_DATA_HOME/meta_clinical.txt ]; then
+    touch $FMI_BATLEVI_DATA_HOME/meta_clinical.txt
+fi
+
+# now subset sample files with lymphoma cases from mskimpact and hemepact
+LYMPHOMA_FILTER_CRITERIA="CANCER_TYPE=Non-Hodgkin Lymphoma,Hodgkin Lymphoma"
+$PYTHON_BINARY $PORTAL_HOME/scripts/generate-clinical-subset.py --study-id="lymphoma_super_cohort_fmi_msk" --clinical-file="$MSK_IMPACT_DATA_HOME/data_clinical.txt" --filter-criteria="$LYMPHOMA_FILTER_CRITERIA" --subset-filename="$tmp/mskimpact_lymphoma_subset.txt"
+if [ $? -gt 0 ]; then
+    echo "ERROR! Failed to generate subset of lymphoma samples from MSK-IMPACT. Skipping merge and update of lymphoma super cohort!"
+    LYMPHOMA_SUPER_COHORT_SUBSET_FAIL=1
+fi
+$PYTHON_BINARY $PORTAL_HOME/scripts/generate-clinical-subset.py --study-id="lymphoma_super_cohort_fmi_msk" --clinical-file="$MSK_HEMEPACT_DATA_HOME/data_clinical.txt" --filter-criteria="$LYMPHOMA_FILTER_CRITERIA" --subset-filename="$tmp/mskimpact_heme_lymphoma_subset.txt"
+if [ $? -gt 0 ]; then
+    echo "ERROR! Failed to generate subset of lymphoma samples from MSK-IMPACT Heme. Skipping merge and update of lymphoma super cohort!"
+    LYMPHOMA_SUPER_COHORT_SUBSET_FAIL=1
+fi
+
+# check sizes of subset files before attempting to merge data using these subsets
+grep -v '^#' $FMI_BATLEVI_DATA_HOME/data_clinical.txt | awk -F '\t' '{if ($2 != "SAMPLE_ID") print $2;}' > $tmp/lymphoma_subset_samples.txt
+if [[ $LYMPHOMA_SUPER_COHORT_SUBSET_FAIL -eq && $(wc -l < $tmp/lymphoma_subset_samples.txt) -eq 0 ]]; then
+    echo "ERROR! Subset list $tmp/lymphoma_subset_samples.txt is empty. Skipping merge and update of lymphoma super cohort!"
+    LYMPHOMA_SUPER_COHORT_SUBSET_FAIL=1
+fi
+
+if [[ $LYMPHOMA_SUPER_COHORT_SUBSET_FAIL -eq 0 && $(wc -l < $tmp/mskimpact_lymphoma_subset.txt) -eq 0 ]]; then
+    echo "ERROR! Subset list $tmp/mskimpact_lymphoma_subset.txt is empty. Skipping merge and update of lymphoma super cohort!"
+    LYMPHOMA_SUPER_COHORT_SUBSET_FAIL=1
+else
+    cat $tmp/mskimpact_lymphoma_subset.txt >> $tmp/lymphoma_subset_samples.txt
+fi
+
+if [[ $LYMPHOMA_SUPER_COHORT_SUBSET_FAIL -eq 0 && $(wc -l < $tmp/mskimpact_heme_lymphoma_subset.txt) -eq 0 ]]; then
+    echo "ERROR! Subset list $tmp/mskimpact_heme_lymphoma_subset.txt is empty. Skipping merge and update of lymphoma super cohort!"
+    LYMPHOMA_SUPER_COHORT_SUBSET_FAIL=1
+else
+    cat $tmp/mskimpact_heme_lymphoma_subset.txt >> $tmp/lymphoma_subset_samples.txt
+fi
+
+# merge data from mskimpact and hemepact lymphoma subsets with FMI BAT study
+if [ $LYMPHOMA_SUPER_COHORT_SUBSET_FAIL -eq 0 ]; then 
+    $PYTHON_BINARY $PORTAL_HOME/scripts/merge.py  -d $LYMPHOMA_SUPER_COHORT_DATA_HOME -i "lymphoma_super_cohort_fmi_msk" -x "true" -m "true" -s $tmp/lymphoma_subset_samples.txt $MSK_IMPACT_DATA_HOME $MSK_HEMEPACT_DATA_HOME $FMI_BATLEVI_DATA_HOME
+    if [ $? -gt 0 ]; then
+        echo "Lymphoma super cohort subset failed! Lymphoma super cohort study will not be updated in the portal."
+        LYMPHOMA_SUPER_COHORT_SUBSET_FAIL=1
+    fi
+fi
+
+# check that meta_clinical.txt and meta_SV.txt are actually empty files before deleting from IMPACT, HEME, and RAINDANCE studies
+if [ $(wc -l < $MSK_IMPACT_DATA_HOME/meta_clinical.txt) -eq 0 ]; then
+    rm $MSK_IMPACT_DATA_HOME/meta_clinical.txt
+fi
+
+if [ $(wc -l < $MSK_IMPACT_DATA_HOME/meta_SV.txt) -eq 0 ]; then
+    rm $MSK_IMPACT_DATA_HOME/meta_SV.txt
+fi
+
+if [ $(wc -l < $MSK_HEMEPACT_DATA_HOME/meta_clinical.txt) -eq 0 ]; then
+    rm $MSK_HEMEPACT_DATA_HOME/meta_clinical.txt
+fi
+
+if [ $(wc -l < $MSK_HEMEPACT_DATA_HOME/meta_SV.txt) -eq 0 ]; then
+    rm $MSK_HEMEPACT_DATA_HOME/meta_SV.txt
+fi
+
+if [ $(wc -l < $FMI_BATLEVI_DATA_HOME/meta_clinical.txt) -eq 0 ]; then
+    rm $FMI_BATLEVI_DATA_HOME/meta_clinical.txt
+fi
+
+# attempt to import if merge and subset successful
+if [ $LYMPHOMA_SUPER_COHORT_SUBSET_FAIL -eq 0 ]; then
+    echo "Importing lymphoma 'super' cohort study..."
+    echo $(date)
+    bash $PORTAL_HOME/scripts/import-temp-study.sh --study-id="lymphoma_super_cohort_fmi_msk" --temp-study-id="temporary_lymphoma_super_cohort_fmi_msk" --backup-study-id="yesterday_lymphoma_super_cohort_fmi_msk" --portal-name="msk-fmi-lymphoma-portal" --study-path="$LYMPHOMA_SUPER_COHORT_DATA_HOME" --notification-file="$lymphoma_super_cohort_notification_file" --tmp-directory="$tmp" --email-list="$email_list" --importer-jar="$PORTAL_HOME/lib/msk-dmp-importer.jar"
+    if [ $? -gt 0 ]; then
+        IMPORT_FAIL_LYMPHOMA=1
+    else
+        RESTART_AFTER_MSK_AFFILIATE_IMPORT=1
+    fi
+else
+    echo "Something went wrong with subsetting clinical studies for Lymphoma super cohort."
+    IMPORT_FAIL_LYMPHOMA=1
+fi
+
+# commit or revert changes for Lymphoma super cohort
+if [ $IMPORT_FAIL_LYMPHOMA -gt 0 ]; then
+    echo "Lymphoma super cohort subset and/or updates failed! Reverting data to last commit."
+    cd $LYMPHOMA_SUPER_COHORT_DATA_HOME;$HG_BINARY update -C
+    rm $LYMPHOMA_SUPER_COHORT_DATA_HOME/*.orig
+    rm $LYMPHOMA_SUPER_COHORT_DATA_HOME/case_lists/*.orig
+else
+    echo "Committing Lymphoma super cohort data"
+    cd $LYMPHOMA_SUPER_COHORT_DATA_HOME;$HG_BINARY add *;$HG_BINARY add case_lists/*;$HG_BINARY commit -m "Latest Lymphoma Super Cohort dataset"
+fi
 
 ## TOMCAT RESTART
 # Restart will only execute if at least one of these studies succesfully updated.
@@ -626,5 +742,6 @@ $JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,add
 $JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -Xmx16g -ea -Dspring.profiles.active=dbcp -Djava.io.tmpdir="$tmp" -cp $PORTAL_HOME/lib/msk-dmp-importer.jar org.mskcc.cbio.importer.Admin --send-update-notification --portal msk-kingscounty-portal --notification-file "$kingscounty_notification_file"
 $JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -Xmx16g -ea -Dspring.profiles.active=dbcp -Djava.io.tmpdir="$tmp" -cp $PORTAL_HOME/lib/msk-dmp-importer.jar org.mskcc.cbio.importer.Admin --send-update-notification --portal msk-lehighvalley-portal --notification-file "$lehighvalley_notification_file"
 $JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -Xmx16g -ea -Dspring.profiles.active=dbcp -Djava.io.tmpdir="$tmp" -cp $PORTAL_HOME/lib/msk-dmp-importer.jar org.mskcc.cbio.importer.Admin --send-update-notification --portal msk-queenscancercenter-portal --notification-file "$queenscancercenter_notification_file"
+$JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -Xmx16g -ea -Dspring.profiles.active=dbcp -Djava.io.tmpdir="$tmp" -cp $PORTAL_HOME/lib/msk-dmp-importer.jar org.mskcc.cbio.importer.Admin --send-update-notification --portal msk-fmi-lymphoma-portal --notification-file "$lymphoma_super_cohort_notification_file"
 echo "Fetching and importing of clinical datasets complete!"
 echo $(date)
