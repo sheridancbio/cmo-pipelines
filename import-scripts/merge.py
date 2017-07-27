@@ -70,7 +70,7 @@ SV_FILE_PATTERN = 'data_SV.txt'
 SV_META_PATTERN = 'meta_SV.txt'
 
 # we do not want to copy over or merge json files or meta_study.txt files
-FILE_PATTERN_FILTERS = ['.json', 'meta_study.txt', '.orig', '.merge']
+FILE_PATTERN_FILTERS = ['.json', 'meta_study.txt', '.orig', '.merge', 'ignore']
 
 NON_CASE_IDS = [
     'MIRNA',

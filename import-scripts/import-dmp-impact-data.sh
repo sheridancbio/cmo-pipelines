@@ -580,7 +580,7 @@ fi
 
 # check sizes of subset files before attempting to merge data using these subsets
 grep -v '^#' $FMI_BATLEVI_DATA_HOME/data_clinical.txt | awk -F '\t' '{if ($2 != "SAMPLE_ID") print $2;}' > $tmp/lymphoma_subset_samples.txt
-if [[ $LYMPHOMA_SUPER_COHORT_SUBSET_FAIL -eq && $(wc -l < $tmp/lymphoma_subset_samples.txt) -eq 0 ]]; then
+if [[ $LYMPHOMA_SUPER_COHORT_SUBSET_FAIL -eq 0 && $(wc -l < $tmp/lymphoma_subset_samples.txt) -eq 0 ]]; then
     echo "ERROR! Subset list $tmp/lymphoma_subset_samples.txt is empty. Skipping merge and update of lymphoma super cohort!"
     LYMPHOMA_SUPER_COHORT_SUBSET_FAIL=1
 fi
