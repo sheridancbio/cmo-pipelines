@@ -601,7 +601,7 @@ fi
 
 # merge data from mskimpact and hemepact lymphoma subsets with FMI BAT study
 if [ $LYMPHOMA_SUPER_COHORT_SUBSET_FAIL -eq 0 ]; then 
-    $PYTHON_BINARY $PORTAL_HOME/scripts/merge.py  -d $LYMPHOMA_SUPER_COHORT_DATA_HOME -i "lymphoma_super_cohort_fmi_msk" -x "true" -m "true" -s $tmp/lymphoma_subset_samples.txt $MSK_IMPACT_DATA_HOME $MSK_HEMEPACT_DATA_HOME $FMI_BATLEVI_DATA_HOME
+    $PYTHON_BINARY $PORTAL_HOME/scripts/merge.py  -d $LYMPHOMA_SUPER_COHORT_DATA_HOME -i "lymphoma_super_cohort_fmi_msk" -m "true" -s $tmp/lymphoma_subset_samples.txt $MSK_IMPACT_DATA_HOME $MSK_HEMEPACT_DATA_HOME $FMI_BATLEVI_DATA_HOME
     if [ $? -gt 0 ]; then
         echo "Lymphoma super cohort subset failed! Lymphoma super cohort study will not be updated in the portal."
         LYMPHOMA_SUPER_COHORT_SUBSET_FAIL=1
