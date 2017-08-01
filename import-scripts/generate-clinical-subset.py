@@ -64,7 +64,8 @@ def update_data_with_sequencing_date(study_id, clinical_filename):
 
 def filter_samples_by_sequencing_date(clinical_supp_filename, sequencing_date_limit, anonymize_date, impact_data_only):
 	""" Generates list of sample IDs from sequencing date file meeting the sequencing date limit criteria. """
-	seq_date_limit = datetime.strptime(sequencing_date_limit, '%a, %d %b %Y %H:%M:%S')
+	seq_date_limit = datetime.strptime(sequencing_date_limit, '%Y/%m/%d %H:%M:%S')
+
 
 	data_file = open(clinical_supp_filename, 'rU')
 	data_reader = csv.DictReader(data_file, dialect = 'excel-tab')
@@ -78,12 +79,10 @@ def filter_samples_by_sequencing_date(clinical_supp_filename, sequencing_date_li
 		if impact_data_only and not is_impact_sample(sample_id):
 			continue
 
-		# figure out which column to use
-		if 'SeqDate' in line.keys():
-			seq_date_val = line['SeqDate']
-		else:
-			seq_date_val = line['SEQ_DATE']
-		raw_sample_seq_date = datetime.strptime(seq_date_val, '%Y-%m-%d %H:%M:%S')
+		seq_date_val = line['SEQ_DATE']
+		if not seq_date_val:
+			continue
+		raw_sample_seq_date = datetime.strptime(seq_date_val, '%a, %d %b %Y %H:%M:%S %Z')
 
 		# if sample sequencing date meets criteria then anonymize the sequencing date
 		if raw_sample_seq_date <= seq_date_limit:
@@ -174,7 +173,7 @@ def is_valid_clin_header(clinical_filename, is_seq_date):
 def parse_filter_criteria(filter_criteria):
 	attr_name = filter_criteria.split('=')[0]
 	attr_values = filter_criteria.split('=')[1].split(',')
-	if attr_name == 'SEQUENCING_DATE':
+	if attr_name == 'SEQ_DATE':
 		if len(attr_values) > 1:
 			print >> ERROR_FILE, "Only ONE sequencing date can be provided for filtering."
 			exit(2)

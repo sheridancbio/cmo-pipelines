@@ -54,18 +54,18 @@ public class CVRClinicalDataProcessor implements ItemProcessor<CVRClinicalRecord
         List<String> record = new ArrayList<>();
         List<String> seqDateRecord = new ArrayList<>();
         for (String field : CVRClinicalRecord.getFieldNames()) {
-            record.add(i.getClass().getMethod("get" + field).invoke(i).toString().replaceAll("[\\t\\n\\r]+"," "));
+            record.add(i.getClass().getMethod("get" + field).invoke(i).toString().replaceAll("[\\t\\n\\r]+"," ").trim());
         }
         for (String field : MskimpactSeqDate.getFieldNames()) {
-            seqDateRecord.add(i.getClass().getMethod("get" + field).invoke(i).toString().replaceAll("[\\t\\n\\r]+"," "));
+            seqDateRecord.add(i.getClass().getMethod("get" + field).invoke(i).toString().replaceAll("[\\t\\n\\r]+"," ").trim());
         }
         CompositeClinicalRecord compRecord = new CompositeClinicalRecord();
         if (cvrSampleListUtil.getNewDmpSamples().contains(i.getSAMPLE_ID())) {
-            compRecord.setNewClinicalRecord(StringUtils.join(record, "\t").trim());
+            compRecord.setNewClinicalRecord(StringUtils.join(record, "\t"));
         } else {
-            compRecord.setOldClinicalRecord(StringUtils.join(record, "\t").trim());
+            compRecord.setOldClinicalRecord(StringUtils.join(record, "\t"));
         }
-        compRecord.setSeqDateRecord(StringUtils.join(seqDateRecord, "\t").trim());
+        compRecord.setSeqDateRecord(StringUtils.join(seqDateRecord, "\t"));
         return compRecord;
     }
 }

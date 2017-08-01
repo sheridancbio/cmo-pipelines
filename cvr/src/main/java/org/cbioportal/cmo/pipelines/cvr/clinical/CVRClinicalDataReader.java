@@ -245,7 +245,7 @@ public class CVRClinicalDataReader implements ItemStreamReader<CVRClinicalRecord
                     for(CVRClinicalRecord record : patientToRecordMap.get(mskimpactSeqDate.getPATIENT_ID())) {
                         if (record.getSAMPLE_ID().equals(mskimpactSeqDate.getSAMPLE_ID())) {
                             record.setSEQ_DATE(mskimpactSeqDate.getSEQ_DATE());
-                            continue;
+                            break;
                         }
                     }
                 }
