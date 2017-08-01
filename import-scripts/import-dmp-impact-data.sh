@@ -19,6 +19,7 @@ mskarcher_notification_file=$(mktemp $tmp/mskarcher-portal-update-notification.$
 kingscounty_notification_file=$(mktemp $tmp/kingscounty-portal-update-notification.$now.XXXXXX)
 lehighvalley_notification_file=$(mktemp $tmp/lehighvalley-portal-update-notification.$now.XXXXXX)
 queenscancercenter_notification_file=$(mktemp $tmp/queenscancercenter-portal-update-notification.$now.XXXXXX)
+lymphoma_super_cohort_notification_file=$(mktemp $tmp/lymphoma-super-cohort-portal-update-notification.$now.XXXXXX)
 
 # fetch clinical data mercurial
 echo "fetching updates from msk-impact repository..."
