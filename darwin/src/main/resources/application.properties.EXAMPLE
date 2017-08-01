@@ -46,6 +46,11 @@ darwin.medicaltherapy_timeline_filename=data_timeline_medical_therapy.txt
 darwin.medicaltherapy_clinical_filename=data_clinical_supp_medical_therapy.txt
 darwin.medicaltherapy.skip_negative_dosage_records=true
 
+darwin.mskimpact_suffix=%-IM%
+darwin.mskimpact_heme_suffix=%-IH%
+darwin.mskraindance_suffix=%-T%
+darwin.mskarcher_suffix=%-A%
+
 # For redcap metadata clinical attributes header generation
 metadata_project=
 namespace_project=

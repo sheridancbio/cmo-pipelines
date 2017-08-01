@@ -66,6 +66,18 @@ public class DarwinConfiguration {
     @Value("${darwin.schema}")
     private String schema;
 
+    @Value("${darwin.mskimpact_suffix}")
+    private String mskimpactSuffix;
+
+    @Value("${darwin.mskimpact_heme_suffix}")
+    private String mskimpactHemeSuffix;
+
+    @Value("${darwin.mskraindance_suffix}")
+    private String mskraindanceSuffix;
+
+    @Value("${darwin.mskarcher_suffix}")
+    private String mskarcherSuffix;            
+
 
     @Bean
     public SQLQueryFactory darwinQueryFactory() throws SQLException{
@@ -89,10 +101,10 @@ public class DarwinConfiguration {
     @Bean(name="studyIdRegexMap")    
     public Map<String, String> studyIdRegexMap() {
         Map<String, String> studyIdRegexMap = new HashMap<>();
-        studyIdRegexMap.put("mskimpact", "%-IM%");
-        studyIdRegexMap.put("mskimpact_heme", "%-IH%");
-        studyIdRegexMap.put("mskarcher", "%-AR%");
-        studyIdRegexMap.put("raindance", "%-TS%");
+        studyIdRegexMap.put("mskimpact", mskimpactSuffix);
+        studyIdRegexMap.put("mskimpact_heme", mskimpactHemeSuffix);
+        studyIdRegexMap.put("mskarcher", mskarcherSuffix);
+        studyIdRegexMap.put("mskraindance", mskraindanceSuffix);
         return studyIdRegexMap;
     }
 }
