@@ -176,12 +176,12 @@ public class CVRUtilities {
         }
 
         for (AnnotatedRecord record : annotatedRecords) {
-            if (record.getChromosome().equals(snp.getChromosome()) &&
-                    record.getStart_Position().equals(snp.getStart_Position()) &&
-                    record.getEnd_Position().equals(snp.getEnd_Position()) &&
-                    record.getReference_Allele().equals(snp.getReference_Allele()) &&
-                    record.getTumor_Seq_Allele2().equals(snp.getTumor_Seq_Allele2()) &&
-                    record.getHugo_Symbol().equals(snp.getHugo_Symbol())) {
+            if (record.getCHROMOSOME().equals(snp.getCHROMOSOME()) &&
+                    record.getSTART_POSITION().equals(snp.getSTART_POSITION()) &&
+                    record.getEND_POSITION().equals(snp.getEND_POSITION()) &&
+                    record.getREFERENCE_ALLELE().equals(snp.getREFERENCE_ALLELE()) &&
+                    record.getTUMOR_SEQ_ALLELE2().equals(snp.getTUMOR_SEQ_ALLELE2()) &&
+                    record.getHUGO_SYMBOL().equals(snp.getHUGO_SYMBOL())) {
                 return true;
             }
         }
@@ -189,44 +189,44 @@ public class CVRUtilities {
     }
 
     public AnnotatedRecord buildCVRAnnotatedRecord(MutationRecord record) {
-        String hugoSymbol = record.getHugo_Symbol();
-        String entrezGeneId = record.getEntrez_Gene_Id();
-        String center = record.getCenter();
-        String ncbiBuild = record.getNCBI_Build();
-        String chromosome = record.getChromosome();
-        String startPosition = record.getStart_Position();
-        String strand = record.getStrand();
-        String variantClassification = record.getVariant_Classification();
-        String variantType = record.getVariant_Type();
-        String referenceAllele = record.getReference_Allele();
-        String endPosition = record.getEnd_Position();
-        String tumorSeqAllele1 = record.getTumor_Seq_Allele1();
-        String tumorSeqAllele2 = record.getTumor_Seq_Allele2();
-        String dbSnpRs = record.getdbSNP_RS();
-        String dbSnpValStatus = record.getdbSNP_Val_Status();
-        String tumorSampleBarcode = record.getTumor_Sample_Barcode();
-        String matchedNormSampleBarcode = record.getMatched_Norm_Sample_Barcode();
-        String matchedNormSeqAllele1 = record.getMatch_Norm_Seq_Allele1();
-        String matchedNormSeqAllele2 = record.getMatch_Norm_Seq_Allele2();
-        String tumorValidationAllele1 = record.getTumor_Validation_Allele1();
-        String tumorValidationAllele2 = record.getTumor_Validation_Allele2();
-        String matchNormValidationAllele1 = record.getMatch_Norm_Validation_Allele1();
-        String matchNormValidationAllele2 = record.getMatch_Norm_Validation_Allele2();
-        String verificationStatus = record.getVerification_Status();
-        String validationStatus = record.getValidation_Status();
-        String mutationStatus = record.getMutation_Status();
-        String sequencingPhase = record.getSequencing_Phase();
-        String sequencingSource = record.getSequence_Source();
-        String validationMethod = record.getValidation_Method();
-        String score = record.getScore();
-        String bamFile = record.getBAM_File();
-        String sequencer = record.getSequencer();
-        String tumorSampleUUID = record.getTumor_Sample_UUID();
-        String matchedNormSampleUUID = record.getMatched_Norm_Sample_UUID();
-        String tRefCount = record.gett_ref_count();
-        String nRefCount = record.getn_ref_count();
-        String tAltCount = record.gett_alt_count();
-        String nAltCount = record.getn_alt_count();
+        String hugoSymbol = record.getHUGO_SYMBOL();
+        String entrezGeneId = record.getENTREZ_GENE_ID();
+        String center = record.getCENTER();
+        String ncbiBuild = record.getNCBI_BUILD();
+        String chromosome = record.getCHROMOSOME();
+        String startPosition = record.getSTART_POSITION();
+        String strand = record.getSTRAND();
+        String variantClassification = record.getVARIANT_CLASSIFICATION();
+        String variantType = record.getVARIANT_TYPE();
+        String referenceAllele = record.getREFERENCE_ALLELE();
+        String endPosition = record.getEND_POSITION();
+        String tumorSeqAllele1 = record.getTUMOR_SEQ_ALLELE1();
+        String tumorSeqAllele2 = record.getTUMOR_SEQ_ALLELE2();
+        String dbSnpRs = record.getDBSNP_RS();
+        String dbSnpValStatus = record.getDBSNP_VAL_STATUS();
+        String tumorSampleBarcode = record.getTUMOR_SAMPLE_BARCODE();
+        String matchedNormSampleBarcode = record.getMATCHED_NORM_SAMPLE_BARCODE();
+        String matchedNormSeqAllele1 = record.getMATCH_NORM_SEQ_ALLELE1();
+        String matchedNormSeqAllele2 = record.getMATCH_NORM_SEQ_ALLELE2();
+        String tumorValidationAllele1 = record.getTUMOR_VALIDATION_ALLELE1();
+        String tumorValidationAllele2 = record.getTUMOR_VALIDATION_ALLELE2();
+        String matchNormValidationAllele1 = record.getMATCH_NORM_VALIDATION_ALLELE1();
+        String matchNormValidationAllele2 = record.getMATCH_NORM_VALIDATION_ALLELE2();
+        String verificationStatus = record.getVERIFICATION_STATUS();
+        String validationStatus = record.getVALIDATION_STATUS();
+        String mutationStatus = record.getMUTATION_STATUS();
+        String sequencingPhase = record.getSEQUENCING_PHASE();
+        String sequencingSource = record.getSEQUENCE_SOURCE();
+        String validationMethod = record.getVALIDATION_METHOD();
+        String score = record.getSCORE();
+        String bamFile = record.getBAM_FILE();
+        String sequencer = record.getSEQUENCER();
+        String tumorSampleUUID = record.getTUMOR_SAMPLE_UUID();
+        String matchedNormSampleUUID = record.getMATCHED_NORM_SAMPLE_UUID();
+        String tRefCount = record.getT_REF_COUNT();
+        String nRefCount = record.getN_REF_COUNT();
+        String tAltCount = record.getT_ALT_COUNT();
+        String nAltCount = record.getN_ALT_COUNT();
         Map<String ,String> additionalProperties = record.getAdditionalProperties();
         return new AnnotatedRecord(hugoSymbol, entrezGeneId, center, ncbiBuild, chromosome,
                 startPosition, endPosition, strand, variantClassification, variantType, referenceAllele,
