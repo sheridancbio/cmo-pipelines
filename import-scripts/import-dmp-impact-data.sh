@@ -83,15 +83,25 @@ cd $MSK_IMPACT_DATA_HOME;$HG_BINARY commit -m "Latest MSK-IMPACT Dataset: CRDB"
 
 # fetch Darwin data
 
-echo "fetching Darwin data"
+echo "fetching Darwin impact data"
 echo $(date)
 $JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -jar $PORTAL_HOME/lib/darwin_fetcher.jar -d $MSK_IMPACT_DATA_HOME -s mskimpact
-cd $MSK_IMPACT_DATA_HOME;$HG_BINARY commit -m "Latest MSK-IMPACT Dataset: Darwin"
+cd $MSK_IMPACT_DATA_HOME;$HG_BINARY commit -m "Latest MSK-IMPACT Dataset: Darwin impact"
 
 echo "fetching Darwin heme data"
 echo $(date)
 $JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -jar $PORTAL_HOME/lib/darwin_fetcher.jar -d $MSK_HEMEPACT_DATA_HOME -s mskimpact_heme
 cd $MSK_HEMEPACT_DATA_HOME;$HG_BINARY commit -m "Latest MSK-IMPACT Dataset: Darwin heme"
+
+echo "fetching Darwin raindance data"
+echo $(date)
+$JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -jar $PORTAL_HOME/lib/darwin_fetcher.jar -d $MSK_RAINDANCE_DATA_HOME -s mskraindance
+cd $MSK_RAINDANCE_DATA_HOME;$HG_BINARY commit -m "Latest MSK-IMPACT Dataset: Darwin raindance"
+
+echo "fetching Darwin archer data"
+echo $(date)
+$JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -jar $PORTAL_HOME/lib/darwin_fetcher.jar -d $MSK_ARCHER_DATA_HOME -s mskarcher
+cd $MSK_ARCHER_DATA_HOME;$HG_BINARY commit -m "Latest MSK-IMPACT Dataset: Darwin archer"
 
 DB_VERSION_FAIL=0
 IMPORT_STATUS_IMPACT=0
