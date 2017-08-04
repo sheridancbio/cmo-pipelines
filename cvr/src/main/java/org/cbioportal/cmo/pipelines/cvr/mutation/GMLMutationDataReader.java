@@ -109,13 +109,13 @@ public class GMLMutationDataReader implements ItemStreamReader<AnnotatedRecord> 
                             annotatedRecord = annotator.annotateRecord(record, false, "mskcc", forceAnnotation);
                         }
                         catch (HttpServerErrorException e) {
-                            log.warn("Failed to annotate a record from json! Sample: " + sampleId + " Variant: " + record.getChromosome() + ":" + record.getStart_Position() + record.getReference_Allele() + ">" + record.getTumor_Seq_Allele2());
+                            log.warn("Failed to annotate a record from json! Sample: " + sampleId + " Variant: " + record.getCHROMOSOME() + ":" + record.getSTART_POSITION() + record.getREFERENCE_ALLELE() + ">" + record.getTUMOR_SEQ_ALLELE2());
                             annotatedRecord = cvrUtilities.buildCVRAnnotatedRecord(record);
                         }
                         mutationRecords.add(annotatedRecord);
                         header.addAll(record.getHeaderWithAdditionalFields());
                         additionalPropertyKeys.addAll(record.getAdditionalProperties().keySet());
-                        mutationMap.getOrDefault(annotatedRecord.getTumor_Sample_Barcode(), new ArrayList()).add(annotatedRecord);
+                        mutationMap.getOrDefault(annotatedRecord.getTUMOR_SAMPLE_BARCODE(), new ArrayList()).add(annotatedRecord);
                         germlineSamples.add(sampleId);
                     }
                 }
@@ -146,20 +146,20 @@ public class GMLMutationDataReader implements ItemStreamReader<AnnotatedRecord> 
             reader.open(ec);
             try {
                 MutationRecord to_add;
-                while ((to_add = reader.read()) != null && to_add.getTumor_Sample_Barcode() != null) {
+                while ((to_add = reader.read()) != null && to_add.getTUMOR_SAMPLE_BARCODE() != null) {
                     AnnotatedRecord to_add_annotated;
                     try {
                         to_add_annotated = annotator.annotateRecord(to_add, false, "mskcc", forceAnnotation);
                     }
                     catch (HttpServerErrorException e) {
-                        log.warn("Failed to annotate a record from existing file! Sample: " + to_add.getTumor_Sample_Barcode() + " Variant: " + to_add.getChromosome() + ":" + to_add.getStart_Position() + to_add.getReference_Allele() + ">" + to_add.getTumor_Seq_Allele2());
+                        log.warn("Failed to annotate a record from existing file! Sample: " + to_add.getTUMOR_SAMPLE_BARCODE() + " Variant: " + to_add.getCHROMOSOME() + ":" + to_add.getSTART_POSITION() + to_add.getREFERENCE_ALLELE() + ">" + to_add.getTUMOR_SEQ_ALLELE2());
                         to_add_annotated = cvrUtilities.buildCVRAnnotatedRecord(to_add);
                     }
-                    if (!cvrUtilities.isDuplicateRecord(to_add, mutationMap.get(to_add.getTumor_Sample_Barcode())) && !(germlineSamples.contains(to_add.getTumor_Sample_Barcode()) && to_add.getMutation_Status().equals("GERMLINE"))) {
+                    if (!cvrUtilities.isDuplicateRecord(to_add, mutationMap.get(to_add.getTUMOR_SAMPLE_BARCODE())) && !(germlineSamples.contains(to_add.getTUMOR_SAMPLE_BARCODE()) && to_add.getMUTATION_STATUS().equals("GERMLINE"))) {
                         mutationRecords.add(to_add_annotated);
                         header.addAll(to_add_annotated.getHeaderWithAdditionalFields());
                         additionalPropertyKeys.addAll(to_add_annotated.getAdditionalProperties().keySet());
-                        mutationMap.getOrDefault(to_add_annotated.getTumor_Sample_Barcode(), new ArrayList()).add(to_add_annotated);
+                        mutationMap.getOrDefault(to_add_annotated.getTUMOR_SAMPLE_BARCODE(), new ArrayList()).add(to_add_annotated);
                     }
                 }
                 ec.put("commentLines", cvrUtilities.processFileComments(mutationFile));
@@ -184,8 +184,8 @@ public class GMLMutationDataReader implements ItemStreamReader<AnnotatedRecord> 
     public AnnotatedRecord read() throws Exception {
         if (!mutationRecords.isEmpty()) {
             AnnotatedRecord annotatedRecord = mutationRecords.remove(0);
-            if (!cvrSampleListUtil.getPortalSamples().contains(annotatedRecord.getTumor_Sample_Barcode())) {
-                cvrSampleListUtil.addSampleRemoved(annotatedRecord.getTumor_Sample_Barcode());
+            if (!cvrSampleListUtil.getPortalSamples().contains(annotatedRecord.getTUMOR_SAMPLE_BARCODE())) {
+                cvrSampleListUtil.addSampleRemoved(annotatedRecord.getTUMOR_SAMPLE_BARCODE());
                 return read();
             }
             for (String additionalProperty : additionalPropertyKeys) {
