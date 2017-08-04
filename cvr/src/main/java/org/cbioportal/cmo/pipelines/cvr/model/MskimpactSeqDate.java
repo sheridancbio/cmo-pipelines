@@ -46,7 +46,7 @@ public class MskimpactSeqDate {
      * @return the SAMPLE_ID
      */
     public String getSAMPLE_ID() {
-        return SAMPLE_ID;
+        return SAMPLE_ID != null ? SAMPLE_ID : "";
     }
 
     /**
@@ -60,7 +60,7 @@ public class MskimpactSeqDate {
      * @return the PATIENT_ID
      */
     public String getPATIENT_ID() {
-        return PATIENT_ID;
+        return PATIENT_ID != null ? PATIENT_ID : "";
     }
 
     /**
@@ -74,7 +74,7 @@ public class MskimpactSeqDate {
      * @return the SEQ_DATE
      */
     public String getSEQ_DATE() {
-        return SEQ_DATE;
+        return SEQ_DATE != null ? SEQ_DATE : "";
     }
 
     /**
