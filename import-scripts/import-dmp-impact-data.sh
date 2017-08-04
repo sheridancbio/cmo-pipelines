@@ -617,6 +617,9 @@ if [ $LYMPHOMA_SUPER_COHORT_SUBSET_FAIL -eq 0 ]; then
         echo "Lymphoma super cohort subset failed! Lymphoma super cohort study will not be updated in the portal."
         LYMPHOMA_SUPER_COHORT_SUBSET_FAIL=1
     fi
+    # remove files we don't need for lymphoma super cohort
+    rm $LYMPHOMA_SUPER_COHORT_DATA_HOME/*genie*
+    rm $LYMPHOMA_SUPER_COHORT_DATA_HOME/seq_date.txt
 fi
 
 # check that meta_clinical.txt and meta_SV.txt are actually empty files before deleting from IMPACT, HEME, and RAINDANCE studies
