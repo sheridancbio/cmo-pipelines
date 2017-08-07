@@ -52,7 +52,7 @@ public class CVRMutationDataProcessor implements ItemProcessor<AnnotatedRecord, 
         List<String> record = new ArrayList<>();
         for (String field : header) {
             try {
-                record.add(i.getClass().getMethod("get" + field).invoke(i).toString().replaceAll("[\\t\\n\\r]+"," "));
+                record.add(i.getClass().getMethod("get" + field.toUpperCase()).invoke(i).toString().replaceAll("[\\t\\n\\r]+"," "));
             } catch (Exception e) {
                 record.add(i.getAdditionalProperties().getOrDefault(field, "").replace("\r\n", " ").replaceAll("[\\t\\n\\r]+"," "));
             }
