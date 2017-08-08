@@ -62,6 +62,7 @@ if [ $STUDY_ID == "genie" ]; then
 
     # expand data_clinical_supp_sample.txt with ONCOTREE_CODE, SAMPLE_TYPE, GENE_PANEL from data_clinical.txt
     $PYTHON_BINARY $PORTAL_SCRIPTS_DIRECTORY/expand-clinical-data.py --study-id="genie" --clinical-file="$OUTPUT_DIRECTORY/data_clinical_supp_sample.txt" --clinical-supp-file="$MSK_IMPACT_DATA_DIRECTORY/data_clinical.txt" --fields="ONCOTREE_CODE,SAMPLE_TYPE,GENE_PANEL"
+    $PYTHON_BINARY $PORTAL_SCRIPTS_DIRECTORY/expand-clinical-data.py --study-id="genie" --clinical-file="$OUTPUT_DIRECTORY/data_clinical_supp_patient.txt" --clinical-supp-file="$MSK_IMPACT_DATA_DIRECTORY/data_clinical_supp_darwin_demographics.txt" --fields="AGE_AT_DEATH,AGE_AT_LAST_FOLLOWUP"
 
     #rename GENE_PANEL to SEQ_ASSAY_ID
     sed 's/GENE_PANEL/SEQ_ASSAY_ID/' $OUTPUT_DIRECTORY/data_clinical_supp_sample.txt > $OUTPUT_DIRECTORY/data_clinical_supp_sample.txt.tmp

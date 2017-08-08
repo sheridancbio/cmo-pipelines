@@ -24,10 +24,16 @@ def expand_clinical_data_main(clinical_filename, fields, impact_data_only):
 	data_reader = csv.DictReader(data_file, dialect = 'excel-tab')
 	output_data = ['\t'.join(header)]
 	for line in data_reader:
-		if impact_data_only and not is_impact_sample(line['SAMPLE_ID'].strip()):
-			continue
+		try:
+			if impact_data_only and not is_impact_sample(line['SAMPLE_ID'].strip()):
+				continue
+		except KeyError:
+			print >> ERROR_FILE, "No SAMPLE_ID column, skipping impact_data_only check"	
 		# update line with supplemental sample clinical data and format data as string for output file		
-		line.update(SUPPLEMENTAL_SAMPLE_CLINICAL_DATA.get(line['SAMPLE_ID'].strip(), {}))
+		try:
+			line.update(SUPPLEMENTAL_SAMPLE_CLINICAL_DATA.get(line['SAMPLE_ID'].strip(), {}))
+		except KeyError:
+			line.update(SUPPLEMENTAL_SAMPLE_CLINICAL_DATA.get(line['PATIENT_ID'].strip(), {}))
 		data = map(lambda v: line.get(v,''), header)
 		output_data.append('\t'.join(data))
 	data_file.close()	
@@ -45,14 +51,20 @@ def load_supplemental_clinical_data(supplemental_clinical_filename, supplemental
 	for line in data_reader:
 		if study_id == 'genie':
 			normalize_genie_sample_type(line)
-		SUPPLEMENTAL_SAMPLE_CLINICAL_DATA[line['SAMPLE_ID'].strip()] = dict({(k,v) for k,v in line.items() if k in supplemental_fields})
+		try:
+			SUPPLEMENTAL_SAMPLE_CLINICAL_DATA[line['SAMPLE_ID'].strip()] = dict({(k,v) for k,v in line.items() if k in supplemental_fields})
+		except KeyError:
+			SUPPLEMENTAL_SAMPLE_CLINICAL_DATA[line['PATIENT_ID'].strip()] = dict({(k,v) for k,v in line.items() if k in supplemental_fields})
 	data_file.close()
 
 def normalize_genie_sample_type(data):
-	if data['SAMPLE_TYPE'].strip() == 'Metastasis':
-		data['SAMPLE_TYPE'] = '4'
-	elif data['SAMPLE_TYPE'].strip() == 'Primary':
-		data['SAMPLE_TYPE'] = '1'
+	try:
+		if data['SAMPLE_TYPE'].strip() == 'Metastasis':
+			data['SAMPLE_TYPE'] = '4'
+		elif data['SAMPLE_TYPE'].strip() == 'Primary':
+			data['SAMPLE_TYPE'] = '1'
+	except KeyError:
+		print >> ERROR_FILE, "No SAMPLE_TYPE column detected, cannot normalize genie sample type"
 	return data
 
 def is_impact_sample(sample_id):

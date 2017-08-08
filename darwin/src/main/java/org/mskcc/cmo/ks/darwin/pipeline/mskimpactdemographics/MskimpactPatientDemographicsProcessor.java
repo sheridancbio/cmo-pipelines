@@ -47,7 +47,8 @@ public class MskimpactPatientDemographicsProcessor implements ItemProcessor<Mski
     public String process(final MskimpactPatientDemographics darwinPatientDemographics) throws Exception{
         List<String> record = new ArrayList<>();
         for(String field : new MskimpactPatientDemographics().getFieldNames()){
-            record.add(darwinPatientDemographics.getClass().getMethod("get"+field).invoke(darwinPatientDemographics).toString());
+            Object value = darwinPatientDemographics.getClass().getMethod("get"+field).invoke(darwinPatientDemographics);            
+            record.add(value != null ? value.toString() : "NA");
         }
         
         return StringUtils.join(record, "\t");
