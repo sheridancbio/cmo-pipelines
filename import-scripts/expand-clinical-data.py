@@ -7,11 +7,12 @@ import re
 ERROR_FILE = sys.stderr
 OUTPUT_FILE = sys.stdout
 
-SUPPLEMENTAL_SAMPLE_CLINICAL_DATA = {}
+SUPPLEMENTAL_CLINICAL_DATA = {}
 FILTERED_SAMPLE_IDS = set()
 IMPACT_SAMPLE_PATTERN = re.compile('P-\d*-T\d\d-IM\d*')
+IMPACT_PATIENT_PATTERN = re.compile('P-\d*')
 
-def expand_clinical_data_main(clinical_filename, fields, impact_data_only):
+def expand_clinical_data_main(clinical_filename, fields, impact_data_only, identifier_column_name):
 	""" Loads supplemental clinical data from data_clinical.txt and writes data to output directory. """
 	# add supp fields to header if not already exists
 	header = get_file_header(clinical_filename)
@@ -24,16 +25,10 @@ def expand_clinical_data_main(clinical_filename, fields, impact_data_only):
 	data_reader = csv.DictReader(data_file, dialect = 'excel-tab')
 	output_data = ['\t'.join(header)]
 	for line in data_reader:
-		try:
-			if impact_data_only and not is_impact_sample(line['SAMPLE_ID'].strip()):
-				continue
-		except KeyError:
-			print >> ERROR_FILE, "No SAMPLE_ID column, skipping impact_data_only check"	
-		# update line with supplemental sample clinical data and format data as string for output file		
-		try:
-			line.update(SUPPLEMENTAL_SAMPLE_CLINICAL_DATA.get(line['SAMPLE_ID'].strip(), {}))
-		except KeyError:
-			line.update(SUPPLEMENTAL_SAMPLE_CLINICAL_DATA.get(line['PATIENT_ID'].strip(), {}))
+		if impact_data_only and not is_impact_sample_or_patient(line[identifier_column_name].strip()):
+			continue
+		# update line with supplemental sample clinical data and format data as string for output file
+		line.update(SUPPLEMENTAL_CLINICAL_DATA.get(line[identifier_column_name].strip(), {}))
 		data = map(lambda v: line.get(v,''), header)
 		output_data.append('\t'.join(data))
 	data_file.close()	
@@ -44,17 +39,14 @@ def expand_clinical_data_main(clinical_filename, fields, impact_data_only):
 	output_file.close()
 	print >> OUTPUT_FILE, 'Updated clinical file `' + clinical_filename + '` with supp fields: ' + ', '.join(fields)
 
-def load_supplemental_clinical_data(supplemental_clinical_filename, supplemental_fields, study_id):
-	""" Loads supplemental clinical data from supplemental_clinical_filename into SUPPLEMENTAL_SAMPLE_CLINICAL_DATA. """
+def load_supplemental_clinical_data(supplemental_clinical_filename, supplemental_fields, study_id, identifier_column_name):
+	""" Loads supplemental clinical data from supplemental_clinical_filename into SUPPLEMENTAL_CLINICAL_DATA. """
 	data_file = open(supplemental_clinical_filename, 'rU')
 	data_reader = csv.DictReader(data_file, dialect = 'excel-tab')
 	for line in data_reader:
-		if study_id == 'genie':
+		if study_id == 'genie' and identifier_column_name == 'SAMPLE_ID':
 			normalize_genie_sample_type(line)
-		try:
-			SUPPLEMENTAL_SAMPLE_CLINICAL_DATA[line['SAMPLE_ID'].strip()] = dict({(k,v) for k,v in line.items() if k in supplemental_fields})
-		except KeyError:
-			SUPPLEMENTAL_SAMPLE_CLINICAL_DATA[line['PATIENT_ID'].strip()] = dict({(k,v) for k,v in line.items() if k in supplemental_fields})
+		SUPPLEMENTAL_CLINICAL_DATA[line[identifier_column_name].strip()] = dict({(k,v) for k,v in line.items() if k in supplemental_fields})
 	data_file.close()
 
 def normalize_genie_sample_type(data):
@@ -67,9 +59,9 @@ def normalize_genie_sample_type(data):
 		print >> ERROR_FILE, "No SAMPLE_TYPE column detected, cannot normalize genie sample type"
 	return data
 
-def is_impact_sample(sample_id):
+def is_impact_sample_or_patient(case_identifier):
 	""" Determine whether sample id is from IMPACT """
-	if IMPACT_SAMPLE_PATTERN.match(sample_id):
+	if IMPACT_SAMPLE_PATTERN.match(case_identifier) or IMPACT_PATIENT_PATTERN.match(case_identifier):
 		return True
 	return False
 
@@ -82,7 +74,7 @@ def get_file_header(filename):
 	return header
 
 def usage():
-	print >> OUTPUT_FILE, "expand-clinical-data.py --study-id [study id] --clinical-file [path to clinical file] --clinical-supp-file [path to clinical supp file] --fields [comma-delimited list of fields to expand the clinical file]"
+	print >> OUTPUT_FILE, "expand-clinical-data.py --study-id [study id] --clinical-file [path to clinical file] --clinical-supp-file [path to clinical supp file] --fields [comma-delimited list of fields to expand the clinical file] --identifier-column-name [PATIENT_ID|SAMPLE_ID]"
 	sys.exit(2)
 
 def main():
@@ -92,16 +84,18 @@ def main():
 	parser.add_option('-s', '--clinical-supp-file', action = 'store', dest = 'clinsuppfile')
 	parser.add_option('-f', '--fields', action = 'store', dest = 'fields')
 	parser.add_option('-i', '--study-id', action = 'store', dest = 'studyid')
+	parser.add_option('-d', '--identifier-column-name', action = 'store', dest = 'idcolumn')
 
 	(options, args) = parser.parse_args()
 	clin_file = options.clinfile
 	clin_supp_file = options.clinsuppfile
 	fields = options.fields.split(',')
 	study_id = options.studyid
+	identifier_column_name = options.idcolumn
 
 	# check arguments
-	if not clin_file or not clin_supp_file or not fields or not study_id:
-		print >> ERROR_FILE, "Clinical file, clinical supp file, fields, and study id must be provided!"
+	if not clin_file or not clin_supp_file or not fields or not study_id or not identifier_column_name:
+		print >> ERROR_FILE, "Clinical file, clinical supp file, fields, study id, and identifier column name must be provided!"
 		usage()
 	if not os.path.exists(clin_file):
 		print >> ERROR_FILE, "No such file: " + clin_file
@@ -109,14 +103,17 @@ def main():
 	if not os.path.exists(clin_supp_file):
 		print >> ERROR_FILE, "No such file: " + clin_supp_file
 		usage()
+	if identifier_column_name != 'SAMPLE_ID' and identifier_column_name != 'PATIENT_ID':
+		print >> ERROR_FILE, "Identifier column name provided must equal PATIENT_ID or SAMPLE_ID"
+		usage()
 
 	impact_data_only = False
 	if study_id == 'genie':
 		impact_data_only = True
 
 	# load supplemental data from the clinical supp file
-	load_supplemental_clinical_data(clin_supp_file, fields, study_id)
-	expand_clinical_data_main(clin_file, fields, impact_data_only)
+	load_supplemental_clinical_data(clin_supp_file, fields, study_id, identifier_column_name)
+	expand_clinical_data_main(clin_file, fields, impact_data_only, identifier_column_name)
 
 
 
