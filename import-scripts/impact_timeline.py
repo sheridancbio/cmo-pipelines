@@ -89,7 +89,7 @@ def write_map_to_file(filtered_samples, hgrepo):
 
     fieldnames = ['PATIENT_ID', 'SAMPLE_ID', 'DATE_ADDED', 'MONTH_ADDED', 'WEEK_ADDED']
     output_file = open(os.path.join(hgrepo,'data_clinical_supp_date.txt'), 'wb')
-    writer = csv.DictWriter(output_file, fieldnames = fieldnames, dialect = 'excel-tab')
+    writer = csv.DictWriter(output_file, fieldnames = fieldnames, dialect = 'excel-tab', lineterminator = '\n')
     writer.writeheader()
     for k, v in filtered_samples.iteritems():
         if k in current_sample_list:
