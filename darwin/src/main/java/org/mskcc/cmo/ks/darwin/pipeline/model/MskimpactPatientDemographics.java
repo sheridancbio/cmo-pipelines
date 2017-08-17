@@ -336,6 +336,8 @@ public class MskimpactPatientDemographics {
         fieldNames.add("ETHNICITY");
         fieldNames.add("OS_STATUS");
         fieldNames.add("OS_MONTHS");
+        fieldNames.add("AGE_AT_DATE_OF_DEATH_IN_DAYS");
+        fieldNames.add("AGE_AT_LAST_KNOWN_ALIVE_IN_DAYS");
 
         return fieldNames;
 
@@ -350,6 +352,8 @@ public class MskimpactPatientDemographics {
         fieldNames.add("ETHNICITY");
         fieldNames.add("OS_STATUS");
         fieldNames.add("OS_MONTHS");
+        fieldNames.add("AGE_AT_DEATH");
+        fieldNames.add("AGE_AT_LAST_FOLLOWUP");
 
         return fieldNames;
 

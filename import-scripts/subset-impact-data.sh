@@ -61,14 +61,25 @@ if [ $STUDY_ID == "genie" ]; then
     $PYTHON_BINARY $PORTAL_SCRIPTS_DIRECTORY/generate-clinical-subset.py --study-id="genie" --clinical-file="$OUTPUT_DIRECTORY/data_clinical_supp_sample.txt" --clinical-supp-file="$CLINICAL_SUPP_FILE" --filter-criteria="$FILTER_CRITERIA" --subset-filename="$SUBSET_FILENAME" --anonymize-date='true' --clinical-patient-file="$OUTPUT_DIRECTORY/data_clinical_supp_patient.txt"
 
     # expand data_clinical_supp_sample.txt with ONCOTREE_CODE, SAMPLE_TYPE, GENE_PANEL from data_clinical.txt
-    $PYTHON_BINARY $PORTAL_SCRIPTS_DIRECTORY/expand-clinical-data.py --study-id="genie" --clinical-file="$OUTPUT_DIRECTORY/data_clinical_supp_sample.txt" --clinical-supp-file="$MSK_IMPACT_DATA_DIRECTORY/data_clinical.txt" --fields="ONCOTREE_CODE,SAMPLE_TYPE,GENE_PANEL"
+    $PYTHON_BINARY $PORTAL_SCRIPTS_DIRECTORY/expand-clinical-data.py --study-id="genie" --clinical-file="$OUTPUT_DIRECTORY/data_clinical_supp_sample.txt" --clinical-supp-file="$MSK_IMPACT_DATA_DIRECTORY/data_clinical.txt" --fields="ONCOTREE_CODE,SAMPLE_TYPE,GENE_PANEL" --identifier-column-name="SAMPLE_ID"
+    $PYTHON_BINARY $PORTAL_SCRIPTS_DIRECTORY/expand-clinical-data.py --study-id="genie" --clinical-file="$OUTPUT_DIRECTORY/data_clinical_supp_patient.txt" --clinical-supp-file="$MSK_IMPACT_DATA_DIRECTORY/data_clinical_supp_darwin_demographics.txt" --fields="AGE_AT_DEATH,AGE_AT_LAST_FOLLOWUP" --identifier-column-name="PATIENT_ID"
 
     #rename GENE_PANEL to SEQ_ASSAY_ID
     sed 's/GENE_PANEL/SEQ_ASSAY_ID/' $OUTPUT_DIRECTORY/data_clinical_supp_sample.txt > $OUTPUT_DIRECTORY/data_clinical_supp_sample.txt.tmp
     mv $OUTPUT_DIRECTORY/data_clinical_supp_sample.txt.tmp $OUTPUT_DIRECTORY/data_clinical_supp_sample.txt
     
+    # touch meta clinical if not already exists
+    if [ ! -f $MSK_IMPACT_DATA_DIRECTORY/meta_clinical.txt ]; then
+        touch $MSK_IMPACT_DATA_DIRECTORY/meta_clinical.txt
+    fi
+
     # generate subset of impact data using the subset file generated above
     $PYTHON_BINARY $PORTAL_SCRIPTS_DIRECTORY/merge.py  -d $OUTPUT_DIRECTORY -i "genie" -s "$SUBSET_FILENAME" -x "true" $MSK_IMPACT_DATA_DIRECTORY
+    
+    # remove if file empty
+    if [ $(wc -l < $MSK_IMPACT_DATA_HOME/meta_clinical.txt) -eq 0 ]; then
+        rm $MSK_IMPACT_DATA_HOME/meta_clinical.txt
+    fi
 else
     # generate subset list of sample ids based on filter criteria and subset MSK-IMPACT using generated list in $SUBSET_FILENAME
     $PYTHON_BINARY $PORTAL_SCRIPTS_DIRECTORY/generate-clinical-subset.py --study-id="$STUDY_ID" --clinical-file="$MSK_IMPACT_DATA_DIRECTORY/data_clinical.txt" --filter-criteria="$FILTER_CRITERIA" --subset-filename="$SUBSET_FILENAME"

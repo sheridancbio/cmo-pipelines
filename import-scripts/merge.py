@@ -132,7 +132,7 @@ PATIENT_SAMPLE_MAP = {}
 # ------------------------------------------------------------------------------
 # Functions
 
-def merge_studies(file_types, reference_list, keep_match, output_directory, study_id, cancer_type, exclude_supp_data):
+def merge_studies(file_types, reference_list, keep_match, output_directory, study_id, cancer_type, exclude_supp_data, merge_clinical):
     """
         Goes through all the potential file types and calls correct function for those types.
         Normal merge, profile merge, and straight copy are the possibilities
@@ -141,6 +141,9 @@ def merge_studies(file_types, reference_list, keep_match, output_directory, stud
     for file_type, files in file_types.items():
         if len(files) > 0:
             if file_type in META_FILE_MAP:
+                if not merge_clinical and 'clinical' in file_type:
+                    continue
+
                 # make sure there are data files in list so that empty files aren't generated
                 if len(file_types[META_FILE_MAP[file_type][0]]) == 0:
                     continue
@@ -661,21 +664,20 @@ def organize_files(studies, file_types, merge_clinical):
             elif TIMELINE_FILE_PATTERN in study_file:
                 file_types[TIMELINE_FILE_PATTERN].append(study_file)
             # CLINICAL FILE PATTERN MATCHING
-            elif merge_clinical and 'clinical' in study_file:
-                if CLINICAL_META_PATTERN in study_file:
-                    file_types[CLINICAL_META_PATTERN].append(study_file)
-                elif CLINICAL_PATIENT_META_PATTERN in study_file:
-                    file_types[CLINICAL_PATIENT_META_PATTERN].append(study_file)
-                elif CLINICAL_SAMPLE_META_PATTERN in study_file:
-                    file_types[CLINICAL_SAMPLE_META_PATTERN].append(study_file)
-                elif CLINICAL_FILE_PATTERN in study_file:
-                    file_types[CLINICAL_FILE_PATTERN].append(study_file)
-                elif CLINICAL_PATIENT_FILE_PATTERN in study_file:
-                    file_types[CLINICAL_PATIENT_FILE_PATTERN].append(study_file)
-                elif CLINICAL_SAMPLE_FILE_PATTERN in study_file:
-                    file_types[CLINICAL_SAMPLE_FILE_PATTERN].append(study_file)
-                else:
-                    file_types[SUPP_DATA].append(study_file)
+            elif CLINICAL_META_PATTERN in study_file:
+                file_types[CLINICAL_META_PATTERN].append(study_file)
+            elif CLINICAL_PATIENT_META_PATTERN in study_file:
+                file_types[CLINICAL_PATIENT_META_PATTERN].append(study_file)
+            elif CLINICAL_SAMPLE_META_PATTERN in study_file:
+                file_types[CLINICAL_SAMPLE_META_PATTERN].append(study_file)
+            elif CLINICAL_FILE_PATTERN in study_file:
+                file_types[CLINICAL_FILE_PATTERN].append(study_file)
+            elif CLINICAL_PATIENT_FILE_PATTERN in study_file:
+                file_types[CLINICAL_PATIENT_FILE_PATTERN].append(study_file)
+            elif CLINICAL_SAMPLE_FILE_PATTERN in study_file:
+                file_types[CLINICAL_SAMPLE_FILE_PATTERN].append(study_file)
+            elif DATA_CLINICAL_SUPP_PREFIX in study_file:
+                file_types[SUPP_DATA].append(study_file)
             else:
                 file_types[SUPP_DATA].append(study_file)
 
@@ -791,7 +793,7 @@ def main():
     reference_list,keep_match = generate_patient_sample_mapping(file_types, sublist, excluded_samples_list)
 
     # merge the studies
-    merge_studies(file_types, reference_list, keep_match, output_directory, study_id, cancer_type, exclude_supp_data)
+    merge_studies(file_types, reference_list, keep_match, output_directory, study_id, cancer_type, exclude_supp_data, merge_clinical)
 
 # do the main
 if __name__ == '__main__':
