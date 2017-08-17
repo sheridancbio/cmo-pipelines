@@ -62,7 +62,6 @@ function addDateAddedData {
 
     # add "date added" to clinical data file
     $PYTHON_BINARY $PORTAL_HOME/scripts/impact_timeline.py --hgrepo=$STUDY_DATA_DIRECTORY
-    sed -i '/^\s*$/d' $STUDY_DATA_DIRECTORY/data_clinical_supp_date.txt
     cd $STUDY_DATA_DIRECTORY; rm *.orig
     rm $STUDY_DATA_DIRECTORY/case_lists/*.orig
 }
