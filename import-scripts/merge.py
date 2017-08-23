@@ -375,22 +375,32 @@ def get_header(filename):
 
 def process_header(data_filenames, reference_list, keep_match, merge_style):
     """ Handles header merging, accumulating all column names """
-    header = []
+    
     if merge_style is MERGE_STYLES[PROFILE]:
+        header = []
+        profile_header_data = {}
         for fname in data_filenames:
-            new_header = []
-            if len(reference_list) > 0:
-                for hdr in [hdr for hdr in get_header(fname) if hdr not in header]:
-                    if hdr.upper() in NON_CASE_IDS:
-                        new_header.append(hdr)
-                    else:
-                        add_hdr = (keep_match == (hdr in reference_list))
-                        if add_hdr:
-                            new_header.append(hdr)
-            else:
-                new_header = [hdr for hdr in get_header(fname) if hdr not in header]
-            header.extend(new_header)
+            non_case_ids = profile_header_data.get('non_case_ids', [])
+            case_ids = profile_header_data.get('case_ids', [])
+
+            for hdr in get_header(fname):
+                # skip columns that are non case ids
+                if hdr.upper() in NON_CASE_IDS:
+                    if not hdr in non_case_ids:
+                        non_case_ids.append(hdr)
+                    continue
+                if len(reference_list) > 0:
+                    if (keep_match == (hdr in reference_list)) and not hdr in case_ids:
+                        case_ids.append(hdr)
+                else:
+                    case_ids.append(hdr)
+            # udpate profile header data with new case ids and new non case ids
+            profile_header_data['non_case_ids'] = non_case_ids
+            profile_header_data['case_ids'] = case_ids
+        header = profile_header_data['non_case_ids']
+        header.extend(profile_header_data['case_ids'])
     elif merge_style is MERGE_STYLES[NORMAL]:
+        header = []
         for fname in data_filenames:
             new_header = [hdr for hdr in get_header(fname) if hdr not in header]
             header.extend(new_header)
