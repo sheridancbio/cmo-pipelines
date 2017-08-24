@@ -32,6 +32,7 @@ def get_msk_fusions(msk_fusions_filename):
 	for line in fileinput.input(msk_fusions_filename):
 		if len(header) == 0:
 			header = map(str.strip, line.split('\t'))
+			continue
 		data = map(str.strip, line.split('\t'))
 		seen_fusions.add(data[header.index('Tumor_Sample_Barcode')] + '\t' + data[header.index('Fusion')] + '\t' + data[header.index('Hugo_Symbol')])
 		msk_fusions.append(data)
