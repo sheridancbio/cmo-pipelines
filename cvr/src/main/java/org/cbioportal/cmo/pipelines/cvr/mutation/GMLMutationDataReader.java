@@ -106,7 +106,7 @@ public class GMLMutationDataReader implements ItemStreamReader<AnnotatedRecord> 
                         MutationRecord record = cvrUtilities.buildGMLMutationRecord(snp, sampleId);
                         AnnotatedRecord annotatedRecord;
                         try {
-                            annotatedRecord = annotator.annotateRecord(record, false, "mskcc", forceAnnotation);
+                            annotatedRecord = annotator.annotateRecord(record, false, "mskcc", true);
                         }
                         catch (HttpServerErrorException e) {
                             log.warn("Failed to annotate a record from json! Sample: " + sampleId + " Variant: " + record.getCHROMOSOME() + ":" + record.getSTART_POSITION() + record.getREFERENCE_ALLELE() + ">" + record.getTUMOR_SEQ_ALLELE2());
