@@ -133,7 +133,6 @@ public class RedcapPipeline {
                     .addString("redcapProject", commandLine.getOptionValue("redcap-project"))
                     .addString("overwriteProjectData", String.valueOf(commandLine.hasOption("overwrite-project-data")));
         }
-        boolean mergeClinicalDataSources = commandLine.hasOption("merge-datasources");
         if (redcapJob != null) {
             JobExecution jobExecution = jobLauncher.run(redcapJob, builder.toJobParameters());
         }
