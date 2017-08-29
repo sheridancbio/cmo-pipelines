@@ -39,7 +39,7 @@ public class LinkedMskimpactCaseRecord {
      * @return the linkedMskImpactCase
      */
     public String getLINKED_MSKIMPACT_CASE() {
-        return linkedMskImpactCase;
+        return linkedMskImpactCase != null ? linkedMskImpactCase : "";
     }
 
     /**
