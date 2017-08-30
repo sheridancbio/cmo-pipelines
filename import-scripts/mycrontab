@@ -18,3 +18,6 @@ MAILTO=cbioportal-pipelines@cbio.mskcc.org
 16 0 * * * /data/portal-cron/cis-logins/cbioportal-restful-login-users.sh `date -d yesterday "+\%m/\%d/\%Y"` /data/portal-cron/cis-logins/cis-users.tsv > /data/portal-cron/logs/cis-users.log 2>&1
 0 0 * * 1 . /data/portal-cron/scripts/automation-environment.sh;/data/portal-cron/scripts/update-gene-data.sh >> /data/portal-cron/logs/update-gene-data.log 2>&1
 0 14 * * * /data/portal-cron/scripts/scan-for-stalled-import-jobs.sh >> /data/portal-cron/logs/scan-for-stalled-import-jobs.log 2>&1
+1 14 * * * /data/portal-cron/scripts/test_if_impact_has_lost_allele_count.sh >> /data/portal-cron/logs/lost-allele-count-test.log 2>&1
+# generate missing oncotree meta links report
+0 9 * * 1 /usr/bin/python /data/portal-cron/scripts/missing_oncotree_meta_links.py | mail -r "oncotree-pipelines@cbio.mskcc.org" -s "Missing Oncotree NCI/UMLS codes" oncotree-pipelines@cbio.mskcc.org
