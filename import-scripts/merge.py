@@ -193,6 +193,7 @@ def merge_studies(file_types, reference_list, keep_match, output_directory, stud
                 for f in files_to_copy:
                     print >> OUTPUT_FILE, '\t' + f
                 copy_files(file_type, files_to_copy, reference_list, keep_match, output_directory, study_id, cancer_type)
+    print >> OUTPUT_FILE, '\nMerge complete!'
 
 def merge_files(data_filenames, file_type, reference_list, keep_match, output_directory, merge_style, study_id):
     """
@@ -248,6 +249,10 @@ def merge_files(data_filenames, file_type, reference_list, keep_match, output_di
     if merge_style is MERGE_STYLES[PROFILE]:
         write_profile(gene_sample_dict, output_filename, new_header)
     if merge_style is MERGE_STYLES[NORMAL]:
+        # don't attempt to write a file or validate merge if no data was merged or subset from the source data
+        if len(rows) == 0:
+            print >> OUTPUT_FILE, 'No data was merged for ' + file_type
+            return
         write_normal(rows, output_filename, new_header)
 
     print >> OUTPUT_FILE, 'Validating merge for: ' + output_filename
@@ -444,11 +449,6 @@ def write_profile(gene_sample_dict, output_filename, new_header):
 
 def write_normal(rows, output_filename, new_header):
     """ Writes out to file normal style merge data, row by row. """
-    # double check that more than one row will be written to new file
-    if len(rows) == 0:
-        print >> ERROR_FILE, "ERROR - EMPTY FILE CREATED!"
-        sys.exit(2)
-
     output_file = open(output_filename, 'w')
 
     # if output file is data_mutations* then add sequenced samples tag to file before header
