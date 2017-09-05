@@ -48,6 +48,7 @@ import org.cbioportal.cmo.pipelines.cvr.variants.*;
 import org.cbioportal.models.*;
 
 import java.util.*;
+import org.apache.log4j.Logger;
 import org.springframework.batch.core.*;
 import org.springframework.batch.core.configuration.annotation.*;
 import org.springframework.batch.core.job.builder.FlowBuilder;
@@ -81,6 +82,8 @@ public class BatchConfiguration {
     @Value("${chunk}")
     private int chunkInterval;
     
+    private Logger log = Logger.getLogger(BatchConfiguration.class);
+    
     @Bean
     public Job gmlJob() {
         return jobBuilderFactory.get(GML_JOB)
@@ -100,22 +103,26 @@ public class BatchConfiguration {
                 .next(cnaStep())
                 .next(svStep())
                 .next(fusionStep())
-//                .next(segStep())
                 .build();
     }
 
     @Bean
     public Job cvrJob() {
         return jobBuilderFactory.get(CVR_JOB)
-                .start(cvrJobFlow())
+                .start(cvrResponseStep())
+                .next(checkCvrReponse())
+                    .on("RUN")
+                    .to(cvrMasterListStep())
+                    .next(cvrJobFlow())
+                .from(checkCvrReponse())
+                    .on("STOP").end()
                 .build().build();
     }
     
     @Bean 
     public Flow cvrJobFlow() {
         return new FlowBuilder<Flow>("cvrJobFlow")
-                .start(cvrMasterListStep())
-                .next(cvrJsonStep())
+                .start(cvrJsonStep())
                 .next(linkedMskimpactCaseFlow())
                 .next(clinicalStep())
                 .next(mutationStep())
@@ -185,7 +192,8 @@ public class BatchConfiguration {
     @Bean
     public Step cvrJsonStep() {
         return stepBuilderFactory.get("cvrJsonStep")
-                .<CVRVariants, String> chunk(chunkInterval)
+                .listener(cvrResponseListener())
+                .<CvrResponse, String> chunk(chunkInterval)
                 .reader(cvrJsonreader())
                 .processor(cvrJsonprocessor())
                 .writer(cvrJsonwriter())
@@ -351,7 +359,7 @@ public class BatchConfiguration {
     // Reader to get json data from CVR
     @Bean
     @StepScope
-    public ItemStreamReader<CVRVariants> cvrJsonreader() {
+    public ItemStreamReader<CvrResponse> cvrJsonreader() {
         return new CVRVariantsReader();
     }
 
@@ -624,6 +632,11 @@ public class BatchConfiguration {
     public StepExecutionListener cvrRequeueListener() {
         return new CvrRequeueListener();
     }
+    
+    @Bean
+    public StepExecutionListener cvrResponseListener() {
+        return new CvrResponseListener();
+    }
 
     @Bean
     public StepExecutionListener CVRClinicalDataListener() {
@@ -655,6 +668,37 @@ public class BatchConfiguration {
                     return new FlowExecutionStatus("SKIP");
                 }
             }                    
+        };
+    }
+    
+    @Bean
+    public Step cvrResponseStep() {
+        return stepBuilderFactory.get("cvrResponseStep")
+                .tasklet(cvrResponseTasklet())
+                .build();
+    }
+    
+    @Bean
+    @StepScope
+    public Tasklet cvrResponseTasklet() {
+        return new CvrResponseTasklet();
+    }
+
+    @Bean
+    public JobExecutionDecider checkCvrReponse() {
+        return new JobExecutionDecider() {
+            @Override
+            public FlowExecutionStatus decide(JobExecution je, StepExecution se) {
+                String studyId = je.getJobParameters().getString("studyId");
+                CvrResponse cvrResponse = (CvrResponse) je.getExecutionContext().get("cvrResponse");
+                if (cvrResponse.getSampleCount() > 0) {
+                    return new FlowExecutionStatus("RUN");
+                }
+                else {
+                    log.warn("No new samples to process for study " + studyId + " - exiting gracefully...");
+                    return new FlowExecutionStatus("STOP");
+                }
+            }
         };
     }
 }

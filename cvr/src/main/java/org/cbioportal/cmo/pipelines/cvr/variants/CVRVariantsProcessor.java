@@ -50,7 +50,7 @@ import org.springframework.web.client.RestTemplate;
  *
  * @author heinsz
  */
-public class CVRVariantsProcessor implements ItemProcessor<CVRVariants, String> {
+public class CVRVariantsProcessor implements ItemProcessor<CvrResponse, String> {
 
     @Value("${dmp.server_name}")
     private String dmpServerName;
@@ -76,9 +76,9 @@ public class CVRVariantsProcessor implements ItemProcessor<CVRVariants, String> 
     // Need to call get_seg_data against the CVR webservice for every sample, then merge the results together (CVRMergedResult)
     // All of these get put into the cvrData object, which contains everything and is what get sent to the writer
     @Override
-    public String process(CVRVariants i) throws Exception {
+    public String process(CvrResponse i) throws Exception {
         dmpSegmentUrl = dmpServerName + dmpRetrieveSegmentData + "/" + sessionId + "/";
-        HashMap<String, Object> results = i.getResults();
+        Map<String, CVRResult> results = i.getResults();
         CVRData cvrData = new CVRData(i.getSampleCount(), i.getDisclaimer(), new ArrayList<CVRMergedResult>());
         ObjectMapper mapper = new ObjectMapper();
         Iterator it = results.entrySet().iterator();
