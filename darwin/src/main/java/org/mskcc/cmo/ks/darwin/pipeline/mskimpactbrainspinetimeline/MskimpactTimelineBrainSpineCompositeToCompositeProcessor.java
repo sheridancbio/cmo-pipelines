@@ -42,9 +42,9 @@ import org.springframework.batch.item.ItemProcessor;
  * @author jake
  */
 public class MskimpactTimelineBrainSpineCompositeToCompositeProcessor implements ItemProcessor<MskimpactBrainSpineCompositeTimeline, MskimpactBrainSpineCompositeTimeline>{
-    private BatchConfiguration.BrainSpineTimelineType type;
+    private BrainSpineTimelineType type;
     
-    public MskimpactTimelineBrainSpineCompositeToCompositeProcessor(BatchConfiguration.BrainSpineTimelineType type) {
+    public MskimpactTimelineBrainSpineCompositeToCompositeProcessor(BrainSpineTimelineType type) {
         this.type = type;
     }    
     @Override

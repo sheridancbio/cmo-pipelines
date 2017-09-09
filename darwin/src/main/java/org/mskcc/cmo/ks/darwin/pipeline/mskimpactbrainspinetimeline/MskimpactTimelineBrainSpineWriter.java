@@ -50,9 +50,9 @@ import org.mskcc.cmo.ks.darwin.pipeline.BatchConfiguration;
  * @author jake
  */
 public class MskimpactTimelineBrainSpineWriter implements ItemStreamWriter<MskimpactBrainSpineCompositeTimeline>{
-    private BatchConfiguration.BrainSpineTimelineType type;
+    private BrainSpineTimelineType type;
     
-    public MskimpactTimelineBrainSpineWriter(BatchConfiguration.BrainSpineTimelineType type) {
+    public MskimpactTimelineBrainSpineWriter(BrainSpineTimelineType type) {
         this.type = type;
     }
     

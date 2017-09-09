@@ -71,26 +71,26 @@ public class GeneDataPipeline {
     }
     
     private static Options getOptions(String[] args) {
-        Options gnuOptions = new Options();
-        gnuOptions.addOption("h", "help", false, "shows this help document and quits.")
+        Options options = new Options();
+        options.addOption("h", "help", false, "shows this help document and quits.")
             .addOption("d", "gene-data-filename", true, "The gene data filename (Homo_sapiens.gene_info)")
             .addOption("l", "gene-length-filename", true, "The gene length data filename (GFF file)")
             .addOption("n", "notification-filename", true, "The notification filename to write results from update [optional]");
-        return gnuOptions;
+        return options;
     }
     
-    private static void help(Options gnuOptions, int exitStatus) {
+    private static void help(Options options, int exitStatus) {
         HelpFormatter helpFormatter = new HelpFormatter();
-        helpFormatter.printHelp("GeneDataPipeline", gnuOptions);
+        helpFormatter.printHelp("GeneDataPipeline", options);
         System.exit(exitStatus);
     }
     
     public static void main(String[] args) throws Exception {
-        Options gnuOptions = GeneDataPipeline.getOptions(args);
-        CommandLineParser parser = new GnuParser();
-        CommandLine commandLine = parser.parse(gnuOptions, args);
+        Options options = GeneDataPipeline.getOptions(args);
+        CommandLineParser parser = new DefaultParser();
+        CommandLine commandLine = parser.parse(options, args);
         if (commandLine.hasOption("h") || !commandLine.hasOption("d") || !commandLine.hasOption("l")) {
-            help(gnuOptions, 0);
+            help(options, 0);
         }
         launchGeneDataJob(args, commandLine.getOptionValue("d"), commandLine.getOptionValue("l"), commandLine.hasOption("n") ? commandLine.getOptionValue("n") : null);
     }

@@ -49,7 +49,7 @@ public class MskimpactBrainSpineClinicalWriter implements ItemStreamWriter<Strin
     @Value("#{jobParameters[outputDirectory]}")
     private String outputDirectory;
     
-    @Value("${darwin.clinical_filename}")
+    @Value("${darwin.brainspine_clinical_filename}")
     private String datasetFilename;
     
     private List<String> writeList = new ArrayList<>();

@@ -53,29 +53,28 @@ public class CVRPipeline {
     private static Logger log = Logger.getLogger(CVRPipeline.class);
 
     private static Options getOptions(String[] args) {
-        Options gnuOptions = new Options();
-        gnuOptions.addOption("h", "help", false, "shows this help document and quits.")
+        Options options = new Options();
+        options.addOption("h", "help", false, "shows this help document and quits.")
             .addOption("d", "directory", true, "The staging directory")
-            .addOption("j", "json", false, "To read or not to read")
+            .addOption("j", "json", false, "To read or not to read. This can be used alone or in combination with --gml")
             .addOption("g", "gml", false, "Run germline job")
             .addOption("s", "skipSeg", false, "Flag to skip fetching seg data")
-            .addOption("m", "gmljson", false, "Only gml json")
             .addOption("i", "study_id", true, "Study identifier (i.e., mskimpact, raindance, archer, etc.)")
             .addOption("t", "test", false, "Flag for running pipeline in testing mode so that samples are not consumed")
             .addOption("c", "consume_samples", true, "Path to CVR json filename")
             .addOption("r", "max_samples_to_remove", true, "The max number of samples that can be removed from data")
             .addOption("f", "force_annotation", false, "Flag for forcing reannotation of samples");
-        return gnuOptions;
+        return options;
     }
 
-    private static void help(Options gnuOptions, int exitStatus) {
+    private static void help(Options options, int exitStatus) {
         HelpFormatter helpFormatter = new HelpFormatter();
-        helpFormatter.printHelp("CVRPipeline", gnuOptions);
+        helpFormatter.printHelp("CVRPipeline", options);
         System.exit(exitStatus);
     }
 
-    private static void launchCvrPipelineJob(String[] args, String directory, String studyId, Boolean json, Boolean gml, 
-            Boolean gmljson, Boolean skipSeg, boolean testingMode, Integer maxNumSamplesToRemove, Boolean forceAnnotation) throws Exception {
+    private static void launchCvrPipelineJob(String[] args, String directory, String studyId, Boolean json, Boolean gml,
+            Boolean skipSeg, boolean testingMode, Integer maxNumSamplesToRemove, Boolean forceAnnotation) throws Exception {
         // log wether in testing mode or not
         if (testingMode) {
             log.warn("CvrPipelineJob running in TESTING MODE - samples will NOT be requeued.");
@@ -83,7 +82,6 @@ public class CVRPipeline {
         else {
             log.warn("CvrPipelineJob running in PRODUCTION MODE - samples will be requeued.");
         }
-        
         SpringApplication app = new SpringApplication(CVRPipeline.class);
         ConfigurableApplicationContext ctx= app.run(args);
         JobLauncher jobLauncher = ctx.getBean(JobLauncher.class);
@@ -97,10 +95,12 @@ public class CVRPipeline {
                 .addString("maxNumSamplesToRemove", String.valueOf(maxNumSamplesToRemove))
                 .addString("forceAnnotation", String.valueOf(forceAnnotation));
         if (json) {
-            jobName = BatchConfiguration.JSON_JOB;
-        }
-        else if (gmljson) {
-            jobName = BatchConfiguration.GML_JSON_JOB;
+            if (gml) {
+                jobName = BatchConfiguration.GML_JSON_JOB;
+            }
+            else {
+                jobName = BatchConfiguration.JSON_JOB;
+            }
         }
         else if (gml) {
             // SessionID is gotten from a spring bean in the SessionConfiguration and passed through here as a param
@@ -160,12 +160,12 @@ public class CVRPipeline {
     }
 
     public static void main(String[] args) throws Exception {
-        Options gnuOptions = CVRPipeline.getOptions(args);
-        CommandLineParser parser = new GnuParser();
-        CommandLine commandLine = parser.parse(gnuOptions, args);
+        Options options = CVRPipeline.getOptions(args);
+        CommandLineParser parser = new DefaultParser();
+        CommandLine commandLine = parser.parse(options, args);
         if (commandLine.hasOption("h") ||
                 ((!commandLine.hasOption("d") || !commandLine.hasOption("i")) && !commandLine.hasOption("c"))) {
-            help(gnuOptions, 0);
+            help(options, 0);
         }
         if (commandLine.hasOption("c")) {
             launchConsumeSamplesJob(args, commandLine.getOptionValue("c"), commandLine.hasOption("t"));
@@ -181,11 +181,9 @@ public class CVRPipeline {
                 e.printStackTrace();
                 throw new RuntimeException("Cannot parse argument as integer: " + commandLine.getOptionValue("r"));
             }
-            
             launchCvrPipelineJob(args, commandLine.getOptionValue("d"), commandLine.getOptionValue("i"),
-                commandLine.hasOption("j"), commandLine.hasOption("g"), commandLine.hasOption("m"),
-                commandLine.hasOption("s"), commandLine.hasOption("t"), maxNumSamplesToRemove,
-                commandLine.hasOption("f"));
+                commandLine.hasOption("j"), commandLine.hasOption("g"), commandLine.hasOption("s"),
+                commandLine.hasOption("t"), maxNumSamplesToRemove, commandLine.hasOption("f"));
         }
     }
 }

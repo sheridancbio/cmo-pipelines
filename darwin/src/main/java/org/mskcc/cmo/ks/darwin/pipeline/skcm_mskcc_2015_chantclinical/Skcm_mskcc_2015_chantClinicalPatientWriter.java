@@ -58,9 +58,6 @@ public class Skcm_mskcc_2015_chantClinicalPatientWriter implements ItemStreamWri
     @Value("#{stepExecutionContext['patientHeader']}")
     private Map<String, List<String>> patientHeader;
     
-    @Autowired
-    public MetadataManager metadataManager;
-    
     private FlatFileItemWriter<String> flatFileItemWriter = new FlatFileItemWriter<>();
     private File stagingFile;    
     

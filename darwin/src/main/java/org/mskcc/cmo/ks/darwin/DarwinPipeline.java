@@ -50,16 +50,16 @@ public class DarwinPipeline {
     private static Logger log = Logger.getLogger(DarwinPipeline.class);
 
     private static Options getOptions(String[] args){
-        Options gnuOptions = new Options();
-        gnuOptions.addOption("h", "help", false, "shows this help document and quits.")
+        Options options = new Options();
+        options.addOption("h", "help", false, "shows this help document and quits.")
         .addOption("d", "directory", true, "Output directory")
         .addOption("s", "study", true, "Cancer Study ID");
-        return gnuOptions;
+        return options;
     }
 
-    private static void help(Options gnuOptions, int exitStatus){
+    private static void help(Options options, int exitStatus){
         HelpFormatter helpFormatter = new HelpFormatter();
-        helpFormatter.printHelp("Darwin Pipeline", gnuOptions);
+        helpFormatter.printHelp("Darwin Pipeline", options);
         System.exit(exitStatus);
     }
 
@@ -97,13 +97,13 @@ public class DarwinPipeline {
     }
 
     public static void main(String[] args) throws Exception{
-        Options gnuOptions = DarwinPipeline.getOptions(args);
-        CommandLineParser parser = new GnuParser();
-        CommandLine commandLine = parser.parse(gnuOptions, args);
+        Options options = DarwinPipeline.getOptions(args);
+        CommandLineParser parser = new DefaultParser();
+        CommandLine commandLine = parser.parse(options, args);
         if (commandLine.hasOption("h")||
             !commandLine.hasOption("directory")||
             !commandLine.hasOption("study")){
-            help(gnuOptions, 0);
+            help(options, 0);
         }
 
         launchJob(args, commandLine.getOptionValue("directory"), commandLine.getOptionValue("study"));

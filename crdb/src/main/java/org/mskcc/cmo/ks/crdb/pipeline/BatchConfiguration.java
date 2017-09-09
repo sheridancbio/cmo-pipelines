@@ -32,19 +32,20 @@
 
 package org.mskcc.cmo.ks.crdb;
 
-import org.mskcc.cmo.ks.crdb.model.CRDBSurvey;
 import org.mskcc.cmo.ks.crdb.model.CRDBDataset;
-
+import org.mskcc.cmo.ks.crdb.model.CRDBSurvey;
+import org.mskcc.cmo.ks.crdb.pipeline.CRDBDatasetListener;
+import org.mskcc.cmo.ks.crdb.pipeline.CRDBSurveyListener;
 import org.springframework.batch.core.*;
-import org.springframework.batch.item.*;
 import org.springframework.batch.core.configuration.annotation.*;
 import org.springframework.batch.core.configuration.annotation.StepScope;
-import org.springframework.context.annotation.*;
+import org.springframework.batch.item.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.*;
 
 /**
  * Configuration for running the CRDB clinical data fetcher.
- * 
+ *
  * @author ochoaa
  */
 
@@ -74,6 +75,7 @@ public class BatchConfiguration
     @Bean
     public Step step1() {
         return stepBuilderFactory.get("step1")
+            .listener(CRDBSurveyListener())
             .<CRDBSurvey, String> chunk(10)
             .reader(reader1())
             .processor(processor1())
@@ -97,18 +99,29 @@ public class BatchConfiguration
     public ItemStreamWriter<String> writer1() {
         return new CRDBSurveyWriter();
     }
-        
+
     /**
      * Step 2 reads, processes, and writes the CRDB Dataset query results
-     */    
+     */
     @Bean
     public Step step2() {
-        return stepBuilderFactory.get("step2") 
+        return stepBuilderFactory.get("step2")
+            .listener(CRDBDatasetListener())
             .<CRDBDataset, String> chunk(10)
             .reader(reader2())
             .processor(processor2())
             .writer(writer2())
             .build();
+    }
+
+    @Bean
+    public StepExecutionListener CRDBSurveyListener() {
+        return new CRDBSurveyListener();
+    }
+
+    @Bean
+    public StepExecutionListener CRDBDatasetListener() {
+        return new CRDBDatasetListener();
     }
 
     @Bean
@@ -126,5 +139,5 @@ public class BatchConfiguration
     @StepScope
     public ItemStreamWriter<String> writer2() {
         return new CRDBDatasetWriter();
-    }    
+    }
 }
