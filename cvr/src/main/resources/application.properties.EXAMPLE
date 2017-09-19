@@ -41,6 +41,9 @@ email.server=localhost
 email.sender=
 email.recipient=
 email.subject=Failure in CVR Pipeline
+# for emails that dmp should be included on
+dmp.email.sender=
+dmp.email.recipient=
 
 # Absoulte URL to the redcap web application
 redcap_base_url=

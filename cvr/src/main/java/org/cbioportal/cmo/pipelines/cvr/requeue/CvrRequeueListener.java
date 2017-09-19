@@ -39,6 +39,7 @@ import java.util.*;
 import org.apache.log4j.Logger;
 import org.springframework.batch.core.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 
 /**
  *
@@ -48,6 +49,12 @@ public class CvrRequeueListener implements StepExecutionListener {
     
     @Autowired
     private EmailUtil emailUtil;
+
+    @Value("${dmp.email.sender}")
+    private  String sender;
+
+    @Value("${dmp.email.recipient}")
+    private  String recipient;
 
     Logger log = Logger.getLogger(CvrRequeueListener.class);
     
@@ -130,7 +137,7 @@ public class CvrRequeueListener implements StepExecutionListener {
         }
         
         if (!body.toString().isEmpty()) {
-            emailUtil.sendEmail(subject, body.toString());
+            emailUtil.sendEmail(sender, recipient, subject, body.toString());
         }
         return ExitStatus.COMPLETED;
     }
