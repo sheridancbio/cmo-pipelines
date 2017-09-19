@@ -59,16 +59,22 @@ public class CVRClinicalDataListener implements StepExecutionListener {
     @Override
     public ExitStatus afterStep(StepExecution stepExecution) {
         String stagingDirectory = stepExecution.getJobExecution().getJobParameters().getString("stagingDirectory");
-        File stagingFile = new File(stagingDirectory, cvrUtilities.CLINICAL_FILE);
-        if (stagingFile.exists()) {
-            try {
-                String clinicalDataFilename = stagingFile.getCanonicalPath();
-                clinicalDataSource.importClinicalDataFile(redcapProjectTitle, clinicalDataFilename, true);
-            } catch (IOException e) {
-                log.error("Error: could not persist clinical file \"" + cvrUtilities.CLINICAL_FILE + "\" in directory \"" + stagingDirectory + "\" to RedCap : IO error locating/reading file");
+        boolean testingMode = Boolean.valueOf(stepExecution.getJobExecution().getJobParameters().getString("testingMode"));
+        if (testingMode) {
+            log.warn("Running in testing mode - data will not be persisted to REDCap. Skipping step...");
+        }
+        else {
+            File stagingFile = new File(stagingDirectory, cvrUtilities.CLINICAL_FILE);
+            if (stagingFile.exists()) {
+                try {
+                    String clinicalDataFilename = stagingFile.getCanonicalPath();
+                    clinicalDataSource.importClinicalDataFile(redcapProjectTitle, clinicalDataFilename, true);
+                } catch (IOException e) {
+                    log.error("Error: could not persist clinical file \"" + cvrUtilities.CLINICAL_FILE + "\" in directory \"" + stagingDirectory + "\" to RedCap : IO error locating/reading file");
+                }
+            } else {
+                log.error("Error: could not persist clinical file \"" + cvrUtilities.CLINICAL_FILE + "\" in directory \"" + stagingDirectory + "\" to RedCap : file does not exist");
             }
-        } else {
-            log.error("Error: could not persist clinical file \"" + cvrUtilities.CLINICAL_FILE + "\" in directory \"" + stagingDirectory + "\" to RedCap : file does not exist");
         }
         return ExitStatus.COMPLETED;
     }
