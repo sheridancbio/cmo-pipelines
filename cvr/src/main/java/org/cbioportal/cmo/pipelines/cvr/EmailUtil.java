@@ -69,6 +69,10 @@ public class EmailUtil {
     }
 
     public void sendEmail(String subject, String body) {
+        sendEmail(this.sender, this.recipient, subject, body);
+    }
+
+    public void sendEmail(String sender, String recipient, String subject, String body) {
         try {
             properties.setProperty("mail.smtp.host", server);
             MimeMessage message = new MimeMessage(session);
