@@ -9,7 +9,8 @@
 # (6): notification file [ $mskimpact_notification_file | $mskheme_notification_file | $mskraindance_notification_file | $mixedpact_notification_file | $kingscounty_notification_file | $lehighvalley_notification_file | $queenscancercenter_notification_file ]
 # (7): tmp directory
 # (8): email list
-# (9): importer jar
+# (9): oncotree version [ oncotree_candidate_release | oncotree_latest_stable ]
+# (10): importer jar
 
 # Non-zero exit code status indication
 # There are several flags that are checked during the execution of the temporary study import. If any flags are non-zero at the end 
@@ -31,6 +32,7 @@ function usage {
 	echo -e "\t-n | --notification-file     notification file"
 	echo -e "\t-d | --tmp-directory         tmp directory"
 	echo -e "\t-e | --email-list            email list"
+	echo -e "\t-o | --oncotree-version      oncotree version"
 	echo -e "\t-j | --importer-jar          importer jar"
 }
 
@@ -77,6 +79,11 @@ case $i in
     echo -e "\temail list=$EMAIL_LIST"
     shift
     ;;
+    -o=*|--oncotree-version=*)
+    ONCOTREE_VERSION_TO_USE="${i#*=}"
+    echo -e "\toncotree version=$ONCOTREE_VERSION_TO_USE"
+    shift
+    ;;
     -j=*|--importer-jar=*)
     IMPORTER_JAR="${i#*=}"
     echo -e "\timporter jar=$IMPORTER_JAR"
@@ -108,9 +115,13 @@ RENAME_BACKUP_FAIL=0
 RENAME_FAIL=0
 GROUPS_FAIL=0
 
+ONCOTREE_VERSION_TERM="--oncotree-version ${ONCOTREE_VERSION_TO_USE}"
+if [[ -z ${ONCOTREE_VERSION_TO_USE} ]] ; then
+	ONCOTREE_VERSION_TERM=""
+fi
 # import study using temp id
 echo "Importing study '$CANCER_STUDY_IDENTIFIER' as temporary study '$TEMP_CANCER_STUDY_IDENTIFIER'"
-$JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -Xmx64g -ea -Dspring.profiles.active=dbcp -Djava.io.tmpdir="$TMP_DIRECTORY" -cp $IMPORTER_JAR org.mskcc.cbio.importer.Admin --update-study-data --portal "$PORTAL_NAME" --notification-file "$NOTIFICATION_FILE" --temporary-id "$TEMP_CANCER_STUDY_IDENTIFIER"
+$JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -Xmx64g -ea -Dspring.profiles.active=dbcp -Djava.io.tmpdir="$TMP_DIRECTORY" -cp $IMPORTER_JAR org.mskcc.cbio.importer.Admin --update-study-data --portal "$PORTAL_NAME" --notification-file "$NOTIFICATION_FILE" --temporary-id "$TEMP_CANCER_STUDY_IDENTIFIER" ${ONCOTREE_VERSION_TERM}
 
 # check number of studies updated before continuing
 if [ -f "$TMP_DIRECTORY/num_studies_updated.txt" ]; then 

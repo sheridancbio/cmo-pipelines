@@ -10,6 +10,7 @@ fi
 email_list="cbioportal-cmo-importer@cbio.mskcc.org"
 now=$(date "+%Y-%m-%d-%H-%M-%S")
 triage_notification_file=$(mktemp $tmp/triage-portal-update-notification.$now.XXXXXX)
+ONCOTREE_VERSION_TO_USE=oncotree_candidate_release
 
 # fetch updates in CMO repository
 echo "fetching updates from bic-mskcc..."
@@ -44,7 +45,7 @@ $JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,add
 
 # import data that requires QC into triage portal
 echo "importing cancer type updates into triage portal database..."
-$JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27183 -Xmx16g -ea -Dspring.profiles.active=dbcp -Djava.io.tmpdir="$tmp" -cp $PORTAL_HOME/lib/triage-cmo-importer.jar org.mskcc.cbio.importer.Admin --import-types-of-cancer
+$JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27183 -Xmx16g -ea -Dspring.profiles.active=dbcp -Djava.io.tmpdir="$tmp" -cp $PORTAL_HOME/lib/triage-cmo-importer.jar org.mskcc.cbio.importer.Admin --import-types-of-cancer --oncotree-version ${ONCOTREE_VERSION_TO_USE}
 
 $JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27183 -Xmx16g -ea -Dspring.profiles.active=dbcp -Djava.io.tmpdir="$tmp" -cp $PORTAL_HOME/lib/triage-cmo-importer.jar org.mskcc.cbio.importer.Admin --apply-overrides --portal triage-portal
 
@@ -61,7 +62,7 @@ fi
 if [ $DB_VERSION_FAIL -eq 0 ]
 then
     echo "importing study data into triage portal database..."
-    $JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27183 -Xmx32G -ea -Dspring.profiles.active=dbcp -Djava.io.tmpdir="$tmp" -cp $PORTAL_HOME/lib/triage-cmo-importer.jar org.mskcc.cbio.importer.Admin --update-study-data --portal triage-portal --use-never-import --update-worksheet --notification-file "$triage_notification_file"
+    $JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27183 -Xmx32G -ea -Dspring.profiles.active=dbcp -Djava.io.tmpdir="$tmp" -cp $PORTAL_HOME/lib/triage-cmo-importer.jar org.mskcc.cbio.importer.Admin --update-study-data --portal triage-portal --use-never-import --update-worksheet --notification-file "$triage_notification_file" --oncotree-version ${ONCOTREE_VERSION_TO_USE}
     num_studies_updated=`cat $tmp/num_studies_updated.txt`
 
     # redeploy war
