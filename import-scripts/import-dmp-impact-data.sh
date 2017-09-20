@@ -21,6 +21,7 @@ kingscounty_notification_file=$(mktemp $tmp/kingscounty-portal-update-notificati
 lehighvalley_notification_file=$(mktemp $tmp/lehighvalley-portal-update-notification.$now.XXXXXX)
 queenscancercenter_notification_file=$(mktemp $tmp/queenscancercenter-portal-update-notification.$now.XXXXXX)
 miamicancerinstitute_notification_file=$(mktemp $tmp/miamicancerinstitute-portal-update-notification.$now.XXXXXX)
+hartfordhealthcare_notification_file=$(mktemp $tmp/hartfordhealthcare-portal-update-notification.$now.XXXXXX)
 lymphoma_super_cohort_notification_file=$(mktemp $tmp/lymphoma-super-cohort-portal-update-notification.$now.XXXXXX)
 
 
@@ -119,11 +120,13 @@ MSK_KINGS_SUBSET_FAIL=0
 MSK_QUEENS_SUBSET_FAIL=0
 MSK_LEHIGH_SUBSET_FAIL=0
 MSK_MCI_SUBSET_FAIL=0
+MSK_HARTFORD_SUBSET_FAIL=0
 IMPORT_FAIL_MIXEDPACT=0
 IMPORT_FAIL_KINGS=0
 IMPORT_FAIL_LEHIGH=0
 IMPORT_FAIL_QUEENS=0
 IMPORT_FAIL_MCI=0
+IMPORT_FAIL_HARTFORD=0
 IMPORT_FAIL_LYMPHOMA=0
 LYMPHOMA_SUPER_COHORT_SUBSET_FAIL=0
 
@@ -449,7 +452,7 @@ if [ ! -f $MSK_MIXEDPACT_DATA_HOME/meta_clinical.txt ]; then
     touch $MSK_MIXEDPACT_DATA_HOME/meta_clinical.txt
 fi
 
-# subset the mixedpact study for Queens Cancer Center, Lehigh Valley, Kings County Cancer Center, and Miami Cancer Institute
+# subset the mixedpact study for Queens Cancer Center, Lehigh Valley, Kings County Cancer Center, Miami Cancer Institute, and Hartford Health Care
 bash $PORTAL_HOME/scripts/subset-impact-data.sh -i=msk_kingscounty -o=$MSK_KINGS_DATA_HOME -m=$MSK_MIXEDPACT_DATA_HOME -f="INSTITUTE=Kings County Cancer Center" -s=$tmp/kings_subset.txt
 if [ $? -gt 0 ]; then
     echo "MSK Kings County subset failed! Study will not be updated in the portal."
@@ -481,6 +484,14 @@ if [ $? -gt 0 ]; then
 else
     echo "MSK Miami Cancer Institute subset successful!"
     addCancerTypeCaseLists $MSK_MCI_DATA_HOME "msk_miamicancerinstitute"
+fi
+bash $PORTAL_HOME/scripts/subset-impact-data.sh -i=msk_hartfordhealthcare -o=$MSK_HARTFORD_DATA_HOME -m=$MSK_MIXEDPACT_DATA_HOME -f="INSTITUTE=Hartford Healthcare" -s=$tmp/hartford_subset.txt
+if [ $? -gt 0 ]; then
+    echo "MSK Hartford Healthcare subset failed! Study will not be updated in the portal."
+    MSK_HARTFORD_SUBSET_FAIL=1
+else
+    echo "MSK Hartford Healthcare subset successful!"
+    addCancerTypeCaseLists $MSK_HARTFORD_DATA_HOME "msk_hartfordhealthcare"
 fi
 
 # remove the meta clinical file from mixedpact
@@ -589,6 +600,32 @@ else
     echo "Committing MIAMICANCERINSTITUTE data"
     cd $MSK_MCI_DATA_HOME;$HG_BINARY add *;$HG_BINARY add case_lists/*;$HG_BINARY commit -m "Latest MIAMICANCERINSTITUTE dataset"
 fi
+
+# update msk_hartfordhealthcare in portal only if subset was successful
+if [ $MSK_HARTFORD_SUBSET_FAIL -eq 0 ]; then
+    echo "Importing msk_hartfordhealthcare study..."
+    echo $(date)
+    bash $PORTAL_HOME/scripts/import-temp-study.sh --study-id="msk_hartfordhealthcare" --temp-study-id="temporary_msk_hartfordhealthcare" --backup-study-id="yesterday_msk_hartfordhealthcare" --portal-name="msk-hartford-portal" --study-path="$MSK_HARTFORD_DATA_HOME" --notification-file="$hartfordhealthcare_notification_file" --tmp-directory="$tmp" --email-list="$email_list" --oncotree-version="${ONCOTREE_VERSION_TO_USE}" --importer-jar="$PORTAL_HOME/lib/msk-dmp-importer.jar"
+    if [ $? -gt 0 ]; then
+        IMPORT_FAIL_HARTFORD=1
+    else
+        RESTART_AFTER_MSK_AFFILIATE_IMPORT=1
+    fi
+else
+    echo "Something went wrong with subsetting clinical studies for HARTFORDHEALTHCARE."
+    IMPORT_FAIL_HARTFORD=1
+fi
+# commit or revert changes for HARTFORDHEALTHCARE
+if [ $IMPORT_FAIL_HARTFORD -gt 0 ]; then
+    echo "HARTFORDHEALTHCARE subset and/or updates failed! Reverting data to last commit."
+    cd $MSK_HARTFORD_DATA_HOME;$HG_BINARY update -C
+    rm $MSK_HARTFORD_DATA_HOME/*.orig
+    rm $MSK_HARTFORD_DATA_HOME/case_lists/*.orig
+else
+    echo "Committing HARTFORDHEALTHCARE data"
+    cd $MSK_HARTFORD_DATA_HOME;$HG_BINARY add *;$HG_BINARY add case_lists/*;$HG_BINARY commit -m "Latest HARTFORDHEALTHCARE dataset"
+fi
+
 
 ## END Subset MIXEDPACT on INSTITUTE
 
@@ -792,6 +829,12 @@ if [ $MSK_MCI_SUBSET_FAIL -gt 0 ]; then
     echo -e "$EMAIL_BODY" |  mail -s "MIAMICANCERINSTITUTE Subset Failure: Study will not be updated." $email_list
 fi
 
+EMAIL_BODY="Failed to subset Hartford Healthcare data. Subset study will not be updated."
+if [ $MSK_HARTFORD_SUBSET_FAIL -gt 0 ]; then
+    echo -e "Sending email $EMAIL_BODY"
+    echo -e "$EMAIL_BODY" |  mail -s "HARTFORDHEALTHCARE Subset Failure: Study will not be updated." $email_list
+fi
+
 echo "Sending notification emails.."
 echo $(date)
 $JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -Xmx16g -ea -Dspring.profiles.active=dbcp -Djava.io.tmpdir="$tmp" -cp $PORTAL_HOME/lib/msk-dmp-importer.jar org.mskcc.cbio.importer.Admin --send-update-notification --portal mskimpact-portal --notification-file "$mskimpact_notification_file"
@@ -803,6 +846,7 @@ $JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,add
 $JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -Xmx16g -ea -Dspring.profiles.active=dbcp -Djava.io.tmpdir="$tmp" -cp $PORTAL_HOME/lib/msk-dmp-importer.jar org.mskcc.cbio.importer.Admin --send-update-notification --portal msk-lehighvalley-portal --notification-file "$lehighvalley_notification_file"
 $JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -Xmx16g -ea -Dspring.profiles.active=dbcp -Djava.io.tmpdir="$tmp" -cp $PORTAL_HOME/lib/msk-dmp-importer.jar org.mskcc.cbio.importer.Admin --send-update-notification --portal msk-queenscancercenter-portal --notification-file "$queenscancercenter_notification_file"
 $JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -Xmx16g -ea -Dspring.profiles.active=dbcp -Djava.io.tmpdir="$tmp" -cp $PORTAL_HOME/lib/msk-dmp-importer.jar org.mskcc.cbio.importer.Admin --send-update-notification --portal msk-mci-portal --notification-file "$miamicancerinstitute_notification_file"
+$JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -Xmx16g -ea -Dspring.profiles.active=dbcp -Djava.io.tmpdir="$tmp" -cp $PORTAL_HOME/lib/msk-dmp-importer.jar org.mskcc.cbio.importer.Admin --send-update-notification --portal msk-hartford-portal --notification-file "$hartfordhealthcare_notification_file"
 $JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -Xmx16g -ea -Dspring.profiles.active=dbcp -Djava.io.tmpdir="$tmp" -cp $PORTAL_HOME/lib/msk-dmp-importer.jar org.mskcc.cbio.importer.Admin --send-update-notification --portal msk-fmi-lymphoma-portal --notification-file "$lymphoma_super_cohort_notification_file"
 echo "Fetching and importing of clinical datasets complete!"
 echo $(date)

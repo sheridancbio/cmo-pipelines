@@ -11,6 +11,7 @@ export MSK_KINGS_DATA_HOME=$PORTAL_DATA_HOME/msk-impact/msk_kingscounty
 export MSK_LEHIGH_DATA_HOME=$PORTAL_DATA_HOME/msk-impact/msk_lehighvalley
 export MSK_QUEENS_DATA_HOME=$PORTAL_DATA_HOME/msk-impact/msk_queenscancercenter
 export MSK_MCI_DATA_HOME=$PORTAL_DATA_HOME/msk-impact/msk_miamicancerinstitute
+export MSK_HARTFORD_DATA_HOME=$PORTAL_DATA_HOME/msk-impact/msk_hartfordhealthcare
 export IMPACT_DATA_HOME=$PORTAL_DATA_HOME/impact
 export FOUNDATION_DATA_HOME=$PORTAL_DATA_HOME/foundation
 export FMI_BATLEVI_DATA_HOME=$FOUNDATION_DATA_HOME/mixed/lymphoma/mskcc/foundation/lymph_landscape_fmi_201611
