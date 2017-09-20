@@ -11,6 +11,7 @@
 # (8): email list
 # (9): oncotree version [ oncotree_candidate_release | oncotree_latest_stable ]
 # (10): importer jar
+# (11): transcript overrides source [ uniprot | mskcc ]
 
 # Non-zero exit code status indication
 # There are several flags that are checked during the execution of the temporary study import. If any flags are non-zero at the end 
@@ -24,16 +25,17 @@
 
 function usage {
 	echo "import-temp-study.sh"
-	echo -e "\t-i | --study-id              cancer study identifier"
-	echo -e "\t-t | --temp-study-id         temp study identifier"
-	echo -e "\t-b | --backup-study-id       backup study identifier"
-	echo -e "\t-p | --portal-name           portal name"
-	echo -e "\t-s | --study-path            study path"
-	echo -e "\t-n | --notification-file     notification file"
-	echo -e "\t-d | --tmp-directory         tmp directory"
-	echo -e "\t-e | --email-list            email list"
-	echo -e "\t-o | --oncotree-version      oncotree version"
-	echo -e "\t-j | --importer-jar          importer jar"
+	echo -e "\t-i | --study-id                      cancer study identifier"
+	echo -e "\t-t | --temp-study-id                 temp study identifier"
+	echo -e "\t-b | --backup-study-id               backup study identifier"
+	echo -e "\t-p | --portal-name                   portal name"
+	echo -e "\t-s | --study-path                    study path"
+	echo -e "\t-n | --notification-file             notification file"
+	echo -e "\t-d | --tmp-directory                 tmp directory"
+	echo -e "\t-e | --email-list                    email list"
+	echo -e "\t-o | --oncotree-version              oncotree version"
+	echo -e "\t-j | --importer-jar                  importer jar"
+	echo -e "\t-r | --transcript-overrides-source   transcript overrides source"
 }
 
 echo "Input arguments:"
@@ -89,12 +91,17 @@ case $i in
     echo -e "\timporter jar=$IMPORTER_JAR"
     shift
     ;;
+    -r=*|--transcript-overrides-source=*)
+    TRANCRIPT_OVERRIDES_SOURCE="${i#*=}"
+    echo -e "\ttranscript overrides source=$TRANCRIPT_OVERRIDES_SOURCE"
+    shift
+    ;;
     *)
     ;;
 esac
 done
 
-if [[ -z $CANCER_STUDY_IDENTIFIER || -z $TEMP_CANCER_STUDY_IDENTIFIER || -z $BACKUP_CANCER_STUDY_IDENTIFIER || -z $PORTAL_NAME || -z $STUDY_PATH || -z $NOTIFICATION_FILE || -z $TMP_DIRECTORY || -z $EMAIL_LIST || -z $IMPORTER_JAR ]]; then
+if [[ -z $CANCER_STUDY_IDENTIFIER || -z $TEMP_CANCER_STUDY_IDENTIFIER || -z $BACKUP_CANCER_STUDY_IDENTIFIER || -z $PORTAL_NAME || -z $STUDY_PATH || -z $NOTIFICATION_FILE || -z $TMP_DIRECTORY || -z $EMAIL_LIST || -z $IMPORTER_JAR || -z $TRANCRIPT_OVERRIDES_SOURCE ]]; then
 	usage
 	exit 1
 fi
@@ -121,7 +128,7 @@ if [[ -z ${ONCOTREE_VERSION_TO_USE} ]] ; then
 fi
 # import study using temp id
 echo "Importing study '$CANCER_STUDY_IDENTIFIER' as temporary study '$TEMP_CANCER_STUDY_IDENTIFIER'"
-$JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -Xmx64g -ea -Dspring.profiles.active=dbcp -Djava.io.tmpdir="$TMP_DIRECTORY" -cp $IMPORTER_JAR org.mskcc.cbio.importer.Admin --update-study-data --portal "$PORTAL_NAME" --notification-file "$NOTIFICATION_FILE" --temporary-id "$TEMP_CANCER_STUDY_IDENTIFIER" ${ONCOTREE_VERSION_TERM}
+$JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -Xmx64g -ea -Dspring.profiles.active=dbcp -Djava.io.tmpdir="$TMP_DIRECTORY" -cp $IMPORTER_JAR org.mskcc.cbio.importer.Admin --update-study-data --portal "$PORTAL_NAME" --notification-file "$NOTIFICATION_FILE" --temporary-id "$TEMP_CANCER_STUDY_IDENTIFIER" ${ONCOTREE_VERSION_TERM} --transcript-overrides-source "$TRANCRIPT_OVERRIDES_SOURCE"
 
 # check number of studies updated before continuing
 if [ -f "$TMP_DIRECTORY/num_studies_updated.txt" ]; then 
