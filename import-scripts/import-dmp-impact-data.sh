@@ -139,8 +139,16 @@ if [ $? -gt 0 ]; then
     cd $MSK_IMPACT_DATA_HOME;$HG_BINARY update -C;rm *.orig
     IMPORT_STATUS_IMPACT=1
 else
-    echo "committing cvr data"
-    cd $MSK_IMPACT_DATA_HOME;$HG_BINARY commit -m "Latest MSK-IMPACT Dataset: CVR"
+    # sanity check for empty allele counts
+    bash $PORTAL_HOME/scripts/test_if_impact_has_lost_allele_count.sh
+    if [ $? -gt 0 ]; then 
+        echo "Empty allele count sanity check failed! MSK-IMPACT will not be imported!"
+        cd $MSK_IMPACT_DATA_HOME;$HG_BINARY update -C;rm *.orig
+        IMPORT_STATUS_IMPACT=1
+    else
+        echo "committing cvr data"
+        cd $MSK_IMPACT_DATA_HOME;$HG_BINARY commit -m "Latest MSK-IMPACT Dataset: CVR"
+    fi
 fi
 
 # fetch new/updated IMPACT germline samples using CVR Web service   (must come after normal cvr fetching)
