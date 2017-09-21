@@ -61,7 +61,7 @@ if [ $STUDY_ID == "genie" ]; then
     $PYTHON_BINARY $PORTAL_SCRIPTS_DIRECTORY/generate-clinical-subset.py --study-id="genie" --clinical-file="$OUTPUT_DIRECTORY/data_clinical_supp_sample.txt" --clinical-supp-file="$CLINICAL_SUPP_FILE" --filter-criteria="$FILTER_CRITERIA" --subset-filename="$SUBSET_FILENAME" --anonymize-date='true' --clinical-patient-file="$OUTPUT_DIRECTORY/data_clinical_supp_patient.txt"
 
     # expand data_clinical_supp_sample.txt with ONCOTREE_CODE, SAMPLE_TYPE, GENE_PANEL from data_clinical.txt
-    $PYTHON_BINARY $PORTAL_SCRIPTS_DIRECTORY/expand-clinical-data.py --study-id="genie" --clinical-file="$OUTPUT_DIRECTORY/data_clinical_supp_sample.txt" --clinical-supp-file="$MSK_IMPACT_DATA_DIRECTORY/data_clinical.txt" --fields="ONCOTREE_CODE,SAMPLE_TYPE,GENE_PANEL" --identifier-column-name="SAMPLE_ID"
+    $PYTHON_BINARY $PORTAL_SCRIPTS_DIRECTORY/expand-clinical-data.py --study-id="genie" --clinical-file="$OUTPUT_DIRECTORY/data_clinical_supp_sample.txt" --clinical-supp-file="$MSK_IMPACT_DATA_DIRECTORY/data_clinical.txt" --fields="ONCOTREE_CODE,SAMPLE_TYPE,GENE_PANEL,AGE_AT_SEQ_REPORT" --identifier-column-name="SAMPLE_ID"
     $PYTHON_BINARY $PORTAL_SCRIPTS_DIRECTORY/expand-clinical-data.py --study-id="genie" --clinical-file="$OUTPUT_DIRECTORY/data_clinical_supp_patient.txt" --clinical-supp-file="$MSK_IMPACT_DATA_DIRECTORY/data_clinical_supp_darwin_demographics.txt" --fields="AGE_AT_DEATH,AGE_AT_LAST_FOLLOWUP" --identifier-column-name="PATIENT_ID"
 
     #rename GENE_PANEL to SEQ_ASSAY_ID
