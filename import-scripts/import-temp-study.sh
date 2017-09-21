@@ -228,6 +228,8 @@ if [ $GROUPS_FAIL -gt 0 ]; then
 	echo -e "$EMAIL_BODY" | mail -s "$CANCER_STUDY_IDENTIFIER Update Failure: Groups update" $EMAIL_LIST
 fi
 
+# send notification file 
+$JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -Xmx16g -ea -Dspring.profiles.active=dbcp -Djava.io.tmpdir="$TMP_DIRECTORY" -cp $IMPORTER_JAR org.mskcc.cbio.importer.Admin --send-update-notification --portal "$PORTAL_NAME" --notification-file "$NOTIFICATION_FILE"
 
 # determine if we need to exit with error code
 if [[ $IMPORT_FAIL -ne 0 || $VALIDATION_FAIL -ne 0 || $DELETE_FAIL -ne 0 || $RENAME_BACKUP_FAIL -ne 0 || $RENAME_FAIL -ne 0 || $GROUPS_FAIL -ne 0 ]]; then
