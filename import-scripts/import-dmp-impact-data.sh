@@ -262,7 +262,9 @@ fi
 # (6): notification file [ $mskimpact_notification_file | $mskheme_notification_file | $mskraindance_notification_file | $mixedpact_notification_file | $kingscounty_notification_file | $lehighvalley_notification_file | $queenscancercenter_notification_file ]
 # (7): tmp directory
 # (8): email list
-# (9): importer jar
+# (9): oncotree version [ oncotree_candidate_release | oncotree_latest_stable ]
+# (10): importer jar
+# (11): transcript overrides source [ uniprot | mskcc ]
 
 ## TEMP STUDY IMPORT: MSKIMPACT
 RESTART_AFTER_IMPACT_IMPORT=1
@@ -613,7 +615,7 @@ fi
 if [ $MSK_HARTFORD_SUBSET_FAIL -eq 0 ]; then
     echo "Importing msk_hartfordhealthcare study..."
     echo $(date)
-    bash $PORTAL_HOME/scripts/import-temp-study.sh --study-id="msk_hartfordhealthcare" --temp-study-id="temporary_msk_hartfordhealthcare" --backup-study-id="yesterday_msk_hartfordhealthcare" --portal-name="msk-hartford-portal" --study-path="$MSK_HARTFORD_DATA_HOME" --notification-file="$hartfordhealthcare_notification_file" --tmp-directory="$tmp" --email-list="$email_list" --oncotree-version="${ONCOTREE_VERSION_TO_USE}" --importer-jar="$PORTAL_HOME/lib/msk-dmp-importer.jar"
+    bash $PORTAL_HOME/scripts/import-temp-study.sh --study-id="msk_hartfordhealthcare" --temp-study-id="temporary_msk_hartfordhealthcare" --backup-study-id="yesterday_msk_hartfordhealthcare" --portal-name="msk-hartford-portal" --study-path="$MSK_HARTFORD_DATA_HOME" --notification-file="$hartfordhealthcare_notification_file" --tmp-directory="$tmp" --email-list="$email_list" --oncotree-version="${ONCOTREE_VERSION_TO_USE}" --importer-jar="$PORTAL_HOME/lib/msk-dmp-importer.jar" --transcript-overrides-source="mskcc"
     if [ $? -gt 0 ]; then
         IMPORT_FAIL_HARTFORD=1
     else
