@@ -75,8 +75,8 @@ public class CVRClinicalDataReader implements ItemStreamReader<CVRClinicalRecord
         processClinicalFile(ec);      
         processJsonFile();
         if (studyId.equals("mskimpact")) {
-            processAgeFile(ec);
             processSeqDateFile(ec);
+            processAgeFile(ec);
         }
         // updates portalSamplesNotInDmpList and dmpSamplesNotInPortal sample lists
         // portalSamples list is only updated if threshold check for max num samples to remove passes
@@ -186,7 +186,7 @@ public class CVRClinicalDataReader implements ItemStreamReader<CVRClinicalRecord
             while ((mskimpactAge = reader.read()) != null) {
                 if (patientToRecordMap.keySet().contains(mskimpactAge.getPATIENT_ID())) {
                     for (CVRClinicalRecord record : patientToRecordMap.get(mskimpactAge.getPATIENT_ID())) {
-                        if (record.getSEQ_DATE() != null && !record.getSEQ_DATE().isEmpty() && !record.equals("NA")) {
+                        if (record.getSEQ_DATE() != null && !record.getSEQ_DATE().isEmpty() && !record.getSEQ_DATE().equals("NA")) {
                             Date now = new Date();
                             Date cvrDateSequenced = cvrDateFormat.parse(record.getSEQ_DATE());
                             // We know age of patient now from darwin, and the time at which the patient was sequenced.
