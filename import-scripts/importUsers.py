@@ -219,24 +219,21 @@ def get_worksheet_feed(client, ss, ws):
 
 def insert_new_users(cursor, new_user_list):
     to_remove = []
-
     for user in new_user_list:
         print >> OUTPUT_FILE, "new user: %s" % user.google_email;
-    try:
-        user_name = user.name
-        if isinstance(user_name, unicode):
-            user_name = user_name.encode('utf-8')
-        cursor.execute("insert into users values('%s', '%s', '%s')" % (user.google_email.lower(), user_name, user.enabled)) 
-    except (MySQLdb.Error, UnicodeEncodeError) as e:
-        to_remove.append(user)
-    for user in new_user_list:
-        # authorities is semicolon delimited
-        authorities = user.authorities
-    try:
-        cursor.executemany("insert into authorities values(%s, %s)", [(user.google_email.lower(), authority) for authority in authorities])
-    except MySQLdb.Error, msg:
-        print >> OUTPUT_FILE, msg
-        print >> ERROR_FILE, msg
+        try:
+            user_name = user.name
+            if isinstance(user_name, unicode):
+                user_name = user_name.encode('utf-8')
+            cursor.execute("insert into users values('%s', '%s', '%s')" % (user.google_email.lower(), user_name, user.enabled)) 
+            # authorities is semicolon delimited
+            authorities = user.authorities
+            cursor.executemany("insert into authorities values(%s, %s)", [(user.google_email.lower(), authority) for authority in authorities])
+        except MySQLdb.Error, msg:
+            print >> OUTPUT_FILE, msg
+            print >> OUTPUT_FILE, "Removing user: %s" % user_name
+            print >> ERROR_FILE, msg
+            to_remove.append(user)
     return to_remove
 
 # ------------------------------------------------------------------------------
