@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 - 2017 Memorial Sloan-Kettering Cancer Center.
+ * Copyright (c) 2017 Memorial Sloan-Kettering Cancer Center.
  *
  * This library is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS
@@ -32,54 +32,53 @@
 
 package org.cbioportal.cmo.pipelines.cvr.variants;
 
-import org.cbioportal.cmo.pipelines.cvr.model.*;
+import org.cbioportal.cmo.pipelines.cvr.model.CvrResponse;
 
-import java.util.*;
-import org.apache.log4j.Logger;
-import org.springframework.batch.item.*;
+import java.util.Map;
+import javax.annotation.Resource;
+import org.springframework.batch.core.StepContribution;
+import org.springframework.batch.core.scope.context.ChunkContext;
+import org.springframework.batch.core.step.tasklet.Tasklet;
+import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.web.client.RestTemplate;
 
 /**
  *
- * @author heinsz
+ * @author ochoaa
  */
-
-public class CVRVariantsReader implements ItemStreamReader<CvrResponse> {
-
-    @Value("#{stepExecutionContext['cvrResponse']}")
-    private CvrResponse cvrResponse;
-
-    private List<CvrResponse> cvrVariants = new ArrayList<CvrResponse>();
+public class CvrResponseTasklet implements Tasklet {
     
-    private Logger log = Logger.getLogger(CVRVariantsReader.class);
-
-    // Calls cbio_retrieve_variants against CVR web service
+    @Value("#{jobParameters[sessionId]}")
+    private String sessionId;
+    
+    @Value("#{jobParameters[studyId]}")
+    private String studyId;
+    
+    @Value("${dmp.server_name}")
+    private String dmpServerName;
+    
+    @Resource(name="retrieveVariantTokensMap")
+    private Map<String, String> retrieveVariantTokensMap;
+    
     @Override
-    public void open(ExecutionContext ec) throws ItemStreamException {
-        cvrVariants.add(cvrResponse);
+    public RepeatStatus execute(StepContribution sc, ChunkContext cc) throws Exception {
+        // get retrieve variants token by study id
+        String dmpUrl = dmpServerName + retrieveVariantTokensMap.get(studyId) + "/" + sessionId + "/0";
+        RestTemplate restTemplate = new RestTemplate();
+        HttpEntity<LinkedMultiValueMap<String, Object>> requestEntity = getRequestEntity();
+        ResponseEntity<CvrResponse> responseEntity = restTemplate.exchange(dmpUrl, HttpMethod.GET, requestEntity, CvrResponse.class);
+        CvrResponse cvrResponse = responseEntity.getBody();
+        cc.getStepContext().getStepExecution().getJobExecution().getExecutionContext().put("cvrResponse", cvrResponse);
+        return RepeatStatus.FINISHED;
     }
-
-    @Override
-    public void update(ExecutionContext ec) throws ItemStreamException {
-    }
-
-    @Override
-    public void close() throws ItemStreamException {
-    }
-
-    // The cvrVariants list will never have more than 1 CVRVariants object in it to process
-    @Override
-    public CvrResponse read() throws Exception {
-        if (!cvrVariants.isEmpty()) {
-            return cvrVariants.remove(0);
-        }
-        return null;
-    }
-
+    
     private HttpEntity getRequestEntity() {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
         return new HttpEntity<Object>(headers);
     }
+    
 }

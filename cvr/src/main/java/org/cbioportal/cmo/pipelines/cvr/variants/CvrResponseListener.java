@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 - 2017 Memorial Sloan-Kettering Cancer Center.
+ * Copyright (c) 2017 Memorial Sloan-Kettering Cancer Center.
  *
  * This library is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS
@@ -32,54 +32,22 @@
 
 package org.cbioportal.cmo.pipelines.cvr.variants;
 
-import org.cbioportal.cmo.pipelines.cvr.model.*;
-
-import java.util.*;
-import org.apache.log4j.Logger;
-import org.springframework.batch.item.*;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.*;
+import org.springframework.batch.core.*;
 
 /**
  *
- * @author heinsz
+ * @author ochoaa
  */
+public class CvrResponseListener implements StepExecutionListener {
 
-public class CVRVariantsReader implements ItemStreamReader<CvrResponse> {
+    @Override
+    public void beforeStep(StepExecution se) {
+        se.getExecutionContext().put("cvrResponse", se.getJobExecution().getExecutionContext().get("cvrResponse"));
+    }
 
-    @Value("#{stepExecutionContext['cvrResponse']}")
-    private CvrResponse cvrResponse;
-
-    private List<CvrResponse> cvrVariants = new ArrayList<CvrResponse>();
+    @Override
+    public ExitStatus afterStep(StepExecution se) {
+        return ExitStatus.COMPLETED;
+    }
     
-    private Logger log = Logger.getLogger(CVRVariantsReader.class);
-
-    // Calls cbio_retrieve_variants against CVR web service
-    @Override
-    public void open(ExecutionContext ec) throws ItemStreamException {
-        cvrVariants.add(cvrResponse);
-    }
-
-    @Override
-    public void update(ExecutionContext ec) throws ItemStreamException {
-    }
-
-    @Override
-    public void close() throws ItemStreamException {
-    }
-
-    // The cvrVariants list will never have more than 1 CVRVariants object in it to process
-    @Override
-    public CvrResponse read() throws Exception {
-        if (!cvrVariants.isEmpty()) {
-            return cvrVariants.remove(0);
-        }
-        return null;
-    }
-
-    private HttpEntity getRequestEntity() {
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-        return new HttpEntity<Object>(headers);
-    }
 }

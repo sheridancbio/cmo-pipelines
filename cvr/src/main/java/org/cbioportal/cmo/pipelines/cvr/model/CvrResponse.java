@@ -32,36 +32,34 @@
 
 package org.cbioportal.cmo.pipelines.cvr.model;
 
+import com.fasterxml.jackson.annotation.*;
+import java.util.*;
+import javax.annotation.Generated;
+import org.apache.commons.lang.builder.ToStringBuilder;
+
 /**
  *
  * @author heinsz
  */
 
-import com.fasterxml.jackson.annotation.JsonAnyGetter;
-import com.fasterxml.jackson.annotation.JsonAnySetter;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import java.util.HashMap;
-import java.util.Map;
-import javax.annotation.Generated;
-import org.apache.commons.lang.builder.ToStringBuilder;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
     "disclaimer",
     "results",
-    "sample-count"
+    "sample-count",
+    "information"
 })
-public class CVRVariants {
+public class CvrResponse {
     @JsonProperty("disclaimer")
     private String disclaimer;
     @JsonProperty("results")
-    private HashMap results;
+    private Map<String, CVRResult> results = new HashMap<>();
     @JsonProperty("sample-count")
     private Integer sampleCount;
+    @JsonProperty("information")
+    private String information;
     @JsonIgnore
     private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
@@ -69,7 +67,7 @@ public class CVRVariants {
     * No args constructor for use in serialization
     *
     */
-    public CVRVariants() {
+    public CvrResponse() {
     }
 
     /**
@@ -78,7 +76,7 @@ public class CVRVariants {
     *@param results
     *@param sampleCount
     */
-    public CVRVariants(String disclaimer, HashMap results, Integer sampleCount) {
+    public CvrResponse(String disclaimer, Map<String, CVRResult> results, Integer sampleCount) {
         this.disclaimer = disclaimer;
         this.results = results;
         this.sampleCount = sampleCount;
@@ -110,7 +108,7 @@ public class CVRVariants {
     *The results
     */
     @JsonProperty("results")
-    public HashMap getResults() {
+    public Map<String, CVRResult> getResults() {
         return results;
     }
 
@@ -120,7 +118,7 @@ public class CVRVariants {
     *The results
     */
     @JsonProperty("results")
-    public void setResults(HashMap<String, CVRResult> results) {
+    public void setResults(Map<String, CVRResult> results) {
         this.results = results;
     }
 
@@ -143,6 +141,16 @@ public class CVRVariants {
     public void setSampleCount(Integer sampleCount) {
         this.sampleCount = sampleCount;
     }
+    
+    @JsonProperty("information")
+    public String getInformation() {
+        return information;
+    }
+
+    @JsonProperty("information")
+    public void setInformation(String information) {
+        this.information = information;
+    }
 
     @Override
     public String toString() {
@@ -159,7 +167,7 @@ public class CVRVariants {
         this.additionalProperties.put(name, value);
     }
 
-    public CVRVariants withAdditionalProperty(String name, Object value) {
+    public CvrResponse withAdditionalProperty(String name, Object value) {
         this.additionalProperties.put(name, value);
         return this;
     }
