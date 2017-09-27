@@ -34,6 +34,7 @@ package org.cbioportal.cmo.pipelines.cvr;
 
 import org.apache.log4j.Logger;
 import java.util.*;
+import org.cbioportal.cmo.pipelines.cvr.model.CvrResponse;
 import org.springframework.context.annotation.*;
 
 /**
@@ -43,6 +44,7 @@ import org.springframework.context.annotation.*;
 @Configuration
 public class CvrSampleListUtil {
 
+    private CvrResponse cvrResponse;
     private Set<String> dmpMasterList = new HashSet<>();
     private Set<String> newDmpSamples = new HashSet<>();
     private Set<String> portalSamples = new HashSet<>();
@@ -63,6 +65,20 @@ public class CvrSampleListUtil {
     
     public CvrSampleListUtil() {}
 
+    /**
+     * @return the cvrResponse
+     */
+    public CvrResponse getCvrResponse() {
+        return cvrResponse;
+    }
+
+    /**
+     * @param cvrResponse the cvrResponse to set
+     */
+    public void setCvrResponse(CvrResponse cvrResponse) {
+        this.cvrResponse = cvrResponse;
+    }
+    
     /**
      * The complete DMP master sample list from CVR.
      * 
