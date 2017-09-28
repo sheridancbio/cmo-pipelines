@@ -29,7 +29,9 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+
 package org.cbioportal.cmo.pipelines.cvr;
+
 import java.util.*;
 import java.util.Properties;
 import javax.mail.*;
@@ -39,6 +41,7 @@ import org.apache.commons.lang.exception.ExceptionUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
 /**
  *
  * @author heinsz
@@ -68,16 +71,23 @@ public class EmailUtil {
         session = Session.getDefaultInstance(properties);
     }
 
-    public void sendEmail(String subject, String body) {
-        sendEmail(this.sender, this.recipient, subject, body);
+    public void sendEmailToDefaultRecipient(String subject, String body) {
+        String[] recipients = new String[1];
+        recipients[0] = this.recipient;
+        sendEmail(this.sender, recipients, subject, body);
     }
 
-    public void sendEmail(String sender, String recipient, String subject, String body) {
+    public void sendEmail(String sender, String[] recipients, String subject, String body) {
         try {
+            if (recipients == null || recipients.length < 1) {
+                return;
+            }
             properties.setProperty("mail.smtp.host", server);
             MimeMessage message = new MimeMessage(session);
             message.setFrom(new InternetAddress(sender));
-            message.addRecipient(Message.RecipientType.TO, new InternetAddress(recipient));
+            for (String nextRecipient : recipients) {
+                message.addRecipient(Message.RecipientType.TO, new InternetAddress(nextRecipient));
+            }
             message.setSubject(subject);
             message.setText(body);
             Transport.send(message);
@@ -94,6 +104,6 @@ public class EmailUtil {
             messages.add(ExceptionUtils.getFullStackTrace(exception));
         }
         body += StringUtils.join(messages, "\n\n");
-        sendEmail(subject, body);
+        sendEmailToDefaultRecipient(subject, body);
     }
 }

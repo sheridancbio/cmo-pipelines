@@ -54,7 +54,10 @@ public class CvrRequeueListener implements StepExecutionListener {
     private  String sender;
 
     @Value("${dmp.email.recipient}")
-    private  String recipient;
+    private  String dmpRecipient;
+
+    @Value("${email.recipient}")
+    private  String defaultRecipient;
 
     Logger log = Logger.getLogger(CvrRequeueListener.class);
     
@@ -137,7 +140,8 @@ public class CvrRequeueListener implements StepExecutionListener {
         }
         
         if (!body.toString().isEmpty()) {
-            emailUtil.sendEmail(sender, recipient, subject, body.toString());
+            String[] recipients = {defaultRecipient, dmpRecipient};
+            emailUtil.sendEmail(sender, recipients, subject, body.toString());
         }
         return ExitStatus.COMPLETED;
     }
