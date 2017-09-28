@@ -690,8 +690,8 @@ public class BatchConfiguration {
             @Override
             public FlowExecutionStatus decide(JobExecution je, StepExecution se) {
                 String studyId = je.getJobParameters().getString("studyId");
-                CvrResponse cvrResponse = (CvrResponse) je.getExecutionContext().get("cvrResponse");
-                if (cvrResponse.getSampleCount() > 0) {
+                Integer sampleCount = (Integer) je.getExecutionContext().get("sampleCount");
+                if (sampleCount > 0) {
                     return new FlowExecutionStatus("RUN");
                 }
                 else {

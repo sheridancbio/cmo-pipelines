@@ -36,10 +36,12 @@ import org.cbioportal.cmo.pipelines.cvr.model.CvrResponse;
 
 import java.util.Map;
 import javax.annotation.Resource;
+import org.cbioportal.cmo.pipelines.cvr.CvrSampleListUtil;
 import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.batch.repeat.RepeatStatus;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.util.LinkedMultiValueMap;
@@ -60,6 +62,9 @@ public class CvrResponseTasklet implements Tasklet {
     @Value("${dmp.server_name}")
     private String dmpServerName;
     
+    @Autowired
+    public CvrSampleListUtil cvrSampleListUtil;
+    
     @Resource(name="retrieveVariantTokensMap")
     private Map<String, String> retrieveVariantTokensMap;
     
@@ -71,7 +76,10 @@ public class CvrResponseTasklet implements Tasklet {
         HttpEntity<LinkedMultiValueMap<String, Object>> requestEntity = getRequestEntity();
         ResponseEntity<CvrResponse> responseEntity = restTemplate.exchange(dmpUrl, HttpMethod.GET, requestEntity, CvrResponse.class);
         CvrResponse cvrResponse = responseEntity.getBody();
-        cc.getStepContext().getStepExecution().getJobExecution().getExecutionContext().put("cvrResponse", cvrResponse);
+        // save the CVR response in the sample util and add the sample count to the execution context
+        // for the CVR response job execution decider 
+        cvrSampleListUtil.setCvrResponse(cvrResponse);
+        cc.getStepContext().getStepExecution().getJobExecution().getExecutionContext().put("sampleCount", cvrResponse.getSampleCount());
         return RepeatStatus.FINISHED;
     }
     

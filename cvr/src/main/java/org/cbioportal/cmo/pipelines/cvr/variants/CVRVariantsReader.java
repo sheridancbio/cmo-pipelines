@@ -36,9 +36,9 @@ import org.cbioportal.cmo.pipelines.cvr.model.*;
 
 import java.util.*;
 import org.apache.log4j.Logger;
+import org.cbioportal.cmo.pipelines.cvr.CvrSampleListUtil;
 import org.springframework.batch.item.*;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.*;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  *
@@ -47,8 +47,8 @@ import org.springframework.http.*;
 
 public class CVRVariantsReader implements ItemStreamReader<CvrResponse> {
 
-    @Value("#{stepExecutionContext['cvrResponse']}")
-    private CvrResponse cvrResponse;
+    @Autowired
+    public CvrSampleListUtil cvrSampleListUtil;
 
     private List<CvrResponse> cvrVariants = new ArrayList<CvrResponse>();
     
@@ -57,7 +57,7 @@ public class CVRVariantsReader implements ItemStreamReader<CvrResponse> {
     // Calls cbio_retrieve_variants against CVR web service
     @Override
     public void open(ExecutionContext ec) throws ItemStreamException {
-        cvrVariants.add(cvrResponse);
+        cvrVariants.add(cvrSampleListUtil.getCvrResponse());
     }
 
     @Override
@@ -77,9 +77,4 @@ public class CVRVariantsReader implements ItemStreamReader<CvrResponse> {
         return null;
     }
 
-    private HttpEntity getRequestEntity() {
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-        return new HttpEntity<Object>(headers);
-    }
 }

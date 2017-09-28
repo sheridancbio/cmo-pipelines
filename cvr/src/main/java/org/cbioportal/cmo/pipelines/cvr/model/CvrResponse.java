@@ -75,11 +75,13 @@ public class CvrResponse {
     *@param disclaimer
     *@param results
     *@param sampleCount
+    *@param information
     */
-    public CvrResponse(String disclaimer, Map<String, CVRResult> results, Integer sampleCount) {
+    public CvrResponse(String disclaimer, Map<String, CVRResult> results, Integer sampleCount, String information) {
         this.disclaimer = disclaimer;
         this.results = results;
         this.sampleCount = sampleCount;
+        this.information = information;
     }
 
     /**
