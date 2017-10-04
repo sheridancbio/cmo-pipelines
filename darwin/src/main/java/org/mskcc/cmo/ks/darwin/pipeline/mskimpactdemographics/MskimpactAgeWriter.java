@@ -29,7 +29,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-package org.mskcc.cmo.ks.darwin.pipeline.age;
+package org.mskcc.cmo.ks.darwin.pipeline.mskimpactdemographics;
 
 import java.io.*;
 import java.util.*;
@@ -45,7 +45,7 @@ import org.springframework.core.io.FileSystemResource;
  *
  * @author heinsz
  */
-public class MskimpactAgeWriter implements ItemStreamWriter<String> {
+public class MskimpactAgeWriter implements ItemStreamWriter<MskimpactCompositeDemographics> {
     @Value("#{jobParameters[outputDirectory]}")
     private String outputDirectory;
 
@@ -80,7 +80,11 @@ public class MskimpactAgeWriter implements ItemStreamWriter<String> {
     }
 
     @Override
-    public void write(List<? extends String> list) throws Exception {
-        flatFileItemWriter.write(list);
+    public void write(List<? extends MskimpactCompositeDemographics> items) throws Exception {
+        writeList.clear();
+        for (MskimpactCompositeDemographics record : items) {
+            writeList.add(record.getAgeResult());
+        }
+        flatFileItemWriter.write(writeList);
     }    
 }

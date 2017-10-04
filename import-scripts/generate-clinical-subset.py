@@ -90,13 +90,13 @@ def filter_samples_by_sequencing_date(clinical_supp_filename, sequencing_date_li
 			if anonymize_date:
 				# anonymize the sample seq date and add to supplemental sample clinical data
 				if raw_sample_seq_date.month <= 3:
-					sample_seq_date = 'Jan-' + str(raw_sample_seq_date.year)
+					sample_seq_date = 'Jan-' + raw_sample_seq_date.strftime('%Y')
 				elif raw_sample_seq_date.month > 3 and raw_sample_seq_date.month <= 6:
-					sample_seq_date = 'Jun-' + str(raw_sample_seq_date.year)
+					sample_seq_date = 'Apr-' + raw_sample_seq_date.strftime('%Y')
 				elif raw_sample_seq_date.month > 6 and raw_sample_seq_date.month <= 9:
-					sample_seq_date = 'Jul-' + str(raw_sample_seq_date.year)
+					sample_seq_date = 'Jul-' + raw_sample_seq_date.strftime('%Y')
 				else:
-					sample_seq_date = 'Oct-' + str(raw_sample_seq_date.year)
+					sample_seq_date = 'Oct-' + raw_sample_seq_date.strftime('%Y')
 			else:
 				sample_seq_date = raw_sample_seq_date.strftime('%Y/%m')
 

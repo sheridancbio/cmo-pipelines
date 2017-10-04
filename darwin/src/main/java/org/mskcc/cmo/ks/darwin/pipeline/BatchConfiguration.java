@@ -32,7 +32,7 @@
 
 package org.mskcc.cmo.ks.darwin.pipeline;
 
-import org.mskcc.cmo.ks.darwin.pipeline.age.*;
+import org.mskcc.cmo.ks.darwin.pipeline.mskimpactdemographics.MskimpactAgeWriter;
 import org.mskcc.cmo.ks.darwin.pipeline.model.*;
 import org.mskcc.cmo.ks.darwin.pipeline.mskimpactbrainspineclinical.*;
 import org.mskcc.cmo.ks.darwin.pipeline.mskimpactbrainspinetimeline.*;
@@ -84,7 +84,6 @@ public class BatchConfiguration {
     public Job mskimpactJob() {
         return jobBuilderFactory.get(MSKIMPACT_JOB)
                 .start(mskimpactPatientDemographicsStep())
-                .next(mskimpactAgeStep())
                 .next(mskimpactTimelineBrainSpineStep())
                 .next(mskimpactClinicalBrainSpineStep())
             //.next(mskimpactMedicalTherapyStep())
@@ -110,10 +109,10 @@ public class BatchConfiguration {
     @Bean
     public Step mskimpactPatientDemographicsStep() {
         return stepBuilderFactory.get("mskimpactPatientDemographicsStep")
-                .<MskimpactPatientDemographics, String> chunk(chunkSize)
+                .<MskimpactPatientDemographics, MskimpactCompositeDemographics> chunk(chunkSize)
                 .reader(mskimpactPatientDemographicsReader())
                 .processor(mskimpactPatientDemographicsProcessor())
-                .writer(mskimpactPatientDemographicsWriter())
+                .writer(mskimpactCompositeDemographicsWriter())
                 .build();
     }
 
@@ -178,16 +177,6 @@ public class BatchConfiguration {
     }
 
     @Bean
-    public Step mskimpactAgeStep() {
-        return stepBuilderFactory.get("mskimpactAgeStep")
-                .<MskimpactPatientDemographics, String> chunk(chunkSize)
-                .reader(mskimpactAgeReader())
-                .processor(mskimpactAgeProcessor())
-                .writer(mskimpactAgeWriter())
-                .build();
-    }
-
-    @Bean
     @StepScope
     public DarwinUtils darwinUtils() {
         return new DarwinUtils();
@@ -206,8 +195,32 @@ public class BatchConfiguration {
 
     @Bean
     @StepScope
-    public ItemStreamWriter<String> mskimpactPatientDemographicsWriter() {
+    public ItemStreamWriter<MskimpactCompositeDemographics> mskimpactPatientDemographicsWriter() {
         return new MskimpactPatientDemographicsWriter();
+    }
+
+    @Bean
+    @StepScope
+    public ItemStreamWriter<MskimpactCompositeDemographics> mskimpactAgeWriter() {
+        return new MskimpactAgeWriter();
+    }
+    
+    @Bean
+    @StepScope
+    public ItemStreamWriter<MskimpactCompositeDemographics> mskimpactVitalStatusWriter() {
+        return new MskimpactVitalStatusWriter();
+    }
+    
+    @Bean
+    @StepScope
+    public CompositeItemWriter<MskimpactCompositeDemographics> mskimpactCompositeDemographicsWriter() {
+        CompositeItemWriter writer = new CompositeItemWriter();
+        List<ItemWriter> delegates = new ArrayList<>();
+        delegates.add(mskimpactPatientDemographicsWriter());
+        delegates.add(mskimpactAgeWriter());
+        delegates.add(mskimpactVitalStatusWriter());
+        writer.setDelegates(delegates);
+        return writer;
     }
 
     @Bean
@@ -266,23 +279,6 @@ public class BatchConfiguration {
     @StepScope
     public ItemStreamWriter<String> mskimpactGeniePatientWriter() {
         return new MskimpactGeniePatientWriter();
-    }
-
-    @Bean
-    @StepScope
-    public ItemStreamReader<MskimpactPatientDemographics> mskimpactAgeReader() {
-        return new MskimpactAgeReader();
-    }
-
-    @Bean
-    public MskimpactAgeProcessor mskimpactAgeProcessor() {
-        return new MskimpactAgeProcessor();
-    }
-
-    @Bean
-    @StepScope
-    public ItemStreamWriter<String> mskimpactAgeWriter() {
-        return new MskimpactAgeWriter();
     }
 
     // Beans for CompositeItemProcessor mskimpactTimelieBrainSpineProcessor delegation
