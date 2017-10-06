@@ -65,9 +65,7 @@ function addDateAddedData {
     STUDY_ID=$2
 
     # add "date added" to clinical data file
-    $PYTHON_BINARY $PORTAL_HOME/scripts/impact_timeline.py --hgrepo=$STUDY_DATA_DIRECTORY
-    cd $STUDY_DATA_DIRECTORY; rm *.orig
-    rm $STUDY_DATA_DIRECTORY/case_lists/*.orig
+    $PYTHON_BINARY $PORTAL_HOME/scripts/update-date-added.py --date-added-file=$STUDY_DATA_DIRECTORY/data_clinical_supp_date.txt --clinical-file=$STUDY_DATA_DIRECTORY/data_clinical.txt
 }
 
 # Function for restarting tomcats
