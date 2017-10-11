@@ -52,18 +52,49 @@ public class TimelineReader implements ItemStreamReader<Map<String, String>> {
 
     @Value("#{jobParameters[stableId]}")
     public String stableId;
+    
+    @Value("#{jobParameters[mergeClinicalDataSources]}")
+    private boolean mergeClinicalDataSources;
 
     private final Logger log = Logger.getLogger(ClinicalDataReader.class);
 
-    public List<Map<String, String>> records = new ArrayList<>();
+    public List<Map<String, String>> timelineRecords = new ArrayList<>();
+    private List<String> timelineHeader = new ArrayList();
 
     @Override
     public void open(ExecutionContext ec) throws ItemStreamException {
         String projectTitle = clinicalDataSource.getNextTimelineProjectTitle(stableId);
-        ec.put("projectTitle", projectTitle);
+
         log.info("Getting timeline header for project: " + projectTitle);
-        ec.put("combinedHeader", clinicalDataSource.getTimelineHeader(stableId));
-        records = clinicalDataSource.getTimelineData(stableId);
+        timelineHeader = clinicalDataSource.getTimelineHeader(stableId);
+        timelineRecords = clinicalDataSource.getTimelineData(stableId);
+        
+        // merge remaining timeline data sources if in merge mode and more timeline data exists
+        if (mergeClinicalDataSources && clinicalDataSource.hasMoreTimelineData(stableId)) {
+            mergeTimelineDataSources();
+        }
+        
+        // update execution context with project title and full timeline header
+        ec.put("projectTitle", projectTitle);
+        ec.put("timelineHeader", timelineHeader);
+    }
+    
+    private void mergeTimelineDataSources() {
+        while (clinicalDataSource.hasMoreTimelineData(stableId)) {
+            String projectTitle = clinicalDataSource.getNextTimelineProjectTitle(stableId);
+            
+            // get timeline data header for project and merge with global timeline header
+            log.info("Merging timeline data for project: " + projectTitle);
+            List<String> header = clinicalDataSource.getTimelineHeader(stableId);
+            for (String column : header) {
+                if (timelineHeader.contains(column)) {
+                    continue;
+                }
+                timelineHeader.add(column);
+            }
+            // now add all timeline data records for current project
+            timelineRecords.addAll(clinicalDataSource.getTimelineData(stableId));
+        }
     }
 
     @Override
@@ -74,8 +105,8 @@ public class TimelineReader implements ItemStreamReader<Map<String, String>> {
 
     @Override
     public Map<String, String> read() throws Exception {
-        if (!records.isEmpty()) {
-            return records.remove(0);
+        if (!timelineRecords.isEmpty()) {
+            return timelineRecords.remove(0);
         }
         return null;
     }

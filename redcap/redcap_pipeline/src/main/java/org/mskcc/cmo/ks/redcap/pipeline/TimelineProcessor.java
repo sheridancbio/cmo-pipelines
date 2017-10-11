@@ -45,8 +45,8 @@ import org.springframework.beans.factory.annotation.Value;
  */
 public class TimelineProcessor implements ItemProcessor<Map<String, String>, String> {
 
-    @Value("#{stepExecutionContext['combinedHeader']}")
-    List<String> header;
+    @Value("#{stepExecutionContext['timelineHeader']}")
+    List<String> timelineHeader;
 
     @Value("#stepExecutionContext['standardTimelineDataFields']")
     private List<String> standardTimelineDataFields;
@@ -56,13 +56,13 @@ public class TimelineProcessor implements ItemProcessor<Map<String, String>, Str
         List<String> record = new ArrayList();
 
         for (String column : standardTimelineDataFields) {
-            if (header.contains(column)) {
-                record.add(i.get(column));
+            if (timelineHeader.contains(column)) {
+                record.add(i.getOrDefault(column, ""));
             }
         }
 
         // get the sample and patient ids first before processing the other columns
-        for (String column : header) {
+        for (String column : timelineHeader) {
             if (!standardTimelineDataFields.contains(column) && !column.equals("RECORD_ID")) {
                 record.add(i.getOrDefault(column, ""));
             }

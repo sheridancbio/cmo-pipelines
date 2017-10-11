@@ -59,8 +59,8 @@ public class TimelineWriter  implements ItemStreamWriter<String> {
     @Value("#{jobParameters[mergeClinicalDataSources]}")
     private boolean mergeClinicalDataSources;
 
-    @Value("#{stepExecutionContext['combinedHeader']}")
-    private List<String> combinedHeader;
+    @Value("#{stepExecutionContext['timelineHeader']}")
+    private List<String> timelineHeader;
 
     @Value("#{stepExecutionContext['projectTitle']}")
     private String projectTitle;
@@ -86,7 +86,7 @@ public class TimelineWriter  implements ItemStreamWriter<String> {
         flatFileItemWriter.setHeaderCallback(new FlatFileHeaderCallback() {
             @Override
             public void writeHeader(Writer writer) throws IOException {
-                writer.write(getHeaderLine(combinedHeader));
+                writer.write(getHeaderLine(timelineHeader));
             }
         });
         flatFileItemWriter.open(ec);
