@@ -60,7 +60,7 @@ public class TimelineReader implements ItemStreamReader<Map<String, String>> {
     @Override
     public void open(ExecutionContext ec) throws ItemStreamException {
         String projectTitle = clinicalDataSource.getNextTimelineProjectTitle(stableId);
-        ec.put("projectId", projectTitle);
+        ec.put("projectTitle", projectTitle);
         log.info("Getting timeline header for project: " + projectTitle);
         ec.put("combinedHeader", clinicalDataSource.getTimelineHeader(stableId));
         records = clinicalDataSource.getTimelineData(stableId);
