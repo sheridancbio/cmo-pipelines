@@ -363,7 +363,6 @@ public class ClinicalDataSourceRedcapImpl implements ClinicalDataSource {
             projectToken = clinicalTimelineTokens.remove(nextTimelineId);
         }
         else {
-            Set<String> keySet = clinicalDataTokens.keySet();
             projectToken = clinicalDataTokens.remove(nextClinicalId);
         }
 
