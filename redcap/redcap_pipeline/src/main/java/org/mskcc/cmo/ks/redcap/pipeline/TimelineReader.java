@@ -52,9 +52,6 @@ public class TimelineReader implements ItemStreamReader<Map<String, String>> {
 
     @Value("#{jobParameters[stableId]}")
     public String stableId;
-    
-    @Value("#{jobParameters[mergeClinicalDataSources]}")
-    private boolean mergeClinicalDataSources;
 
     private final Logger log = Logger.getLogger(ClinicalDataReader.class);
 
@@ -70,7 +67,7 @@ public class TimelineReader implements ItemStreamReader<Map<String, String>> {
         timelineRecords = clinicalDataSource.getTimelineData(stableId);
         
         // merge remaining timeline data sources if in merge mode and more timeline data exists
-        if (mergeClinicalDataSources && clinicalDataSource.hasMoreTimelineData(stableId)) {
+        if (clinicalDataSource.hasMoreTimelineData(stableId)) {
             mergeTimelineDataSources();
         }
         

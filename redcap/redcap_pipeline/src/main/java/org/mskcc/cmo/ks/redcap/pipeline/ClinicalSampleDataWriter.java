@@ -54,12 +54,6 @@ public class ClinicalSampleDataWriter implements ItemStreamWriter<ClinicalDataCo
     @Value("#{jobParameters[directory]}")
     private String directory;
 
-    @Value("#{jobParameters[mergeClinicalDataSources]}")
-    private boolean mergeClinicalDataSources;
-
-    @Value("#{stepExecutionContext['projectTitle']}")
-    private String projectTitle;
-
     @Value("#{stepExecutionContext['writeClinicalSample']}")
     private boolean writeClinicalSample;
 
@@ -72,6 +66,7 @@ public class ClinicalSampleDataWriter implements ItemStreamWriter<ClinicalDataCo
     @Autowired
     public ClinicalDataSource clinicalDataSource;
 
+    private static final String OUTPUT_FILENAME = "data_clinical_sample.txt";
     private File stagingFile;
     private FlatFileItemWriter<String> flatFileItemWriter = new FlatFileItemWriter<String>();
     private List<String> writeList = new ArrayList<>();
@@ -79,12 +74,7 @@ public class ClinicalSampleDataWriter implements ItemStreamWriter<ClinicalDataCo
     @Override
     public void open(ExecutionContext ec) throws ItemStreamException {
         if (writeClinicalSample) {
-            String outputFilename = "data_clinical_sample";
-            if (!mergeClinicalDataSources) {
-                outputFilename = outputFilename + "_" + projectTitle;
-            }
-            outputFilename = outputFilename + ".txt";
-            this.stagingFile = new File(directory, outputFilename);
+            this.stagingFile = new File(directory, OUTPUT_FILENAME);
             PassThroughLineAggregator aggr = new PassThroughLineAggregator();
             flatFileItemWriter.setLineAggregator(aggr);
             flatFileItemWriter.setResource( new FileSystemResource(stagingFile));

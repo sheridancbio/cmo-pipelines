@@ -56,30 +56,19 @@ public class TimelineWriter  implements ItemStreamWriter<String> {
     @Value("#{jobParameters[directory]}")
     private String directory;
 
-    @Value("#{jobParameters[mergeClinicalDataSources]}")
-    private boolean mergeClinicalDataSources;
-
     @Value("#{stepExecutionContext['timelineHeader']}")
     private List<String> timelineHeader;
-
-    @Value("#{stepExecutionContext['projectTitle']}")
-    private String projectTitle;
 
     @Value("#stepExecutionContext['standardTimelineDataFields']")
     private List<String> standardTimelineDataFields;
     
-    private String outputFilename = "data_timeline_";
+    private static final String OUTPUT_FILENAME = "data_timeline.txt";
     private File stagingFile;
     private FlatFileItemWriter<String> flatFileItemWriter = new FlatFileItemWriter<String>();
 
     @Override
     public void open(ExecutionContext ec) throws ItemStreamException {
-        String outputFilename = "data_timeline";
-        if (!mergeClinicalDataSources) {
-            outputFilename = outputFilename + "_" + projectTitle;
-        }
-        outputFilename = outputFilename + ".txt";
-        this.stagingFile = new File(directory, outputFilename);
+        this.stagingFile = new File(directory, OUTPUT_FILENAME);
         PassThroughLineAggregator aggr = new PassThroughLineAggregator();
         flatFileItemWriter.setLineAggregator(aggr);
         flatFileItemWriter.setResource(new FileSystemResource(stagingFile));

@@ -53,9 +53,6 @@ public class ClinicalDataReader implements ItemStreamReader<Map<String, String>>
     @Autowired
     public MetadataManager metadataManager;
 
-    @Value("#{jobParameters[mergeClinicalDataSources]}")
-    private boolean mergeClinicalDataSources;
-
     @Value("#{jobParameters[stableId]}")
     private String stableId;
 
@@ -84,7 +81,7 @@ public class ClinicalDataReader implements ItemStreamReader<Map<String, String>>
             updateClinicalData(record, false);
         }
         // merge remaining clinical data sources if in merge mode and more clinical data exists
-        if (mergeClinicalDataSources && clinicalDataSource.hasMoreClinicalData(stableId)) {
+        if (clinicalDataSource.hasMoreClinicalData(stableId)) {
             mergeClinicalDataSources();
         }
         // associate patient data with their samples so that patient data for each sample is the same
