@@ -63,14 +63,15 @@ public class RedcapPipeline {
     {
         Options options = new Options();
         options.addOption("h", "help", false, "shows this help document and quits.")
-            .addOption("p", "redcap-project", true, "RedCap project title (required for import-mode)")
+            .addOption("p", "redcap-project-title", true, "RedCap project title (required for import-mode)")
             .addOption("s", "stable-id", true, "Stable id for cancer study (required for export-mode)")
             .addOption("d", "directory", true, "Output directory (required for export-mode)")
             .addOption("f", "filename", true, "Input filename (required for input-mode)")
+            .addOption("r", "raw-data", false, "Export data without manipulation (no merging of data sources or splitting of attribute types)")
             .addOption("o", "overwrite-project-data", false, "This flag causes redcap projects to be cleared of data before import (import-mode only)")
             .addOption("i", "import-mode", false, "Import from directory to redcap-project (use one of { -i, -e, -c })")
-            .addOption("e", "export-mode", false, "Export redcap-project to directory (use one of -i, -e, -c)")
-            .addOption("c", "check-mode", false, "Check if either redcap-project or stable-id is present in RedCap (use one of { -i, -e, -c })");
+            .addOption("e", "export-mode", false, "Export either redcap-project-title or stable-id to directory (use one of -i, -e, -c)")
+            .addOption("c", "check-mode", false, "Check if either redcap-project-title or stable-id is present in RedCap (use one of { -i, -e, -c })");
         return options;
     }
 
@@ -85,7 +86,7 @@ public class RedcapPipeline {
     {
         SpringApplication app = new SpringApplication(RedcapPipeline.class);
         ConfigurableApplicationContext ctx = app.run(args);
-        String projectTitle = commandLine.getOptionValue("redcap-project");
+        String projectTitle = commandLine.getOptionValue("redcap-project-title");
         String stableId = commandLine.getOptionValue("stable-id");
         ClinicalDataSource clinicalDataSource = ctx.getBean(ClinicalDataSource.class);
         String message = "project " + projectTitle + " does not exists in RedCap";
@@ -117,18 +118,33 @@ public class RedcapPipeline {
         Job redcapJob = null;
         if (executionMode == EXPORT_MODE) {
             String stableId = commandLine.getOptionValue("stable-id");
+            String redcapProjectTitle = commandLine.getOptionValue("redcap-project-title");
             ClinicalDataSource clinicalDataSource = ctx.getBean(ClinicalDataSource.class);
-            if (!clinicalDataSource.projectsExistForStableId(stableId)) {
-                log.error("no project for stable-id " + stableId + " exists in RedCap");
-                System.exit(1);
+            if (commandLine.hasOption("stable-id")) {
+                if (!clinicalDataSource.projectsExistForStableId(stableId)) {
+                    log.error("no project for stable-id " + stableId + " exists in RedCap");
+                    System.exit(1);
+                }
+                builder.addString("stableId", stableId);
             }
-            redcapJob = ctx.getBean(BatchConfiguration.REDCAP_EXPORT_JOB, Job.class);
-            builder.addString("directory", commandLine.getOptionValue("directory"))
-                    .addString("stableId", stableId);
+            if (commandLine.hasOption("redcap-project-title")) {
+                if (!clinicalDataSource.projectExists(redcapProjectTitle)) {
+                    log.error("no project with title " + redcapProjectTitle + " exists in RedCap");
+                    System.exit(1);
+                }
+                builder.addString("redcapProjectTitle", redcapProjectTitle);
+            }
+            builder.addString("directory", commandLine.getOptionValue("directory"));
+            builder.addString("rawData", String.valueOf(commandLine.hasOption("raw-data")));
+            if (commandLine.hasOption("raw-data")) {
+                redcapJob = ctx.getBean(BatchConfiguration.REDCAP_RAW_EXPORT_JOB, Job.class);
+            } else {
+                redcapJob = ctx.getBean(BatchConfiguration.REDCAP_EXPORT_JOB, Job.class);
+            }
         } else if (executionMode == IMPORT_MODE) {
             redcapJob = ctx.getBean(BatchConfiguration.REDCAP_IMPORT_JOB, Job.class);
             builder.addString("filename", commandLine.getOptionValue("filename"))
-                    .addString("redcapProject", commandLine.getOptionValue("redcap-project"))
+                    .addString("redcapProjectTitle", commandLine.getOptionValue("redcap-project-title"))
                     .addString("overwriteProjectData", String.valueOf(commandLine.hasOption("overwrite-project-data")));
         }
         if (redcapJob != null) {
@@ -147,12 +163,16 @@ public class RedcapPipeline {
                 errOut.println("error: multiple modes selected. Use only one from { -i, -e, -c }");
                 optionsAreValid = false;
             }
-            if (!commandLine.hasOption("redcap-project")) {
-                errOut.println("error: -p (--redcap-project) argument must be provided");
+            if (!commandLine.hasOption("redcap-project-title")) {
+                errOut.println("error: -p (--redcap-project-title) argument must be provided");
                 optionsAreValid = false;
             }
             if (!commandLine.hasOption("filename")) {
                 errOut.println("error: import-mode requires a -f (--filename) argument to be provided");
+                optionsAreValid = false;
+            }
+            if (commandLine.hasOption("raw-data")) {
+                errOut.println("error: the --raw-data option can only be used with export-mode");
                 optionsAreValid = false;
             }
         } else if (commandLine.hasOption("export-mode")) {
@@ -161,8 +181,16 @@ public class RedcapPipeline {
                 errOut.println("error: multiple modes selected. Use only one from { -i, -e, -c }");
                 optionsAreValid = false;
             }
-            if (!commandLine.hasOption("stable-id")) {
-                errOut.println("error: -s (--stable-id) argument must be provided");
+            if (!commandLine.hasOption("redcap-project-title") && !commandLine.hasOption("stable-id")) {
+                errOut.println("error: one of -p (--redcap-project-title) or -s (--stable-id) must be provided for export-mode");
+                optionsAreValid = false;
+            }
+            if (commandLine.hasOption("redcap-project-title") && commandLine.hasOption("stable-id")) {
+                errOut.println("error: only one of -p (--redcap-project-title) or -s (--stable-id) can be provided for export-mode");
+                optionsAreValid = false;
+            }
+            if (!commandLine.hasOption("raw-data") && commandLine.hasOption("redcap-project-title")) {
+                errOut.println("error: export of single project must use the --raw-data flag : standard export of a single project is not currently supported");
                 optionsAreValid = false;
             }
             if (!commandLine.hasOption("directory")) {
@@ -175,12 +203,16 @@ public class RedcapPipeline {
                 errOut.println("error: multiple modes selected. Use only one from { -i, -e, -c }");
                 optionsAreValid = false;
             }
-            if (!commandLine.hasOption("redcap-project") && !commandLine.hasOption("stable-id")) {
-                errOut.println("error: one of -p (--redcap-project) or -s (--stable-id) must be provided for check-mode");
+            if (!commandLine.hasOption("redcap-project-title") && !commandLine.hasOption("stable-id")) {
+                errOut.println("error: one of -p (--redcap-project-title) or -s (--stable-id) must be provided for check-mode");
                 optionsAreValid = false;
             }
-            if (commandLine.hasOption("redcap-project") && commandLine.hasOption("stable-id")) {
-                errOut.println("error: only one of -p (--redcap-project) or -s (--stable-id) can be provided for check-mode");
+            if (commandLine.hasOption("redcap-project-title") && commandLine.hasOption("stable-id")) {
+                errOut.println("error: only one of -p (--redcap-project-title) or -s (--stable-id) can be provided for check-mode");
+                optionsAreValid = false;
+            }
+            if (commandLine.hasOption("raw-data")) {
+                errOut.println("error: the --raw-data option can only be used with export-mode");
                 optionsAreValid = false;
             }
         } else {

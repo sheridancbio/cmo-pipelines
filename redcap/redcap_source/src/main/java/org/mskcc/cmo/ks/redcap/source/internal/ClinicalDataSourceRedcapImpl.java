@@ -63,8 +63,6 @@ public class ClinicalDataSourceRedcapImpl implements ClinicalDataSource {
     private Map<String, String> clinicalDataTokens = null;
     private Map<String, String> clinicalTimelineTokens = null;
     private String metadataToken = null;
-    private List<Map<String, String>> records;
-    private List<Map<String, String>> timelineRecords;
     private List<RedcapAttributeMetadata> metadata;
 
     private List<String> sampleHeader;
@@ -85,9 +83,36 @@ public class ClinicalDataSourceRedcapImpl implements ClinicalDataSource {
     }
 
     @Override
+    public boolean redcapDataTypeIsTimeline(String projectTitle) {
+        return redcapSessionManager.redcapDataTypeIsTimeline(projectTitle);
+    }
+
+    @Override
+    public List<Map<String, String>> exportRawDataForProjectTitle(String projectTitle) {
+        String projectToken = redcapSessionManager.getTokenByProjectTitle(projectTitle);
+        List<Map<String, String>> data = getRedcapDataForProject(projectToken);
+        if (redcapDataTypeIsTimeline(projectTitle)) {
+            if (clinicalTimelineTokens != null) {
+                clinicalTimelineTokens.remove(projectTitle);
+            }
+        } else {
+            if (clinicalDataTokens != null) {
+                clinicalDataTokens.remove(projectTitle);
+            }
+        }
+        return data;
+    }
+
+    @Override
     public boolean projectsExistForStableId(String stableId) {
         return !redcapSessionManager.getClinicalTokenMapByStableId(stableId).isEmpty() ||
                 !redcapSessionManager.getTimelineTokenMapByStableId(stableId).isEmpty();
+    }
+
+    @Override
+    public List<String> getProjectHeader(String projectTitle) {
+        String projectToken = redcapSessionManager.getTokenByProjectTitle(projectTitle);
+        return getNormalizedColumnHeaders(projectToken);
     }
 
     @Override
@@ -114,14 +139,15 @@ public class ClinicalDataSourceRedcapImpl implements ClinicalDataSource {
     @Override
     public List<Map<String, String>> getClinicalData(String stableId) {
         checkTokensByStableId(stableId);
-        return records = getClinicalData(false);
+        String projectToken = clinicalDataTokens.remove(nextClinicalId);
+        return getRedcapDataForProject(projectToken);
     }
 
     @Override
     public List<Map<String, String>> getTimelineData(String stableId) {
         checkTokensByStableId(stableId);
-        return timelineRecords = getClinicalData(true);
-
+        String projectToken = clinicalTimelineTokens.remove(nextTimelineId);
+        return getRedcapDataForProject(projectToken);
     }
 
     @Override
@@ -216,6 +242,21 @@ public class ClinicalDataSourceRedcapImpl implements ClinicalDataSource {
                 headerHandled = true;
             }
         }
+    }
+
+    private List<String> getNormalizedColumnHeaders(String projectToken) {
+        metadata = getMetadata();
+        List<RedcapProjectAttribute> attributes = getAttributesByToken(projectToken);
+        Map<RedcapProjectAttribute, RedcapAttributeMetadata> attributeMap = new LinkedHashMap<>();
+        for (RedcapProjectAttribute attribute : attributes) {
+            for (RedcapAttributeMetadata meta : metadata) {
+                if (attribute.getFieldName().toUpperCase().equals(meta.getNormalizedColumnHeader().toUpperCase())) {
+                    attributeMap.put(attribute, meta);
+                    break;
+                }
+            }
+        }
+        return makeHeader(attributeMap);
     }
 
     private void getClinicalHeaderData() {
@@ -343,7 +384,10 @@ public class ClinicalDataSourceRedcapImpl implements ClinicalDataSource {
         else {
             projectToken = clinicalDataTokens.get(nextClinicalId);
         }
+        return getAttributesByToken(projectToken);
+    }
 
+    private List<RedcapProjectAttribute> getAttributesByToken(String projectToken) {
         LinkedMultiValueMap<String, String> uriVariables = new LinkedMultiValueMap<>();
         uriVariables.add("token", projectToken);
         uriVariables.add("content", "metadata");
@@ -357,15 +401,7 @@ public class ClinicalDataSourceRedcapImpl implements ClinicalDataSource {
         return Arrays.asList(responseEntity.getBody());
     }
 
-    private List<Map<String, String>> getClinicalData(boolean timelineData) {
-        String projectToken;
-        if(timelineData) {
-            projectToken = clinicalTimelineTokens.remove(nextTimelineId);
-        }
-        else {
-            projectToken = clinicalDataTokens.remove(nextClinicalId);
-        }
-
+    private List<Map<String, String>> getRedcapDataForProject(String projectToken) {
         LinkedMultiValueMap<String, String> uriVariables = new LinkedMultiValueMap<>();
         uriVariables.add("token", projectToken);
         uriVariables.add("content", "record");
@@ -396,7 +432,6 @@ public class ClinicalDataSourceRedcapImpl implements ClinicalDataSource {
         for (Map.Entry<RedcapProjectAttribute, RedcapAttributeMetadata> entry : attributeMap.entrySet()) {
             header.add(entry.getValue().getNormalizedColumnHeader());
         }
-
         return header;
     }
 

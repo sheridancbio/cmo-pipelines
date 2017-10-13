@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-17 Memorial Sloan-Kettering Cancer Center.
+ * Copyright (c) 2016 - 2017 Memorial Sloan-Kettering Cancer Center.
  *
  * This library is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS
@@ -32,55 +32,47 @@
 
 package org.mskcc.cmo.ks.redcap.pipeline;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.Writer;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.io.*;
+import java.util.*;
 import org.apache.commons.lang3.StringUtils;
+import org.mskcc.cmo.ks.redcap.source.ClinicalDataSource;
 import org.springframework.batch.item.ExecutionContext;
 import org.springframework.batch.item.ItemStreamException;
 import org.springframework.batch.item.ItemStreamWriter;
 import org.springframework.batch.item.file.FlatFileHeaderCallback;
 import org.springframework.batch.item.file.FlatFileItemWriter;
 import org.springframework.batch.item.file.transform.PassThroughLineAggregator;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.FileSystemResource;
 
-/**
- *
- * @author heinsz
- */
-public class TimelineWriter  implements ItemStreamWriter<String> {
+public class RawClinicalDataWriter implements ItemStreamWriter<String> {
+
     @Value("#{jobParameters[directory]}")
     private String directory;
 
-    @Value("#{stepExecutionContext['timelineHeader']}")
-    private List<String> timelineHeader;
+    @Value("#{stepExecutionContext['projectTitle']}")
+    private String projectTitle;
 
-    @Value("#stepExecutionContext['standardTimelineDataFields']")
-    private List<String> standardTimelineDataFields;
-    
-    private static final String OUTPUT_FILENAME = "data_timeline.txt";
-    private File stagingFile;
+    @Value("#{stepExecutionContext['fullHeader']}")
+    private List<String> fullHeader;
+
+    @Autowired
+    public ClinicalDataSource clinicalDataSource;
+
+    private static final String OUTPUT_FILENAME_PREFIX = "data_clinical_";
     private FlatFileItemWriter<String> flatFileItemWriter = new FlatFileItemWriter<String>();
 
     @Override
     public void open(ExecutionContext ec) throws ItemStreamException {
-        if (rawData) {
-            this.stagingFile = new File(directory, OUTPUT_FILENAME_PREFIX + "_" + projectTitle + ".txt");
-        }
-        else {
-            this.stagingFile = new File(directory, OUTPUT_FILENAME_PREFIX + ".txt");
-        }
+        File stagingFile = new File(directory, OUTPUT_FILENAME_PREFIX + projectTitle + ".txt");
         PassThroughLineAggregator aggr = new PassThroughLineAggregator();
         flatFileItemWriter.setLineAggregator(aggr);
-        flatFileItemWriter.setResource(new FileSystemResource(stagingFile));
+        flatFileItemWriter.setResource( new FileSystemResource(stagingFile));
         flatFileItemWriter.setHeaderCallback(new FlatFileHeaderCallback() {
             @Override
             public void writeHeader(Writer writer) throws IOException {
-                writer.write(getHeaderLine(timelineHeader));
+                writer.write(StringUtils.join(fullHeader, "\t"));
             }
         });
         flatFileItemWriter.open(ec);
@@ -88,7 +80,6 @@ public class TimelineWriter  implements ItemStreamWriter<String> {
 
     @Override
     public void update(ExecutionContext ec) throws ItemStreamException {
-        ec.put("timelineFile", stagingFile.getName());
     }
 
     @Override
@@ -98,22 +89,7 @@ public class TimelineWriter  implements ItemStreamWriter<String> {
 
     @Override
     public void write(List<? extends String> items) throws Exception {
-         flatFileItemWriter.write(items);
-    }
-
-    private String getHeaderLine(List<String> metaData) {
-        List<String> header = new ArrayList();
-        for (String column : standardTimelineDataFields) {
-            if (metaData.contains(column)) {
-                header.add(column);
-            }
-        }        
-        for (String column : metaData) {
-            if (!standardTimelineDataFields.contains(column) && !column.equals("RECORD_ID")) {
-                header.add(column);
-            }
-        }
-        return StringUtils.join(header, "\t");
+        flatFileItemWriter.write(items);
     }
 
 }

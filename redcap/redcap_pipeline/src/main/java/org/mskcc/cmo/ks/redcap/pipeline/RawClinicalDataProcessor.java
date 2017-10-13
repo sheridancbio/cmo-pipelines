@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Memorial Sloan-Kettering Cancer Center.
+ * Copyright (c) 2016 - 2017 Memorial Sloan-Kettering Cancer Center.
  *
  * This library is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS
@@ -29,32 +29,31 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-package org.mskcc.cmo.ks.redcap.source;
+
+package org.mskcc.cmo.ks.redcap.pipeline;
 
 import java.util.*;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.batch.item.ItemProcessor;
+import org.springframework.beans.factory.annotation.Value;
 
-/**
- *
- * @author heinsz
- */
+public class RawClinicalDataProcessor implements ItemProcessor<Map<String, String>, String> {
 
-public interface ClinicalDataSource {
-    boolean projectExists(String projectTitle);
-    boolean redcapDataTypeIsTimeline(String projectTitle);
-    void importClinicalDataFile(String projectTitle, String filename, boolean overwriteProjectData);
-    List<String> getProjectHeader(String projectTitle);
-    List<Map<String, String>> exportRawDataForProjectTitle(String projectTitle);
+    @Value("#{stepExecutionContext['fullHeader']}")
+    private List<String> fullHeader;
 
-    boolean projectsExistForStableId(String stableId);
-    List<Map<String, String>> getClinicalData(String stableId);
-    List<String> getSampleHeader(String stableId);
-    List<String> getPatientHeader(String stableId);
-    List<String> getTimelineHeader(String stableId);
-    List<Map<String, String>> getTimelineData(String stableId);
-    String getNextClinicalProjectTitle(String stableId);
-    String getNextTimelineProjectTitle(String stableId);
-    boolean hasMoreTimelineData(String stableId);
-    boolean hasMoreClinicalData(String stableId);
-    Map<String, List<String>> getFullPatientHeader(Map<String, List<String>> fullHeader);
-    Map<String, List<String>> getFullSampleHeader(Map<String, List<String>> fullHeader);
+    @Override
+    public String process(Map<String, String> i) throws Exception {
+        List<String> record = new ArrayList();
+
+        // get the sample and patient ids first before processing the other columns
+        record.add(i.get("SAMPLE_ID"));
+        record.add(i.get("PATIENT_ID"));
+        for (String column : fullHeader) {
+            if (!column.equals("SAMPLE_ID") && !column.equals("PATIENT_ID")) {
+                record.add(i.getOrDefault(column, ""));
+            }
+        }
+        return StringUtils.join(record, "\t");
+    }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Memorial Sloan-Kettering Cancer Center.
+ * Copyright (c) 2017 Memorial Sloan-Kettering Cancer Center.
  *
  * This library is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS
@@ -29,32 +29,41 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-package org.mskcc.cmo.ks.redcap.source;
+
+package org.mskcc.cmo.ks.redcap.pipeline;
 
 import java.util.*;
+import org.apache.log4j.Logger;
+import org.mskcc.cmo.ks.redcap.source.ClinicalDataSource;
+import org.springframework.batch.core.ExitStatus;
+import org.springframework.batch.core.StepExecution;
+import org.springframework.batch.core.StepExecutionListener;
+import org.springframework.beans.factory.annotation.Autowired;
 
-/**
- *
- * @author heinsz
- */
+public class RawClinicalDataStepListener implements StepExecutionListener {
+    private final Logger log = Logger.getLogger(RawClinicalDataStepListener.class);
+    @Autowired
+    public ClinicalDataSource clinicalDataSource;
 
-public interface ClinicalDataSource {
-    boolean projectExists(String projectTitle);
-    boolean redcapDataTypeIsTimeline(String projectTitle);
-    void importClinicalDataFile(String projectTitle, String filename, boolean overwriteProjectData);
-    List<String> getProjectHeader(String projectTitle);
-    List<Map<String, String>> exportRawDataForProjectTitle(String projectTitle);
+    @Override
+    public void beforeStep(StepExecution se) {
+        log.info("Starting a clinical data step");
+    }
 
-    boolean projectsExistForStableId(String stableId);
-    List<Map<String, String>> getClinicalData(String stableId);
-    List<String> getSampleHeader(String stableId);
-    List<String> getPatientHeader(String stableId);
-    List<String> getTimelineHeader(String stableId);
-    List<Map<String, String>> getTimelineData(String stableId);
-    String getNextClinicalProjectTitle(String stableId);
-    String getNextTimelineProjectTitle(String stableId);
-    boolean hasMoreTimelineData(String stableId);
-    boolean hasMoreClinicalData(String stableId);
-    Map<String, List<String>> getFullPatientHeader(Map<String, List<String>> fullHeader);
-    Map<String, List<String>> getFullSampleHeader(Map<String, List<String>> fullHeader);
+    @Override
+    public ExitStatus afterStep(StepExecution se) {
+        String redcapProjectTitle = se.getJobParameters().getString("redcapProjectTitle");
+        if (redcapProjectTitle != null && !redcapProjectTitle.isEmpty()) {
+            return ExitStatus.COMPLETED;
+        }
+        log.info("Checking if more data to process...");
+        String stableId = se.getJobParameters().getString("stableId");
+        if (clinicalDataSource.hasMoreClinicalData(stableId)) {
+            return new ExitStatus("CLINICAL");
+        }
+        if (clinicalDataSource.hasMoreTimelineData(stableId)) {
+            return new ExitStatus("TIMELINE");
+        }
+        return ExitStatus.COMPLETED;
+    }
 }
