@@ -53,18 +53,13 @@ public class ClinicalPatientDataWriter implements ItemStreamWriter<ClinicalDataC
     @Value("#{jobParameters[directory]}")
     private String directory;
 
-    @Value("#{jobParameters[mergeClinicalDataSources]}")
-    private boolean mergeClinicalDataSources;
-
-    @Value("#{stepExecutionContext['projectTitle']}")
-    private String projectTitle;
-
     @Value("#{stepExecutionContext['writeClinicalPatient']}")
     private boolean writeClinicalPatient;
 
     @Value("#{stepExecutionContext['patientHeader']}")
     private Map<String, List<String>> header;
 
+    private static final String OUTPUT_FILENAME = "data_clinical_patient.txt";
     private File stagingFile;
     private Set<String> patientsProcessed = new HashSet();
     private Set<String> skippedPatients = new HashSet();
@@ -76,12 +71,7 @@ public class ClinicalPatientDataWriter implements ItemStreamWriter<ClinicalDataC
     @Override
     public void open(ExecutionContext ec) throws ItemStreamException {
         if (writeClinicalPatient) {
-            String outputFilename = "data_clinical_patient";
-            if (!mergeClinicalDataSources) {
-                outputFilename = outputFilename + "_" + projectTitle;
-            }
-            outputFilename = outputFilename + ".txt";
-            this.stagingFile = new File(directory, outputFilename);
+            this.stagingFile = new File(directory, OUTPUT_FILENAME);
             PassThroughLineAggregator aggr = new PassThroughLineAggregator();
             flatFileItemWriter.setLineAggregator(aggr);
             flatFileItemWriter.setResource( new FileSystemResource(stagingFile));

@@ -67,7 +67,6 @@ public class RedcapPipeline {
             .addOption("s", "stable-id", true, "Stable id for cancer study (required for export-mode)")
             .addOption("d", "directory", true, "Output directory (required for export-mode)")
             .addOption("f", "filename", true, "Input filename (required for input-mode)")
-            .addOption("m", "merge-datasources", false, "Flag for merging datasources for given stable ID")
             .addOption("o", "overwrite-project-data", false, "This flag causes redcap projects to be cleared of data before import (import-mode only)")
             .addOption("i", "import-mode", false, "Import from directory to redcap-project (use one of { -i, -e, -c })")
             .addOption("e", "export-mode", false, "Export redcap-project to directory (use one of -i, -e, -c)")
@@ -125,8 +124,7 @@ public class RedcapPipeline {
             }
             redcapJob = ctx.getBean(BatchConfiguration.REDCAP_EXPORT_JOB, Job.class);
             builder.addString("directory", commandLine.getOptionValue("directory"))
-                    .addString("stableId", stableId)
-                    .addString("mergeClinicalDataSources", String.valueOf(commandLine.hasOption("merge-datasources")));
+                    .addString("stableId", stableId);
         } else if (executionMode == IMPORT_MODE) {
             redcapJob = ctx.getBean(BatchConfiguration.REDCAP_IMPORT_JOB, Job.class);
             builder.addString("filename", commandLine.getOptionValue("filename"))
