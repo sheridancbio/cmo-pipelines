@@ -59,13 +59,13 @@ public class RawTimelineDataStepListener implements StepExecutionListener {
     public ExitStatus afterStep(StepExecution se) {
         String redcapProjectTitle = se.getJobParameters().getString("redcapProjectTitle");
         if (redcapProjectTitle != null && !redcapProjectTitle.isEmpty()) {
-            return new ExitStatus("FINISHED");
+            return ExitStatus.COMPLETED;
         }
         String stableId = se.getJobParameters().getString("stableId");
         if (clinicalDataSource.hasMoreTimelineData(stableId)) {
             return new ExitStatus("TIMELINE");
         }
-        return new ExitStatus("FINISHED");
+        return ExitStatus.COMPLETED;
     }
 
 }

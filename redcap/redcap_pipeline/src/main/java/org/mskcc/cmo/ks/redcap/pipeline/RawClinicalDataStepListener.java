@@ -54,6 +54,9 @@ public class RawClinicalDataStepListener implements StepExecutionListener {
     public ExitStatus afterStep(StepExecution se) {
         String redcapProjectTitle = se.getJobParameters().getString("redcapProjectTitle");
         if (redcapProjectTitle != null && !redcapProjectTitle.isEmpty()) {
+            if (clinicalDataSource.redcapDataTypeIsTimeline(redcapProjectTitle)) {
+                return new ExitStatus("TIMELINE");
+            }
             return ExitStatus.COMPLETED;
         }
         log.info("Checking if more data to process...");

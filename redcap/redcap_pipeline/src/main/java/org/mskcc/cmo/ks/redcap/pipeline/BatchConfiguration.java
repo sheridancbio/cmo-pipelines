@@ -92,12 +92,14 @@ public class BatchConfiguration {
         return jobBuilderFactory.get(REDCAP_RAW_EXPORT_JOB)
                 .start(exportRawClinicalDataStep())
                     .on("CLINICAL")
-                    .to(exportRawClinicalDataStep())
-                .on("TIMELINE")
-                    .to(exportRawTimelineDataStep())
+                    .to(exportRawClinicalDataStep())                
+                    .on("COMPLETED").end()
                     .on("TIMELINE")
-                    .to(exportRawTimelineDataStep())
-                .end()
+                        .to(exportRawTimelineDataStep())
+                        .on("TIMELINE")
+                        .to(exportRawTimelineDataStep())
+                        .on("COMPLETED").end()
+                .build()
                 .build();
     }
 
@@ -271,16 +273,6 @@ public class BatchConfiguration {
     @StepScope
     public TimelineWriter timelineWriter() {
         return new TimelineWriter();
-    }
-
-    @Bean
-    public TimelineDataStepListener exportTimelineDataStepListener() {
-        return new TimelineDataStepListener();
-    }
-
-    @Bean
-    public RawTimelineDataStepListener exportRawTimelineDataStepListener() {
-        return new RawTimelineDataStepListener();
     }
 
     @Bean

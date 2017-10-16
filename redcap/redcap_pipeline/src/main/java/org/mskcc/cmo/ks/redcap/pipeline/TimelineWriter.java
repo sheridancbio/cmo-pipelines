@@ -55,14 +55,20 @@ import org.springframework.core.io.FileSystemResource;
 public class TimelineWriter  implements ItemStreamWriter<String> {
     @Value("#{jobParameters[directory]}")
     private String directory;
+    
+    @Value("#{jobParameters[rawData]}")
+    private boolean rawData;
 
     @Value("#{stepExecutionContext['timelineHeader']}")
     private List<String> timelineHeader;
+    
+    @Value("#{stepExecutionContext['projectTitle']}")
+    private String projectTitle;
 
     @Value("#stepExecutionContext['standardTimelineDataFields']")
     private List<String> standardTimelineDataFields;
     
-    private static final String OUTPUT_FILENAME = "data_timeline.txt";
+    private static final String OUTPUT_FILENAME_PREFIX = "data_timeline";
     private File stagingFile;
     private FlatFileItemWriter<String> flatFileItemWriter = new FlatFileItemWriter<String>();
 

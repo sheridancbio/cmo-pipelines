@@ -56,6 +56,9 @@ public class RawClinicalDataWriter implements ItemStreamWriter<String> {
 
     @Value("#{stepExecutionContext['fullHeader']}")
     private List<String> fullHeader;
+    
+    @Value("#{stepExecutionContext['writeRawClinicalData']}")
+    private boolean writeRawClinicalData;
 
     @Autowired
     public ClinicalDataSource clinicalDataSource;
@@ -65,17 +68,19 @@ public class RawClinicalDataWriter implements ItemStreamWriter<String> {
 
     @Override
     public void open(ExecutionContext ec) throws ItemStreamException {
-        File stagingFile = new File(directory, OUTPUT_FILENAME_PREFIX + projectTitle + ".txt");
-        PassThroughLineAggregator aggr = new PassThroughLineAggregator();
-        flatFileItemWriter.setLineAggregator(aggr);
-        flatFileItemWriter.setResource( new FileSystemResource(stagingFile));
-        flatFileItemWriter.setHeaderCallback(new FlatFileHeaderCallback() {
-            @Override
-            public void writeHeader(Writer writer) throws IOException {
-                writer.write(StringUtils.join(fullHeader, "\t"));
-            }
-        });
-        flatFileItemWriter.open(ec);
+        if (writeRawClinicalData) {
+            File stagingFile = new File(directory, OUTPUT_FILENAME_PREFIX + projectTitle + ".txt");
+            PassThroughLineAggregator aggr = new PassThroughLineAggregator();
+            flatFileItemWriter.setLineAggregator(aggr);
+            flatFileItemWriter.setResource( new FileSystemResource(stagingFile));
+            flatFileItemWriter.setHeaderCallback(new FlatFileHeaderCallback() {
+                @Override
+                public void writeHeader(Writer writer) throws IOException {
+                    writer.write(StringUtils.join(fullHeader, "\t"));
+                }
+            });
+            flatFileItemWriter.open(ec);
+        }
     }
 
     @Override
@@ -84,12 +89,16 @@ public class RawClinicalDataWriter implements ItemStreamWriter<String> {
 
     @Override
     public void close() throws ItemStreamException {
-        flatFileItemWriter.close();
+        if (writeRawClinicalData) {
+            flatFileItemWriter.close();
+        }        
     }
 
     @Override
     public void write(List<? extends String> items) throws Exception {
-        flatFileItemWriter.write(items);
+        if (writeRawClinicalData) {
+            flatFileItemWriter.write(items);
+        }        
     }
 
 }

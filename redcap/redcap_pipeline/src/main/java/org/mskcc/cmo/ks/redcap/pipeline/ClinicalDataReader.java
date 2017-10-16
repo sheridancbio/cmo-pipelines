@@ -75,6 +75,7 @@ public class ClinicalDataReader implements ItemStreamReader<Map<String, String>>
 
         String projectTitle = (redcapProjectTitle == null) ? clinicalDataSource.getNextClinicalProjectTitle(stableId) : redcapProjectTitle;
         if (rawData && clinicalDataSource.redcapDataTypeIsTimeline(projectTitle)) {
+            ec.put("writeRawClinicalData", false);
             return; // short circuit when only exporting a timeline file in rawData mode
         }
         if (rawData) {
@@ -82,6 +83,7 @@ public class ClinicalDataReader implements ItemStreamReader<Map<String, String>>
             List<String> fullHeader = clinicalDataSource.getProjectHeader(projectTitle);
             // add headers and booleans to execution context for processors and writers
             ec.put("fullHeader", fullHeader);
+            ec.put("writeRawClinicalData", true);
             // get clinical data for current clinical data source
             clinicalRecords = clinicalDataSource.exportRawDataForProjectTitle(projectTitle);
         } else {
@@ -118,7 +120,6 @@ public class ClinicalDataReader implements ItemStreamReader<Map<String, String>>
             ec.put("writeClinicalSample", writeClinicalSample);
             ec.put("writeClinicalPatient", writeClinicalPatient);
         }
-        // add headers and booleans to execution context for processors and writers
         ec.put("projectTitle", projectTitle);
     }
     
