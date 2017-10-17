@@ -60,11 +60,6 @@ namespace_project=
 # Absoulte URL to the redcap web application
 redcap_base_url=
 redcap_api_url_path=
-# Relative URL path to the erase_project_data php module
-redcap_erase_project_data_url_path=
-redcap_username=
-redcap_password=
-redcap_login_hidden_input_name=
 
 # RedCap mapping token for ID_MAPPING - any tables that we want to access need to be in this project
 mapping_token=
@@ -72,14 +67,3 @@ mapping_token=
 metadata_project=
 # The name of the RedCap project that contains the namespace mapping of external column headers to normalized
 namespace_project=
-
-# The name of the RedCap project into which clinical data should be imported
-redcap.project_title_for_patient_demographics_import=mskimpact_data_clinical_darwin_demographics
-redcap.project_title_for_darwin_skcm_2015_chant_clinical_sample_import=darwin_skcm_2015_chant_clinical_sample  ####this needs to be mapped
-redcap.project_title_for_darwin_skcm_2015_chant_timeline_import=darwin_skcm_2015_chant_timeline  ####this needs to be mapped
-redcap.project_title_for_darwin_medical_therapy_clinical_import=darwin_medical_therapy_clinical  ####medical therapy is not yet running .. this project does not yet exist
-redcap.project_title_for_darwin_medical_therapy_timeline_import=darwin_medical_therapy_timeline  ####medical therapy is not yet running .. this project does not yet exist
-redcap.project_title_for_darwin_mskimpact_brain_spine_clinical_data_import=mskimpact_clinical_caisis
-#between prefix and suffix brainspine caisis timeline project titles vary over these types: {diagnosis, specimen, status, surgery, treatment}
-redcap.project_title_for_darwin_mskimpact_brain_spine_timeline_import_prefix=mskimpact_timeline_
-redcap.project_title_for_darwin_mskimpact_brain_spine_timeline_import_suffix=_caisis

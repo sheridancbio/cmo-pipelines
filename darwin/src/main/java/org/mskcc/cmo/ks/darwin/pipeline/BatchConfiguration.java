@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Memorial Sloan-Kettering Cancer Center.
+ * Copyright (c) 2016-2017 Memorial Sloan-Kettering Cancer Center.
  *
  * This library is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS
@@ -52,13 +52,13 @@ import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.batch.item.support.*;
 import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
+
 /**
  *
  * @author jake
  */
 @Configuration
 @EnableBatchProcessing
-@ComponentScan(basePackages="org.mskcc.cmo.ks.redcap.source")
 public class BatchConfiguration {
 
     public static final String MSKIMPACT_JOB = "mskimpactJob";
@@ -109,7 +109,6 @@ public class BatchConfiguration {
     @Bean
     public Step mskimpactPatientDemographicsStep() {
         return stepBuilderFactory.get("mskimpactPatientDemographicsStep")
-                .listener(MskimpactPatientDemographicsListener())
                 .<MskimpactPatientDemographics, String> chunk(chunkSize)
                 .reader(mskimpactPatientDemographicsReader())
                 .processor(mskimpactPatientDemographicsProcessor())
@@ -120,7 +119,6 @@ public class BatchConfiguration {
     @Bean
     public Step mskimpactTimelineBrainSpineStep() {
         return stepBuilderFactory.get("mskimpactTimelineBrainSpineStep")
-                .listener(MskimpactTimelineBrainSpineListener())
                 .<MskimpactBrainSpineTimeline, MskimpactBrainSpineCompositeTimeline> chunk(chunkSize)
                 .reader(mskimpactTimelineBrainSpineReader())
                 .processor(mskimpactTimelineBrainSpineProcessor())
@@ -131,7 +129,6 @@ public class BatchConfiguration {
     @Bean
     public Step mskimpactClinicalBrainSpineStep() {
         return stepBuilderFactory.get("mskimpactClinicalBrainSpineStep")
-                .listener(MskimpactBrainSpineClinicalListener())
                 .<MskimpactBrainSpineClinical, String> chunk(chunkSize)
                 .reader(readerDarwinClinicalBrainSpine())
                 .processor(processorDarwinClinicalBrainSpine())
@@ -142,7 +139,6 @@ public class BatchConfiguration {
     @Bean
     public Step mskimpactMedicalTherapyStep() {
         return stepBuilderFactory.get("mskimpactMedicalTherapyStep")
-                .listener(MskimpactMedicalTherapyListener())
                 .<List<MskimpactMedicalTherapy>, MskimpactMedicalTherapy> chunk(chunkSize)
                 .reader(mskimpactMedicalTherapyReader())
                 .processor(mskimpactMedicalTherapyProcessor())
@@ -153,7 +149,6 @@ public class BatchConfiguration {
     @Bean
     public Step skcm_mskcc_2015_chantClinicalStep() {
         return stepBuilderFactory.get("skcm_mskcc_2015_chantClinicalStep")
-                .listener(Skcm_mskcc_2015_chantClinicalCompositeListener())
                 .<Skcm_mskcc_2015_chantClinicalRecord, String> chunk(chunkSize)
                 .reader(skcm_mskcc_2015_chantClinicalReader())
                 .processor(skcm_mskcc_2015_chantClinicalCompositeProcessor())
@@ -164,7 +159,6 @@ public class BatchConfiguration {
     @Bean
     public Step skcm_mskcc_2015_chantTimelineStep() {
         return stepBuilderFactory.get("skcm_mskcc_2015_chantTimelineStep")
-                .listener(Skcm_mskcc_2015_chantTimelineListener())
                 .<Skcm_mskcc_2015_chantTimelineRecord, String> chunk(chunkSize)
                 .reader(skcm_mskcc_2015_chantTimelineReader())
                 .processor(skcm_mskcc_2015_chantTimelineProcessor())
@@ -190,36 +184,6 @@ public class BatchConfiguration {
                 .processor(mskimpactAgeProcessor())
                 .writer(mskimpactAgeWriter())
                 .build();
-    }
-
-    @Bean
-    public StepExecutionListener Skcm_mskcc_2015_chantTimelineListener() {
-        return new Skcm_mskcc_2015_chantTimelineListener();
-    }
-
-    @Bean
-    public StepExecutionListener Skcm_mskcc_2015_chantClinicalCompositeListener() {
-        return new Skcm_mskcc_2015_chantClinicalCompositeListener();
-    }
-
-    @Bean
-    public StepExecutionListener MskimpactMedicalTherapyListener() {
-        return new MskimpactMedicalTherapyListener();
-    }
-
-    @Bean
-    public StepExecutionListener MskimpactBrainSpineClinicalListener() {
-        return new MskimpactBrainSpineClinicalListener();
-    }
-
-    @Bean
-    public StepExecutionListener MskimpactTimelineBrainSpineListener() {
-        return new MskimpactTimelineBrainSpineListener();
-    }
-
-    @Bean
-    public StepExecutionListener MskimpactPatientDemographicsListener() {
-        return new MskimpactPatientDemographicsListener();
     }
 
     @Bean

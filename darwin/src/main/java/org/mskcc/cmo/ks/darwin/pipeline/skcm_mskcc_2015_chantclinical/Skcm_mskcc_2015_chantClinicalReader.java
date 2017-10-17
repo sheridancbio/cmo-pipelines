@@ -31,20 +31,21 @@
 */
 package org.mskcc.cmo.ks.darwin.pipeline.skcm_mskcc_2015_chantclinical;
 
-import org.mskcc.cmo.ks.darwin.pipeline.mskimpactdemographics.MskimpactPatientDemographicsReader;
-import org.mskcc.cmo.ks.darwin.pipeline.model.Skcm_mskcc_2015_chantClinicalRecord;
-import org.mskcc.cmo.ks.redcap.source.*;
+import com.querydsl.core.types.Projections;
+import com.querydsl.sql.SQLQueryFactory;
+import java.lang.reflect.Method;
 import java.util.*;
+import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
+import org.mskcc.cmo.ks.darwin.pipeline.model.Skcm_mskcc_2015_chantClinicalRecord;
+import org.mskcc.cmo.ks.darwin.pipeline.mskimpactdemographics.MskimpactPatientDemographicsReader;
+import org.mskcc.cmo.ks.redcap.source.ClinicalDataSource;
+import org.mskcc.cmo.ks.redcap.source.MetadataManager;
 import org.springframework.batch.item.*;
 import org.springframework.beans.factory.annotation.*;
 import org.springframework.transaction.annotation.Transactional;
-import org.apache.log4j.Logger;
-import com.querydsl.core.types.Projections;
 import static com.querydsl.core.alias.Alias.*;
 import static com.querydsl.core.alias.Alias.alias;
-import com.querydsl.sql.SQLQueryFactory;
-import java.lang.reflect.Method;
-import org.apache.commons.lang.StringUtils;
 
 /**
  *
