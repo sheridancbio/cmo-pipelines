@@ -64,7 +64,7 @@ public class GeneDataPipeline {
                 .toJobParameters();
         Job geneDataJob = ctx.getBean(BatchConfiguration.GENE_DATA_JOB, Job.class);
         JobExecution jobExecution = jobLauncher.run(geneDataJob, jobParameters);
-        if (!jobExecution.getExitStatus().equals("COMPLETED")) {
+        if (!jobExecution.getExitStatus().equals(ExitStatus.COMPLETED)) {
             LOG.error("GeneDataPipeline job failed with exit status: " + jobExecution.getExitStatus());
             System.exit(1);
         }

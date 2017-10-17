@@ -59,9 +59,9 @@ public class GeneDataListener implements StepExecutionListener {
     public ExitStatus afterStep(StepExecution stepExecution) {
         String notificationFileName = (String) stepExecution.getJobParameters().getString("notificationFileName");
         
-        int genesAdded = (int) stepExecution.getExecutionContext().getInt("genesAdded");
-        int genesUpdated = (int) stepExecution.getExecutionContext().getInt("genesUpdated");
-        int geneAliasesAdded = (int) stepExecution.getExecutionContext().getInt("geneAliasesAdded");
+        int genesAdded = (int) stepExecution.getExecutionContext().getInt("genesAdded", 0);
+        int genesUpdated = (int) stepExecution.getExecutionContext().getInt("genesUpdated", 0);
+        int geneAliasesAdded = (int) stepExecution.getExecutionContext().getInt("geneAliasesAdded", 0);
         
         List<String> results = new ArrayList();
         if ((genesAdded + genesUpdated + geneAliasesAdded) == 0) {
