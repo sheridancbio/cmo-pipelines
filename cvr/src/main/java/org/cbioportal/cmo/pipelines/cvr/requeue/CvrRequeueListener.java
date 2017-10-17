@@ -85,11 +85,6 @@ public class CvrRequeueListener implements StepExecutionListener {
             for (CVRRequeueRecord requeueRecord : failedToRequeueSamples) {
                 body.append("\n\t");
                 body.append(requeueRecord.getSampleId());
-                body.append(": ");
-                body.append(requeueRecord.getResult());
-                body.append(" result; '");
-                body.append(requeueRecord.getInformation());
-                body.append("'");
             }
             body.append("\n");
         }
