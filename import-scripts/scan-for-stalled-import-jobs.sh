@@ -12,7 +12,7 @@ if [ $myuid -eq -1 ]; then
     exit 1
 fi
 ex1="CMD" #exclude the header from ps
-ex2="grep\|ps\|tail" #exclude grep and ps and tail commands
+ex2="grep\|ps\|tail\|vim" #exclude grep, ps, tail, and vim commands
 ex3="importUsers[a-zA-Z0-9-]*.py\|users[a-zA-Z0-9-]*\.sh" #exclude strings from import user scripts
 ex4="triage\|hot-deploy" #exclude triage or hot-deploy imports
 ex5="scan-for-stalled-import-jobs\.sh" #exclude this command (scan-for-stalled-import-jobs.sh)
