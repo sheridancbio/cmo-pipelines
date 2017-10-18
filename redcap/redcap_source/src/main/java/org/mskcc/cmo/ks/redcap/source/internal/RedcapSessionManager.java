@@ -144,6 +144,10 @@ public class RedcapSessionManager {
         return selectedClinicalTimelineTokens != null && selectedClinicalDataTokens != null;
     }
 
+    public boolean redcapDataTypeIsTimeline(String projectTitle) {
+        return projectTitle.toUpperCase().contains("TIMELINE");
+    }
+
     private void checkAllTokensHaveBeenFetched() {
         if (allTokensProjectTitleToApiTokenMap != null && allTokensApiTokenToProjectTitleMap != null &&
                 allTokensStableIdToApiTokenListMap != null && allTokensApiTokenToStableIdMap != null &&
@@ -254,7 +258,7 @@ public class RedcapSessionManager {
         }
         for (String apiToken : apiTokenList) {
             String projectTitle = allTokensApiTokenToProjectTitleMap.get(apiToken);
-            if (projectTitle.toUpperCase().contains("TIMELINE")) {
+            if (redcapDataTypeIsTimeline(projectTitle)) {
                 selectedClinicalTimelineTokens.put(projectTitle, apiToken);
             } else {
                 selectedClinicalDataTokens.put(projectTitle, apiToken);

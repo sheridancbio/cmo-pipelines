@@ -53,6 +53,12 @@ public class ClinicalDataReader implements ItemStreamReader<Map<String, String>>
     @Autowired
     public MetadataManager metadataManager;
 
+    @Value("#{jobParameters[rawData]}")
+    private Boolean rawData;
+
+    @Value("#{jobParameters[redcapProjectTitle]}")
+    private String redcapProjectTitle;
+
     @Value("#{jobParameters[stableId]}")
     private String stableId;
 
@@ -66,47 +72,55 @@ public class ClinicalDataReader implements ItemStreamReader<Map<String, String>>
 
     @Override
     public void open(ExecutionContext ec) throws ItemStreamException {
-        
-        String projectTitle = clinicalDataSource.getNextClinicalProjectTitle(stableId);
 
-        log.info("Getting sample header for project: " + projectTitle);
-        this.fullSampleHeader = metadataManager.getFullHeader(clinicalDataSource.getSampleHeader(stableId));
-
-        log.info("Getting patient header for project: " + projectTitle);
-        this.fullPatientHeader = metadataManager.getFullHeader(clinicalDataSource.getPatientHeader(stableId));
-
-        // get clinical and sample data for current clinical data source
-        for (Map<String, String> record : clinicalDataSource.getClinicalData(stableId)) {
-            updateClinicalData(record, true);
-            updateClinicalData(record, false);
+        String projectTitle = (redcapProjectTitle == null) ? clinicalDataSource.getNextClinicalProjectTitle(stableId) : redcapProjectTitle;
+        if (rawData && clinicalDataSource.redcapDataTypeIsTimeline(projectTitle)) {
+            ec.put("writeRawClinicalData", false);
+            return; // short circuit when only exporting a timeline file in rawData mode
         }
-        // merge remaining clinical data sources if in merge mode and more clinical data exists
-        if (clinicalDataSource.hasMoreClinicalData(stableId)) {
-            mergeClinicalDataSources();
+        if (rawData) {
+            log.info("Getting project header for project: " + projectTitle);
+            List<String> fullHeader = clinicalDataSource.getProjectHeader(projectTitle);
+            // add headers and booleans to execution context for processors and writers
+            ec.put("fullHeader", fullHeader);
+            ec.put("writeRawClinicalData", true);
+            // get clinical data for current clinical data source
+            clinicalRecords = clinicalDataSource.exportRawDataForProjectTitle(projectTitle);
+        } else {
+            log.info("Getting sample header for project: " + projectTitle);
+            this.fullSampleHeader = metadataManager.getFullHeader(clinicalDataSource.getSampleHeader(stableId));
+            log.info("Getting patient header for project: " + projectTitle);
+            this.fullPatientHeader = metadataManager.getFullHeader(clinicalDataSource.getPatientHeader(stableId));
+            // get clinical and sample data for current clinical data source
+            for (Map<String, String> record : clinicalDataSource.getClinicalData(stableId)) {
+                updateClinicalData(record, true);
+                updateClinicalData(record, false);
+            }
+            // merge remaining clinical data sources if in merge mode and more clinical data exists
+            if (clinicalDataSource.hasMoreClinicalData(stableId)) {
+                mergeClinicalDataSources();
+            }
+            // associate patient data with their samples so that patient data for each sample is the same
+            this.clinicalRecords = mergePatientSampleClinicalRecords();
+            // if sample header size is <= 1 then skip writing the sample clinical data file
+            boolean writeClinicalSample = true;
+            if (fullSampleHeader.get("header").size() <= 1) {
+                log.warn("Sample header size for project <=1 - clinical sample data file will not be generated");
+                writeClinicalSample = false;
+            }
+            // if patient header size is <= 1 then skip writing the patient clinical data file
+            boolean writeClinicalPatient = true;
+            if (fullPatientHeader.get("header").size() <= 1) {
+                log.warn("Patient header size for project <=1 - clinical patient data file will not be generated");
+                writeClinicalPatient = false;
+            }
+            // add headers and booleans to execution context for processors and writers
+            ec.put("sampleHeader", fullSampleHeader);
+            ec.put("patientHeader", fullPatientHeader);
+            ec.put("writeClinicalSample", writeClinicalSample);
+            ec.put("writeClinicalPatient", writeClinicalPatient);
         }
-        // associate patient data with their samples so that patient data for each sample is the same
-        this.clinicalRecords = mergePatientSampleClinicalRecords();
-
-        // if sample header size is <= 1 then skip writing the sample clinical data file
-        boolean writeClinicalSample = true;
-        if (fullSampleHeader.get("header").size() <= 1) {
-            log.warn("Sample header size for project <=1 - clinical sample data file will not be generated");
-            writeClinicalSample = false;
-        }
-
-        // if patient header size is <= 1 then skip writing the patient clinical data file
-        boolean writeClinicalPatient = true;
-        if (fullPatientHeader.get("header").size() <= 1) {
-            log.warn("Patient header size for project <=1 - clinical patient data file will not be generated");
-            writeClinicalPatient = false;
-        }
-
-        // add headers and booleans to execution context for processors and writers
         ec.put("projectTitle", projectTitle);
-        ec.put("sampleHeader", fullSampleHeader);
-        ec.put("patientHeader", fullPatientHeader);
-        ec.put("writeClinicalSample", writeClinicalSample);
-        ec.put("writeClinicalPatient", writeClinicalPatient);
     }
     
     /**

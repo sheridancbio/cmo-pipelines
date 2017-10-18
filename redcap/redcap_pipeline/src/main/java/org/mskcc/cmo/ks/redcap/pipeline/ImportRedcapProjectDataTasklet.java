@@ -52,8 +52,8 @@ public class ImportRedcapProjectDataTasklet implements Tasklet {
     @Value("#{jobParameters[filename]}")
     private String filename;
 
-    @Value("#{jobParameters[redcapProject]}")
-    private String redcapProject;
+    @Value("#{jobParameters[redcapProjectTitle]}")
+    private String redcapProjectTitle;
 
     @Value("#{jobParameters[overwriteProjectData]}")
     private boolean overwriteProjectData;
@@ -62,7 +62,7 @@ public class ImportRedcapProjectDataTasklet implements Tasklet {
 
     @Override
     public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
-        clinicalDataSource.importClinicalDataFile(redcapProject, filename, overwriteProjectData);
+        clinicalDataSource.importClinicalDataFile(redcapProjectTitle, filename, overwriteProjectData);
         return RepeatStatus.FINISHED;
     }
 

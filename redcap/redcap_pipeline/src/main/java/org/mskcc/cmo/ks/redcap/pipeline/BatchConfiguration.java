@@ -55,6 +55,7 @@ import org.springframework.beans.factory.annotation.Value;
 @PropertySource("classpath:application.properties")
 public class BatchConfiguration {
     public static final String REDCAP_EXPORT_JOB = "redcapExportJob";
+    public static final String REDCAP_RAW_EXPORT_JOB = "redcapRawExportJob";
     public static final String REDCAP_IMPORT_JOB = "redcapImportJob";
 
     private final Logger log = Logger.getLogger(BatchConfiguration.class);
@@ -68,16 +69,6 @@ public class BatchConfiguration {
     @Autowired
     public StepBuilderFactory stepBuilderFactory;
 
-    @Bean
-    public ClinicalDataStepListener exportClinicalDataStepListener() {
-        return new ClinicalDataStepListener();
-    }
-
-    @Bean
-    public TimelineDataStepListener exportTimelineDataStepListener() {
-        return new TimelineDataStepListener();
-    }
-
     // Will keep calling clinicalDataStep or timelineDataStep based on the exit status from the clinicalDataStepListener
     @Bean
     public Job redcapExportJob() {
@@ -89,9 +80,26 @@ public class BatchConfiguration {
                     .to(exportTimelineDataStep())
                     .on("TIMELINE")
                     .to(exportTimelineDataStep())
-                .on("FINISHED")
+                .on("COMPLETED")
                 .to(metaFileStep())
                 .end()
+                .build();
+    }
+
+    // Will keep calling clinicalDataStep or timelineDataStep based on the exit status from the clinicalDataStepListener
+    @Bean
+    public Job redcapRawExportJob() {
+        return jobBuilderFactory.get(REDCAP_RAW_EXPORT_JOB)
+                .start(exportRawClinicalDataStep())
+                    .on("CLINICAL")
+                    .to(exportRawClinicalDataStep())                
+                    .on("COMPLETED").end()
+                    .on("TIMELINE")
+                        .to(exportRawTimelineDataStep())
+                        .on("TIMELINE")
+                        .to(exportRawTimelineDataStep())
+                        .on("COMPLETED").end()
+                .build()
                 .build();
     }
 
@@ -108,8 +116,19 @@ public class BatchConfiguration {
                 .listener(exportClinicalDataStepListener())
                 .<Map<String, String>, ClinicalDataComposite> chunk(chunkInterval)
                 .reader(clinicalDataReader())
-                .processor(clinicalDataprocessor())
-                .writer(clinicalDatawriter())
+                .processor(clinicalDataProcessor())
+                .writer(clinicalDataWriter())
+                .build();
+    }
+
+    @Bean
+    public Step exportRawClinicalDataStep() {
+        return stepBuilderFactory.get("exportRawClinicalDataStep")
+                .listener(exportRawClinicalDataStepListener())
+                .<Map<String, String>, String> chunk(chunkInterval)
+                .reader(clinicalDataReader())
+                .processor(rawClinicalDataProcessor())
+                .writer(rawClinicalDataWriter())
                 .build();
     }
 
@@ -117,6 +136,17 @@ public class BatchConfiguration {
     public Step exportTimelineDataStep() {
         return stepBuilderFactory.get("exportTimelineDataStep")
                 .listener(exportTimelineDataStepListener())
+                .<Map<String, String>, String> chunk(chunkInterval)
+                .reader(timelineReader())
+                .processor(timelineProcessor())
+                .writer(timelineWriter())
+                .build();
+    }
+
+    @Bean
+    public Step exportRawTimelineDataStep() {
+        return stepBuilderFactory.get("exportRawTimelineDataStep")
+                .listener(exportRawTimelineDataStepListener())
                 .<Map<String, String>, String> chunk(chunkInterval)
                 .reader(timelineReader())
                 .processor(timelineProcessor())
@@ -142,6 +172,7 @@ public class BatchConfiguration {
         return new ImportRedcapProjectDataTasklet();
     }
 
+    // clinical data processor / writers / listeners
     @Bean
     @StepScope
     public ItemStreamReader<Map<String, String>> clinicalDataReader() {
@@ -155,7 +186,7 @@ public class BatchConfiguration {
 
     @Bean
     @StepScope
-    public ItemProcessor clinicalDataprocessor() {
+    public ItemProcessor clinicalDataProcessor() {
         CompositeItemProcessor processor = new CompositeItemProcessor();
         List<ItemProcessor> delegates = new ArrayList<>();
         delegates.add(sampleProcessor());
@@ -166,13 +197,25 @@ public class BatchConfiguration {
 
     @Bean
     @StepScope
-    public CompositeItemWriter<ClinicalDataComposite> clinicalDatawriter() {
+    public RawClinicalDataProcessor rawClinicalDataProcessor() {
+        return new RawClinicalDataProcessor();
+    }
+
+    @Bean
+    @StepScope
+    public CompositeItemWriter<ClinicalDataComposite> clinicalDataWriter() {
         CompositeItemWriter writer = new CompositeItemWriter();
         List<ItemWriter> delegates = new ArrayList<>();
         delegates.add(sampleWriter());
         delegates.add(patientWriter());
         writer.setDelegates(delegates);
         return writer;
+    }
+
+    @Bean
+    @StepScope
+    public ItemStreamWriter<String> rawClinicalDataWriter() {
+        return new RawClinicalDataWriter();
     }
 
     @Bean
@@ -203,7 +246,17 @@ public class BatchConfiguration {
         return patientWriter;
     }
 
-    // timeline processor / writers
+    @Bean
+    public ClinicalDataStepListener exportClinicalDataStepListener() {
+        return new ClinicalDataStepListener();
+    }
+
+    @Bean
+    public RawClinicalDataStepListener exportRawClinicalDataStepListener() {
+        return new RawClinicalDataStepListener();
+    }
+
+    // timeline processor / writers / listeners
     @Bean
     @StepScope
     public ItemStreamReader<Map<String, String>> timelineReader() {
@@ -222,6 +275,17 @@ public class BatchConfiguration {
         return new TimelineWriter();
     }
 
+    @Bean
+    public TimelineDataStepListener exportTimelineDataStepListener() {
+        return new TimelineDataStepListener();
+    }
+
+    @Bean
+    public RawTimelineDataStepListener exportRawTimelineDataStepListener() {
+        return new RawTimelineDataStepListener();
+    }
+
+    // meta file tasklet
     @Bean
     @StepScope
     public Tasklet metaFileStepTasklet() {

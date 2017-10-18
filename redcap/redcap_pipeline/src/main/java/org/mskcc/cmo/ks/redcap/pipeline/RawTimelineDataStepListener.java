@@ -41,17 +41,13 @@ import org.springframework.batch.core.StepExecutionListener;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 
-/**
- *
- * @author heinsz
- */
-public class TimelineDataStepListener implements StepExecutionListener {
+public class RawTimelineDataStepListener implements StepExecutionListener {
 
     @Autowired
     public ClinicalDataSource clinicalDataSource;
     
     private final List<String> standardTimelineDataFields = Arrays.asList(new String[] { "PATIENT_ID", "START_DATE", "STOP_DATE", "EVENT_TYPE"});    
-    private final Logger log = Logger.getLogger(TimelineDataStepListener.class);
+    private final Logger log = Logger.getLogger(RawTimelineDataStepListener.class);
     
     @Override
     public void beforeStep(StepExecution se) {
@@ -61,13 +57,11 @@ public class TimelineDataStepListener implements StepExecutionListener {
 
     @Override
     public ExitStatus afterStep(StepExecution se) {
-        List<String> timelineFiles = (List<String>)se.getJobExecution().getExecutionContext().get("timelineFiles");
-        String stableId = se.getJobParameters().getString("stableId");
-        if (timelineFiles == null) {
-            timelineFiles = new ArrayList<>();
+        String redcapProjectTitle = se.getJobParameters().getString("redcapProjectTitle");
+        if (redcapProjectTitle != null && !redcapProjectTitle.isEmpty()) {
+            return ExitStatus.COMPLETED;
         }
-        timelineFiles.add((String)se.getExecutionContext().get("timelineFile"));
-        se.getJobExecution().getExecutionContext().put("timelineFiles", timelineFiles);
+        String stableId = se.getJobParameters().getString("stableId");
         if (clinicalDataSource.hasMoreTimelineData(stableId)) {
             return new ExitStatus("TIMELINE");
         }

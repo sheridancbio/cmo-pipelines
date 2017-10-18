@@ -50,6 +50,12 @@ public class TimelineReader implements ItemStreamReader<Map<String, String>> {
     @Autowired
     public ClinicalDataSource clinicalDataSource;
 
+    @Value("#{jobParameters[rawData]}")
+    private Boolean rawData;
+
+    @Value("#{jobParameters[redcapProjectTitle]}")
+    private String redcapProjectTitle;
+
     @Value("#{jobParameters[stableId]}")
     public String stableId;
 
@@ -60,17 +66,16 @@ public class TimelineReader implements ItemStreamReader<Map<String, String>> {
 
     @Override
     public void open(ExecutionContext ec) throws ItemStreamException {
-        String projectTitle = clinicalDataSource.getNextTimelineProjectTitle(stableId);
-
+        String projectTitle = (redcapProjectTitle == null) ? clinicalDataSource.getNextTimelineProjectTitle(stableId) : redcapProjectTitle;
         log.info("Getting timeline header for project: " + projectTitle);
-        timelineHeader = clinicalDataSource.getTimelineHeader(stableId);
-        timelineRecords = clinicalDataSource.getTimelineData(stableId);
-        
-        // merge remaining timeline data sources if in merge mode and more timeline data exists
-        if (clinicalDataSource.hasMoreTimelineData(stableId)) {
-            mergeTimelineDataSources();
+        timelineHeader = clinicalDataSource.getProjectHeader(projectTitle);
+        timelineRecords = clinicalDataSource.exportRawDataForProjectTitle(projectTitle);
+        if (!rawData) {
+            // merge remaining timeline data sources if in merge mode and more timeline data exists
+            if (clinicalDataSource.hasMoreTimelineData(stableId)) {
+                mergeTimelineDataSources();
+            }
         }
-        
         // update execution context with project title and full timeline header
         ec.put("projectTitle", projectTitle);
         ec.put("timelineHeader", timelineHeader);
