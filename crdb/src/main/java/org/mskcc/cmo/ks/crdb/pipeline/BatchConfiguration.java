@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Memorial Sloan-Kettering Cancer Center.
+ * Copyright (c) 2016-2017 Memorial Sloan-Kettering Cancer Center.
  *
  * This library is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS
@@ -34,8 +34,6 @@ package org.mskcc.cmo.ks.crdb;
 
 import org.mskcc.cmo.ks.crdb.model.CRDBDataset;
 import org.mskcc.cmo.ks.crdb.model.CRDBSurvey;
-import org.mskcc.cmo.ks.crdb.pipeline.CRDBDatasetListener;
-import org.mskcc.cmo.ks.crdb.pipeline.CRDBSurveyListener;
 import org.springframework.batch.core.*;
 import org.springframework.batch.core.configuration.annotation.*;
 import org.springframework.batch.core.configuration.annotation.StepScope;
@@ -75,7 +73,6 @@ public class BatchConfiguration
     @Bean
     public Step step1() {
         return stepBuilderFactory.get("step1")
-            .listener(CRDBSurveyListener())
             .<CRDBSurvey, String> chunk(10)
             .reader(reader1())
             .processor(processor1())
@@ -106,22 +103,11 @@ public class BatchConfiguration
     @Bean
     public Step step2() {
         return stepBuilderFactory.get("step2")
-            .listener(CRDBDatasetListener())
             .<CRDBDataset, String> chunk(10)
             .reader(reader2())
             .processor(processor2())
             .writer(writer2())
             .build();
-    }
-
-    @Bean
-    public StepExecutionListener CRDBSurveyListener() {
-        return new CRDBSurveyListener();
-    }
-
-    @Bean
-    public StepExecutionListener CRDBDatasetListener() {
-        return new CRDBDatasetListener();
     }
 
     @Bean

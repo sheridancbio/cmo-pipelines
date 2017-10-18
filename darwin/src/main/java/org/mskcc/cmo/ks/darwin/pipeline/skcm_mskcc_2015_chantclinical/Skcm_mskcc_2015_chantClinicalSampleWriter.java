@@ -32,7 +32,6 @@
 package org.mskcc.cmo.ks.darwin.pipeline.skcm_mskcc_2015_chantclinical;
 
 import org.mskcc.cmo.ks.darwin.pipeline.model.*;
-import org.mskcc.cmo.ks.redcap.source.MetadataManager;
 import org.springframework.batch.item.*;
 import org.springframework.batch.item.file.*;
 import org.springframework.core.io.*;

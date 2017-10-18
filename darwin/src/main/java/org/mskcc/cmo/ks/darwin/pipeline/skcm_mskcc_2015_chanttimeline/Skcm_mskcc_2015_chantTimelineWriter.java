@@ -37,7 +37,6 @@ import java.util.*;
 import org.apache.commons.lang.StringUtils;
 import org.mskcc.cmo.ks.darwin.pipeline.model.Skcm_mskcc_2015_chantClinicalRecord;
 import org.mskcc.cmo.ks.darwin.pipeline.model.Skcm_mskcc_2015_chantTimelineAdjuvantTx;
-import org.mskcc.cmo.ks.redcap.source.MetadataManager;
 import org.springframework.batch.item.*;
 import org.springframework.batch.item.file.*;
 import org.springframework.batch.item.file.transform.PassThroughLineAggregator;

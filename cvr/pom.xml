@@ -64,11 +64,6 @@
       <version>19.0</version>
       <type>jar</type>
     </dependency>
-    <dependency>
-      <groupId>org.mskcc.cmo.ks.redcap.source</groupId>
-      <artifactId>redcap_source</artifactId>
-      <version>0.1.0</version>
-    </dependency>
   </dependencies>
 
   <build>
