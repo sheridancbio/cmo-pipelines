@@ -97,7 +97,8 @@ public class BatchConfiguration {
     @Bean
     public Job jsonJob() {
         return jobBuilderFactory.get(JSON_JOB)
-                .start(clinicalStep())
+                .start(cvrMasterListStep())
+                .next(clinicalStep())
                 .next(mutationStep())
                 .next(unfilteredMutationStep())
                 .next(cnaStep())
@@ -146,7 +147,8 @@ public class BatchConfiguration {
     @Bean
     public Job gmlJsonJob() {
         return jobBuilderFactory.get(GML_JSON_JOB)
-                .start(gmlMutationStep())
+                .start(cvrMasterListStep())
+                .next(gmlMutationStep())
                 .next(gmlClinicalStep())
                 .build();
     }
