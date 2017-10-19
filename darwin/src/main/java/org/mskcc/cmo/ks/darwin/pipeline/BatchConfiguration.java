@@ -283,10 +283,10 @@ public class BatchConfiguration {
     public CompositeItemProcessor mskimpactTimelineBrainSpineProcessor() {
         List<ItemProcessor> processorDelegates = new ArrayList<>();
         processorDelegates.add(new MskimpactTimelineBrainSpineModelToCompositeProcessor(BrainSpineTimelineType.STATUS));
-        processorDelegates.add(new MskimpactTimelineBrainSpineCompositeToCompositeProcessor(BrainSpineTimelineType.SPECIMEN));
         processorDelegates.add(new MskimpactTimelineBrainSpineCompositeToCompositeProcessor(BrainSpineTimelineType.TREATMENT));
-        processorDelegates.add(new MskimpactTimelineBrainSpineCompositeToCompositeProcessor(BrainSpineTimelineType.IMAGING));
         processorDelegates.add(new MskimpactTimelineBrainSpineCompositeToCompositeProcessor(BrainSpineTimelineType.SURGERY));
+        processorDelegates.add(new MskimpactTimelineBrainSpineCompositeToCompositeProcessor(BrainSpineTimelineType.SPECIMEN));
+        processorDelegates.add(new MskimpactTimelineBrainSpineCompositeToCompositeProcessor(BrainSpineTimelineType.IMAGING));
         CompositeItemProcessor processor = new CompositeItemProcessor<>();
         processor.setDelegates(processorDelegates);
         return processor;
@@ -327,10 +327,10 @@ public class BatchConfiguration {
     public CompositeItemWriter<MskimpactBrainSpineCompositeTimeline> mskimpactTimelineBrainSpineWriter() {
         List<ItemStreamWriter> writerDelegates = new ArrayList<>();
         writerDelegates.add(statusWriter());
-        writerDelegates.add(surgeryWriter());
-        writerDelegates.add(imagingWriter());
-        writerDelegates.add(specimenWriter());
         writerDelegates.add(treatmentWriter());
+        writerDelegates.add(surgeryWriter());
+        writerDelegates.add(specimenWriter());
+        writerDelegates.add(imagingWriter());
         CompositeItemWriter writer = new CompositeItemWriter<>();
         writer.setDelegates(writerDelegates);
         return writer;
