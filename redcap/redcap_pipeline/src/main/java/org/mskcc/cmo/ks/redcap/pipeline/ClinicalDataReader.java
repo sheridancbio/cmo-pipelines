@@ -188,7 +188,7 @@ public class ClinicalDataReader implements ItemStreamReader<Map<String, String>>
             }
             String existingValue = existingData.getOrDefault(attribute, "");
             String recordValue = record.getOrDefault(attribute, "");
-            if (!existingValue.isEmpty() && !recordValue.isEmpty()) {
+            if (!existingValue.isEmpty() && !recordValue.isEmpty() && !attribute.equals("SAMPLE_ID") && !attribute.equals("PATIENT_ID")) {
                 if (isSampleData) {
                     log.info("Clinical attribute " + attribute + " already loaded for sample " + record.get("SAMPLE_ID") + " - skipping.");
                 }

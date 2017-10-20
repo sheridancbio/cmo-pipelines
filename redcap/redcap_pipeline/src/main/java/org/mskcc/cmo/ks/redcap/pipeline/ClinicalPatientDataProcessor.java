@@ -50,8 +50,10 @@ public class ClinicalPatientDataProcessor implements ItemProcessor<ClinicalDataC
     public ClinicalDataComposite process(ClinicalDataComposite composite) throws Exception {
         List<String> record = new ArrayList<>();
         List<String> header = total_header.get("header");
-
-        record.add(composite.getData().get("PATIENT_ID"));
+        
+        if (header.contains("PATIENT_ID")) {
+            record.add(composite.getData().getOrDefault("PATIENT_ID", ""));
+        }
 
         for(String column : header) {
             if (!column.equals("PATIENT_ID")) {
