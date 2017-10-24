@@ -229,7 +229,12 @@ if [ $GROUPS_FAIL -gt 0 ]; then
 fi
 
 # send notification file 
-$JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -Xmx16g -ea -Dspring.profiles.active=dbcp -Djava.io.tmpdir="$TMP_DIRECTORY" -cp $IMPORTER_JAR org.mskcc.cbio.importer.Admin --send-update-notification --portal "$PORTAL_NAME" --notification-file "$NOTIFICATION_FILE"
+# this contains the error or success message from import
+# we only want to send the email on import failure
+# or if everything succeeds
+if [[ $IMPORT_FAIL -ne 0 || ($VALIDATION_FAIL -eq 0 && $DELETE_FAIL -eq 0 && $RENAME_BACKUP_FAIL -eq 0 && $RENAME_FAIL -eq 0 && $GROUPS_FAIL -eq 0) ]]; then
+    $JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -Xmx16g -ea -Dspring.profiles.active=dbcp -Djava.io.tmpdir="$TMP_DIRECTORY" -cp $IMPORTER_JAR org.mskcc.cbio.importer.Admin --send-update-notification --portal "$PORTAL_NAME" --notification-file "$NOTIFICATION_FILE"
+fi
 
 # determine if we need to exit with error code
 if [[ $IMPORT_FAIL -ne 0 || $VALIDATION_FAIL -ne 0 || $DELETE_FAIL -ne 0 || $RENAME_BACKUP_FAIL -ne 0 || $RENAME_FAIL -ne 0 || $GROUPS_FAIL -ne 0 ]]; then
