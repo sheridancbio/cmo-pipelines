@@ -168,6 +168,14 @@ public class CVRPipeline {
             help(options, 0);
         }
         if (commandLine.hasOption("c")) {
+            for (Option option : commandLine.getOptions()) {
+                if (!option.getOpt().equals("t") && !option.getOpt().equals("c")) {
+                    String error_message = "The --consume_samples option is only compatible with the --test option. " +
+                                    "You used an incompatible option (--" + option.getLongOpt() + "/-" + option.getOpt() + ")";
+                    log.error(error_message);
+                    help(options,1);
+                }
+            }
             launchConsumeSamplesJob(args, commandLine.getOptionValue("c"), commandLine.hasOption("t"));
         }
         else {
