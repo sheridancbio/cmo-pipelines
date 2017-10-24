@@ -54,7 +54,7 @@ public class CVRUtilities {
     public static final String CVR_FILE = "cvr_data.json";
     public final String MUTATION_FILE = "data_mutations_extended.txt";
     public final String UNFILTERED_MUTATION_FILE = "data_mutations_unfiltered.txt";
-    public final String CLINICAL_FILE = "data_clinical.txt";
+    public static final String DEFAULT_CLINICAL_FILE = "data_clinical.txt";
     public final String SEQ_DATE_CLINICAL_FILE = "seq_date.txt";
     public final String DARWIN_AGE_FILE = "darwin_age.txt";
     public final String CORRESPONDING_ID_FILE = "linked_mskimpact_cases.txt";

@@ -63,7 +63,8 @@ public class CVRPipeline {
             .addOption("t", "test", false, "Flag for running pipeline in testing mode so that samples are not consumed")
             .addOption("c", "consume_samples", true, "Path to CVR json filename")
             .addOption("r", "max_samples_to_remove", true, "The max number of samples that can be removed from data")
-            .addOption("f", "force_annotation", false, "Flag for forcing reannotation of samples");
+            .addOption("f", "force_annotation", false, "Flag for forcing reannotation of samples")
+            .addOption("n", "name_of_clinical_file", true, "Clinical filename.  Default is data_clinical.txt");
         return options;
     }
 
@@ -74,7 +75,7 @@ public class CVRPipeline {
     }
 
     private static void launchCvrPipelineJob(String[] args, String directory, String studyId, Boolean json, Boolean gml,
-            Boolean skipSeg, boolean testingMode, Integer maxNumSamplesToRemove, Boolean forceAnnotation) throws Exception {
+            Boolean skipSeg, boolean testingMode, Integer maxNumSamplesToRemove, Boolean forceAnnotation, String clinicalFilename) throws Exception {
         // log wether in testing mode or not
         if (testingMode) {
             log.warn("CvrPipelineJob running in TESTING MODE - samples will NOT be requeued.");
@@ -93,7 +94,8 @@ public class CVRPipeline {
                 .addString("studyId", studyId)
                 .addString("testingMode", String.valueOf(testingMode))
                 .addString("maxNumSamplesToRemove", String.valueOf(maxNumSamplesToRemove))
-                .addString("forceAnnotation", String.valueOf(forceAnnotation));
+                .addString("forceAnnotation", String.valueOf(forceAnnotation))
+                .addString("clinicalFilename", clinicalFilename);
         if (json) {
             if (gml) {
                 jobName = BatchConfiguration.GML_JSON_JOB;
@@ -189,9 +191,13 @@ public class CVRPipeline {
                 e.printStackTrace();
                 throw new RuntimeException("Cannot parse argument as integer: " + commandLine.getOptionValue("r"));
             }
+            String clinicalFilename = CVRUtilities.DEFAULT_CLINICAL_FILE;
+            if (commandLine.hasOption("n")) {
+                clinicalFilename = commandLine.getOptionValue("n");
+            }
             launchCvrPipelineJob(args, commandLine.getOptionValue("d"), commandLine.getOptionValue("i"),
                 commandLine.hasOption("j"), commandLine.hasOption("g"), commandLine.hasOption("s"),
-                commandLine.hasOption("t"), maxNumSamplesToRemove, commandLine.hasOption("f"));
+                commandLine.hasOption("t"), maxNumSamplesToRemove, commandLine.hasOption("f"), clinicalFilename);
         }
     }
 }
