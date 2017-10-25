@@ -11,6 +11,18 @@ now=$(date "+%Y-%m-%d-%H-%M-%S")
 msk_automation_notification_file=$(mktemp $tmp/msk-automation-portal-update-notification.$now.XXXXXX)
 ONCOTREE_VERSION_TO_USE=oncotree_candidate_release
 
+# fetch updates in CMO repository
+echo "fetching updates from bic-mskcc..."
+CMO_FETCH_FAIL=0
+$JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27184 -Xmx16g -ea -Dspring.profiles.active=dbcp -Djava.io.tmpdir="$tmp" -cp $PORTAL_HOME/lib/msk-dmp-importer.jar org.mskcc.cbio.importer.Admin --fetch-data --data-source bic-mskcc --run-date latest --update-worksheet
+if [ $? -gt 0 ]; then
+    echo "CMO (bic-mskcc) fetch failed!"
+    CMO_FETCH_FAIL=1
+    EMAIL_BODY="The CMO (bic-mskcc) data fetch failed.  Imports into Triage and production WILL NOT HAVE UP-TO-DATE DATA until this is resolved.\n\n*** DO NOT MARK STUDIES FOR IMPORT INTO msk-automation-portal. ***\n\n*** DO NOT MERGE ANY STUDIES until this has been resolved. Please uncheck any merged studies in the cBio Portal Google document. ***\n\nYou may keep projects marked for import into Triage in the cBio Portal Google document.  Triage studies will be reimported once there has been a successful data fetch.\n\nPlease don't hesitate to ask if you have any questions."
+    echo -e "Sending email $EMAIL_BODY"
+    echo -e "$EMAIL_BODY" | mail -s "Data fetch failure: CMO (bic-mskcc)" $email_list
+fi
+
 DB_VERSION_FAIL=0
 # check database version before importing anything
 echo "Checking if database version is compatible"
@@ -20,7 +32,7 @@ if [ $? -gt 0 ]; then
     DB_VERSION_FAIL=1
 fi
 
-if [ $DB_VERSION_FAIL -eq 0 ]; then
+if [[ $DB_VERSION_FAIL -eq 0 && $CMO_FETCH_FAIL -eq 0 ]]; then
     # import vetted studies into MSK portal
     echo "importing cancer type updates into msk portal database..."
     $JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27184 -Xmx16g -ea -Dspring.profiles.active=dbcp -Djava.io.tmpdir="$tmp" -cp $PORTAL_HOME/lib/msk-cmo-importer.jar org.mskcc.cbio.importer.Admin --import-types-of-cancer --oncotree-version ${ONCOTREE_VERSION_TO_USE}
