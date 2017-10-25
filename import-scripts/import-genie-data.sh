@@ -32,7 +32,7 @@ if [ $DB_VERSION_FAIL -eq 0 ]; then
         IMPORT_FAIL=1
         EMAIL_BODY="Genie import failed"
         echo -e "Sending email $EMAIL_BODY"
-        echo -e "$EMAIL_BODY" | mail -s "Import failure: Genie" $pipelines_email_list
+        echo -e "$EMAIL_BODY" | mail -s "Import failure: Genie" $email_list
     fi
     num_studies_updated=`cat $tmp/num_studies_updated.txt`
 
