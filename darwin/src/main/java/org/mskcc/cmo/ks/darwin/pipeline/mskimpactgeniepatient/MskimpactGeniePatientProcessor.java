@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2017 Memorial Sloan-Kettering Cancer Center.
+ * Copyright (c) 2016 - 2017 Memorial Sloan-Kettering Cancer Center.
  *
  * This library is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS
@@ -29,23 +29,31 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+
 package org.mskcc.cmo.ks.darwin.pipeline.mskimpactgeniepatient;
 
 import java.util.*;
 import org.apache.commons.lang.StringUtils;
 import org.mskcc.cmo.ks.darwin.pipeline.model.MskimpactNAACCRClinical;
+import org.mskcc.cmo.ks.darwin.pipeline.util.DarwinUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.batch.item.ItemProcessor;
 
 /**
  *
  * @author heinsz
  */
-public class MskimpactGeniePatientProcessor implements ItemProcessor<MskimpactNAACCRClinical, String>{
+public class MskimpactGeniePatientProcessor implements ItemProcessor<MskimpactNAACCRClinical, String> {
+
+    @Autowired
+    private DarwinUtils darwinUtils;
+
     @Override
     public String process(MskimpactNAACCRClinical mskimpactNAACCRClinical) throws Exception {
         List<String> record = new ArrayList<>();
         for (String field : mskimpactNAACCRClinical.getFieldNames()) {
-            record.add(mskimpactNAACCRClinical.getClass().getMethod("get" + field).invoke(mskimpactNAACCRClinical).toString());
+            String value = mskimpactNAACCRClinical.getClass().getMethod("get" + field).invoke(mskimpactNAACCRClinical).toString();
+            record.add(darwinUtils.convertWhitespace(value));
         }
         return StringUtils.join(record, "\t");
     }

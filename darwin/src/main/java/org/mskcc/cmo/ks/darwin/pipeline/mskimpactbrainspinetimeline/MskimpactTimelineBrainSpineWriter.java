@@ -43,7 +43,6 @@ import java.io.*;
 import java.util.*;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
-import org.mskcc.cmo.ks.darwin.pipeline.BatchConfiguration;
 
 /**
  *

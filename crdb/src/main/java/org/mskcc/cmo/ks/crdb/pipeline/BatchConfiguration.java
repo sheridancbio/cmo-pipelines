@@ -34,6 +34,7 @@ package org.mskcc.cmo.ks.crdb;
 
 import org.mskcc.cmo.ks.crdb.model.CRDBDataset;
 import org.mskcc.cmo.ks.crdb.model.CRDBSurvey;
+import org.mskcc.cmo.ks.crdb.pipeline.util.CRDBUtils;
 import org.springframework.batch.core.*;
 import org.springframework.batch.core.configuration.annotation.*;
 import org.springframework.batch.core.configuration.annotation.StepScope;
@@ -58,6 +59,11 @@ public class BatchConfiguration
 
     @Autowired
     public StepBuilderFactory stepBuilderFactory;
+
+    @Bean
+    public CRDBUtils crdbUtils() {
+        return new CRDBUtils();
+    }
 
     @Bean
     public Job crdbImpactJob() {

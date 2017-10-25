@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Memorial Sloan-Kettering Cancer Center.
+ * Copyright (c) 2016 - 2017 Memorial Sloan-Kettering Cancer Center.
  *
  * This library is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS
@@ -32,13 +32,13 @@
 
 package org.mskcc.cmo.ks.crdb;
 
-import org.mskcc.cmo.ks.crdb.model.CRDBSurvey;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.ArrayList;
 import java.util.List;
-import org.apache.commons.lang.StringUtils;
+import org.mskcc.cmo.ks.crdb.model.CRDBSurvey;
+import org.mskcc.cmo.ks.crdb.pipeline.util.CRDBUtils;
 import org.springframework.batch.item.ItemProcessor;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * Class for processing the CRDB Survey results for the staging file.
@@ -49,14 +49,18 @@ import org.springframework.batch.item.ItemProcessor;
 public class CRDBSurveyProcessor implements ItemProcessor<CRDBSurvey, String> {
     ObjectMapper mapper = new ObjectMapper();
 
+    @Autowired
+    private CRDBUtils crdbUtils;
+
     @Override
     public String process(final CRDBSurvey crdbSurvey) throws Exception {
         List<String> record = new ArrayList<>();
         for (String field : new CRDBSurvey().getFieldNames()) {
-            if (!field.startsWith("QS_DATE")){
-                record.add(crdbSurvey.getClass().getMethod("get"+field).invoke(crdbSurvey).toString());
+            if (!field.startsWith("QS_DATE")) {
+                String value = crdbSurvey.getClass().getMethod("get"+field).invoke(crdbSurvey).toString();
+                record.add(crdbUtils.convertWhitespace(value));
             }
         }
-        return StringUtils.join(record, "\t");
+        return String.join("\t", record);
     }
 }

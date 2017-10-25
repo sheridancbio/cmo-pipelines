@@ -32,12 +32,12 @@
 
 package org.cbioportal.cmo.pipelines.cvr.variants;
 
-import org.cbioportal.cmo.pipelines.cvr.CvrSampleListUtil;
-import org.cbioportal.cmo.pipelines.cvr.model.*;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.*;
 import org.apache.log4j.Logger;
+import org.cbioportal.cmo.pipelines.cvr.CvrSampleListUtil;
+import org.cbioportal.cmo.pipelines.cvr.model.*;
+import org.cbioportal.cmo.pipelines.util.CVRUtils;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.beans.factory.annotation.*;
 
@@ -50,6 +50,9 @@ public class GMLVariantsProcessor implements ItemProcessor<GMLVariant, String> {
     Logger log = Logger.getLogger(GMLVariantsProcessor.class);
 
     @Autowired
+    private CVRUtils cvrUtils;
+
+    @Autowired
     public CvrSampleListUtil cvrSampleListUtil;
 
     @Override
@@ -59,7 +62,7 @@ public class GMLVariantsProcessor implements ItemProcessor<GMLVariant, String> {
         ObjectMapper mapper = new ObjectMapper();
         for (Map.Entry<String, GMLResult> pair : results.entrySet()) {
             GMLResult result = pair.getValue();
-            String patientId = result.getMetaData().getDmpPatientId();
+            String patientId = cvrUtils.convertWhitespace(result.getMetaData().getDmpPatientId());
             cvrSampleListUtil.addNewDmpGmlPatient(patientId);
             gmlData.addResult(result);
         }

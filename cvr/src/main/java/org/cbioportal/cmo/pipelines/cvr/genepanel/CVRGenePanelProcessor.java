@@ -35,7 +35,9 @@ package org.cbioportal.cmo.pipelines.cvr.genepanel;
 import java.util.*;
 import org.apache.commons.lang.StringUtils;
 import org.cbioportal.cmo.pipelines.cvr.model.*;
+import org.cbioportal.cmo.pipelines.util.CVRUtils;
 import org.springframework.batch.item.ItemProcessor;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  *
@@ -43,11 +45,17 @@ import org.springframework.batch.item.ItemProcessor;
  */
 public class CVRGenePanelProcessor implements ItemProcessor<CVRGenePanelRecord, String> {
 
+    @Autowired
+    private CVRUtils cvrUtils;
+
     @Override
     public String process(CVRGenePanelRecord i) throws Exception {
         List<String> record = new ArrayList<>();
-        record.add(i.getSAMPLE_ID());
-        record.addAll(i.getPanelMap().values());
+        record.add(cvrUtils.convertWhitespace(i.getSAMPLE_ID()));
+        Collection<String> values = i.getPanelMap().values();
+        for (String value : values) {
+            record.add(cvrUtils.convertWhitespace(value));
+        }
         return StringUtils.join(record, "\t");
     }
 }

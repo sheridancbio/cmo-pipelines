@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Memorial Sloan-Kettering Cancer Center.
+ * Copyright (c) 2016 - 2017 Memorial Sloan-Kettering Cancer Center.
  *
  * This library is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS
@@ -29,34 +29,41 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-package org.mskcc.cmo.ks.darwin.pipeline.mskimpactbrainspinetimeline;
 
-import org.mskcc.cmo.ks.darwin.pipeline.model.MskimpactBrainSpineCompositeTimeline;
+package org.mskcc.cmo.ks.darwin.pipeline.mskimpactbrainspinetimeline;
 
 import java.util.*;
 import org.apache.commons.lang.StringUtils;
-import org.mskcc.cmo.ks.darwin.pipeline.BatchConfiguration;
+import org.mskcc.cmo.ks.darwin.pipeline.model.MskimpactBrainSpineCompositeTimeline;
+import org.mskcc.cmo.ks.darwin.pipeline.util.DarwinUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.batch.item.ItemProcessor;
+
 /**
  *
  * @author jake
  */
-public class MskimpactTimelineBrainSpineCompositeToCompositeProcessor implements ItemProcessor<MskimpactBrainSpineCompositeTimeline, MskimpactBrainSpineCompositeTimeline>{
+public class MskimpactTimelineBrainSpineCompositeToCompositeProcessor implements ItemProcessor<MskimpactBrainSpineCompositeTimeline, MskimpactBrainSpineCompositeTimeline> {
+
+    @Autowired
+    private DarwinUtils darwinUtils;
+
     private BrainSpineTimelineType type;
-    
+
     public MskimpactTimelineBrainSpineCompositeToCompositeProcessor(BrainSpineTimelineType type) {
         this.type = type;
-    }    
+    }
+
     @Override
     public MskimpactBrainSpineCompositeTimeline process(final MskimpactBrainSpineCompositeTimeline composite) throws Exception{
         List<String> recordPost = new ArrayList<>();
-        for(String field : (List<String>)composite.getRecord().getClass().getMethod("get" + type.toString() + "Fields").invoke(composite.getRecord())){
-            recordPost.add(composite.getRecord().getClass().getMethod("get" + field).invoke(composite.getRecord()).toString());
+        for (String field : (List<String>)composite.getRecord().getClass().getMethod("get" + type.toString() + "Fields").invoke(composite.getRecord())) {
+            String value = composite.getRecord().getClass().getMethod("get" + field).invoke(composite.getRecord()).toString();
+            recordPost.add(darwinUtils.convertWhitespace(value));
         }
         if(recordPost.contains(type.toString().toUpperCase())){
-            composite.getClass().getMethod("set" + type.toString() + "Result", String.class).invoke(composite, StringUtils.join(recordPost, "\t"));            
+            composite.getClass().getMethod("set" + type.toString() + "Result", String.class).invoke(composite, StringUtils.join(recordPost, "\t"));
         }
-        
         return composite;
     }
 }

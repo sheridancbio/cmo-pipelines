@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Memorial Sloan-Kettering Cancer Center.
+ * Copyright (c) 2016 - 2017 Memorial Sloan-Kettering Cancer Center.
  *
  * This library is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS
@@ -32,12 +32,12 @@
 
 package org.mskcc.cmo.ks.crdb;
 
-import org.mskcc.cmo.ks.crdb.model.CRDBDataset;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.ArrayList;
 import java.util.List;
-import org.apache.commons.lang.StringUtils;
+import org.mskcc.cmo.ks.crdb.model.CRDBDataset;
+import org.mskcc.cmo.ks.crdb.pipeline.util.CRDBUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.batch.item.ItemProcessor;
 
 /**
@@ -47,7 +47,11 @@ import org.springframework.batch.item.ItemProcessor;
  */
 
 public class CRDBDatasetProcessor implements ItemProcessor<CRDBDataset, String> {
+
     ObjectMapper mapper = new ObjectMapper();
+
+    @Autowired
+    private CRDBUtils crdbUtils;
 
     @Override
     public String process(final CRDBDataset crdbDataset) throws Exception {
@@ -57,13 +61,12 @@ public class CRDBDatasetProcessor implements ItemProcessor<CRDBDataset, String> 
             if (field.equals("PARTA_CONSENTED")) {
                 // resolve part a consented value
                 value = resolvePartAConsented(crdbDataset.getCONSENT_DATE_DAYS());
-            }
-            else {
+            } else {
                 value = crdbDataset.getClass().getMethod("get"+field).invoke(crdbDataset).toString();
             }
-            record.add(value);
+            record.add(crdbUtils.convertWhitespace(value));
         }
-        return StringUtils.join(record, "\t");
+        return String.join("\t", record);
     }
 
     /**

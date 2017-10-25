@@ -32,11 +32,11 @@
 
 package org.cbioportal.cmo.pipelines.cvr.clinical;
 
-import org.cbioportal.cmo.pipelines.cvr.model.*;
-import org.cbioportal.cmo.pipelines.cvr.CvrSampleListUtil;
-
 import java.util.*;
 import org.apache.commons.lang.StringUtils;
+import org.cbioportal.cmo.pipelines.cvr.CvrSampleListUtil;
+import org.cbioportal.cmo.pipelines.cvr.model.*;
+import org.cbioportal.cmo.pipelines.util.CVRUtils;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -47,6 +47,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 public class CVRClinicalDataProcessor implements ItemProcessor<CVRClinicalRecord, CompositeClinicalRecord> {
 
     @Autowired
+    private CVRUtils cvrUtils;
+
+    @Autowired
     public CvrSampleListUtil cvrSampleListUtil;
     
     @Override
@@ -54,10 +57,10 @@ public class CVRClinicalDataProcessor implements ItemProcessor<CVRClinicalRecord
         List<String> record = new ArrayList<>();
         List<String> seqDateRecord = new ArrayList<>();
         for (String field : CVRClinicalRecord.getFieldNames()) {
-            record.add(i.getClass().getMethod("get" + field).invoke(i).toString().replaceAll("[\\t\\n\\r]+"," ").trim());
+            record.add(cvrUtils.convertWhitespace(i.getClass().getMethod("get" + field).invoke(i).toString().trim()));
         }
         for (String field : MskimpactSeqDate.getFieldNames()) {
-            seqDateRecord.add(i.getClass().getMethod("get" + field).invoke(i).toString().replaceAll("[\\t\\n\\r]+"," ").trim());
+            seqDateRecord.add(cvrUtils.convertWhitespace(i.getClass().getMethod("get" + field).invoke(i).toString().trim()));
         }
         CompositeClinicalRecord compRecord = new CompositeClinicalRecord();
         if (cvrSampleListUtil.getNewDmpSamples().contains(i.getSAMPLE_ID())) {
