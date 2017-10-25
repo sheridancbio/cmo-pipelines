@@ -58,6 +58,9 @@ public class CVRClinicalDataReader implements ItemStreamReader<CVRClinicalRecord
     @Value("#{jobParameters[studyId]}")
     private String studyId;
 
+    @Value("#{jobParameters[clinicalFilename]}")
+    private String clinicalFilename;
+
     @Autowired
     public CVRUtilities cvrUtilities;
     
@@ -107,7 +110,7 @@ public class CVRClinicalDataReader implements ItemStreamReader<CVRClinicalRecord
     }
     
     private void processClinicalFile(ExecutionContext ec) {
-        File mskimpactClinicalFile = new File(stagingDirectory, cvrUtilities.CLINICAL_FILE);
+        File mskimpactClinicalFile = new File(stagingDirectory, clinicalFilename);
         if (!mskimpactClinicalFile.exists()) {
             log.error("File does not exist - skipping data loading from clinical file: " + mskimpactClinicalFile.getName());
             return;

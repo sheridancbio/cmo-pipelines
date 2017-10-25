@@ -55,6 +55,9 @@ public class GMLClinicalDataReader implements ItemStreamReader<CVRClinicalRecord
     @Value("#{jobParameters[stagingDirectory]}")
     private String stagingDirectory;
 
+    @Value("#{jobParameters[clinicalFilename]}")
+    private String clinicalFilename;
+
     @Autowired
     public CVRUtilities cvrUtilities;
 
@@ -77,7 +80,7 @@ public class GMLClinicalDataReader implements ItemStreamReader<CVRClinicalRecord
             ex.printStackTrace();
         }
         
-        File clinicalFile = new File(stagingDirectory, cvrUtilities.CLINICAL_FILE);
+        File clinicalFile = new File(stagingDirectory, clinicalFilename);
         if (!clinicalFile.exists()) {
             log.error("Could not find clinical file: " + clinicalFile.getName());
         }
