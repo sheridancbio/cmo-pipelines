@@ -33,7 +33,6 @@ package org.mskcc.cmo.ks.redcap.pipeline;
 
 import java.io.*;
 import java.util.*;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.batch.item.ExecutionContext;
 import org.springframework.batch.item.ItemStreamException;
@@ -80,7 +79,7 @@ public class ClinicalPatientDataWriter implements ItemStreamWriter<ClinicalDataC
                 public void writeHeader(Writer writer) throws IOException {
                     writer.write("#" + getMetaLine(header.get("display_names")) + "\n");
                     writer.write("#" + getMetaLine(header.get("descriptions")) + "\n");
-                    writer.write("#" +getMetaLine(header.get("datatypes")) + "\n");
+                    writer.write("#" + getMetaLine(header.get("datatypes")) + "\n");
                     writer.write("#" + getMetaLine(header.get("priorities")) + "\n");
                     writer.write(getMetaLine(header.get("header")));
                 }
@@ -123,7 +122,15 @@ public class ClinicalPatientDataWriter implements ItemStreamWriter<ClinicalDataC
 
     private String getMetaLine(List<String> metaData) {
         int pidIndex = header.get("header").indexOf("PATIENT_ID");
-        return metaData.remove(pidIndex) + "\t" + StringUtils.join(metaData, "\t");
+        StringBuilder metaLine = new StringBuilder(metaData.get(pidIndex));
+        int index = 0;
+        for (String item : metaData) {
+            if (index != pidIndex) {
+                metaLine.append("\t").append(item);
+            }
+            index = index + 1;
+        }
+        return metaLine.toString();
     }
 
 }

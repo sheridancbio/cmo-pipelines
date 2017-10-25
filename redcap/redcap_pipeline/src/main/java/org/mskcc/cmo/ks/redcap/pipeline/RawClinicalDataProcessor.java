@@ -47,8 +47,12 @@ public class RawClinicalDataProcessor implements ItemProcessor<Map<String, Strin
         List<String> record = new ArrayList();
 
         // get the sample and patient ids first before processing the other columns
-        record.add(i.get("SAMPLE_ID"));
-        record.add(i.get("PATIENT_ID"));
+        if (fullHeader.contains("SAMPLE_ID")) {
+            record.add(i.getOrDefault("SAMPLE_ID", ""));
+        }
+        if (fullHeader.contains("PATIENT_ID")) {
+            record.add(i.getOrDefault("PATIENT_ID", ""));
+        }
         for (String column : fullHeader) {
             if (!column.equals("SAMPLE_ID") && !column.equals("PATIENT_ID")) {
                 record.add(i.getOrDefault(column, ""));

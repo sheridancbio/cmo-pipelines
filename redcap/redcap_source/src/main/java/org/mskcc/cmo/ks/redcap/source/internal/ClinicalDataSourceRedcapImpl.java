@@ -73,8 +73,6 @@ public class ClinicalDataSourceRedcapImpl implements ClinicalDataSource {
     private String nextClinicalId;
     private String nextTimelineId;
 
-    private static final Map<String, String> externalToRedcapFieldOverrideMap = initializeExternalToRedcapFieldOverrideMap();
-
     private final Logger log = Logger.getLogger(ClinicalDataSourceRedcapImpl.class);
 
     @Override
@@ -250,7 +248,7 @@ public class ClinicalDataSourceRedcapImpl implements ClinicalDataSource {
         Map<RedcapProjectAttribute, RedcapAttributeMetadata> attributeMap = new LinkedHashMap<>();
         for (RedcapProjectAttribute attribute : attributes) {
             for (RedcapAttributeMetadata meta : metadata) {
-                if (attribute.getFieldName().toUpperCase().equals(meta.getNormalizedColumnHeader().toUpperCase())) {
+                if (attribute.getFieldName().toUpperCase().equals(meta.getRedcapId().toUpperCase())) {
                     attributeMap.put(attribute, meta);
                     break;
                 }
@@ -259,6 +257,7 @@ public class ClinicalDataSourceRedcapImpl implements ClinicalDataSource {
         return makeHeader(attributeMap);
     }
 
+    // Sets the sampleHeader and patientHeader data members for the current clinical project
     private void getClinicalHeaderData() {
         metadata = getMetadata();
         List<RedcapProjectAttribute> attributes = getAttributes(false);
@@ -269,11 +268,16 @@ public class ClinicalDataSourceRedcapImpl implements ClinicalDataSource {
         for (RedcapProjectAttribute attribute : attributes) {
             for (RedcapAttributeMetadata meta : metadata) {
                 if (attribute.getFieldName().toUpperCase().equals(meta.getNormalizedColumnHeader().toUpperCase())) {
-                    if(meta.getAttributeType().equals("SAMPLE")) {
+                    if (attribute.getFieldName().toUpperCase().equals("PATIENT_ID")) {
+                        //PATIENT_ID is both a sample and a patient attribute
                         sampleAttributeMap.put(attribute, meta);
+                        patientAttributeMap.put(attribute, meta);
                         break;
                     }
-                    else {
+                    if (meta.getAttributeType().equals("SAMPLE")) {
+                        sampleAttributeMap.put(attribute, meta);
+                        break;
+                    } else {
                         patientAttributeMap.put(attribute, meta);
                         break;
                     }
@@ -295,24 +299,7 @@ public class ClinicalDataSourceRedcapImpl implements ClinicalDataSource {
                 }
             }
         }
-
          combinedHeader = makeHeader(combinedAttributeMap);
-    }
-
-    public static Map<String, String> initializeExternalToRedcapFieldOverrideMap() {
-        Map<String, String> overrides = new HashMap<>();
-        overrides.put("CRDB_BASIC_COMMENTS", "crdb_basic_comments"); //crdb_basic
-        overrides.put("12_245_PARTA_CONSENTED", "parta_consented_12_245"); //crdb_basic
-        overrides.put("CRDB_SURVEY_COMMENTS", "crdb_survey_comments"); //crdb_survey
-        overrides.put("ARCHER", "archer"); //cvr
-        overrides.put("SOURCE", "source"); //mskimpact_timeline_status_caisis
-        overrides.put("SURGERY_DETAILS", "surgery_details"); //mskimpact_timeline_surgery_caisis
-        overrides.put("EVENT_TYPE_DETAILED", "event_type_detailed"); //mskimpact_timeline_surgery_caisis
-        overrides.put("SOURCE_PATHOLOGY", "source_pathology"); //mskimpact_timeline_surgery_caisis
-        overrides.put("DIAGNOSTIC_TYPE", "diagnostic_type"); //mskimpact_timeline_imagery_caisis
-        overrides.put("DIAGNOSTIC_TYPE_DETAILED", "diagnostic_type_detailed"); //mskimpact_timeline_imagery_caisis
-        overrides.put("AGE_AT_DEATH", "age_at_death"); //mskimpact_data_clinical_darwin_demographics
-        return overrides;
     }
 
     public String[] externalFieldNamesToRedcapFieldIds(String[] externalFieldNames) {
@@ -323,12 +310,10 @@ public class ClinicalDataSourceRedcapImpl implements ClinicalDataSource {
         metadata = getMetadata();
         Map<String, String> externalToRedcapFieldMap = mapExternalToRedcapFieldFromMetadata(metadata);
         for (int i = 0; i < externalFieldNames.length; i++) {
-            String redcapFieldId = externalToRedcapFieldOverrideMap.get(externalFieldNames[i]);
+            String redcapFieldId = externalToRedcapFieldMap.get(externalFieldNames[i]);
             if (redcapFieldId == null) {
-                redcapFieldId = externalToRedcapFieldMap.get(externalFieldNames[i]);
-            }
-            if (redcapFieldId == null) {
-                String errorString = "Error : attempt to persist file to RedCap failed due to field name " + externalFieldNames[i] + " not having a redcap_id defined in the RedCap Metadata Project";
+                String errorString = "Error : attempt to persist file to RedCap failed due to field name " +
+                        externalFieldNames[i] + " not having a redcap_id defined in the RedCap Metadata Project";
                 log.warn(errorString);
                 throw new RuntimeException(errorString);
             }
@@ -378,10 +363,9 @@ public class ClinicalDataSourceRedcapImpl implements ClinicalDataSource {
 
     private List<RedcapProjectAttribute> getAttributes(boolean timelineData) {
         String projectToken;
-        if(timelineData) {
+        if (timelineData) {
             projectToken = clinicalTimelineTokens.get(nextTimelineId);
-        }
-        else {
+        } else {
             projectToken = clinicalDataTokens.get(nextClinicalId);
         }
         return getAttributesByToken(projectToken);
@@ -414,8 +398,7 @@ public class ClinicalDataSourceRedcapImpl implements ClinicalDataSource {
         ResponseEntity<ObjectNode[]> responseEntity = restTemplate.exchange(redcapSessionManager.getRedcapApiURI(), HttpMethod.POST, requestEntity, ObjectNode[].class);
         List<Map<String, String>> responses = new ArrayList<>();
 
-        for(ObjectNode response : responseEntity.getBody())
-        {
+        for(ObjectNode response : responseEntity.getBody()) {
             Map<String, String> map = new HashMap<>();
             Iterator<Map.Entry<String, JsonNode>> nodeIterator = response.fields();
             while (nodeIterator.hasNext()) {

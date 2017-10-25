@@ -52,11 +52,15 @@ public class ClinicalSampleDataProcessor implements ItemProcessor<Map<String, St
         List<String> header = total_header.get("header");
 
         // get the sample and patient ids first before processing the other columns
-        record.add(i.get("SAMPLE_ID"));
-        record.add(i.get("PATIENT_ID"));
+        if (header.contains("SAMPLE_ID")) {
+            record.add(i.getOrDefault("SAMPLE_ID",""));
+        }
+        if (header.contains("PATIENT_ID")) {
+            record.add(i.getOrDefault("PATIENT_ID",""));
+        }
 
-        for(String column : header) {
-            if(!column.equals("SAMPLE_ID")) {
+        for (String column : header) {
+            if (!column.equals("SAMPLE_ID") && !column.equals("PATIENT_ID")) {
                 record.add(i.getOrDefault(column, ""));
             }
         }

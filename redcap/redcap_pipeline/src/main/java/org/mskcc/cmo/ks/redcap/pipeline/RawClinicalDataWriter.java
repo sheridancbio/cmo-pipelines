@@ -76,7 +76,7 @@ public class RawClinicalDataWriter implements ItemStreamWriter<String> {
             flatFileItemWriter.setHeaderCallback(new FlatFileHeaderCallback() {
                 @Override
                 public void writeHeader(Writer writer) throws IOException {
-                    writer.write(StringUtils.join(fullHeader, "\t"));
+                    writer.write(getMetaLine(fullHeader));
                 }
             });
             flatFileItemWriter.open(ec);
@@ -99,6 +99,32 @@ public class RawClinicalDataWriter implements ItemStreamWriter<String> {
         if (writeRawClinicalData) {
             flatFileItemWriter.write(items);
         }        
+    }
+
+    private String getMetaLine(List<String> sampleMetadata) {
+        int sidIndex = sampleMetadata.indexOf("SAMPLE_ID");
+        int pidIndex = sampleMetadata.indexOf("PATIENT_ID");
+        StringBuilder metaLine = new StringBuilder();
+        if (sidIndex != -1) {
+            metaLine.append(sampleMetadata.get(sidIndex));
+        }
+        if (pidIndex != -1) {
+            if (metaLine.toString().length() != 0) {
+                metaLine.append("\t");
+            }
+            metaLine.append(sampleMetadata.get(pidIndex));
+        }
+        int index = 0;
+        for (String item : sampleMetadata) {
+            if (index != sidIndex && index != pidIndex) {
+                if (metaLine.toString().length() != 0) {
+                    metaLine.append("\t");
+                }
+                metaLine.append(item);
+            }
+            index = index + 1;
+        }
+        return metaLine.toString();
     }
 
 }

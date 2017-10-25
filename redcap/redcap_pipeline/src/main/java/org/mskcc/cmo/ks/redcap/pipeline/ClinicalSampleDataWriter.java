@@ -33,7 +33,6 @@ package org.mskcc.cmo.ks.redcap.pipeline;
 
 import java.io.*;
 import java.util.*;
-import org.apache.commons.lang3.StringUtils;
 import org.mskcc.cmo.ks.redcap.source.ClinicalDataSource;
 import org.springframework.batch.item.ExecutionContext;
 import org.springframework.batch.item.ItemStreamException;
@@ -60,9 +59,6 @@ public class ClinicalSampleDataWriter implements ItemStreamWriter<ClinicalDataCo
     @Value("#{stepExecutionContext['sampleHeader']}")
     private Map<String, List<String>> sampleHeader;
 
-    @Value("#{stepExecutionContext['patientHeader']}")
-    private Map<String, List<String>> patientHeader;
-
     @Autowired
     public ClinicalDataSource clinicalDataSource;
 
@@ -81,11 +77,11 @@ public class ClinicalSampleDataWriter implements ItemStreamWriter<ClinicalDataCo
             flatFileItemWriter.setHeaderCallback(new FlatFileHeaderCallback() {
                 @Override
                 public void writeHeader(Writer writer) throws IOException {
-                    writer.write("#" + getMetaLine(sampleHeader.get("display_names"), patientHeader.get("display_names")) + "\n");
-                    writer.write("#" + getMetaLine(sampleHeader.get("descriptions"), patientHeader.get("descriptions")) + "\n");
-                    writer.write("#" + getMetaLine(sampleHeader.get("datatypes"), patientHeader.get("datatypes")) + "\n");
-                    writer.write("#" + getMetaLine(sampleHeader.get("priorities"), patientHeader.get("priorities")) + "\n");
-                    writer.write(getMetaLine(sampleHeader.get("header"), patientHeader.get("header")));
+                    writer.write("#" + getMetaLine(sampleHeader.get("display_names")) + "\n");
+                    writer.write("#" + getMetaLine(sampleHeader.get("descriptions")) + "\n");
+                    writer.write("#" + getMetaLine(sampleHeader.get("datatypes")) + "\n");
+                    writer.write("#" + getMetaLine(sampleHeader.get("priorities")) + "\n");
+                    writer.write(getMetaLine(sampleHeader.get("header")));
                 }
             });
             flatFileItemWriter.open(ec);
@@ -117,9 +113,21 @@ public class ClinicalSampleDataWriter implements ItemStreamWriter<ClinicalDataCo
         }
     }
 
-    private String getMetaLine(List<String> sampleMetadata, List<String> patientMetadata) {
+    private String getMetaLine(List<String> sampleMetadata) {
         int sidIndex = sampleHeader.get("header").indexOf("SAMPLE_ID");
-        int pidIndex = patientHeader.get("header").indexOf("PATIENT_ID");
-        return sampleMetadata.remove(sidIndex) + "\t" + patientMetadata.get(pidIndex) + "\t" + StringUtils.join(sampleMetadata, "\t");
+        int pidIndex = sampleHeader.get("header").indexOf("PATIENT_ID");
+        StringBuilder metaLine = new StringBuilder(sampleMetadata.get(sidIndex));
+        if (pidIndex != -1) {
+            metaLine.append("\t").append(sampleMetadata.get(pidIndex));
+        }
+        int index = 0;
+        for (String item : sampleMetadata) {
+            if (index != sidIndex && index != pidIndex) {
+                metaLine.append("\t").append(item);
+            }
+            index = index + 1;
+        }
+        return metaLine.toString();
     }
+
 }
