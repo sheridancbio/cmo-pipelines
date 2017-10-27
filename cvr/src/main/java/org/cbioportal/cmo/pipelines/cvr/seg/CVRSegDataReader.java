@@ -147,11 +147,11 @@ public class CVRSegDataReader implements ItemStreamReader<CVRSegRecord> {
 
     @Override
     public CVRSegRecord read() throws Exception {
-        if (!cvrSegRecords.isEmpty()) {
+        while (!cvrSegRecords.isEmpty()) {
             CVRSegRecord record = cvrSegRecords.remove(0);
             if (!cvrSampleListUtil.getPortalSamples().contains(record.getID())) {
                 cvrSampleListUtil.addSampleRemoved(record.getID());
-                return read();
+                continue;
             }
             return record;
         }

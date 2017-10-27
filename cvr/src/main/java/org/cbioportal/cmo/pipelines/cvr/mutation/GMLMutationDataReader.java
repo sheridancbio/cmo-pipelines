@@ -182,11 +182,11 @@ public class GMLMutationDataReader implements ItemStreamReader<AnnotatedRecord> 
 
     @Override
     public AnnotatedRecord read() throws Exception {
-        if (!mutationRecords.isEmpty()) {
+        while (!mutationRecords.isEmpty()) {
             AnnotatedRecord annotatedRecord = mutationRecords.remove(0);
             if (!cvrSampleListUtil.getPortalSamples().contains(annotatedRecord.getTUMOR_SAMPLE_BARCODE())) {
                 cvrSampleListUtil.addSampleRemoved(annotatedRecord.getTUMOR_SAMPLE_BARCODE());
-                return read();
+                continue;
             }
             for (String additionalProperty : additionalPropertyKeys) {
                 Map<String, String> additionalProperties = annotatedRecord.getAdditionalProperties();

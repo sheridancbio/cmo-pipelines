@@ -133,11 +133,11 @@ public class GMLClinicalDataReader implements ItemStreamReader<CVRClinicalRecord
 
     @Override
     public CVRClinicalRecord read() throws Exception {
-        if (!clinicalRecords.isEmpty()) {
+        while (!clinicalRecords.isEmpty()) {
             CVRClinicalRecord record = clinicalRecords.remove(0);
             if (!cvrSampleListUtil.getPortalSamples().contains(record.getSAMPLE_ID())) {
                 cvrSampleListUtil.addSampleRemoved(record.getSAMPLE_ID());
-                return read();
+                continue;
             }
             return record;
         }
