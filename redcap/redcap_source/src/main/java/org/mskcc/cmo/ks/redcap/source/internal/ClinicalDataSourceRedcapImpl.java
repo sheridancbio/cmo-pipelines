@@ -248,7 +248,7 @@ public class ClinicalDataSourceRedcapImpl implements ClinicalDataSource {
         Map<RedcapProjectAttribute, RedcapAttributeMetadata> attributeMap = new LinkedHashMap<>();
         for (RedcapProjectAttribute attribute : attributes) {
             for (RedcapAttributeMetadata meta : metadata) {
-                if (attribute.getFieldName().toUpperCase().equals(meta.getRedcapId().toUpperCase())) {
+                if (attribute.getFieldName().equalsIgnoreCase(meta.getRedcapId())) {
                     attributeMap.put(attribute, meta);
                     break;
                 }
@@ -267,8 +267,8 @@ public class ClinicalDataSourceRedcapImpl implements ClinicalDataSource {
 
         for (RedcapProjectAttribute attribute : attributes) {
             for (RedcapAttributeMetadata meta : metadata) {
-                if (attribute.getFieldName().toUpperCase().equals(meta.getNormalizedColumnHeader().toUpperCase())) {
-                    if (attribute.getFieldName().toUpperCase().equals("PATIENT_ID")) {
+                if (attribute.getFieldName().equalsIgnoreCase(meta.getRedcapId())) {
+                    if (attribute.getFieldName().equalsIgnoreCase("PATIENT_ID")) {
                         //PATIENT_ID is both a sample and a patient attribute
                         sampleAttributeMap.put(attribute, meta);
                         patientAttributeMap.put(attribute, meta);
@@ -294,7 +294,7 @@ public class ClinicalDataSourceRedcapImpl implements ClinicalDataSource {
         Map<RedcapProjectAttribute, RedcapAttributeMetadata> combinedAttributeMap = new LinkedHashMap<>();
          for (RedcapProjectAttribute attribute : attributes) {
             for (RedcapAttributeMetadata meta : metadata) {
-                if (attribute.getFieldName().toUpperCase().equals(meta.getRedcapId().toUpperCase())) {
+                if (attribute.getFieldName().equalsIgnoreCase(meta.getRedcapId())) {
                     combinedAttributeMap.put(attribute, meta);
                 }
             }
