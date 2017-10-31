@@ -74,7 +74,7 @@ public class MetadataManagerRedcapImpl implements MetadataManager {
         for (String attribute : header) {
             String extColHeader = "";
             for (RedcapAttributeMetadata namespaceEntry : namespace) {
-                if (namespaceEntry.getExternalColumnHeader().equals(attribute.toUpperCase())) {
+                if (namespaceEntry.getExternalColumnHeader().equalsIgnoreCase(attribute)) {
                     // update attribute name and external column header values
                     // since coming from a namespace and not the metadata source
                     attribute = namespaceEntry.getNormalizedColumnHeader();
@@ -82,7 +82,7 @@ public class MetadataManagerRedcapImpl implements MetadataManager {
                 }
             }
             for (RedcapAttributeMetadata meta : metadata) {
-                if (attribute.toUpperCase().equals(meta.getRedcapId().toUpperCase())) {
+                if (meta.getNormalizedColumnHeader().equalsIgnoreCase(attribute)) {
                     // update external column header if not empty
                     if (!extColHeader.isEmpty()) {
                         meta.setExternalColumnHeader(extColHeader);
