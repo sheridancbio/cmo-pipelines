@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Memorial Sloan-Kettering Cancer Center.
+ * Copyright (c) 2016 - 2017 Memorial Sloan-Kettering Cancer Center.
  *
  * This library is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS
@@ -29,37 +29,44 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+
 package org.mskcc.cmo.ks.darwin.pipeline.mskimpactbrainspinetimeline;
 
 import java.util.*;
 import org.apache.commons.lang.StringUtils;
-import org.mskcc.cmo.ks.darwin.pipeline.BatchConfiguration;
 import org.mskcc.cmo.ks.darwin.pipeline.model.MskimpactBrainSpineCompositeTimeline;
 import org.mskcc.cmo.ks.darwin.pipeline.model.MskimpactBrainSpineTimeline;
 import org.mskcc.cmo.ks.darwin.pipeline.mskimpactbrainspinetimeline.BrainSpineTimelineType;
+import org.mskcc.cmo.ks.darwin.pipeline.util.DarwinUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.batch.item.ItemProcessor;
 
 /**
  *
  * @author jake
  */
-public class MskimpactTimelineBrainSpineModelToCompositeProcessor implements ItemProcessor<MskimpactBrainSpineTimeline, MskimpactBrainSpineCompositeTimeline>{
+public class MskimpactTimelineBrainSpineModelToCompositeProcessor implements ItemProcessor<MskimpactBrainSpineTimeline, MskimpactBrainSpineCompositeTimeline> {
+
+    @Autowired
+    private DarwinUtils darwinUtils;
+
     private BrainSpineTimelineType type;
-    
+
     public MskimpactTimelineBrainSpineModelToCompositeProcessor(BrainSpineTimelineType type) {
         this.type = type;
     }
+
     @Override
-    public MskimpactBrainSpineCompositeTimeline process(final MskimpactBrainSpineTimeline timelineBrainSpine) throws Exception{
+    public MskimpactBrainSpineCompositeTimeline process(final MskimpactBrainSpineTimeline timelineBrainSpine) throws Exception {
         MskimpactBrainSpineCompositeTimeline composite = new MskimpactBrainSpineCompositeTimeline(timelineBrainSpine);
         List<String> recordPost = new ArrayList<>();
-        for(String field : (List<String>)composite.getRecord().getClass().getMethod("get" + type.toString() + "Fields").invoke(composite.getRecord())){
-            recordPost.add(composite.getRecord().getClass().getMethod("get" + field).invoke(composite.getRecord()).toString());
+        for (String field : (List<String>)composite.getRecord().getClass().getMethod("get" + type.toString() + "Fields").invoke(composite.getRecord())) {
+            String value = composite.getRecord().getClass().getMethod("get" + field).invoke(composite.getRecord()).toString();
+            recordPost.add(darwinUtils.convertWhitespace(value));
         }
-        if(recordPost.contains(type.toString().toUpperCase())){
+        if (recordPost.contains(type.toString().toUpperCase())) {
             composite.getClass().getMethod("set" + type.toString() + "Result", String.class).invoke(composite, StringUtils.join(recordPost, "\t"));
         }
-        
         return composite;
     }
 }

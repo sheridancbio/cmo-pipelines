@@ -35,7 +35,9 @@ package org.cbioportal.cmo.pipelines.cvr.mutation;
 import java.util.*;
 import org.apache.commons.lang.StringUtils;
 import org.cbioportal.models.AnnotatedRecord;
+import org.cbioportal.cmo.pipelines.util.CVRUtils;
 import org.springframework.batch.item.ItemProcessor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 
 /**
@@ -47,14 +49,17 @@ public class CVRMutationDataProcessor implements ItemProcessor<AnnotatedRecord, 
     @Value("#{stepExecutionContext['mutation_header']}")
     private List<String> header;
 
+    @Autowired
+    private CVRUtils cvrUtils;
+
     @Override
     public String process(AnnotatedRecord i) throws Exception {
         List<String> record = new ArrayList<>();
         for (String field : header) {
             try {
-                record.add(i.getClass().getMethod("get" + field.toUpperCase()).invoke(i).toString().replaceAll("[\\t\\n\\r]+"," "));
+                record.add(cvrUtils.convertWhitespace(i.getClass().getMethod("get" + field.toUpperCase()).invoke(i).toString()));
             } catch (Exception e) {
-                record.add(i.getAdditionalProperties().getOrDefault(field, "").replace("\r\n", " ").replaceAll("[\\t\\n\\r]+"," "));
+                record.add(cvrUtils.convertWhitespace(i.getAdditionalProperties().getOrDefault(field, "")));
             }
         }
         return StringUtils.join(record, "\t");

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Memorial Sloan-Kettering Cancer Center.
+ * Copyright (c) 2016 - 2017 Memorial Sloan-Kettering Cancer Center.
  *
  * This library is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS
@@ -29,27 +29,32 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-package org.mskcc.cmo.ks.darwin.pipeline.mskimpactbrainspineclinical;
 
-import org.mskcc.cmo.ks.darwin.pipeline.model.MskimpactBrainSpineClinical;
+package org.mskcc.cmo.ks.darwin.pipeline.mskimpactbrainspineclinical;
 
 import java.util.*;
 import org.apache.commons.lang.StringUtils;
+import org.mskcc.cmo.ks.darwin.pipeline.model.MskimpactBrainSpineClinical;
+import org.mskcc.cmo.ks.darwin.pipeline.util.DarwinUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.batch.item.ItemProcessor;
+
 /**
  *
  * @author jake
  */
-public class MskimpactBrainSpineClinicalProcessor implements ItemProcessor<MskimpactBrainSpineClinical, String>{
-    
+public class MskimpactBrainSpineClinicalProcessor implements ItemProcessor<MskimpactBrainSpineClinical, String> {
+
+    @Autowired
+    private DarwinUtils darwinUtils;
+
     @Override
-    public String process(final MskimpactBrainSpineClinical darwinClinicalBrainSpine) throws Exception{
+    public String process(final MskimpactBrainSpineClinical darwinClinicalBrainSpine) throws Exception {
         List<String> record = new ArrayList<>();
         for(String field : new MskimpactBrainSpineClinical().getFieldNames()){
-			String value = darwinClinicalBrainSpine.getClass().getMethod("get"+field).invoke(darwinClinicalBrainSpine).toString();
-			record.add(value);
+            String value = darwinClinicalBrainSpine.getClass().getMethod("get"+field).invoke(darwinClinicalBrainSpine).toString();
+            record.add(darwinUtils.convertWhitespace(value));
         }
-        
         return StringUtils.join(record, "\t");
-    }    
+    }
 }

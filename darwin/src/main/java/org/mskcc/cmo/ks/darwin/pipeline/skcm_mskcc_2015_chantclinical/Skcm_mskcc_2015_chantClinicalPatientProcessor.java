@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Memorial Sloan-Kettering Cancer Center.
+ * Copyright (c) 2016 - 2017 Memorial Sloan-Kettering Cancer Center.
  *
  * This library is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS
@@ -29,13 +29,15 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-package org.mskcc.cmo.ks.darwin.pipeline.skcm_mskcc_2015_chantclinical;
 
-import org.mskcc.cmo.ks.darwin.pipeline.model.*;
+package org.mskcc.cmo.ks.darwin.pipeline.skcm_mskcc_2015_chantclinical;
 
 import java.util.*;
 import org.apache.commons.lang.StringUtils;
+import org.mskcc.cmo.ks.darwin.pipeline.model.*;
+import org.mskcc.cmo.ks.darwin.pipeline.util.DarwinUtils;
 import org.springframework.batch.item.ItemProcessor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 
 /**
@@ -44,17 +46,20 @@ import org.springframework.beans.factory.annotation.Value;
  */
 public class Skcm_mskcc_2015_chantClinicalPatientProcessor implements ItemProcessor<Skcm_mskcc_2015_chantClinicalCompositeRecord, Skcm_mskcc_2015_chantClinicalCompositeRecord> {
 
+    @Autowired
+    private DarwinUtils darwinUtils;
+
     @Value("#{stepExecutionContext['patientHeader']}")
     private Map<String, List<String>> patientHeader;
-    
+
     @Override
-    public Skcm_mskcc_2015_chantClinicalCompositeRecord process(final Skcm_mskcc_2015_chantClinicalCompositeRecord melanomaClinicalCompositeRecord) throws Exception{
+    public Skcm_mskcc_2015_chantClinicalCompositeRecord process(final Skcm_mskcc_2015_chantClinicalCompositeRecord melanomaClinicalCompositeRecord) throws Exception {
         Skcm_mskcc_2015_chantClinicalRecord melanomaClinicalRecord = melanomaClinicalCompositeRecord.getRecord();
         List<String> header =  melanomaClinicalRecord.getFieldNames();
         List<String> record = new ArrayList<>();
-        
+
         // first add patient id to record then iterate through rest of patient header
-        record.add(melanomaClinicalRecord.getPATIENT_ID().split("\\|")[0]);        
+        record.add(darwinUtils.convertWhitespace(melanomaClinicalRecord.getPATIENT_ID()).split("\\|")[0]);
         for (int i=0; i<patientHeader.get("header").size(); i++) {
             String normColumn = patientHeader.get("header").get(i);
             if (normColumn.equals("PATIENT_ID")) {
@@ -65,7 +70,7 @@ public class Skcm_mskcc_2015_chantClinicalPatientProcessor implements ItemProces
             // value then use that, otherwise just use the data that's there
             String extColumn = patientHeader.get("external_header").get(i+1);  // need to shift by one b/c writer removes PATIENT_ID metadata for header
             String value = melanomaClinicalRecord.getClass().getMethod("get" + extColumn).invoke(melanomaClinicalRecord).toString();
-            Set<String> uniqueValues = new HashSet(Arrays.asList(value.split("\\|")));
+            Set<String> uniqueValues = new HashSet(Arrays.asList(darwinUtils.convertWhitespace(value).split("\\|")));
             List<String> values = Arrays.asList(value.split("\\|"));
             if (uniqueValues.size() == 1) {
                 record.add(values.get(0));

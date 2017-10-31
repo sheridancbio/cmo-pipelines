@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Memorial Sloan-Kettering Cancer Center.
+ * Copyright (c) 2016 - 2017 Memorial Sloan-Kettering Cancer Center.
  *
  * This library is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS
@@ -29,28 +29,32 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-package org.mskcc.cmo.ks.darwin.pipeline.mskimpactdemographics;
 
-import org.mskcc.cmo.ks.darwin.pipeline.model.MskimpactPatientDemographics;
+package org.mskcc.cmo.ks.darwin.pipeline.mskimpactdemographics;
 
 import java.util.*;
 import org.apache.commons.lang.StringUtils;
+import org.mskcc.cmo.ks.darwin.pipeline.model.MskimpactPatientDemographics;
+import org.mskcc.cmo.ks.darwin.pipeline.util.DarwinUtils;
 import org.springframework.batch.item.ItemProcessor;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  *
  * @author jake
  */
-public class MskimpactPatientDemographicsProcessor implements ItemProcessor<MskimpactPatientDemographics, String>{
-    
+public class MskimpactPatientDemographicsProcessor implements ItemProcessor<MskimpactPatientDemographics, String> {
+
+    @Autowired
+    private DarwinUtils darwinUtils;
+
     @Override
-    public String process(final MskimpactPatientDemographics darwinPatientDemographics) throws Exception{
+    public String process(final MskimpactPatientDemographics darwinPatientDemographics) throws Exception {
         List<String> record = new ArrayList<>();
-        for(String field : new MskimpactPatientDemographics().getFieldNames()){
-            Object value = darwinPatientDemographics.getClass().getMethod("get"+field).invoke(darwinPatientDemographics);            
-            record.add(value != null ? value.toString() : "NA");
+        for (String field : new MskimpactPatientDemographics().getFieldNames()) {
+            Object value = darwinPatientDemographics.getClass().getMethod("get"+field).invoke(darwinPatientDemographics);
+            record.add(value != null ? darwinUtils.convertWhitespace(value.toString()) : "NA");
         }
-        
         return StringUtils.join(record, "\t");
     }
 }

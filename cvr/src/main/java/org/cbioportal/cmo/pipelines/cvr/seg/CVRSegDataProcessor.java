@@ -32,11 +32,11 @@
 
 package org.cbioportal.cmo.pipelines.cvr.seg;
 
-import org.cbioportal.cmo.pipelines.cvr.model.*;
-import org.cbioportal.cmo.pipelines.cvr.CvrSampleListUtil;
-
 import java.util.*;
 import org.apache.commons.lang.StringUtils;
+import org.cbioportal.cmo.pipelines.cvr.CvrSampleListUtil;
+import org.cbioportal.cmo.pipelines.cvr.model.*;
+import org.cbioportal.cmo.pipelines.util.CVRUtils;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -47,13 +47,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 public class CVRSegDataProcessor implements ItemProcessor<CVRSegRecord, CompositeSegRecord> {
 
     @Autowired
+    private CVRUtils cvrUtils;
+
+    @Autowired
     public CvrSampleListUtil cvrSampleListUtil;
     
     @Override
     public CompositeSegRecord process(CVRSegRecord i) throws Exception {
         List<String> record = new ArrayList<>();
         for (String field : i.getFieldNames()) {
-            record.add(i.getClass().getMethod("get" + field).invoke(i).toString().replaceAll("[\\t\\n\\r]+"," "));
+            record.add(cvrUtils.convertWhitespace(i.getClass().getMethod("get" + field).invoke(i).toString()));
         }
         CompositeSegRecord compRecord = new CompositeSegRecord();
         if (cvrSampleListUtil.getNewDmpSamples().contains(i.getID())) {

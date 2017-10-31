@@ -32,14 +32,13 @@
 
 package org.cbioportal.cmo.pipelines.cvr.variants;
 
-import org.cbioportal.cmo.pipelines.cvr.CvrSampleListUtil;
-import org.cbioportal.cmo.pipelines.cvr.model.*;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.*;
 import java.util.Iterator;
 import org.apache.log4j.Logger;
-
+import org.cbioportal.cmo.pipelines.cvr.CvrSampleListUtil;
+import org.cbioportal.cmo.pipelines.cvr.model.*;
+import org.cbioportal.cmo.pipelines.util.CVRUtils;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.beans.factory.annotation.*;
 import org.springframework.http.*;
@@ -65,6 +64,9 @@ public class CVRVariantsProcessor implements ItemProcessor<CvrResponse, String> 
     private boolean skipSeg;
 
     @Autowired
+    private CVRUtils cvrUtils;
+
+    @Autowired
     public CvrSampleListUtil cvrSampleListUtil;
 
     private String dmpSegmentUrl;
@@ -84,13 +86,14 @@ public class CVRVariantsProcessor implements ItemProcessor<CvrResponse, String> 
         Iterator it = results.entrySet().iterator();
         while (it.hasNext()) {
             Map.Entry pair = (Map.Entry)it.next();
-            String sampleId = (String)pair.getKey();
+            String sampleId = cvrUtils.convertWhitespace((String)pair.getKey());
             cvrSampleListUtil.addNewDmpSample(sampleId);
             
             CVRResult result = (CVRResult)pair.getValue();
             CVRSegData segData = new CVRSegData();
             if (!skipSeg) {
                 segData = getSegmentData(sampleId);
+                // TODO : we could clean this segData object of whitespace (by adding a new cvrUtil method)
             }
             if (segData != null) {
                 CVRMergedResult mergedResult = new CVRMergedResult(result, segData);

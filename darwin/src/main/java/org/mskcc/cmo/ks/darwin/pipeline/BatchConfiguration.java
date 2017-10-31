@@ -38,9 +38,10 @@ import org.mskcc.cmo.ks.darwin.pipeline.mskimpactbrainspineclinical.*;
 import org.mskcc.cmo.ks.darwin.pipeline.mskimpactbrainspinetimeline.*;
 import org.mskcc.cmo.ks.darwin.pipeline.mskimpactdemographics.*;
 import org.mskcc.cmo.ks.darwin.pipeline.mskimpactgeniepatient.*;
-import org.mskcc.cmo.ks.darwin.pipeline.skcm_mskcc_2015_chanttimeline.*;
-import org.mskcc.cmo.ks.darwin.pipeline.skcm_mskcc_2015_chantclinical.*;
 import org.mskcc.cmo.ks.darwin.pipeline.mskimpact_medicaltherapy.*;
+import org.mskcc.cmo.ks.darwin.pipeline.skcm_mskcc_2015_chantclinical.*;
+import org.mskcc.cmo.ks.darwin.pipeline.skcm_mskcc_2015_chanttimeline.*;
+import org.mskcc.cmo.ks.darwin.pipeline.util.DarwinUtils;
 
 import java.util.*;
 import org.springframework.batch.core.*;
@@ -188,6 +189,12 @@ public class BatchConfiguration {
 
     @Bean
     @StepScope
+    public DarwinUtils darwinUtils() {
+        return new DarwinUtils();
+    }
+
+    @Bean
+    @StepScope
     public ItemStreamReader<MskimpactPatientDemographics> mskimpactPatientDemographicsReader() {
         return new MskimpactPatientDemographicsReader();
     }
@@ -278,15 +285,43 @@ public class BatchConfiguration {
         return new MskimpactAgeWriter();
     }
 
+    // Beans for CompositeItemProcessor mskimpactTimelieBrainSpineProcessor delegation
+    // This was necessary because if a delegate processor instance is not created through a bean instance, it's members do not get Autowired
+    //
+    @Bean
+    public MskimpactTimelineBrainSpineModelToCompositeProcessor mskimpactTimelineBrainSpineModelToCompositeProcessorTypeStatus() {
+        return new MskimpactTimelineBrainSpineModelToCompositeProcessor(BrainSpineTimelineType.STATUS); 
+    }
+
+    @Bean
+    public MskimpactTimelineBrainSpineCompositeToCompositeProcessor mskimpactTimelineBrainSpineCompositeToCompositeProcessorTypeTreatment() {
+        return new MskimpactTimelineBrainSpineCompositeToCompositeProcessor(BrainSpineTimelineType.TREATMENT);
+    }
+
+    @Bean
+    public MskimpactTimelineBrainSpineCompositeToCompositeProcessor mskimpactTimelineBrainSpineCompositeToCompositeProcessorTypeSurgery() {
+        return new MskimpactTimelineBrainSpineCompositeToCompositeProcessor(BrainSpineTimelineType.SURGERY);
+    }
+
+    @Bean
+    public MskimpactTimelineBrainSpineCompositeToCompositeProcessor mskimpactTimelineBrainSpineCompositeToCompositeProcessorTypeSpecimen() {
+        return new MskimpactTimelineBrainSpineCompositeToCompositeProcessor(BrainSpineTimelineType.SPECIMEN);
+    }
+
+    @Bean
+    public MskimpactTimelineBrainSpineCompositeToCompositeProcessor mskimpactTimelineBrainSpineCompositeToCompositeProcessorTypeImaging() {
+        return new MskimpactTimelineBrainSpineCompositeToCompositeProcessor(BrainSpineTimelineType.IMAGING);
+    }
+
     @Bean
     @StepScope
     public CompositeItemProcessor mskimpactTimelineBrainSpineProcessor() {
         List<ItemProcessor> processorDelegates = new ArrayList<>();
-        processorDelegates.add(new MskimpactTimelineBrainSpineModelToCompositeProcessor(BrainSpineTimelineType.STATUS));
-        processorDelegates.add(new MskimpactTimelineBrainSpineCompositeToCompositeProcessor(BrainSpineTimelineType.TREATMENT));
-        processorDelegates.add(new MskimpactTimelineBrainSpineCompositeToCompositeProcessor(BrainSpineTimelineType.SURGERY));
-        processorDelegates.add(new MskimpactTimelineBrainSpineCompositeToCompositeProcessor(BrainSpineTimelineType.SPECIMEN));
-        processorDelegates.add(new MskimpactTimelineBrainSpineCompositeToCompositeProcessor(BrainSpineTimelineType.IMAGING));
+        processorDelegates.add(mskimpactTimelineBrainSpineModelToCompositeProcessorTypeStatus());
+        processorDelegates.add(mskimpactTimelineBrainSpineCompositeToCompositeProcessorTypeTreatment());
+        processorDelegates.add(mskimpactTimelineBrainSpineCompositeToCompositeProcessorTypeSurgery());
+        processorDelegates.add(mskimpactTimelineBrainSpineCompositeToCompositeProcessorTypeSpecimen());
+        processorDelegates.add(mskimpactTimelineBrainSpineCompositeToCompositeProcessorTypeImaging());
         CompositeItemProcessor processor = new CompositeItemProcessor<>();
         processor.setDelegates(processorDelegates);
         return processor;

@@ -45,6 +45,7 @@ import org.cbioportal.cmo.pipelines.cvr.requeue.*;
 import org.cbioportal.cmo.pipelines.cvr.seg.*;
 import org.cbioportal.cmo.pipelines.cvr.sv.*;
 import org.cbioportal.cmo.pipelines.cvr.variants.*;
+import org.cbioportal.cmo.pipelines.util.CVRUtils;
 import org.cbioportal.models.*;
 
 import java.util.*;
@@ -84,6 +85,10 @@ public class BatchConfiguration {
     
     private Logger log = Logger.getLogger(BatchConfiguration.class);
     
+    @Bean CVRUtils cvrUtils() {
+        return new CVRUtils();
+    }
+
     @Bean
     public Job gmlJob() {
         return jobBuilderFactory.get(GML_JOB)

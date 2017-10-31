@@ -29,16 +29,16 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+
 package org.mskcc.cmo.ks.darwin.pipeline.mskimpact_medicaltherapy;
 
-import org.mskcc.cmo.ks.darwin.pipeline.model.MskimpactMedicalTherapy;
-
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.collections.map.MultiKeyMap;
-
-import org.springframework.batch.item.ItemProcessor;
-
 import java.util.*;
+import org.apache.commons.collections.map.MultiKeyMap;
+import org.apache.commons.lang.StringUtils;
+import org.mskcc.cmo.ks.darwin.pipeline.model.MskimpactMedicalTherapy;
+import org.mskcc.cmo.ks.darwin.pipeline.util.DarwinUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.batch.item.ItemProcessor;
 
 /**
  * This processor takes a list of medical therapy records all for a single patient, grouped by
@@ -47,8 +47,11 @@ import java.util.*;
  *
  * @author Benjamin Gross
  */
-public class MskimpactMedicalTherapyProcessor implements ItemProcessor<List<MskimpactMedicalTherapy>, MskimpactMedicalTherapy>
-{
+public class MskimpactMedicalTherapyProcessor implements ItemProcessor<List<MskimpactMedicalTherapy>, MskimpactMedicalTherapy> {
+
+    @Autowired
+    private DarwinUtils darwinUtils;
+
     /**
      * All items in the list are identical with the exception of AGE_AT_DISPENSE_DATE_IN_DAYS, the time at which
      * the drug was dispensed to the patient.
@@ -60,16 +63,15 @@ public class MskimpactMedicalTherapyProcessor implements ItemProcessor<List<Mski
         MskimpactMedicalTherapy oldestRecord = listMedicalTherapyRecords.get(0);
         MskimpactMedicalTherapy youngestRecord = listMedicalTherapyRecords.get(listMedicalTherapyRecords.size()-1);
         // we can use any record in the list to populate all fields except for START_DATE, STOP_DATE
-        return new MskimpactMedicalTherapy(oldestRecord.getPT_ID_PHARMACY(),
-                                           oldestRecord.getDMP_ID_PHARMACY(),
+        return new MskimpactMedicalTherapy(darwinUtils.convertWhitespace(oldestRecord.getPT_ID_PHARMACY()),
+                                           darwinUtils.convertWhitespace(oldestRecord.getDMP_ID_PHARMACY()),
                                            -1,
-                                           oldestRecord.getGENERIC_DRUG_NAME(),
+                                           darwinUtils.convertWhitespace(oldestRecord.getGENERIC_DRUG_NAME()),
                                            oldestRecord.getDOSAGE(),
-                                           oldestRecord.getDOSE_UNIT(),
+                                           darwinUtils.convertWhitespace(oldestRecord.getDOSE_UNIT()),
                                            oldestRecord.getDISPENSED_QUANTITY(),
                                            oldestRecord.getAGE_AT_DISPENSE_DATE_IN_DAYS(),
                                            youngestRecord.getAGE_AT_DISPENSE_DATE_IN_DAYS());
-        
     }
 
     private void checkConsistencyOfRecords(List<MskimpactMedicalTherapy> listMedicalTherapyRecords) {
@@ -78,7 +80,6 @@ public class MskimpactMedicalTherapyProcessor implements ItemProcessor<List<Mski
             byRecordAttributes.put(record.getDMP_ID_PHARMACY(), record.getGENERIC_DRUG_NAME(),
                                  record.getDOSAGE(), record.getDOSE_UNIT(), record.getDISPENSED_QUANTITY());
         }
-
         assert byRecordAttributes.keySet().size() == 1;
     }
 }

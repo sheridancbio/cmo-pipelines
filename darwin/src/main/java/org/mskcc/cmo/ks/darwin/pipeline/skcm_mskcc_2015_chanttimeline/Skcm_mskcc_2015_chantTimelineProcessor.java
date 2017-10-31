@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Memorial Sloan-Kettering Cancer Center.
+ * Copyright (c) 2016 - 2017 Memorial Sloan-Kettering Cancer Center.
  *
  * This library is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS
@@ -29,31 +29,37 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+
 package org.mskcc.cmo.ks.darwin.pipeline.skcm_mskcc_2015_chanttimeline;
 
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.commons.lang.StringUtils;
-import org.springframework.batch.item.ItemProcessor;
 import org.mskcc.cmo.ks.darwin.pipeline.model.Skcm_mskcc_2015_chantTimelineRecord;
+import org.mskcc.cmo.ks.darwin.pipeline.util.DarwinUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.batch.item.ItemProcessor;
 
 /**
  *
  * @author heinsz
  */
 public class Skcm_mskcc_2015_chantTimelineProcessor implements ItemProcessor<Skcm_mskcc_2015_chantTimelineRecord, String> {
-    
+
+    @Autowired
+    private DarwinUtils darwinUtils;
+
     @Override
-    public String process(final Skcm_mskcc_2015_chantTimelineRecord melanomaTimelineRecord) throws Exception{
+    public String process(final Skcm_mskcc_2015_chantTimelineRecord melanomaTimelineRecord) throws Exception {
         List<String> record = new ArrayList<>();
         for (String field : melanomaTimelineRecord.getFieldNames()) {
             String value = melanomaTimelineRecord.getClass().getMethod("get" + field).invoke(melanomaTimelineRecord).toString();
+            value = darwinUtils.convertWhitespace(value);
             if (field.equals("STOP_DATE") && value.equals("-1")) {
                 value = "";
-            } 
+            }
             record.add(value);
         }
-        
         return StringUtils.join(record, "\t");
-    }    
+    }
 }

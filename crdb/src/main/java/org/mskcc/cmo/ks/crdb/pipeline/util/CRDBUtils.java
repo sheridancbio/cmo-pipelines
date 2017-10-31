@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 - 2017 Memorial Sloan-Kettering Cancer Center.
+ * Copyright (c) 2017 Memorial Sloan-Kettering Cancer Center.
  *
  * This library is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS
@@ -30,29 +30,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-package org.mskcc.cmo.ks.darwin.pipeline.age;
+package org.mskcc.cmo.ks.crdb.pipeline.util;
 
-import java.util.*;
-import org.apache.commons.lang.StringUtils;
-import org.mskcc.cmo.ks.darwin.pipeline.model.*;
-import org.mskcc.cmo.ks.darwin.pipeline.util.DarwinUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.batch.item.ItemProcessor;
+public class CRDBUtils {
 
-/**
- *
- * @author heinsz
- */
-public class MskimpactAgeProcessor implements ItemProcessor<MskimpactPatientDemographics, String> {
+    public CRDBUtils() {}
 
-    @Autowired
-    private DarwinUtils darwinUtils;
-
-    @Override
-    public String process(MskimpactPatientDemographics i) throws Exception {
-        List<String> record = new ArrayList<>();
-        record.add(darwinUtils.convertWhitespace(i.getDMP_ID_DEMO()));
-        record.add(darwinUtils.convertWhitespace(i.getYearsSinceBirth()));
-        return StringUtils.join(record, "\t");
+    public String convertWhitespace(String s) {
+        return s.replaceAll("^[\\t|\\n|\\r]+", "").replaceAll("[\\t|\\n|\\r]+$", "").replaceAll("[\\t|\\n|\\r]+", " ");
     }
+    
 }
