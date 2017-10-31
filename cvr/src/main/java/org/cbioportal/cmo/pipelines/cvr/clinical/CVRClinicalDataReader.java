@@ -96,13 +96,13 @@ public class CVRClinicalDataReader implements ItemStreamReader<CVRClinicalRecord
 
     @Override
     public CVRClinicalRecord read() throws Exception {
-        if (!clinicalRecords.isEmpty()) {
+        while (!clinicalRecords.isEmpty()) {
             CVRClinicalRecord record = clinicalRecords.remove(0);
             // portal samples may or may not be filtered by 'portalSamplesNotInDmp' is threshold check above
             // so we want to skip samples that aren't in this list
             if (!cvrSampleListUtil.getPortalSamples().contains(record.getSAMPLE_ID())) {
                 cvrSampleListUtil.addSampleRemoved(record.getSAMPLE_ID());
-                return read();
+                continue;
             }
             return record;
         }

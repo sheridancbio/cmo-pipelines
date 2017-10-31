@@ -157,11 +157,11 @@ public class CVRFusionDataReader implements ItemStreamReader<CVRFusionRecord> {
 
     @Override
     public CVRFusionRecord read() throws Exception {
-        if (!fusionRecords.isEmpty()) {
+        while (!fusionRecords.isEmpty()) {
             CVRFusionRecord record = fusionRecords.remove(0);
             if (!cvrSampleListUtil.getPortalSamples().contains(record.getTumor_Sample_Barcode())) {
                 cvrSampleListUtil.addSampleRemoved(record.getTumor_Sample_Barcode());
-                return read();
+                continue;
             }
             return record;
         }
