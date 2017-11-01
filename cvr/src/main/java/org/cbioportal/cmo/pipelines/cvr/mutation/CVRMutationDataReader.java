@@ -93,6 +93,22 @@ public class CVRMutationDataReader implements ItemStreamReader<AnnotatedRecord> 
         }
 
         Set<String> header = new LinkedHashSet<>();
+        int snpsToAnnotateCount = 0;
+        int annotatedSnpsCount = 0;
+        // this loop is just to get the snpsToAnnotateCount
+        for (CVRMergedResult result : cvrData.getResults()) {
+            List<CVRSnp> snps = new ArrayList<>();
+            snps.addAll(result.getSnpIndelExonic());
+            snps.addAll(result.getSnpIndelExonicNp());
+            snps.addAll(result.getSnpIndelSilent());
+            snps.addAll(result.getSnpIndelSilentNp());
+            for (CVRSnp snp : snps) {
+                if (snp.getClinicalSignedOut().equals("1")) {
+                    snpsToAnnotateCount++;
+                }
+            }
+        }
+        log.info(String.valueOf(snpsToAnnotateCount) + " records to annotate");
         for (CVRMergedResult result : cvrData.getResults()) {
             String sampleId = result.getMetaData().getDmpSampleId();
             String somaticStatus = result.getMetaData().getSomaticStatus() != null ? result.getMetaData().getSomaticStatus() : "N/A";
@@ -101,24 +117,12 @@ public class CVRMutationDataReader implements ItemStreamReader<AnnotatedRecord> 
             snps.addAll(result.getSnpIndelExonicNp());
             snps.addAll(result.getSnpIndelSilent());
             snps.addAll(result.getSnpIndelSilentNp());
-            int snpsToAnnotateCount = 0;
-            int countSignedOutSnps = 0; // right now countSignedOutSnps and snpsToAnnotateCount are the same, but really snpsToAnnotateCount should be for all samples (TODO)
-            int annotatedSnpsCount = 0;
+            int countSignedOutSnps = 0;
             for (CVRSnp snp : snps) {
                 if (snp.getClinicalSignedOut().equals("1")) {
-                    snpsToAnnotateCount++;
                     countSignedOutSnps++;
-                }
-            }
-            if (!stopZeroVariantWarnings && countSignedOutSnps == 0) {
-                log.warn(sampleId + " has no snps (might be whitelisted)");
-                cvrSampleListUtil.addZeroVariantSample(sampleId);
-            }
-            log.info(String.valueOf(snpsToAnnotateCount) + " records to annotate");
-            for (CVRSnp snp : snps) {
-                if (snp.getClinicalSignedOut().equals("1")) {
                     annotatedSnpsCount++;
-                    if (annotatedSnpsCount % 2000 == 0) {
+                    if (annotatedSnpsCount % 500 == 0) {
                         log.info("\tOn record " + String.valueOf(annotatedSnpsCount) + " out of " + String.valueOf(snpsToAnnotateCount) + ", annotation " + String.valueOf((int)(((annotatedSnpsCount * 1.0)/snpsToAnnotateCount) * 100)) + "% complete");
                     }
                     MutationRecord record = cvrUtilities.buildCVRMutationRecord(snp, sampleId, somaticStatus);
@@ -134,6 +138,10 @@ public class CVRMutationDataReader implements ItemStreamReader<AnnotatedRecord> 
                     additionalPropertyKeys.addAll(annotatedRecord.getAdditionalProperties().keySet());
                     mutationMap.getOrDefault(annotatedRecord.getTUMOR_SAMPLE_BARCODE(), new ArrayList()).add(annotatedRecord);
                 }
+            }
+            if (!stopZeroVariantWarnings && countSignedOutSnps == 0) {
+                log.warn(sampleId + " has no snps (might be whitelisted)");
+                cvrSampleListUtil.addZeroVariantSample(sampleId);
             }
         }
 
