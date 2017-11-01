@@ -32,9 +32,11 @@
 
 package org.mskcc.cmo.ks.darwin.pipeline.mskimpactdemographics;
 
+import org.mskcc.cmo.ks.darwin.pipeline.model.MskimpactPatientDemographics;
+import org.mskcc.cmo.ks.darwin.pipeline.model.MskimpactCompositeDemographics;
+
 import java.util.*;
 import org.apache.commons.lang.StringUtils;
-import org.mskcc.cmo.ks.darwin.pipeline.model.MskimpactPatientDemographics;
 import org.mskcc.cmo.ks.darwin.pipeline.util.DarwinUtils;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,18 +45,33 @@ import org.springframework.beans.factory.annotation.Autowired;
  *
  * @author jake
  */
-public class MskimpactPatientDemographicsProcessor implements ItemProcessor<MskimpactPatientDemographics, String> {
+public class MskimpactPatientDemographicsProcessor implements ItemProcessor<MskimpactPatientDemographics, MskimpactCompositeDemographics> {
 
     @Autowired
     private DarwinUtils darwinUtils;
 
     @Override
-    public String process(final MskimpactPatientDemographics darwinPatientDemographics) throws Exception {
-        List<String> record = new ArrayList<>();
-        for (String field : new MskimpactPatientDemographics().getFieldNames()) {
-            Object value = darwinPatientDemographics.getClass().getMethod("get"+field).invoke(darwinPatientDemographics);
-            record.add(value != null ? darwinUtils.convertWhitespace(value.toString()) : "NA");
+    public MskimpactCompositeDemographics process(final MskimpactPatientDemographics darwinPatientDemographics) throws Exception{
+        // format results for demographics, age, and survival status
+        List<String> patientDemographicsResult = new ArrayList<>();        
+        for(String field : MskimpactPatientDemographics.getPatientDemographicsFieldNames()){
+            Object value = darwinPatientDemographics.getClass().getMethod("get"+field).invoke(darwinPatientDemographics);            
+            patientDemographicsResult.add(value != null ? darwinUtils.convertWhitespace(value.toString()) : "NA");
         }
-        return StringUtils.join(record, "\t");
+        List<String> patientAgeResult = new ArrayList<>();
+        for(String field : MskimpactPatientDemographics.getAgeFieldNames()){
+            Object value = darwinPatientDemographics.getClass().getMethod("get"+field).invoke(darwinPatientDemographics);            
+            patientAgeResult.add(value != null ? darwinUtils.convertWhitespace(value.toString()) : "NA");
+        }
+        List<String> patientVitalStatusResult = new ArrayList<>();
+        for(String field : MskimpactPatientDemographics.getVitalStatusFieldNames()){
+            Object value = darwinPatientDemographics.getClass().getMethod("get"+field).invoke(darwinPatientDemographics);            
+            patientVitalStatusResult.add(value != null ? darwinUtils.convertWhitespace(value.toString()) : "NA");
+        }
+        MskimpactCompositeDemographics compositeRecord = new MskimpactCompositeDemographics();
+        compositeRecord.setDemographicsResult(StringUtils.join(patientDemographicsResult, "\t"));
+        compositeRecord.setAgeResult(StringUtils.join(patientAgeResult, "\t"));
+        compositeRecord.setVitalStatusResult(StringUtils.join(patientVitalStatusResult, "\t"));
+        return compositeRecord;
     }
 }

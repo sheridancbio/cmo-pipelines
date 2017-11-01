@@ -30,7 +30,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-package org.mskcc.cmo.ks.darwin.pipeline.age;
+package org.mskcc.cmo.ks.darwin.pipeline.model;
 
 import java.util.*;
 import org.apache.commons.lang.StringUtils;
@@ -41,18 +41,54 @@ import org.springframework.batch.item.ItemProcessor;
 
 /**
  *
- * @author heinsz
+ * @author ochoaa
  */
-public class MskimpactAgeProcessor implements ItemProcessor<MskimpactPatientDemographics, String> {
-
-    @Autowired
-    private DarwinUtils darwinUtils;
-
-    @Override
-    public String process(MskimpactPatientDemographics i) throws Exception {
-        List<String> record = new ArrayList<>();
-        record.add(darwinUtils.convertWhitespace(i.getDMP_ID_DEMO()));
-        record.add(darwinUtils.convertWhitespace(i.getYearsSinceBirth()));
-        return StringUtils.join(record, "\t");
+public class MskimpactCompositeDemographics {
+    private String demographicsResult;
+    private String ageResult;
+    private String vitalStatusResult;
+    
+    public MskimpactCompositeDemographics(){}
+    
+    /**
+     * @return the demographicsResult
+     */
+    public String getDemographicsResult() {
+        return demographicsResult;
     }
+
+    /**
+     * @param demographicsResult the demographicsResult to set
+     */
+    public void setDemographicsResult(String demographicsResult) {
+        this.demographicsResult = demographicsResult;
+    }
+
+    /**
+     * @return the ageResult
+     */
+    public String getAgeResult() {
+        return ageResult;
+    }
+
+    /**
+     * @param ageResult the ageResult to set
+     */
+    public void setAgeResult(String ageResult) {
+        this.ageResult = ageResult;
+    }
+
+    /**
+     * @return the vitalStatusResult
+     */
+    public String getVitalStatusResult() {
+        return vitalStatusResult;
+    }
+
+    /**
+     * @param vitalStatusResult the vitalStatusResult to set
+     */
+    public void setVitalStatusResult(String vitalStatusResult) {
+        this.vitalStatusResult = vitalStatusResult;
+    }    
 }

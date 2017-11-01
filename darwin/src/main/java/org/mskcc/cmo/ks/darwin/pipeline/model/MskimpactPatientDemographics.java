@@ -344,7 +344,7 @@ public class MskimpactPatientDemographics {
         return ToStringBuilder.reflectionToString(this);
     }
 
-    public static List<String> getFieldNames() {
+    public static List<String> getPatientDemographicsFieldNames() {
         List<String> fieldNames = new ArrayList<>();
         fieldNames.add("DMP_ID_DEMO");
         fieldNames.add("DARWIN_PATIENT_AGE");
@@ -354,14 +354,11 @@ public class MskimpactPatientDemographics {
         fieldNames.add("ETHNICITY");
         fieldNames.add("OS_STATUS");
         fieldNames.add("OS_MONTHS");
-        fieldNames.add("AGE_AT_DATE_OF_DEATH_IN_DAYS");
-        fieldNames.add("AGE_AT_LAST_KNOWN_ALIVE_IN_DAYS");
         fieldNames.add("PED_IND");
-
         return fieldNames;
-
     }
-    public static List<String> getHeaders() {
+    
+    public static List<String> getPatientDemographicsHeaders() {
         List<String> fieldNames = new ArrayList<>();
         fieldNames.add("PATIENT_ID");
         fieldNames.add("AGE_CURRENT"); // DARWIN_PATIENT_AGE has been renamed
@@ -371,12 +368,15 @@ public class MskimpactPatientDemographics {
         fieldNames.add("ETHNICITY");
         fieldNames.add("OS_STATUS");
         fieldNames.add("OS_MONTHS");
-        fieldNames.add("AGE_AT_DEATH");
-        fieldNames.add("AGE_AT_LAST_FOLLOWUP");
         fieldNames.add("PED_IND");
-
         return fieldNames;
-
+    }
+    
+    public static List<String> getAgeFieldNames() {
+        List<String> fieldNames = new ArrayList<>();
+        fieldNames.add("DMP_ID_DEMO");
+        fieldNames.add("YearsSinceBirth");
+        return fieldNames;
     }
     
     public static List<String> getAgeHeaders() {
@@ -385,7 +385,23 @@ public class MskimpactPatientDemographics {
         fieldNames.add("AGE");
         return fieldNames;
     }
-
+    
+    public static List<String> getVitalStatusFieldNames() {
+        List<String> fieldNames = new ArrayList<>();
+        fieldNames.add("DMP_ID_DEMO");
+        fieldNames.add("AGE_AT_DATE_OF_DEATH_IN_DAYS");
+        fieldNames.add("AGE_AT_LAST_KNOWN_ALIVE_IN_DAYS");
+        return fieldNames;
+    }
+    
+    public static List<String> getVitalStatusHeaders() {
+        List<String> fieldNames = new ArrayList<>();
+        fieldNames.add("PATIENT_ID");
+        fieldNames.add("AGE_AT_DEATH");
+        fieldNames.add("AGE_AT_LAST_FOLLOWUP");
+        return fieldNames;
+    }
+    
     public void setAdditionalProperty(String name, Object value) {
         this.additionalProperties.put(name, value);
     }
