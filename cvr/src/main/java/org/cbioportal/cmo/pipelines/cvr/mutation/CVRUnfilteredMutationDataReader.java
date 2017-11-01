@@ -90,6 +90,16 @@ public class CVRUnfilteredMutationDataReader implements ItemStreamReader<Annotat
         }
 
         Set<String> header = new LinkedHashSet<>();
+        int snpsToAnnotateCount = 0;
+        int annotatedSnpsCount = 0;
+        // this loop is just to get the snpsToAnnotateCount
+        for (CVRMergedResult result : cvrData.getResults()) {
+            snpsToAnnotateCount += result.getSnpIndelExonic().size();
+            snpsToAnnotateCount += result.getSnpIndelExonicNp().size();
+            snpsToAnnotateCount += result.getSnpIndelSilent().size();
+            snpsToAnnotateCount += result.getSnpIndelSilentNp().size();
+        }
+        log.info(String.valueOf(snpsToAnnotateCount) + " records to annotate");
         for (CVRMergedResult result : cvrData.getResults()) {
             String sampleId = result.getMetaData().getDmpSampleId();
             String somaticStatus = result.getMetaData().getSomaticStatus() != null ? result.getMetaData().getSomaticStatus() : "N/A";
@@ -98,12 +108,9 @@ public class CVRUnfilteredMutationDataReader implements ItemStreamReader<Annotat
             snps.addAll(result.getSnpIndelExonicNp());
             snps.addAll(result.getSnpIndelSilent());
             snps.addAll(result.getSnpIndelSilentNp());
-            int snpsToAnnotateCount = snps.size();
-            int annotatedSnpsCount = 0;
-            log.info(String.valueOf(snpsToAnnotateCount) + " records to annotate");
             for (CVRSnp snp : snps) {
                 annotatedSnpsCount++;
-                if (annotatedSnpsCount % 2000 == 0) {
+                if (annotatedSnpsCount % 500 == 0) {
                     log.info("\tOn record " + String.valueOf(annotatedSnpsCount) + " out of " + String.valueOf(snpsToAnnotateCount) + ", annotation " + String.valueOf((int)(((annotatedSnpsCount * 1.0)/snpsToAnnotateCount) * 100)) + "% complete");
                 }
                 MutationRecord record = cvrUtilities.buildCVRMutationRecord(snp, sampleId, somaticStatus);
