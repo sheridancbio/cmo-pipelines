@@ -46,7 +46,7 @@ def load_current_samples(clinical_file):
 		# only want to update date added info for new samples
 		if line['SAMPLE_ID'] in EXISTING_DATE_ADDED_DATA.keys():
 			continue
-		NEW_SAMPLE_DATA[line['SAMPLE_ID']] = {'PATIENT_ID':line['PATIENT_ID']}
+		NEW_SAMPLE_DATA[line['SAMPLE_ID']] = {'SAMPLE_ID':line['SAMPLE_ID'], 'PATIENT_ID':line['PATIENT_ID']}
 		NEW_SAMPLE_DATA[line['SAMPLE_ID']].update(DATE_ADDED_DATA)
 	data_file.close()
 
@@ -64,8 +64,7 @@ def generate_todays_date_added_data():
 	date_added = datetime.strftime(now, '%Y/%m/%d')
 	month_added = datetime.strftime(now, '%Y/%m')
 	week_added = str(now.year) + ', Wk. ' + date(now.year, now.month, now.day).strftime('%V')
-
-	DATE_ADDED_DATA = {'DATE_ADDED': date_added, 'MONTH_ADDED':month_added, 'WEEK_ADDED':week_added}
+	DATE_ADDED_DATA.update({'DATE_ADDED':date_added, 'MONTH_ADDED':month_added, 'WEEK_ADDED':week_added})
 
 def usage():
 	print 'python update-date-added.py --clinical-file [path/to/clinical/file] --date-added-file [path/to/date/added/file]'
