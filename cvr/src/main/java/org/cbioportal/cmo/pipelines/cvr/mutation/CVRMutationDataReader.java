@@ -98,8 +98,20 @@ public class CVRMutationDataReader implements ItemStreamReader<AnnotatedRecord> 
             snps.addAll(result.getSnpIndelExonicNp());
             snps.addAll(result.getSnpIndelSilent());
             snps.addAll(result.getSnpIndelSilentNp());
+            int snpsToAnnotateCount = 0;
+            int annotatedSnpsCount = 0;
             for (CVRSnp snp : snps) {
                 if (snp.getClinicalSignedOut().equals("1")) {
+                    snpsToAnnotateCount++;
+                }
+            }
+            log.info(String.valueOf(snpsToAnnotateCount) + " records to annotate");
+            for (CVRSnp snp : snps) {
+                if (snp.getClinicalSignedOut().equals("1")) {
+                    annotatedSnpsCount++;
+                    if (annotatedSnpsCount % 2000 == 0) {
+                        log.info("\tOn record " + String.valueOf(annotatedSnpsCount) + " out of " + String.valueOf(snpsToAnnotateCount) + ", annotation " + String.valueOf((int)(((annotatedSnpsCount * 1.0)/snpsToAnnotateCount) * 100)) + "% complete");
+                    }
                     MutationRecord record = cvrUtilities.buildCVRMutationRecord(snp, sampleId, somaticStatus);
                     AnnotatedRecord annotatedRecord;
                     try {

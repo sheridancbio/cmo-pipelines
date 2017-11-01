@@ -98,11 +98,28 @@ public class GMLMutationDataReader implements ItemStreamReader<AnnotatedRecord> 
             List<String> samples = cvrSampleListUtil.getGmlPatientSampleMap().get(patientId);
             List<GMLSnp> snps = result.getSnpIndelGml();
             if (samples != null && snps != null) {
+                int snpsToAnnotateCount = 0;
+                int annotatedSnpsCount = 0;
                 for (GMLSnp snp : snps) {
                     if (snp.getClinicalSignedOut().equals("0")) {
                         continue;
                     }
                     for (String sampleId : samples) {
+                        snpsToAnnotateCount++;
+                    }
+                }
+                if (snpsToAnnotateCount != 0) {
+                    log.info(String.valueOf(snpsToAnnotateCount) + " records to annotate");
+                }
+                for (GMLSnp snp : snps) {
+                    if (snp.getClinicalSignedOut().equals("0")) {
+                        continue;
+                    }
+                    for (String sampleId : samples) {
+                        annotatedSnpsCount++;
+                        if (annotatedSnpsCount % 2000 == 0) {
+                            log.info("\tOn record " + String.valueOf(annotatedSnpsCount) + " out of " + String.valueOf(snpsToAnnotateCount) + ", annotation " + String.valueOf((int)(((annotatedSnpsCount * 1.0)/snpsToAnnotateCount) * 100)) + "% complete");
+                        }
                         MutationRecord record = cvrUtilities.buildGMLMutationRecord(snp, sampleId);
                         AnnotatedRecord annotatedRecord;
                         try {
