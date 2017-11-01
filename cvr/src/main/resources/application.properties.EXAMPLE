@@ -44,3 +44,5 @@ email.subject=Failure in CVR Pipeline
 # for emails that dmp should be included on
 dmp.email.sender=
 dmp.email.recipient=
+
+whitelisted_samples=

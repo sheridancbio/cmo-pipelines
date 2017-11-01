@@ -60,6 +60,9 @@ public class CVRMutationDataReader implements ItemStreamReader<AnnotatedRecord> 
     @Value("#{jobParameters[forceAnnotation]}")
     private boolean forceAnnotation;
 
+    @Value("#{jobParameters[stopZeroVariantWarnings]}")
+    private boolean stopZeroVariantWarnings;
+
     @Autowired
     public CVRUtilities cvrUtilities;
     
@@ -99,11 +102,17 @@ public class CVRMutationDataReader implements ItemStreamReader<AnnotatedRecord> 
             snps.addAll(result.getSnpIndelSilent());
             snps.addAll(result.getSnpIndelSilentNp());
             int snpsToAnnotateCount = 0;
+            int countSignedOutSnps = 0; // right now countSignedOutSnps and snpsToAnnotateCount are the same, but really snpsToAnnotateCount should be for all samples (TODO)
             int annotatedSnpsCount = 0;
             for (CVRSnp snp : snps) {
                 if (snp.getClinicalSignedOut().equals("1")) {
                     snpsToAnnotateCount++;
+                    countSignedOutSnps++;
                 }
+            }
+            if (!stopZeroVariantWarnings && countSignedOutSnps == 0) {
+                log.warn(sampleId + " has no snps (might be whitelisted)");
+                cvrSampleListUtil.addZeroVariantSample(sampleId);
             }
             log.info(String.valueOf(snpsToAnnotateCount) + " records to annotate");
             for (CVRSnp snp : snps) {
