@@ -64,6 +64,7 @@ public class CVRPipeline {
             .addOption("c", "consume_samples", true, "Path to CVR json filename")
             .addOption("r", "max_samples_to_remove", true, "The max number of samples that can be removed from data")
             .addOption("f", "force_annotation", false, "Flag for forcing reannotation of samples")
+            .addOption("b", "block_zero_variant_warnings", false, "Flag to turn off warnings for samples with no variants")
             .addOption("n", "name_of_clinical_file", true, "Clinical filename.  Default is data_clinical.txt");
         return options;
     }
@@ -75,7 +76,8 @@ public class CVRPipeline {
     }
 
     private static void launchCvrPipelineJob(String[] args, String directory, String studyId, Boolean json, Boolean gml,
-            Boolean skipSeg, boolean testingMode, Integer maxNumSamplesToRemove, Boolean forceAnnotation, String clinicalFilename) throws Exception {
+            Boolean skipSeg, boolean testingMode, Integer maxNumSamplesToRemove, Boolean forceAnnotation, String clinicalFilename,
+            Boolean stopZeroVariantWarnings) throws Exception {
         // log wether in testing mode or not
         if (testingMode) {
             log.warn("CvrPipelineJob running in TESTING MODE - samples will NOT be requeued.");
@@ -95,7 +97,8 @@ public class CVRPipeline {
                 .addString("testingMode", String.valueOf(testingMode))
                 .addString("maxNumSamplesToRemove", String.valueOf(maxNumSamplesToRemove))
                 .addString("forceAnnotation", String.valueOf(forceAnnotation))
-                .addString("clinicalFilename", clinicalFilename);
+                .addString("clinicalFilename", clinicalFilename)
+                .addString("stopZeroVariantWarnings", String.valueOf(stopZeroVariantWarnings));
         if (json) {
             if (gml) {
                 jobName = BatchConfiguration.GML_JSON_JOB;
@@ -197,7 +200,7 @@ public class CVRPipeline {
             }
             launchCvrPipelineJob(args, commandLine.getOptionValue("d"), commandLine.getOptionValue("i"),
                 commandLine.hasOption("j"), commandLine.hasOption("g"), commandLine.hasOption("s"),
-                commandLine.hasOption("t"), maxNumSamplesToRemove, commandLine.hasOption("f"), clinicalFilename);
+                commandLine.hasOption("t"), maxNumSamplesToRemove, commandLine.hasOption("f"), clinicalFilename, commandLine.hasOption("b"));
         }
     }
 }

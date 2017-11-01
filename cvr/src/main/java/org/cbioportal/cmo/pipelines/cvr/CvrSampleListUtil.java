@@ -36,6 +36,7 @@ import org.apache.log4j.Logger;
 import java.util.*;
 import org.cbioportal.cmo.pipelines.cvr.model.CvrResponse;
 import org.springframework.context.annotation.*;
+import org.springframework.beans.factory.annotation.Value;
 
 /**
  *
@@ -43,6 +44,9 @@ import org.springframework.context.annotation.*;
  */
 @Configuration
 public class CvrSampleListUtil {
+
+    @Value("#{'${whitelisted_samples:}'.split(',')}")
+    public List<String> whitelistedSamples;
 
     private CvrResponse cvrResponse;
     private Set<String> dmpMasterList = new HashSet<>();
@@ -55,6 +59,7 @@ public class CvrSampleListUtil {
     private Integer maxNumSamplesToRemove;
     private Set<String> samplesRemovedList = new HashSet<>();
     private Map<String, String> sampleListStats = new HashMap<>();
+    private Set<String> zeroVariantSamples = new HashSet<>();
 
     Logger log = Logger.getLogger(CvrSampleListUtil.class);
     
@@ -292,6 +297,23 @@ public class CvrSampleListUtil {
     public void addSampleRemoved(String sampleId) {
         this.samplesRemovedList.add(sampleId);
     }    
+
+    /**
+     * @param sampleId the sampleId to add
+     */
+    public void addZeroVariantSample(String sampleId) {
+        this.zeroVariantSamples.add(sampleId);
+    }
+
+    /**
+     * @return the non whitelisted sample ids of samples that have zero variants
+     */
+    public Set<String> getNonWhitelistedZeroVariantSamples() {
+        Set<String> tmpzeroVariantSamples = new HashSet<>(zeroVariantSamples);
+        tmpzeroVariantSamples.removeAll(whitelistedSamples);
+        return tmpzeroVariantSamples;
+    }
+
     private void saveSampleListStats() {
         Map<String, String> sampleListStats = new HashMap<>();
         sampleListStats.put("dmpMasterList", String.valueOf(dmpMasterList.size()));

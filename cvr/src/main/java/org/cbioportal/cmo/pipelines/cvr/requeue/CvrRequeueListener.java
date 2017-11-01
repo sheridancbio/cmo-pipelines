@@ -32,6 +32,7 @@
 
 package org.cbioportal.cmo.pipelines.cvr.requeue;
 
+import org.cbioportal.cmo.pipelines.cvr.CvrSampleListUtil;
 import org.cbioportal.cmo.pipelines.cvr.EmailUtil;
 import org.cbioportal.cmo.pipelines.cvr.model.CVRRequeueRecord;
 
@@ -51,13 +52,16 @@ public class CvrRequeueListener implements StepExecutionListener {
     private EmailUtil emailUtil;
 
     @Value("${dmp.email.sender}")
-    private  String sender;
+    private String sender;
 
     @Value("${dmp.email.recipient}")
-    private  String dmpRecipient;
+    private String dmpRecipient;
 
     @Value("${email.recipient}")
-    private  String defaultRecipient;
+    private String defaultRecipient;
+
+    @Autowired
+    public CvrSampleListUtil cvrSampleListUtil;
 
     Logger log = Logger.getLogger(CvrRequeueListener.class);
     
@@ -74,6 +78,7 @@ public class CvrRequeueListener implements StepExecutionListener {
         Set<String> samplesRemoved = (Set<String>) stepExecution.getJobExecution().getExecutionContext().get("samplesRemoved");
         Map<String, String> sampleListStats = (Map<String, String>) stepExecution.getJobExecution().getExecutionContext().get("sampleListStats");
         List<CVRRequeueRecord> failedToRequeueSamples = (List<CVRRequeueRecord>) stepExecution.getJobExecution().getExecutionContext().get("failedToRequeueSamples");
+        Set<String> zeroVariantSamples = cvrSampleListUtil.getNonWhitelistedZeroVariantSamples();
     
         String subject = "CVR pipeline master list errors: " +  studyId;
         StringBuilder body = new StringBuilder();
@@ -103,6 +108,8 @@ public class CvrRequeueListener implements StepExecutionListener {
                 if (count <= 30) {
                     body.append("\n\t");
                     body.append(sample);
+                } else {
+                    break;
                 }
                 count++;
             }
@@ -125,7 +132,32 @@ public class CvrRequeueListener implements StepExecutionListener {
             }
             body.append("\n");
         }
- 
+
+        // build email body text for samples that have zero variants and are not whitelisted
+        if (zeroVariantSamples != null && zeroVariantSamples.size() > 0) {
+            log.warn(zeroVariantSamples.size() + " samples from have zero variants and are not whitelisted");
+            body.append("\nSamples that have zero variants and are not whitelisted:\n");
+            int count = 1;
+            for (String sampleId : zeroVariantSamples) {
+                if (count <= 30) {
+                    body.append("\n\t");
+                    body.append(sampleId);
+                } else {
+                    break;
+                }
+                count++;
+            }
+            if (zeroVariantSamples.size() > 30) {
+                String additionalSamples = "\n\tplus " + String.valueOf(zeroVariantSamples.size() - 30) + " additional samples";
+                body.append("\n\t...");
+                body.append(additionalSamples);
+            }
+            body.append("\n");
+        }
+        else {
+            log.info("No samples had zero variants that were not whitelisted");
+        }
+
         if (sampleListStats != null && !sampleListStats.isEmpty()) {
             body.append("\nSample list counts: ");
             for (String listName : sampleListStats.keySet()) {
