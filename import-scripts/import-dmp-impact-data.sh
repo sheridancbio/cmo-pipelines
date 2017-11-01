@@ -194,7 +194,8 @@ fi
 # fetch new/updated archer samples using CVR Web service (must come after mercurial fetching).
 echo "fetching CVR archer data..."
 echo $(date)
-$JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -jar $PORTAL_HOME/lib/cvr_fetcher.jar -d $MSK_ARCHER_DATA_HOME -i mskarcher -s
+# archer has -b option to block warnings for samples with zero variants (all samples will have zero variants)
+$JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -jar $PORTAL_HOME/lib/cvr_fetcher.jar -d $MSK_ARCHER_DATA_HOME -i mskarcher -s -b
 if [ $? -gt 0 ]; then
     echo "CVR Archer fetch failed!"
     echo "This will not affect importing of mskimpact"
