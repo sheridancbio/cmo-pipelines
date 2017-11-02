@@ -1,6 +1,10 @@
 #!/bin/bash
 
 # set necessary env variables with automation-environment.sh
+if [[ -z $PORTAL_HOME || -z $JAVA_HOME ]] ; then
+    echo "Error : import-public-data.sh cannot be run without setting PORTAL_HOME and JAVA_HOME environment variables. (Use automation-environment.sh)"
+    exit 1
+fi
 
 tmp=$PORTAL_HOME/tmp/import-cron-public
 if [[ -d "$tmp" && "$tmp" != "/" ]]; then
@@ -35,16 +39,25 @@ if [ $DB_VERSION_FAIL -eq 0 ]; then
         echo -e "$EMAIL_BODY" | mail -s "Import failure: public" $email_list
     fi
     num_studies_updated=`cat $tmp/num_studies_updated.txt`
+    echo "'$num_studies_updated' studies have been updated"
+fi
 
-    # redeploy war
-    if [[ $IMPORT_FAIL -eq 0 && $num_studies_updated -gt 0 ]]; then
-        echo "'$num_studies_updated' studies have been updated, requesting redeployment of public portal war..."
-        ssh -i $HOME/.ssh/id_rsa_public_tomcat_restarts_key cbioportal_importer@dashi.cbio.mskcc.org touch /srv/data/portal-cron/public-tomcat-restart
-        ssh -i $HOME/.ssh/id_rsa_public_tomcat_restarts_key cbioportal_importer@dashi2.cbio.mskcc.org touch /srv/data/portal-cron/public-tomcat-restart
-        echo "'$num_studies_updated' studies have been updated (no longer need to restart public-tomcat server...)"
-    else
-        echo "No studies have been updated, skipping redeploy of public portal war..."
+echo "requesting redeployment of public portal war..."
+TOMCAT_HOST_LIST=(dashi.cbio.mskcc.org dashi2.cbio.mskcc.org)
+TOMCAT_HOST_USERNAME=cbioportal_importer
+TOMCAT_HOST_SSH_KEY_FILE=${HOME}/.ssh/id_rsa_public_tomcat_restarts_key
+TOMCAT_SERVER_RESTART_PATH=/srv/data/portal-cron/public-tomcat-restart
+SSH_OPTIONS="-i ${TOMCAT_HOST_SSH_KEY_FILE} -o BATCHMODE=yes -o ConnectTimeout=3"
+declare -a failed_restart_server_list
+for server in ${TOMCAT_HOST_LIST[@]}; do
+    if ! ssh ${SSH_OPTIONS} ${TOMCAT_HOST_USERNAME}@${server} touch ${TOMCAT_SERVER_RESTART_PATH} ; then
+        failed_restart_server_list[${#failed_restart_server_list[*]}]=${server}
     fi
+done
+if [ ${#failed_restart_server_list[*]} -ne 0 ] ; then
+    EMAIL_BODY="Attempt to trigger a restart of the public-tomcat server on the following hosts failed: ${failed_restart_server_list[*]}"
+    echo -e "Sending email $EMAIL_BODY"
+    echo -e "$EMAIL_BODY" | mail -s "Public Tomcat Restart Error : unable to trigger restart" $email_list
 fi
 
 EMAIL_BODY="The Public database version is incompatible. Imports will be skipped until database is updated."
@@ -56,6 +69,6 @@ fi
 
 $JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27185 -Xmx16g -ea -Dspring.profiles.active=dbcp -Djava.io.tmpdir="$tmp" -cp $PORTAL_HOME/lib/public-importer.jar org.mskcc.cbio.importer.Admin --send-update-notification --portal public-portal --notification-file "$public_portal_notification_file"
 
-if [[ -d "$tmp" && "$tmp" != "/" ]]; then    
+if [[ -d "$tmp" && "$tmp" != "/" ]]; then
     rm -rf "$tmp"/*
 fi
