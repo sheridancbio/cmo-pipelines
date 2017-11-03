@@ -57,10 +57,12 @@ import org.springframework.web.client.RestTemplate;
 public class MetadataManagerRedcapImpl implements MetadataManager {
 
     @Autowired
+    private MetadataCache metadataCache;
+
+    @Autowired
     private RedcapSessionManager redcapSessionManager;
 
-    private List<RedcapAttributeMetadata> metadata;
-    private List<RedcapAttributeMetadata> namespace;
+    private List<RedcapAttributeMetadata> namespace; //TODO: delete this functionality
     private String metadataToken;
     private String namespaceToken;
 
@@ -68,9 +70,9 @@ public class MetadataManagerRedcapImpl implements MetadataManager {
 
     @Override
     public Map<String, List<String>> getFullHeader(List<String> header) {
-        metadata = getMetadata();
         namespace = getNamespace();
         Map<String, RedcapAttributeMetadata> combinedAttributeMap = new LinkedHashMap<>();
+        List<RedcapAttributeMetadata> metaDataList =  metadataCache.getMetadata();
         for (String attribute : header) {
             String extColHeader = "";
             for (RedcapAttributeMetadata namespaceEntry : namespace) {
@@ -81,7 +83,7 @@ public class MetadataManagerRedcapImpl implements MetadataManager {
                     extColHeader = namespaceEntry.getExternalColumnHeader();
                 }
             }
-            for (RedcapAttributeMetadata meta : metadata) {
+            for (RedcapAttributeMetadata meta : metaDataList) {
                 if (meta.getNormalizedColumnHeader().equalsIgnoreCase(attribute)) {
                     // update external column header if not empty
                     if (!extColHeader.isEmpty()) {
@@ -95,18 +97,7 @@ public class MetadataManagerRedcapImpl implements MetadataManager {
     }
 
     private List<RedcapAttributeMetadata> getMetadata() {
-        if (metadata != null) {
-            return metadata;
-        }
-        RestTemplate restTemplate = new RestTemplate();
-
-        log.info("Getting attribute metadatas...");
-
-        String metadataToken = redcapSessionManager.getMetadataToken();
-        LinkedMultiValueMap<String, String> uriVariables = getUriVariables(metadataToken);
-        HttpEntity<LinkedMultiValueMap<String, Object>> requestEntity = redcapSessionManager.getRequestEntity(uriVariables);
-        ResponseEntity<RedcapAttributeMetadata[]> responseEntity = restTemplate.exchange(redcapSessionManager.getRedcapApiURI(), HttpMethod.POST, requestEntity, RedcapAttributeMetadata[].class);
-        return Arrays.asList(responseEntity.getBody());
+        return metadataCache.getMetadata();
     }
 
     private List<RedcapAttributeMetadata> getNamespace() {

@@ -29,6 +29,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
+
 package org.mskcc.cmo.ks.redcap.source.internal;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -45,31 +46,36 @@ import org.springframework.beans.factory.annotation.*;
 import org.springframework.http.*;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.web.client.RestTemplate;
 
 /**
  *
  * @author Zachary Heins
  *
- * Use Redcap to fetch clinical metadata and data
+ * Use Redcap to import/export clinical metadata and data
  *
  */
 @Repository
 public class ClinicalDataSourceRedcapImpl implements ClinicalDataSource {
 
+    //TODO: The design of this class should migrate so that it becomes unaware of redcap_id fields and the mapping issues. Migrate such lower level logic downwards.
+
     @Autowired
-    private RedcapSessionManager redcapSessionManager;
+    private RedcapSessionManager redcapSessionManager; //TODO: eliminate this dependency
+
+    @Autowired
+    private MetadataCache metadataCache;
+
+    @Autowired
+    private RedcapRepository redcapRepository;
 
     private Map<String, String> clinicalDataTokens = null;
     private Map<String, String> clinicalTimelineTokens = null;
-    private String metadataToken = null;
-    private List<RedcapAttributeMetadata> metadata;
 
     private List<String> sampleHeader;
     private List<String> patientHeader;
     private List<String> combinedHeader;
-    private Map<String, List<String>> fullPatientHeader = new HashMap<>();
-    private Map<String, List<String>> fullSampleHeader = new HashMap<>();
+    private Map<String, List<String>> fullPatientHeader = null;
+    private Map<String, List<String>> fullSampleHeader = null;
     private String nextClinicalId;
     private String nextTimelineId;
 
@@ -88,7 +94,7 @@ public class ClinicalDataSourceRedcapImpl implements ClinicalDataSource {
     @Override
     public List<Map<String, String>> exportRawDataForProjectTitle(String projectTitle) {
         String projectToken = redcapSessionManager.getTokenByProjectTitle(projectTitle);
-        List<Map<String, String>> data = getRedcapDataForProject(projectToken);
+        List<Map<String, String>> data = redcapRepository.getRedcapDataForProject(projectToken);
         if (redcapDataTypeIsTimeline(projectTitle)) {
             if (clinicalTimelineTokens != null) {
                 clinicalTimelineTokens.remove(projectTitle);
@@ -138,14 +144,14 @@ public class ClinicalDataSourceRedcapImpl implements ClinicalDataSource {
     public List<Map<String, String>> getClinicalData(String stableId) {
         checkTokensByStableId(stableId);
         String projectToken = clinicalDataTokens.remove(nextClinicalId);
-        return getRedcapDataForProject(projectToken);
+        return redcapRepository.getRedcapDataForProject(projectToken);
     }
 
     @Override
     public List<Map<String, String>> getTimelineData(String stableId) {
         checkTokensByStableId(stableId);
         String projectToken = clinicalTimelineTokens.remove(nextTimelineId);
-        return getRedcapDataForProject(projectToken);
+        return redcapRepository.getRedcapDataForProject(projectToken);
     }
 
     @Override
@@ -243,45 +249,33 @@ public class ClinicalDataSourceRedcapImpl implements ClinicalDataSource {
     }
 
     private List<String> getNormalizedColumnHeaders(String projectToken) {
-        metadata = getMetadata();
-        List<RedcapProjectAttribute> attributes = getAttributesByToken(projectToken);
+        List<RedcapProjectAttribute> attributes = redcapRepository.getAttributesByToken(projectToken);
         Map<RedcapProjectAttribute, RedcapAttributeMetadata> attributeMap = new LinkedHashMap<>();
         for (RedcapProjectAttribute attribute : attributes) {
-            for (RedcapAttributeMetadata meta : metadata) {
-                if (attribute.getFieldName().equalsIgnoreCase(meta.getRedcapId())) {
-                    attributeMap.put(attribute, meta);
-                    break;
-                }
-            }
+            attributeMap.put(attribute, metadataCache.getMetadataByRedcapId(attribute.getFieldName()));
         }
         return makeHeader(attributeMap);
     }
 
     // Sets the sampleHeader and patientHeader data members for the current clinical project
     private void getClinicalHeaderData() {
-        metadata = getMetadata();
         List<RedcapProjectAttribute> attributes = getAttributes(false);
-
         Map<RedcapProjectAttribute, RedcapAttributeMetadata> sampleAttributeMap = new LinkedHashMap<>();
         Map<RedcapProjectAttribute, RedcapAttributeMetadata> patientAttributeMap = new LinkedHashMap<>();
-
         for (RedcapProjectAttribute attribute : attributes) {
-            for (RedcapAttributeMetadata meta : metadata) {
-                if (attribute.getFieldName().equalsIgnoreCase(meta.getRedcapId())) {
-                    if (attribute.getFieldName().equalsIgnoreCase("PATIENT_ID")) {
-                        //PATIENT_ID is both a sample and a patient attribute
-                        sampleAttributeMap.put(attribute, meta);
-                        patientAttributeMap.put(attribute, meta);
-                        break;
-                    }
-                    if (meta.getAttributeType().equals("SAMPLE")) {
-                        sampleAttributeMap.put(attribute, meta);
-                        break;
-                    } else {
-                        patientAttributeMap.put(attribute, meta);
-                        break;
-                    }
-                }
+            RedcapAttributeMetadata meta = metadataCache.getMetadataByRedcapId(attribute.getFieldName());
+            if (attribute.getFieldName().equalsIgnoreCase("PATIENT_ID")) {
+                //PATIENT_ID is both a sample and a patient attribute
+                sampleAttributeMap.put(attribute, meta);
+                patientAttributeMap.put(attribute, meta);
+                break;
+            }
+            if (meta.getAttributeType().equals("SAMPLE")) {
+                sampleAttributeMap.put(attribute, meta);
+                break;
+            } else {
+                patientAttributeMap.put(attribute, meta);
+                break;
             }
         }
         sampleHeader = makeHeader(sampleAttributeMap);
@@ -289,17 +283,12 @@ public class ClinicalDataSourceRedcapImpl implements ClinicalDataSource {
     }
 
     private void getTimelineHeaderData() {
-        metadata = getMetadata();
         List<RedcapProjectAttribute> attributes = getAttributes(true);
         Map<RedcapProjectAttribute, RedcapAttributeMetadata> combinedAttributeMap = new LinkedHashMap<>();
-         for (RedcapProjectAttribute attribute : attributes) {
-            for (RedcapAttributeMetadata meta : metadata) {
-                if (attribute.getFieldName().equalsIgnoreCase(meta.getRedcapId())) {
-                    combinedAttributeMap.put(attribute, meta);
-                }
-            }
+        for (RedcapProjectAttribute attribute : attributes) {
+            combinedAttributeMap.put(attribute, metadataCache.getMetadataByRedcapId(attribute.getFieldName()));
         }
-         combinedHeader = makeHeader(combinedAttributeMap);
+        combinedHeader = makeHeader(combinedAttributeMap);
     }
 
     public String[] externalFieldNamesToRedcapFieldIds(String[] externalFieldNames) {
@@ -307,58 +296,17 @@ public class ClinicalDataSourceRedcapImpl implements ClinicalDataSource {
             return new String[0];
         }
         String[] redcapFieldIds = new String[externalFieldNames.length];
-        metadata = getMetadata();
-        Map<String, String> externalToRedcapFieldMap = mapExternalToRedcapFieldFromMetadata(metadata);
         for (int i = 0; i < externalFieldNames.length; i++) {
-            String redcapFieldId = externalToRedcapFieldMap.get(externalFieldNames[i]);
-            if (redcapFieldId == null) {
-                String errorString = "Error : attempt to persist file to RedCap failed due to field name " +
-                        externalFieldNames[i] + " not having a redcap_id defined in the RedCap Metadata Project";
+            RedcapAttributeMetadata metadataForField = metadataCache.getMetadataByExternalColumnHeader(externalFieldNames[i]);
+            if (metadataForField == null) {
+                String errorString = "Error : attempt to persist file to RedCap failed due to external field name " +
+                        externalFieldNames[i] + " not having metadata defined in the RedCap Metadata Project";
                 log.warn(errorString);
                 throw new RuntimeException(errorString);
             }
-            redcapFieldIds[i] = redcapFieldId;
+            redcapFieldIds[i] = metadataForField.getRedcapId();
         }
         return redcapFieldIds;
-    }
-
-    private Map<String, String> mapExternalToRedcapFieldFromMetadata(List<RedcapAttributeMetadata> metadata) {
-        HashMap<String, String> externalToRedcapFieldnameMap = new HashMap<String, String>();
-        for (RedcapAttributeMetadata metadataEntry : metadata) {
-            String extColHeader = metadataEntry.getExternalColumnHeader();
-            String redcapId = metadataEntry.getRedcapId();
-            if (extColHeader == null) {
-                String errorString = "Error : missing value in EXTERNAL_COLUMN_HEADER filed in Redcap Metadata project";
-                log.warn(errorString);
-                throw new RuntimeException(errorString);
-            }
-            if (redcapId == null) {
-                String errorString = "Error : missing value in redcap_id field in Redcap Metadata project";
-                log.warn(errorString);
-                throw new RuntimeException(errorString);
-            }
-            externalToRedcapFieldnameMap.put(extColHeader, redcapId);
-        }
-        return externalToRedcapFieldnameMap;
-    }
-
-    private List<RedcapAttributeMetadata> getMetadata() {
-        if (metadata != null) {
-            return metadata;
-        }
-        RestTemplate restTemplate = new RestTemplate();
-
-        log.info("Getting attribute metadatas...");
-
-        LinkedMultiValueMap<String, String> uriVariables = new LinkedMultiValueMap<>();
-        uriVariables.add("token", redcapSessionManager.getMetadataToken());
-        uriVariables.add("content", "record");
-        uriVariables.add("format", "json");
-        uriVariables.add("type", "flat");
-
-        HttpEntity<LinkedMultiValueMap<String, Object>> requestEntity = redcapSessionManager.getRequestEntity(uriVariables);
-        ResponseEntity<RedcapAttributeMetadata[]> responseEntity = restTemplate.exchange(redcapSessionManager.getRedcapApiURI(), HttpMethod.POST, requestEntity, RedcapAttributeMetadata[].class);
-        return Arrays.asList(responseEntity.getBody());
     }
 
     private List<RedcapProjectAttribute> getAttributes(boolean timelineData) {
@@ -368,46 +316,7 @@ public class ClinicalDataSourceRedcapImpl implements ClinicalDataSource {
         } else {
             projectToken = clinicalDataTokens.get(nextClinicalId);
         }
-        return getAttributesByToken(projectToken);
-    }
-
-    private List<RedcapProjectAttribute> getAttributesByToken(String projectToken) {
-        LinkedMultiValueMap<String, String> uriVariables = new LinkedMultiValueMap<>();
-        uriVariables.add("token", projectToken);
-        uriVariables.add("content", "metadata");
-        uriVariables.add("format", "json");
-        uriVariables.add("type", "flat");
-
-        RestTemplate restTemplate = new RestTemplate();
-        HttpEntity<LinkedMultiValueMap<String, Object>> requestEntity = redcapSessionManager.getRequestEntity(uriVariables);
-        log.info("Getting attributes for project...");
-        ResponseEntity<RedcapProjectAttribute[]> responseEntity = restTemplate.exchange(redcapSessionManager.getRedcapApiURI(), HttpMethod.POST, requestEntity, RedcapProjectAttribute[].class);
-        return Arrays.asList(responseEntity.getBody());
-    }
-
-    private List<Map<String, String>> getRedcapDataForProject(String projectToken) {
-        LinkedMultiValueMap<String, String> uriVariables = new LinkedMultiValueMap<>();
-        uriVariables.add("token", projectToken);
-        uriVariables.add("content", "record");
-        uriVariables.add("format", "json");
-        uriVariables.add("type", "flat");
-
-        RestTemplate restTemplate = new RestTemplate();
-        HttpEntity<LinkedMultiValueMap<String, Object>> requestEntity = redcapSessionManager.getRequestEntity(uriVariables);
-        log.info("Getting data for project...");
-        ResponseEntity<ObjectNode[]> responseEntity = restTemplate.exchange(redcapSessionManager.getRedcapApiURI(), HttpMethod.POST, requestEntity, ObjectNode[].class);
-        List<Map<String, String>> responses = new ArrayList<>();
-
-        for(ObjectNode response : responseEntity.getBody()) {
-            Map<String, String> map = new HashMap<>();
-            Iterator<Map.Entry<String, JsonNode>> nodeIterator = response.fields();
-            while (nodeIterator.hasNext()) {
-                Map.Entry<String, JsonNode> entry = (Map.Entry<String, JsonNode>) nodeIterator.next();
-                map.put(entry.getKey().toUpperCase(), entry.getValue().asText());
-            }
-            responses.add(map);
-        }
-        return responses;
+        return redcapRepository.getAttributesByToken(projectToken);
     }
 
     private List<String> makeHeader(Map<RedcapProjectAttribute, RedcapAttributeMetadata> attributeMap) {
