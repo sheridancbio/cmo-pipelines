@@ -62,19 +62,14 @@ public class RedcapRepository {
 
     private final Logger log = Logger.getLogger(RedcapRepository.class);
 
-/*
-    public List<RedcapAttributeMetadata> getMetadata() {
-        String metadataToken = redcapSessionManager.getMetadataToken();
-        return Arrays.asList(redcapSessionManager.getRedcapMetadataByToken(metadataToken));
-    }
-*/
-
     public List<RedcapProjectAttribute> getAttributesByToken(String projectToken) {
         return Arrays.asList(redcapSessionManager.getRedcapAttribteByToken(projectToken));
     }
 
     public List<Map<String, String>> getRedcapDataForProject(String projectToken) {
         JsonNode[] redcapDataRecords = redcapSessionManager.getRedcapDataForProjectByToken(projectToken);
+        //TODO : we could eliminate the next line if we store the instrument name at the time the the headers are requested through ClinicalDataSource.get[Project|Sample|Patient]Header()
+        String redcapInstrumentCompleteFieldName = redcapSessionManager.getRedcapInstrumentNameByToken(projectToken) + "_complete";
         List<Map<String, String>> redcapDataForProject = new ArrayList<>();
         for (JsonNode redcapResponse : redcapDataRecords) {
             Map<String, String> redcapDataRecord = new HashMap<>();
@@ -84,15 +79,13 @@ public class RedcapRepository {
                 String redcapId = entry.getKey();
                 RedcapAttributeMetadata metadata = metadataCache.getMetadataByRedcapId(redcapId);
                 if (metadata == null) {
-                    continue;
-/*
-                    //TODO: add a properties file property for "redcap-fields-to-be-ignored", and throw an error when a field is not on the ignore list and has no metadata
-                    //example field to ignore : my_first_instrument_complete
+                    if (redcapId.equals(redcapInstrumentCompleteFieldName)) {
+                        continue;
+                    }
                     String errorString = "Error : attempt to export data from RedCap failed due to redcap_id " +
                             redcapId + " not having metadata defined in the RedCap Metadata Project";
                     log.warn(errorString);
                     throw new RuntimeException(errorString);
-*/
                 }
                 redcapDataRecord.put(metadata.getNormalizedColumnHeader(), entry.getValue().asText());
             }

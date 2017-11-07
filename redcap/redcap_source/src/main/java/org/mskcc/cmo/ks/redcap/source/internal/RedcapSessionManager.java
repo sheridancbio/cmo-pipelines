@@ -428,6 +428,16 @@ public class RedcapSessionManager {
         return responseEntity.getBody();
     }
 
+    public String getRedcapInstrumentNameByToken(String projectToken) {
+        RedcapProjectAttribute[] attributeArray = getRedcapAttribteByToken(projectToken);
+        if (attributeArray == null || attributeArray.length < 1) {
+            String errorMessage = "Error retrieving instrument name from project : no attributes available";
+            log.error(errorMessage);
+            throw new RuntimeException(errorMessage);
+        }
+        return attributeArray[0].getFormName();
+    }
+
     public RedcapProjectAttribute[] getRedcapAttribteByToken(String projectToken) {
         LinkedMultiValueMap<String, String> uriVariables = new LinkedMultiValueMap<>();
         uriVariables.add("token", projectToken);
