@@ -32,6 +32,8 @@
 
 package org.mskcc.cmo.ks.redcap.source.internal;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.io.*;
 import java.net.*;
 import java.util.*;
@@ -39,6 +41,8 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import org.apache.log4j.Logger;
 import org.mskcc.cmo.ks.redcap.models.ProjectInfoResponse;
+import org.mskcc.cmo.ks.redcap.models.RedcapAttributeMetadata;
+import org.mskcc.cmo.ks.redcap.models.RedcapProjectAttribute;
 import org.mskcc.cmo.ks.redcap.models.RedcapToken;
 import org.mskcc.cmo.ks.redcap.source.ClinicalDataSource;
 import org.springframework.beans.factory.annotation.*;
@@ -410,4 +414,53 @@ public class RedcapSessionManager {
         HttpEntity<?> response = restTemplate.exchange(getRedcapEraseProjectDataURI(projectId), HttpMethod.GET, rq, String.class);
     }
 
+    public JsonNode[] getRedcapDataForProjectByToken(String projectToken) {
+        LinkedMultiValueMap<String, String> uriVariables = new LinkedMultiValueMap<>();
+        uriVariables.add("token", projectToken);
+        uriVariables.add("content", "record");
+        uriVariables.add("format", "json");
+        uriVariables.add("type", "flat");
+        RestTemplate restTemplate = new RestTemplate();
+        HttpEntity<LinkedMultiValueMap<String, Object>> requestEntity = getRequestEntity(uriVariables);
+        log.info("Getting data for project...");
+        ResponseEntity<JsonNode[]> responseEntity = restTemplate.exchange(getRedcapApiURI(), HttpMethod.POST, requestEntity, JsonNode[].class);
+        //TODO check status of http request after completed .. throw exception on failure
+        return responseEntity.getBody();
+    }
+
+    public String getRedcapInstrumentNameByToken(String projectToken) {
+        RedcapProjectAttribute[] attributeArray = getRedcapAttribteByToken(projectToken);
+        if (attributeArray == null || attributeArray.length < 1) {
+            String errorMessage = "Error retrieving instrument name from project : no attributes available";
+            log.error(errorMessage);
+            throw new RuntimeException(errorMessage);
+        }
+        return attributeArray[0].getFormName();
+    }
+
+    public RedcapProjectAttribute[] getRedcapAttribteByToken(String projectToken) {
+        LinkedMultiValueMap<String, String> uriVariables = new LinkedMultiValueMap<>();
+        uriVariables.add("token", projectToken);
+        uriVariables.add("content", "metadata");
+        uriVariables.add("format", "json");
+        uriVariables.add("type", "flat");
+        RestTemplate restTemplate = new RestTemplate();
+        HttpEntity<LinkedMultiValueMap<String, Object>> requestEntity = getRequestEntity(uriVariables);
+        log.info("Getting attributes for project...");
+        ResponseEntity<RedcapProjectAttribute[]> responseEntity = restTemplate.exchange(getRedcapApiURI(), HttpMethod.POST, requestEntity, RedcapProjectAttribute[].class);
+        return responseEntity.getBody();
+    }
+
+    public RedcapAttributeMetadata[] getRedcapMetadataByToken(String projectToken) {
+        RestTemplate restTemplate = new RestTemplate();
+        log.info("Getting attribute metadatas...");
+        LinkedMultiValueMap<String, String> uriVariables = new LinkedMultiValueMap<>();
+        uriVariables.add("token", projectToken);
+        uriVariables.add("content", "record");
+        uriVariables.add("format", "json");
+        uriVariables.add("type", "flat");
+        HttpEntity<LinkedMultiValueMap<String, Object>> requestEntity = getRequestEntity(uriVariables);
+        ResponseEntity<RedcapAttributeMetadata[]> responseEntity = restTemplate.exchange(getRedcapApiURI(), HttpMethod.POST, requestEntity, RedcapAttributeMetadata[].class);
+        return responseEntity.getBody();
+    }
 }

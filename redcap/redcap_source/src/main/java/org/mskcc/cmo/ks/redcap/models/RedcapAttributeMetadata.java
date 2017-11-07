@@ -55,7 +55,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "priority",
     "note",
     "redcap_id",
-    "my_first_instrument_complete"
+    "clinical_metadata_complete"
 })
 public class RedcapAttributeMetadata {
 
@@ -79,8 +79,8 @@ public class RedcapAttributeMetadata {
     private String note;
     @JsonProperty("redcap_id")
     private String redcapId;
-    @JsonProperty("my_first_instrument_complete")
-    private String myFirstInstrumentComplete;
+    @JsonProperty("clinical_metadata_complete")
+    private String clinicalMetadataComplete;
     @JsonIgnore
     private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
@@ -94,7 +94,7 @@ public class RedcapAttributeMetadata {
     *
     * @param recordId
     * @param normalizedColumnHeader
-    * @param myFirstInstrumentComplete
+    * @param clinicalMetadataComplete
     * @param externalColumnHeader
     * @param priority
     * @param attributeType
@@ -104,7 +104,7 @@ public class RedcapAttributeMetadata {
     * @param redcapId
     * @param descriptions
     */
-    public RedcapAttributeMetadata(Long recordId, String externalColumnHeader, String normalizedColumnHeader, String displayName, String descriptions, String datatype, String attributeType, String priority, String note, String redcapId, String myFirstInstrumentComplete) {
+    public RedcapAttributeMetadata(Long recordId, String externalColumnHeader, String normalizedColumnHeader, String displayName, String descriptions, String datatype, String attributeType, String priority, String note, String redcapId, String clinicalMetadataComplete) {
         this.recordId = recordId;
         this.externalColumnHeader = externalColumnHeader;
         this.normalizedColumnHeader = normalizedColumnHeader;
@@ -115,7 +115,7 @@ public class RedcapAttributeMetadata {
         this.priority = priority;
         this.note = note;
         this.redcapId = redcapId;
-        this.myFirstInstrumentComplete = myFirstInstrumentComplete;
+        this.clinicalMetadataComplete = clinicalMetadataComplete;
     }
 
     /**
@@ -321,21 +321,21 @@ public class RedcapAttributeMetadata {
     /**
     *
     * @return
-    * The myFirstInstrumentComplete
+    * The clinicalMetadataComplete
     */
-    @JsonProperty("my_first_instrument_complete")
-    public String getMyFirstInstrumentComplete() {
-        return myFirstInstrumentComplete;
+    @JsonProperty("clinical_metadata_complete")
+    public String getClinicalMetadataComplete() {
+        return clinicalMetadataComplete;
     }
 
     /**
     *
-    * @param myFirstInstrumentComplete
-    * The my_first_instrument_complete
+    * @param clinicalMetadataComplete
+    * The clinical_metadata_complete
     */
-    @JsonProperty("my_first_instrument_complete")
-    public void setMyFirstInstrumentComplete(String myFirstInstrumentComplete) {
-        this.myFirstInstrumentComplete = myFirstInstrumentComplete;
+    @JsonProperty("clinical_metadata_complete")
+    public void setClinicalMetadataComplete(String clinicalMetadataComplete) {
+        this.clinicalMetadataComplete = clinicalMetadataComplete;
     }
 
     @JsonAnyGetter
