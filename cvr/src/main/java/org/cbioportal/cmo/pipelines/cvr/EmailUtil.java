@@ -85,9 +85,11 @@ public class EmailUtil {
             properties.setProperty("mail.smtp.host", server);
             MimeMessage message = new MimeMessage(session);
             message.setFrom(new InternetAddress(sender));
-            for (String nextRecipient : recipients) {
-                message.addRecipient(Message.RecipientType.TO, new InternetAddress(nextRecipient));
+            InternetAddress[] recipientEmails = new InternetAddress[recipients.length];
+            for (int i = 0; i < recipients.length; i++) {
+                recipientEmails[i] = new InternetAddress(recipients[i]);
             }
+            message.addRecipients(Message.RecipientType.TO, recipientEmails);
             message.setSubject(subject);
             message.setText(body);
             Transport.send(message);
