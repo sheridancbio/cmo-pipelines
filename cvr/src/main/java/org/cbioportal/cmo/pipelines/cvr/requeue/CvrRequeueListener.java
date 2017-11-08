@@ -79,6 +79,7 @@ public class CvrRequeueListener implements StepExecutionListener {
         Map<String, String> sampleListStats = (Map<String, String>) stepExecution.getJobExecution().getExecutionContext().get("sampleListStats");
         List<CVRRequeueRecord> failedToRequeueSamples = (List<CVRRequeueRecord>) stepExecution.getJobExecution().getExecutionContext().get("failedToRequeueSamples");
         Set<String> zeroVariantSamples = cvrSampleListUtil.getNonWhitelistedZeroVariantSamples();
+        Map<String, Integer> unfilteredSampleSnpCounts = cvrSampleListUtil.getUnfilteredSampleSnpCounts();
     
         String subject = "CVR pipeline master list errors: " +  studyId;
         StringBuilder body = new StringBuilder();
@@ -142,6 +143,13 @@ public class CvrRequeueListener implements StepExecutionListener {
                 if (count <= 30) {
                     body.append("\n\t");
                     body.append(sampleId);
+                    Integer unfilteredCount = unfilteredSampleSnpCounts.get(sampleId);
+                    if (unfilteredCount == null) {
+                        unfilteredCount = new Integer(0);
+                    }
+                    body.append(" (unfiltered snp count: ");
+                    body.append(unfilteredCount.toString());
+                    body.append(")");
                 } else {
                     break;
                 }

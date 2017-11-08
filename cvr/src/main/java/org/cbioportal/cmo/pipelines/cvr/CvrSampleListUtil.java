@@ -60,6 +60,7 @@ public class CvrSampleListUtil {
     private Set<String> samplesRemovedList = new HashSet<>();
     private Map<String, String> sampleListStats = new HashMap<>();
     private Set<String> zeroVariantSamples = new HashSet<>();
+    private Map<String, Integer> unfilteredSampleSnpCounts = new HashMap<>();
 
     Logger log = Logger.getLogger(CvrSampleListUtil.class);
     
@@ -312,6 +313,21 @@ public class CvrSampleListUtil {
         Set<String> tmpzeroVariantSamples = new HashSet<>(zeroVariantSamples);
         tmpzeroVariantSamples.removeAll(whitelistedSamples);
         return tmpzeroVariantSamples;
+    }
+
+    /**
+     * @param sampleId the sampleId to add
+     * @param count the number of unfiltered snps for that sample
+     */
+    public void addUnfilteredSampleSnpCount(String sampleId, Integer count) {
+        this.unfilteredSampleSnpCounts.put(sampleId, count);
+    }
+
+    /**
+     * @return the count of unfiltered snps for every sample
+     */
+    public Map<String, Integer> getUnfilteredSampleSnpCounts() {
+        return this.unfilteredSampleSnpCounts;
     }
 
     private void saveSampleListStats() {

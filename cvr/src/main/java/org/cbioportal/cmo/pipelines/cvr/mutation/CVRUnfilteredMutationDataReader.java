@@ -102,6 +102,7 @@ public class CVRUnfilteredMutationDataReader implements ItemStreamReader<Annotat
         log.info(String.valueOf(snpsToAnnotateCount) + " records to annotate");
         for (CVRMergedResult result : cvrData.getResults()) {
             String sampleId = result.getMetaData().getDmpSampleId();
+            int sampleSNPCount = 0;
             String somaticStatus = result.getMetaData().getSomaticStatus() != null ? result.getMetaData().getSomaticStatus() : "N/A";
             List<CVRSnp> snps = new ArrayList<>();
             snps.addAll(result.getSnpIndelExonic());
@@ -110,6 +111,7 @@ public class CVRUnfilteredMutationDataReader implements ItemStreamReader<Annotat
             snps.addAll(result.getSnpIndelSilentNp());
             for (CVRSnp snp : snps) {
                 annotatedSnpsCount++;
+                sampleSNPCount++;
                 if (annotatedSnpsCount % 500 == 0) {
                     log.info("\tOn record " + String.valueOf(annotatedSnpsCount) + " out of " + String.valueOf(snpsToAnnotateCount) + ", annotation " + String.valueOf((int)(((annotatedSnpsCount * 1.0)/snpsToAnnotateCount) * 100)) + "% complete");
                 }
@@ -127,6 +129,7 @@ public class CVRUnfilteredMutationDataReader implements ItemStreamReader<Annotat
                 additionalPropertyKeys.addAll(annotatedRecord.getAdditionalProperties().keySet());
                 mutationMap.getOrDefault(annotatedRecord.getTUMOR_SAMPLE_BARCODE(), new ArrayList()).add(annotatedRecord);
             }
+            cvrSampleListUtil.addUnfilteredSampleSnpCount(sampleId, new Integer(sampleSNPCount));
         }
 
         this.mutationFile = new File(stagingDirectory, cvrUtilities.UNFILTERED_MUTATION_FILE);
