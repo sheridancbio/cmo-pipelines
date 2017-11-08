@@ -241,7 +241,7 @@ def merge_files(data_filenames, file_type, reference_set, keep_match, output_dir
                 data_values = map(lambda x: data.get(x, ''), file_header)
                 if data_okay_to_add(is_clinical_or_timeline_file, file_header, reference_set, data_values, keep_match):
                     rows.append(normal_row(data, new_header))
-                    
+
         is_first_profile_datafile = False
         data_file.close()
 
@@ -291,8 +291,8 @@ def validate_merge(file_type, data_filenames, merged_filename, reference_set, ke
 
 
 def data_okay_to_add(is_clinical_or_timeline_file, file_header, reference_set, data_values, keep_match):
-    """ 
-        Checks reference list (either 'sublist' or 'excluded_samples_list') if any matches found in data values. 
+    """
+        Checks reference list (either 'sublist' or 'excluded_samples_list') if any matches found in data values.
         If keeping match then True is returned for positive match, otherwise False is returned. P-0013956-T01-IM5
     """
     if len(reference_set) == 0:
@@ -300,8 +300,14 @@ def data_okay_to_add(is_clinical_or_timeline_file, file_header, reference_set, d
     found = False
     if is_clinical_or_timeline_file and not 'SAMPLE_ID' in file_header:
         patient_id = data_values[file_header.index('PATIENT_ID')]
-        if len([True for val in data_values if val in PATIENT_SAMPLE_MAP.keys()]) > 0:
+        if patient_id in PATIENT_SAMPLE_MAP.keys():
             found = True
+            # if at least one sample is not in reference set and keep match is false 
+            # then we want to return true so that data for this patient isn't filtered out
+            if not keep_match:
+                for sample_id in PATIENT_SAMPLE_MAP[patient_id]:
+                    if not sample_id in reference_set:
+                        return True
     else:
         if len([True for val in data_values if val in reference_set]) > 0:
             found = True
@@ -353,7 +359,7 @@ def update_sequenced_samples(filename, reference_set, keep_match):
 
         # split sequenced sample tag by all : and spaces, sample ids begin at index 1
         sequenced_samples = map(lambda x: process_datum(x), re.split('[: ]', c)[1:])
-        if len(reference_set) > 0: 
+        if len(reference_set) > 0:
             for sample_id in sequenced_samples:
                 add_seq_sample = (keep_match == (sample_id in reference_set))
                 if add_seq_sample:
@@ -380,7 +386,7 @@ def get_header(filename):
 
 def process_header(data_filenames, reference_set, keep_match, merge_style):
     """ Handles header merging, accumulating all column names """
-    
+
     if merge_style is MERGE_STYLES[PROFILE]:
         header = []
         profile_header_data = {}
@@ -560,7 +566,7 @@ def generate_patient_sample_mapping(file_types, sublist, excluded_samples_list):
     for file_type in [CLINICAL_META_PATTERN, CLINICAL_SAMPLE_META_PATTERN]:
         if file_type in file_types.keys() and len(file_types[META_FILE_MAP[file_type][0]]) > 0:
             load_patient_sample_mapping(file_types[META_FILE_MAP[file_type][0]], reference_list, keep_match)
-    if PATIENT_SAMPLE_MAP == {}: 
+    if PATIENT_SAMPLE_MAP == {}:
         print >> ERROR_FILE, 'ERROR! generate_patient_sample_mapping(),  Did not load any patient sample mapping from clinical files'
         sys.exit(2)
     return set(reference_list),keep_match
@@ -568,10 +574,10 @@ def generate_patient_sample_mapping(file_types, sublist, excluded_samples_list):
 
 def load_patient_sample_mapping(data_filenames, reference_set, keep_match):
     """
-        Loads patient - sample mapping from given clinical file(s). 
+        Loads patient - sample mapping from given clinical file(s).
     """
     print >> OUTPUT_FILE, 'Loading patient - sample mapping from: '
-    # load patient sample mapping from each clinical file    
+    # load patient sample mapping from each clinical file
     for filename in data_filenames:
         print >> OUTPUT_FILE, '\t' + filename
         file_header = get_header(filename)
@@ -579,7 +585,7 @@ def load_patient_sample_mapping(data_filenames, reference_set, keep_match):
         filedata = [line for line in data_file.readlines() if not line.startswith('#')][1:]
         for line in filedata:
             data = dict(zip(file_header, map(lambda x: process_datum(x), line.split('\t'))))
-            
+
             # always update patient sample map if no reference list to check against
             # otherwise only update patient sample map if (1) we want to keep matches and a sample was found in reference list
             # or (2) we do not want to keep matches and sample was not found in reference list
@@ -587,7 +593,8 @@ def load_patient_sample_mapping(data_filenames, reference_set, keep_match):
                 update_patient_sample_map(data['PATIENT_ID'], data['SAMPLE_ID'])
             else:
                 update_map = (keep_match == (data['SAMPLE_ID'] in reference_set))
-                update_patient_sample_map(data['PATIENT_ID'], data['SAMPLE_ID'])
+                if update_map:
+                    update_patient_sample_map(data['PATIENT_ID'], data['SAMPLE_ID'])
         data_file.close()
     print >> OUTPUT_FILE, 'Finished loading patient - sample mapping!\n'
 
@@ -764,11 +771,11 @@ def main():
         GENE_MATRIX_META_PATTERN: [],
         SV_META_PATTERN: [],
         TIMELINE_META_PATTERN: [],
-        SUPP_DATA: [], 
-        CLINICAL_META_PATTERN: [], 
-        CLINICAL_PATIENT_META_PATTERN: [], 
-        CLINICAL_SAMPLE_META_PATTERN: [], 
-        CLINICAL_FILE_PATTERN: [], 
+        SUPP_DATA: [],
+        CLINICAL_META_PATTERN: [],
+        CLINICAL_PATIENT_META_PATTERN: [],
+        CLINICAL_SAMPLE_META_PATTERN: [],
+        CLINICAL_FILE_PATTERN: [],
         CLINICAL_PATIENT_FILE_PATTERN: [],
         CLINICAL_SAMPLE_FILE_PATTERN: []}
 
