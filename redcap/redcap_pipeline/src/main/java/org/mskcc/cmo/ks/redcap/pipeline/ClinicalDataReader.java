@@ -102,16 +102,16 @@ public class ClinicalDataReader implements ItemStreamReader<Map<String, String>>
             }
             // associate patient data with their samples so that patient data for each sample is the same
             this.clinicalRecords = mergePatientSampleClinicalRecords();
-            // if sample header size is <= 1 then skip writing the sample clinical data file
+            // if sample header size is <= 2 then skip writing the sample clinical data file
             boolean writeClinicalSample = true;
-            if (fullSampleHeader.get("header").size() <= 1) {
-                log.warn("Sample header size for project <=1 - clinical sample data file will not be generated");
+            if (fullSampleHeader.get("header").size() <= 2) {
+                log.warn("Sample header size for project <= 2 - clinical sample data file will not be generated");
                 writeClinicalSample = false;
             }
             // if patient header size is <= 1 then skip writing the patient clinical data file
             boolean writeClinicalPatient = true;
             if (fullPatientHeader.get("header").size() <= 1) {
-                log.warn("Patient header size for project <=1 - clinical patient data file will not be generated");
+                log.warn("Patient header size for project <= 1 - clinical patient data file will not be generated");
                 writeClinicalPatient = false;
             }
             // add headers and booleans to execution context for processors and writers
@@ -122,10 +122,10 @@ public class ClinicalDataReader implements ItemStreamReader<Map<String, String>>
         }
         ec.put("projectTitle", projectTitle);
     }
-    
+
     /**
      * Associates patient data with each sample it's associated with.
-     * @return 
+     * @return
      */
     private List<Map<String,String>> mergePatientSampleClinicalRecords() {
         List<Map<String,String>> mergedClinicalRecords = new ArrayList();
@@ -172,13 +172,13 @@ public class ClinicalDataReader implements ItemStreamReader<Map<String, String>>
             }
         }
     }
-    
+
     private void updateClinicalData(Map<String, String> record, boolean isSampleData) {
-        Map<String, String> existingData = isSampleData ? 
-                compiledClinicalSampleRecords.getOrDefault(record.get("SAMPLE_ID"), new HashMap<>()) : 
+        Map<String, String> existingData = isSampleData ?
+                compiledClinicalSampleRecords.getOrDefault(record.get("SAMPLE_ID"), new HashMap<>()) :
                 compiledClinicalPatientRecords.getOrDefault(record.get("PATIENT_ID"), new HashMap<>());
         List<String> clinicalHeader = isSampleData ? fullSampleHeader.get("header") : fullPatientHeader.get("header");
-        
+
         if (isSampleData && !existingData.containsKey("PATIENT_ID")) {
             existingData.put("PATIENT_ID", record.get("PATIENT_ID"));
         }
@@ -194,7 +194,7 @@ public class ClinicalDataReader implements ItemStreamReader<Map<String, String>>
                 }
                 else {
                     log.info("Clinical attribute " + attribute + " already loaded for patient " + record.get("PATIENT_ID") + " - skipping.");
-                }                
+                }
                 continue;
             }
             String value = (!existingValue.isEmpty()) ? existingValue : recordValue;

@@ -35,32 +35,31 @@ package org.mskcc.cmo.ks.redcap.source.internal;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.*;
-import java.net.*;
 import java.util.*;
-import org.apache.commons.text.StringEscapeUtils;
-import org.apache.log4j.Logger;
-import org.junit.Test;
-import org.mockito.Mockito;
 import org.mockito.Matchers;
+import org.mockito.Mockito;
 import org.mskcc.cmo.ks.redcap.models.RedcapAttributeMetadata;
 import org.mskcc.cmo.ks.redcap.models.RedcapProjectAttribute;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
 import org.mskcc.cmo.ks.redcap.source.ClinicalDataSource;
 import org.mskcc.cmo.ks.redcap.source.internal.ClinicalDataSourceRedcapImpl;
 import org.mskcc.cmo.ks.redcap.source.internal.RedcapSourceTestConfiguration;
-import org.springframework.beans.factory.annotation.*;
-import org.springframework.http.*;
-import org.springframework.stereotype.Repository;
-import org.springframework.util.LinkedMultiValueMap;
-import org.junit.Assert;
-import org.springframework.context.annotation.*;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
 @Configuration
-//@ComponentScan("org.mskcc.cmo.ks.redcap.source.internal")
 public class RedcapSourceTestConfiguration {
-    public static final String ONE_DIGIT_PROJECT_ID_TOKEN = "OneDigitProjectIdToken";
+    public static final String ONE_DIGIT_PROJECT_TITLE = "OneDigitProjectTitle";
+    public static final String ONE_DIGIT_PROJECT_TOKEN = "OneDigitProjectToken";
     public static final String METADATA_TOKEN = "MetadataToken";
+    public static final String SIMPLE_MIXED_TYPE_CLINICAL_PROJECT_TITLE = "MixedClinicalProjectTitle";
+    public static final String SIMPLE_MIXED_TYPE_CLINICAL_PROJECT_TOKEN = "MixedClinicalProjectToken";
+    public static final String SIMPLE_MIXED_TYPE_CLINICAL_PROJECT_INSTRUMENT_NAME = "my_first_instrument";
+    public static final String SIMPLE_MIXED_TYPE_CLINICAL_STABLE_ID = "MixedClinicalProjectStableId";
+
+    @Bean
+    public ClinicalDataSource clinicalDataSource() {
+        return new ClinicalDataSourceRedcapImpl();
+    }
 
     @Bean
     public RedcapRepository redcapRepository() {
@@ -75,13 +74,24 @@ public class RedcapSourceTestConfiguration {
     @Bean
     public RedcapSessionManager redcapSessionManager() {
         RedcapSessionManager redcapSessionManager = Mockito.mock(RedcapSessionManager.class);
+        //configure token requests
+        Mockito.when(redcapSessionManager.getTokenByProjectTitle(ONE_DIGIT_PROJECT_TITLE)).thenReturn(ONE_DIGIT_PROJECT_TOKEN);
+        Mockito.when(redcapSessionManager.getTokenByProjectTitle(SIMPLE_MIXED_TYPE_CLINICAL_PROJECT_TITLE)).thenReturn(SIMPLE_MIXED_TYPE_CLINICAL_PROJECT_TOKEN);
+        Map<String, String> mockReturnTimelineTokenMap = makeMockTimelineTokenMap();
+        Map<String, String> mockReturnClinicalTokenMap = makeMockClinicalTokenMap();
+        Mockito.when(redcapSessionManager.getTimelineTokenMapByStableId(SIMPLE_MIXED_TYPE_CLINICAL_STABLE_ID)).thenReturn(mockReturnTimelineTokenMap);
+        Mockito.when(redcapSessionManager.getClinicalTokenMapByStableId(SIMPLE_MIXED_TYPE_CLINICAL_STABLE_ID)).thenReturn(mockReturnClinicalTokenMap);
+        //configure meta data requests
         RedcapAttributeMetadata[] mockReturnForGetMetadata = makeMockRedcapIdToMetadataList();
         Mockito.when(redcapSessionManager.getRedcapMetadataByToken(Matchers.eq(METADATA_TOKEN))).thenReturn(mockReturnForGetMetadata);
         JsonNode[] mockReturnForGetData = makeMockReturnForGetData();
-        Mockito.when(redcapSessionManager.getRedcapDataForProjectByToken(Matchers.eq(ONE_DIGIT_PROJECT_ID_TOKEN))).thenReturn(mockReturnForGetData);
-        String tokenToReturn = ONE_DIGIT_PROJECT_ID_TOKEN;
-        Mockito.when(redcapSessionManager.getTokenByProjectTitle("oneDigitProjectId")).thenReturn(tokenToReturn);
+        //configure data requests
+        Mockito.when(redcapSessionManager.getRedcapDataForProjectByToken(Matchers.eq(ONE_DIGIT_PROJECT_TOKEN))).thenReturn(mockReturnForGetData);
+        RedcapProjectAttribute[] mockReturnForGetAttributesData = makeMockReturnForGetAttributesData();
+        //Mockito.when(redcapSessionManager.getRedcapAttributeByToken(SIMPLE_MIXED_TYPE_CLINICAL_PROJECT_TOKEN)).thenReturn(mockReturnForGetAttributesData);
+        Mockito.when(redcapSessionManager.getRedcapAttributeByToken(Matchers.any(String.class))).thenReturn(mockReturnForGetAttributesData);
         Mockito.when(redcapSessionManager.getMetadataToken()).thenReturn(METADATA_TOKEN);
+        Mockito.when(redcapSessionManager.getRedcapInstrumentNameByToken(SIMPLE_MIXED_TYPE_CLINICAL_PROJECT_TOKEN)).thenReturn(SIMPLE_MIXED_TYPE_CLINICAL_PROJECT_INSTRUMENT_NAME);
         return redcapSessionManager;
     }
 
@@ -91,7 +101,7 @@ public class RedcapSourceTestConfiguration {
     }
 
     private RedcapAttributeMetadata[] makeMockRedcapIdToMetadataList() {
-        RedcapAttributeMetadata[] metadata = new RedcapAttributeMetadata[3];
+        RedcapAttributeMetadata[] metadata = new RedcapAttributeMetadata[6];
         metadata[0] = new RedcapAttributeMetadata();
         metadata[0].setRecordId(1L);
         metadata[0].setNormalizedColumnHeader("PATIENT_ID");
@@ -122,12 +132,43 @@ public class RedcapSourceTestConfiguration {
         metadata[2].setDisplayName("12 245 PARTA CONSENTED");
         metadata[2].setDatatype("STRING");
         metadata[2].setDescriptions("Flag showing if patient has consented to 12 245 part a");
+        //Added the following for getSampleHeader() / getPatientHeader() tests
+        metadata[3] = new RedcapAttributeMetadata();
+        metadata[3].setRecordId(4L);
+        metadata[3].setNormalizedColumnHeader("SAMPLE_ID");
+        metadata[3].setExternalColumnHeader("SAMPLE_ID");
+        metadata[3].setRedcapId("sample_id");
+        metadata[3].setAttributeType("SAMPLE");
+        metadata[3].setPriority("1");
+        metadata[3].setDisplayName("Sample Id");
+        metadata[3].setDatatype("STRING");
+        metadata[3].setDescriptions("This identifies a sample");
+        metadata[4] = new RedcapAttributeMetadata();
+        metadata[4].setRecordId(5L);
+        metadata[4].setNormalizedColumnHeader("NECROSIS");
+        metadata[4].setExternalColumnHeader("NECROSIS");
+        metadata[4].setRedcapId("necrosis");
+        metadata[4].setAttributeType("SAMPLE");
+        metadata[4].setPriority("1");
+        metadata[4].setDisplayName("Necrosis");
+        metadata[4].setDatatype("STRING");
+        metadata[4].setDescriptions("State of tissue");
+        metadata[5] = new RedcapAttributeMetadata();
+        metadata[5].setRecordId(6L);
+        metadata[5].setNormalizedColumnHeader("ETHNICITY");
+        metadata[5].setExternalColumnHeader("ETHNICITY");
+        metadata[5].setRedcapId("ethnicity");
+        metadata[5].setAttributeType("PATIENT");
+        metadata[5].setPriority("1");
+        metadata[5].setDisplayName("Ethnicity");
+        metadata[5].setDatatype("STRING");
+        metadata[5].setDescriptions("Patient Ethnicity");
         return metadata;
     }
 
     private JsonNode[] makeMockReturnForGetData() {
         String mockReturnJsonString =
-                "[" + 
+                "[" +
                     "{\"patient_id\":\"P-0000004\",\"crdb_consent_date_days\":\"14484\",\"parta_consented_12_245\":\"YES\"}," +
                     "{\"patient_id\":\"P-0000012\",\"crdb_consent_date_days\":\"21192\",\"parta_consented_12_245\":\"YES\"}," +
                     "{\"patient_id\":\"P-9999999\",\"crdb_consent_date_days\":\"99999\",\"parta_consented_12_245\":\"\"}" +
@@ -144,4 +185,41 @@ public class RedcapSourceTestConfiguration {
             throw new RuntimeException(e);
         }
     }
+
+    private RedcapProjectAttribute[] makeMockReturnForGetAttributesData() {
+        RedcapProjectAttribute[] attributeArray = new RedcapProjectAttribute[5];
+        RedcapProjectAttribute patientIdAttribute = new RedcapProjectAttribute();
+        patientIdAttribute.setFieldName("patient_id");
+        patientIdAttribute.setFormName("my_first_instrument");
+        attributeArray[0] = patientIdAttribute;
+        RedcapProjectAttribute sampleIdAttribute = new RedcapProjectAttribute();
+        sampleIdAttribute.setFieldName("sample_id");
+        sampleIdAttribute.setFormName("my_first_instrument");
+        attributeArray[1] = sampleIdAttribute;
+        RedcapProjectAttribute necrosisAttribute = new RedcapProjectAttribute();
+        necrosisAttribute.setFieldName("necrosis");
+        necrosisAttribute.setFormName("my_first_instrument");
+        attributeArray[2] = necrosisAttribute;
+        RedcapProjectAttribute ethnicityAttribute = new RedcapProjectAttribute();
+        ethnicityAttribute.setFieldName("ethnicity");
+        ethnicityAttribute.setFormName("my_first_instrument");
+        attributeArray[3] = ethnicityAttribute;
+        RedcapProjectAttribute myFirstInstrumentCompleteAttribute = new RedcapProjectAttribute();
+        myFirstInstrumentCompleteAttribute.setFieldName("my_first_instrument_complete");
+        myFirstInstrumentCompleteAttribute.setFormName("my_first_instrument");
+        attributeArray[4] = myFirstInstrumentCompleteAttribute;
+        return attributeArray;
+    }
+
+    private Map<String, String> makeMockClinicalTokenMap() {
+        Map<String, String> returnMap = new HashMap<>();
+        returnMap.put(SIMPLE_MIXED_TYPE_CLINICAL_PROJECT_TITLE, SIMPLE_MIXED_TYPE_CLINICAL_PROJECT_TOKEN);
+        return returnMap;
+    }
+
+    private Map<String, String> makeMockTimelineTokenMap() {
+        Map<String, String> returnMap = new HashMap<>();
+        return returnMap;
+    }
+
 }

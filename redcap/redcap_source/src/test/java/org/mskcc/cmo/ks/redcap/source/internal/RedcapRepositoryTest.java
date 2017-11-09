@@ -32,31 +32,13 @@
 
 package org.mskcc.cmo.ks.redcap.source.internal;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import java.io.*;
-import java.net.*;
 import java.util.*;
-import org.apache.commons.text.StringEscapeUtils;
-import org.apache.log4j.Logger;
-//import org.junit.AfterClass;
-//import org.junit.BeforeClass;
-//import org.junit.runners.JUnit4;
 import org.junit.runner.RunWith;
 import org.junit.Test;
-import org.mockito.Mockito;
-import org.mskcc.cmo.ks.redcap.models.RedcapAttributeMetadata;
-import org.mskcc.cmo.ks.redcap.models.RedcapProjectAttribute;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
 import org.mskcc.cmo.ks.redcap.source.internal.RedcapSourceTestConfiguration;
 import org.mskcc.cmo.ks.redcap.source.internal.RedcapRepository;
 import org.springframework.beans.factory.annotation.*;
-import org.springframework.http.*;
-import org.springframework.stereotype.Repository;
-import org.springframework.util.LinkedMultiValueMap;
 import org.junit.Assert;
-import static org.mockito.Mockito.*;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -67,12 +49,16 @@ public class RedcapRepositoryTest {
     @Autowired
     private RedcapRepository redcapRepository;
 
+    /* This test mocks the RedcapSessionManager to add a project with fields {"PATIENT_ID", "CRDB_CONSENT_DATE_DAYS", "12_245_PARTA_CONSENTED"}.
+     * getRedcapDataForProject() is called to test whether the mocked data is returned for all fields, including fields which begin with a digit
+     * The proper resolution of redcap_id to EXTERNAL_COLUMN_HEADER should happen within this method.
+     */
     @Test
     public void testGetDataForRedcapProjectID() {
         if (redcapRepository == null) {
             Assert.fail("redcapRepository was not initialized properly for testing");
         }
-        List<Map<String, String>> dataReturned = redcapRepository.getRedcapDataForProject(RedcapSourceTestConfiguration.ONE_DIGIT_PROJECT_ID_TOKEN);
+        List<Map<String, String>> dataReturned = redcapRepository.getRedcapDataForProject(RedcapSourceTestConfiguration.ONE_DIGIT_PROJECT_TOKEN);
         List<Map<String, String>> expectedReturnValue = createExpectedReturnExportFromRedcapOneNumericAttributeName();
         String differenceBetweenReturnedAndExpected = getDifferenceBetweenReturnedAndExpected(dataReturned, expectedReturnValue);
         if (differenceBetweenReturnedAndExpected != null && differenceBetweenReturnedAndExpected.length() > 0) {
