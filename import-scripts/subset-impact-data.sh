@@ -82,7 +82,7 @@ if [ $STUDY_ID == "genie" ]; then
     $PYTHON_BINARY $PORTAL_SCRIPTS_DIRECTORY/merge.py  -d $OUTPUT_DIRECTORY -i "genie" -s "$SUBSET_FILENAME" -x "true" $MSK_IMPACT_DATA_DIRECTORY
     
     # remove germline mutations from maf
-    grep -v '\tGERMLINE\t' $OUTPUT_DIRECTORY/data_mutations_extended.txt > $OUTPUT_DIRECTORY/data_mutations_extended.txt.tmp
+    grep -v 'GERMLINE' $OUTPUT_DIRECTORY/data_mutations_extended.txt > $OUTPUT_DIRECTORY/data_mutations_extended.txt.tmp
     mv $OUTPUT_DIRECTORY/data_mutations_extended.txt.tmp $OUTPUT_DIRECTORY/data_mutations_extended.txt
 
     # remove if file empty
