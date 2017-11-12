@@ -1,12 +1,12 @@
 #!/bin/bash
 
 # Temp study importer arguments
-# (1): cancer study id [ mskimpact | mskimpact_heme | mskraindance | mskarcher | mixedpact | msk_kingscounty | msk_lehighvalley | msk_queenscancercenter ]
-# (2): temp study id [ temporary_mskimpact | temporary_mskimpact_heme | temporary_mskraindance | temporary_mskarcher | temporary_mixedpact | temporary_msk_kingscounty | temporary_msk_lehighvalley | temporary_msk_queenscancercenter ]
-# (3): backup study id [ yesterday_mskimpact | yesterday_mskimpact_heme | yesterday_mskraindance | yesterday_mskarcher | yesterday_mixedpact | yesterday_msk_kingscounty | yesterday_msk_lehighvalley | yesterday_msk_queenscancercenter ]
-# (4): portal name [ mskimpact-portal | mskheme-portal | mskraindance-portal | mskarcher-portal | mixedpact-portal |  msk-kingscounty-portal | msk-lehighvalley-portal | msk-queenscancercenter-portal ]
-# (5): study path [ $MSK_IMPACT_DATA_HOME | $MSK_HEMEPACT_DATA_HOME | $MSK_RAINDANCE_DATA_HOME | $MSK_ARCHER_DATA_HOME | $MSK_MIXEDPACT_DATA_HOME | $MSK_KINGS_DATA_HOME | $MSK_LEHIGH_DATA_HOME | $MSK_QUEENS_DATA_HOME ]
-# (6): notification file [ $mskimpact_notification_file | $mskheme_notification_file | $mskraindance_notification_file | $mixedpact_notification_file | $kingscounty_notification_file | $lehighvalley_notification_file | $queenscancercenter_notification_file ]
+# (1): cancer study id [ mskimpact | mskimpact_heme | mskraindance | mskarcher | mixedpact | msk_kingscounty | msk_lehighvalley | msk_queenscancercenter | msk_miamicancerinstitute | msk_hartfordhealthcare | lymphoma_super_cohort_fmi_msk ]
+# (2): temp study id [ temporary_mskimpact | temporary_mskimpact_heme | temporary_mskraindance | temporary_mskarcher | temporary_mixedpact | temporary_msk_kingscounty | temporary_msk_lehighvalley | temporary_msk_queenscancercenter | temporary_msk_miamicancerinstitute | temporary_msk_hartfordhealthcare | temporary_lymphoma_super_cohort_fmi_msk]
+# (3): backup study id [ yesterday_mskimpact | yesterday_mskimpact_heme | yesterday_mskraindance | yesterday_mskarcher | yesterday_mixedpact | yesterday_msk_kingscounty | yesterday_msk_lehighvalley | yesterday_msk_queenscancercenter | yesterday_msk_miamicancerinstitute | yesterday_msk_hartfordhealthcare | yesterday_lymphoma_super_cohort_fmi_msk]
+# (4): portal name [ mskimpact-portal | mskheme-portal | mskraindance-portal | mskarcher-portal | mixedpact-portal |  msk-kingscounty-portal | msk-lehighvalley-portal | msk-queenscancercenter-portal | msk-mci-portal | msk-hartford-portal | msk-fmi-lymphoma-portal ]
+# (5): study path [ $MSK_IMPACT_DATA_HOME | $MSK_HEMEPACT_DATA_HOME | $MSK_RAINDANCE_DATA_HOME | $MSK_ARCHER_DATA_HOME | $MSK_MIXEDPACT_DATA_HOME | $MSK_KINGS_DATA_HOME | $MSK_LEHIGH_DATA_HOME | $MSK_QUEENS_DATA_HOME | $MSK_MCI_DATA_HOME | $MSK_HARTFORD_DATA_HOME | $LYMPHOMA_SUPER_COHORT_DATA_HOME ]
+# (6): notification file [ $mskimpact_notification_file | $mskheme_notification_file | $mskraindance_notification_file | $mixedpact_notification_file | $kingscounty_notification_file | $lehighvalley_notification_file | $queenscancercenter_notification_file | $miamicancerinstitute_notification_file | $hartfordhealthcare_notification_file | $lymphoma_super_cohort_notification_file ]
 # (7): tmp directory
 # (8): email list
 # (9): oncotree version [ oncotree_candidate_release | oncotree_latest_stable ]
@@ -36,6 +36,11 @@ function usage {
 	echo -e "\t-o | --oncotree-version              oncotree version"
 	echo -e "\t-j | --importer-jar                  importer jar"
 	echo -e "\t-r | --transcript-overrides-source   transcript overrides source"
+}
+
+function sendFailureMessageMskPipelineLogsSlack {
+    MESSAGE=$1
+    curl -X POST --data-urlencode "payload={\"channel\": \"#msk-pipeline-logs\", \"username\": \"cbioportal_importer\", \"text\": \"MSK temporary study import process failed: $MESSAGE\", \"icon_emoji\": \":tired_face:\"}" https://hooks.slack.com/services/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
 }
 
 echo "Input arguments:"
@@ -139,7 +144,7 @@ else
 fi
 
 if [ "$num_studies_updated" -ne 1 ]; then
-	echo "Failed to import study '$CANCER_STUDY_IDENTIFIER'"
+	echo "Failed to import study '$CANCER_STUDY_IDENTIFIER'"	
 	IMPORT_FAIL=1
 else
 	# validate
@@ -190,8 +195,9 @@ fi
 EMAIL_BODY="The $CANCER_STUDY_IDENTIFIER study failed import. The original study will remain on the portal."
 # send email if import fails
 if [ $IMPORT_FAIL -gt 0 ]; then
-	echo -e "Sending email $EMAIL_BODY"
+	echo -e "Sending email $EMAIL_BODY"	
 	echo -e "$EMAIL_BODY" | mail -s "$CANCER_STUDY_IDENTIFIER Update Failure: Import" $EMAIL_LIST
+	sendFailureMessageMskPipelineLogsSlack "$CANCER_STUDY_IDENTIFIER import as temp study"
 fi
 
 # send email if validation fails
@@ -203,30 +209,35 @@ if [ $VALIDATION_FAIL -gt 0 ]; then
 	fi
 	echo -e "Sending email $EMAIL_BODY"
 	echo -e "$EMAIL_BODY" | mail -s "$CANCER_STUDY_IDENTIFIER Update Failure: Validation" $EMAIL_LIST
+	sendFailureMessageMskPipelineLogsSlack "$CANCER_STUDY_IDENTIFIER temp study validation"	
 fi
 
 EMAIL_BODY="The $BACKUP_CANCER_STUDY_IDENTIFIER study failed to delete. $CANCER_STUDY_IDENTIFIER study did not finish updating."
 if [ $DELETE_FAIL -gt 0 ]; then
 	echo -e "Sending email $EMAIL_BODY"
 	echo -e "$EMAIL_BODY" | mail -s "$CANCER_STUDY_IDENTIFIER Update Failure: Deletion" $EMAIL_LIST
+	sendFailureMessageMskPipelineLogsSlack "$BACKUP_CANCER_STUDY_IDENTIFIER deletion"
 fi
 
 EMAIL_BODY="Failed to backup $CANCER_STUDY_IDENTIFIER to $BACKUP_CANCER_STUDY_IDENTIFIER via renaming. $CANCER_STUDY_IDENTIFIER study did not finish updating."
 if [ $RENAME_BACKUP_FAIL -gt 0 ]; then
 	echo -e "Sending email $EMAIL_BODY"
 	echo -e "$EMAIL_BODY" | mail -s "$CANCER_STUDY_IDENTIFIER Update Failure: Renaming backup" $EMAIL_LIST
+	sendFailureMessageMskPipelineLogsSlack "$CANCER_STUDY_IDENTIFIER rename to $BACKUP_CANCER_STUDY_IDENTIFIER"
 fi
 
 EMAIL_BODY="Failed to rename temp study $TEMP_CANCER_STUDY_IDENTIFIER to $CANCER_STUDY_IDENTIFIER. $CANCER_STUDY_IDENTIFIER study did not finish updating."
 if [ $RENAME_FAIL -gt 0 ]; then
 	echo -e "Sending email $EMAIL_BODY"
 	echo -e "$EMAIL_BODY" | mail -s "$CANCER_STUDY_IDENTIFIER Update Failure: CRITICAL!! Renaming" $EMAIL_LIST
+	sendFailureMessageMskPipelineLogsSlack "CRITICAL FAILURE: $TEMP_CANCER_STUDY_IDENTIFIER rename to $CANCER_STUDY_IDENTIFIER" 
 fi
 
 EMAIL_BODY="Failed to update groups for backup study $BACKUP_CANCER_STUDY_IDENTIFIER."
 if [ $GROUPS_FAIL -gt 0 ]; then
 	echo -e "Sending email $EMAIL_BODY"
 	echo -e "$EMAIL_BODY" | mail -s "$CANCER_STUDY_IDENTIFIER Update Failure: Groups update" $EMAIL_LIST
+	sendFailureMessageMskPipelineLogsSlack "$CANCER_STUDY_IDENTIFIER groups update"
 fi
 
 # send notification file 
