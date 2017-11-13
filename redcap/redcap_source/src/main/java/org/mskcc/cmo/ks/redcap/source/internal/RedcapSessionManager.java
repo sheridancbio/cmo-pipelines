@@ -429,7 +429,7 @@ public class RedcapSessionManager {
     }
 
     public String getRedcapInstrumentNameByToken(String projectToken) {
-        RedcapProjectAttribute[] attributeArray = getRedcapAttribteByToken(projectToken);
+        RedcapProjectAttribute[] attributeArray = getRedcapAttributeByToken(projectToken);
         if (attributeArray == null || attributeArray.length < 1) {
             String errorMessage = "Error retrieving instrument name from project : no attributes available";
             log.error(errorMessage);
@@ -438,7 +438,7 @@ public class RedcapSessionManager {
         return attributeArray[0].getFormName();
     }
 
-    public RedcapProjectAttribute[] getRedcapAttribteByToken(String projectToken) {
+    public RedcapProjectAttribute[] getRedcapAttributeByToken(String projectToken) {
         LinkedMultiValueMap<String, String> uriVariables = new LinkedMultiValueMap<>();
         uriVariables.add("token", projectToken);
         uriVariables.add("content", "metadata");

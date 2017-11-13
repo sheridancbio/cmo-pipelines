@@ -33,23 +33,12 @@
 package org.mskcc.cmo.ks.redcap.source.internal;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import java.io.*;
-import java.net.*;
 import java.util.*;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
 import org.apache.log4j.Logger;
-import org.mskcc.cmo.ks.redcap.models.ProjectInfoResponse;
 import org.mskcc.cmo.ks.redcap.models.RedcapAttributeMetadata;
 import org.mskcc.cmo.ks.redcap.models.RedcapProjectAttribute;
-import org.mskcc.cmo.ks.redcap.models.RedcapToken;
-import org.mskcc.cmo.ks.redcap.source.ClinicalDataSource;
 import org.springframework.beans.factory.annotation.*;
-import org.springframework.http.*;
 import org.springframework.stereotype.Repository;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.web.client.RestTemplate;
 
 @Repository
 public class RedcapRepository {
@@ -63,7 +52,15 @@ public class RedcapRepository {
     private final Logger log = Logger.getLogger(RedcapRepository.class);
 
     public List<RedcapProjectAttribute> getAttributesByToken(String projectToken) {
-        return Arrays.asList(redcapSessionManager.getRedcapAttribteByToken(projectToken));
+        RedcapProjectAttribute[] redcapAttributeByToken = redcapSessionManager.getRedcapAttributeByToken(projectToken);
+        List<RedcapProjectAttribute> redcapProjectAttributeList = new ArrayList<>(redcapAttributeByToken.length);
+        String redcapInstrumentCompleteFieldName = redcapSessionManager.getRedcapInstrumentNameByToken(projectToken) + "_complete";
+        for (RedcapProjectAttribute redcapProjectAttribute : redcapAttributeByToken) {
+            if (!redcapInstrumentCompleteFieldName.equals(redcapProjectAttribute.getFieldName())) {
+                redcapProjectAttributeList.add(redcapProjectAttribute);
+            }
+        }
+        return redcapProjectAttributeList;
     }
 
     public List<Map<String, String>> getRedcapDataForProject(String projectToken) {

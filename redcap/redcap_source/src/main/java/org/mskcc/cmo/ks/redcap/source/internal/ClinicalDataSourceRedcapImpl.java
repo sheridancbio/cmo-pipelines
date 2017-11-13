@@ -32,10 +32,7 @@
 
 package org.mskcc.cmo.ks.redcap.source.internal;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.io.*;
-import java.net.*;
 import java.util.*;
 import org.apache.commons.text.StringEscapeUtils;
 import org.apache.log4j.Logger;
@@ -43,9 +40,7 @@ import org.mskcc.cmo.ks.redcap.models.RedcapAttributeMetadata;
 import org.mskcc.cmo.ks.redcap.models.RedcapProjectAttribute;
 import org.mskcc.cmo.ks.redcap.source.ClinicalDataSource;
 import org.springframework.beans.factory.annotation.*;
-import org.springframework.http.*;
 import org.springframework.stereotype.Repository;
-import org.springframework.util.LinkedMultiValueMap;
 
 /**
  *
@@ -268,14 +263,11 @@ public class ClinicalDataSourceRedcapImpl implements ClinicalDataSource {
                 //PATIENT_ID is both a sample and a patient attribute
                 sampleAttributeMap.put(attribute, meta);
                 patientAttributeMap.put(attribute, meta);
-                break;
-            }
-            if (meta.getAttributeType().equals("SAMPLE")) {
+                continue;
+            } else if (meta.getAttributeType().equals("SAMPLE")) {
                 sampleAttributeMap.put(attribute, meta);
-                break;
             } else {
                 patientAttributeMap.put(attribute, meta);
-                break;
             }
         }
         sampleHeader = makeHeader(sampleAttributeMap);
