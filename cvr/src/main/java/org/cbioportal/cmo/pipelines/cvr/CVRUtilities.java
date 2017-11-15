@@ -55,8 +55,8 @@ public class CVRUtilities {
     public final String MUTATION_FILE = "data_mutations_extended.txt";
     public final String UNFILTERED_MUTATION_FILE = "data_mutations_unfiltered.txt";
     public static final String DEFAULT_CLINICAL_FILE = "data_clinical.txt";
-    public final String SEQ_DATE_CLINICAL_FILE = "seq_date.txt";
-    public final String DARWIN_AGE_FILE = "darwin_age.txt";
+    public final String SEQ_DATE_CLINICAL_FILE = "cvr/seq_date.txt";
+    public final String DARWIN_AGE_FILE = "darwin/darwin_age.txt";
     public final String CORRESPONDING_ID_FILE = "linked_mskimpact_cases.txt";
     public final String CNA_FILE = "data_CNA.txt";
     public final String SEG_FILE = "_data_cna_hg19.seg";
