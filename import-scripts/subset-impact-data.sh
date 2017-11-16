@@ -50,11 +50,11 @@ fi
 echo -e "\tPORTAL_SCRIPTS_DIRECTORY="$PORTAL_SCRIPTS_DIRECTORY
 
 if [ $STUDY_ID == "genie" ]; then
-    CLINICAL_SUPP_FILE="$MSK_IMPACT_DATA_DIRECTORY/seq_date.txt"
+    CLINICAL_SUPP_FILE="$MSK_IMPACT_DATA_DIRECTORY/cvr/seq_date.txt"
 
-    # in the case of genie data, the input data directory must be the msk-impact data home, where we expect to see darwin_genie_sample.txt and darwin_genie_patient.txt as well
+    # in the case of genie data, the input data directory must be the msk-impact data home, where we expect to see darwin_naaccr.txt
     # copy the darwin genie files to the output directory with different filenames
-    cp $MSK_IMPACT_DATA_DIRECTORY/darwin_naaccr.txt $OUTPUT_DIRECTORY/data_clinical_supp_patient.txt
+    cp $MSK_IMPACT_DATA_DIRECTORY/darwin/darwin_naaccr.txt $OUTPUT_DIRECTORY/data_clinical_supp_patient.txt
     cut -f1,2 $MSK_IMPACT_DATA_DIRECTORY/data_clinical.txt > $OUTPUT_DIRECTORY/data_clinical_supp_sample.txt
     
     # run the generate clinical subset script to generate list of sample ids to subset from impact data - subset of sample ids will be written to given $SUBSET_FILENAME
@@ -62,10 +62,10 @@ if [ $STUDY_ID == "genie" ]; then
 
     # expand data_clinical_supp_sample.txt with ONCOTREE_CODE, SAMPLE_TYPE, GENE_PANEL from data_clinical.txt
     $PYTHON_BINARY $PORTAL_SCRIPTS_DIRECTORY/expand-clinical-data.py --study-id="genie" --clinical-file="$OUTPUT_DIRECTORY/data_clinical_supp_sample.txt" --clinical-supp-file="$MSK_IMPACT_DATA_DIRECTORY/data_clinical.txt" --fields="ONCOTREE_CODE,SAMPLE_TYPE,GENE_PANEL" --identifier-column-name="SAMPLE_ID"
-    $PYTHON_BINARY $PORTAL_SCRIPTS_DIRECTORY/add-age-at-seq-report.py --clinical-file="$OUTPUT_DIRECTORY/data_clinical_supp_sample.txt" --seq-date-file="$MSK_IMPACT_DATA_DIRECTORY/seq_date.txt" --age-file="$MSK_IMPACT_DATA_DIRECTORY/darwin_age.txt" --convert-to-days="true"
+    $PYTHON_BINARY $PORTAL_SCRIPTS_DIRECTORY/add-age-at-seq-report.py --clinical-file="$OUTPUT_DIRECTORY/data_clinical_supp_sample.txt" --seq-date-file="$MSK_IMPACT_DATA_DIRECTORY/cvr/seq_date.txt" --age-file="$MSK_IMPACT_DATA_DIRECTORY/darwin/darwin_age.txt" --convert-to-days="true"
     # expand data_clinical_supp_patient.txt with AGE_AT_DEATH, AGE_AT_LAST_FOLLOWUP, OS_STATUS
     $PYTHON_BINARY $PORTAL_SCRIPTS_DIRECTORY/expand-clinical-data.py --study-id="genie" --clinical-file="$OUTPUT_DIRECTORY/data_clinical_supp_patient.txt" --clinical-supp-file="$MSK_IMPACT_DATA_DIRECTORY/data_clinical_supp_darwin_demographics.txt" --fields="OS_STATUS" --identifier-column-name="PATIENT_ID"
-    $PYTHON_BINARY $PORTAL_SCRIPTS_DIRECTORY/expand-clinical-data.py --study-id="genie" --clinical-file="$OUTPUT_DIRECTORY/data_clinical_supp_patient.txt" --clinical-supp-file="$MSK_IMPACT_DATA_DIRECTORY/darwin_vital_status.txt" --fields="AGE_AT_DEATH,AGE_AT_LAST_FOLLOWUP" --identifier-column-name="PATIENT_ID"
+    $PYTHON_BINARY $PORTAL_SCRIPTS_DIRECTORY/expand-clinical-data.py --study-id="genie" --clinical-file="$OUTPUT_DIRECTORY/data_clinical_supp_patient.txt" --clinical-supp-file="$MSK_IMPACT_DATA_DIRECTORY/darwin/darwin_vital_status.txt" --fields="AGE_AT_DEATH,AGE_AT_LAST_FOLLOWUP" --identifier-column-name="PATIENT_ID"
 
     # rename GENE_PANEL to SEQ_ASSAY_ID in data_clinical_supp_sample.txt
     sed -i -e 's/GENE_PANEL/SEQ_ASSAY_ID/' $OUTPUT_DIRECTORY/data_clinical_supp_sample.txt
