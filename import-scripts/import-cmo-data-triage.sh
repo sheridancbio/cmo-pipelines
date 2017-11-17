@@ -131,7 +131,7 @@ then
     if [[ $IMPORT_FAIL -eq 0 && $num_studies_updated -gt 0 ]]; then
 	    #echo "'$num_studies_updated' studies have been updated, redeploying triage-portal war..."
     	echo "'$num_studies_updated' studies have been updated.  Restarting triage-tomcat server..."
-	    /usr/bin/sudo /etc/init.d/triage-tomcat7 restart
+	    /usr/bin/sudo /etc/init.d/triage-tomcat restart
     	#echo "'$num_studies_updated' studies have been updated (no longer need to restart triage-tomcat server...)"
     else
 	    echo "No studies have been updated, skipping redeploy of triage-portal war..."
