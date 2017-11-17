@@ -42,7 +42,6 @@ import org.springframework.beans.factory.annotation.*;
 import org.springframework.context.annotation.*;
 import org.springframework.http.*;
 import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.web.client.RestTemplate;
 
 /**
  *
@@ -63,8 +62,6 @@ public class MetadataManagerRedcapImpl implements MetadataManager {
     private RedcapSessionManager redcapSessionManager;
 
     private List<RedcapAttributeMetadata> namespace; //TODO: delete this functionality
-    private String metadataToken;
-    private String namespaceToken;
 
     private final Logger log = Logger.getLogger(MetadataManagerRedcapImpl.class);
 
@@ -104,15 +101,8 @@ public class MetadataManagerRedcapImpl implements MetadataManager {
         if (namespace != null) {
             return namespace;
         }
-        RestTemplate restTemplate = new RestTemplate();
-
-        log.info("Getting attribute namespace...");
-
-        String namespaceToken = redcapSessionManager.getNamespaceToken();
-        LinkedMultiValueMap<String, String> uriVariables = getUriVariables(namespaceToken);
-        HttpEntity<LinkedMultiValueMap<String, Object>> requestEntity = redcapSessionManager.getRequestEntity(uriVariables);
-        ResponseEntity<RedcapAttributeMetadata[]> responseEntity = restTemplate.exchange(redcapSessionManager.getRedcapApiURI(), HttpMethod.POST, requestEntity, RedcapAttributeMetadata[].class);
-        return Arrays.asList(responseEntity.getBody());
+        RedcapAttributeMetadata[] namespaceArray = redcapSessionManager.getRedcapNamespace();
+        return Arrays.asList(namespaceArray);
     }
 
     private Map<String,List<String>> makeHeader(Map<String, RedcapAttributeMetadata> attributeMap) {
@@ -145,12 +135,4 @@ public class MetadataManagerRedcapImpl implements MetadataManager {
         return headerMap;
     }
 
-    private LinkedMultiValueMap<String, String> getUriVariables(String token) {
-        LinkedMultiValueMap<String, String> uriVariables = new LinkedMultiValueMap<>();
-        uriVariables.add("token", token);
-        uriVariables.add("content", "record");
-        uriVariables.add("format", "json");
-        uriVariables.add("type", "flat");
-        return uriVariables;
-    }
 }
