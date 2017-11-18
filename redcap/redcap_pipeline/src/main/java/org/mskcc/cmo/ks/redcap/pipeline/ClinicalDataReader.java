@@ -179,6 +179,9 @@ public class ClinicalDataReader implements ItemStreamReader<Map<String, String>>
     }
 
     private void updateClinicalData(Map<String, String> record, boolean isSampleData) {
+        if (isSampleData && !record.containsKey("SAMPLE_ID")) {
+            return; // with no SAMPLE_ID field, we cannot register attributes with type SAMPLE .. this must be a patient only project
+        }
         Map<String, String> existingData = isSampleData ?
                 compiledClinicalSampleRecords.getOrDefault(record.get("SAMPLE_ID"), new HashMap<>()) :
                 compiledClinicalPatientRecords.getOrDefault(record.get("PATIENT_ID"), new HashMap<>());
