@@ -98,8 +98,7 @@ public class ClinicalDataReader implements ItemStreamReader<Map<String, String>>
             this.fullPatientHeader = metadataManager.getFullHeader(clinicalDataSource.getPatientHeader(stableId));
             // get clinical and sample data for current clinical data source
             for (Map<String, String> record : clinicalDataSource.getClinicalData(stableId)) {
-                updateClinicalData(record, true);
-                updateClinicalData(record, false);
+                updateClinicalData(record);
             }
             // merge remaining clinical data sources if in merge mode and more clinical data exists
             if (clinicalDataSource.hasMoreClinicalData(stableId)) {
@@ -172,24 +171,25 @@ public class ClinicalDataReader implements ItemStreamReader<Map<String, String>>
 
             // get clinical records and merge into existing clinical records
             for (Map<String, String> record : clinicalDataSource.getClinicalData(stableId)) {
-                updateClinicalData(record, true);
-                updateClinicalData(record, false);
+                updateClinicalData(record);
             }
         }
     }
 
-    private void updateClinicalData(Map<String, String> record, boolean isSampleData) {
-        if (isSampleData && !record.containsKey("SAMPLE_ID")) {
-            return; // with no SAMPLE_ID field, we cannot register attributes with type SAMPLE .. this must be a patient only project
-        }
-        Map<String, String> existingData = isSampleData ?
-                compiledClinicalSampleRecords.getOrDefault(record.get("SAMPLE_ID"), new HashMap<>()) :
-                compiledClinicalPatientRecords.getOrDefault(record.get("PATIENT_ID"), new HashMap<>());
-        List<String> clinicalHeader = isSampleData ? fullSampleHeader.get("header") : fullPatientHeader.get("header");
+    private void updateClinicalData(Map<String, String> record) {
+        updateClinicalData(record, "SAMPLE_ID", fullSampleHeader, compiledClinicalSampleRecords);
+        updateClinicalData(record, "PATIENT_ID", fullPatientHeader, compiledClinicalPatientRecords);
+    }
 
-        if (isSampleData && !existingData.containsKey("PATIENT_ID")) {
-            existingData.put("PATIENT_ID", record.get("PATIENT_ID"));
+    private void updateClinicalData(Map<String, String> record,
+                                    String primaryKey,
+                                    Map<String, List<String>> fullHeader,
+                                    Map<String, Map<String, String>> compiledClinicalRecords) {
+        if (!record.containsKey(primaryKey)) {
+            return; // when processing a patient-only record, there is no SAMPLE_ID ; don't try to register attribtes when the primary key is missing
         }
+        Map<String, String> existingData = compiledClinicalRecords.getOrDefault(record.get(primaryKey), new HashMap<>());
+        List<String> clinicalHeader = fullHeader.get("header");
         for (String attribute : clinicalHeader) {
             if (!record.containsKey(attribute)) {
                 continue;
@@ -199,28 +199,19 @@ public class ClinicalDataReader implements ItemStreamReader<Map<String, String>>
             try {
                 replacementValue = redcapUtils.getReplacementValueForAttribute(existingValue, record.get(attribute));
             } catch (ConflictingAttributeValuesException e) {
-                logWarningOverConflictingValues(existingValue, record, attribute, isSampleData);
+                logWarningOverConflictingValues(existingValue, record, attribute, primaryKey);
             }
             if (replacementValue == null) {
                 continue;
             }
             existingData.put(attribute, replacementValue);
         }
-        if (isSampleData) {
-            compiledClinicalSampleRecords.put(record.get("SAMPLE_ID"), existingData);
-        }
-        else {
-            compiledClinicalPatientRecords.put(record.get("PATIENT_ID"), existingData);
-        }
+        compiledClinicalRecords.put(record.get(primaryKey), existingData);
     }
 
-    private void logWarningOverConflictingValues(String existingValue, Map<String, String> record, String attribute, boolean isSampleData) {
+    private void logWarningOverConflictingValues(String existingValue, Map<String, String> record, String attribute, String primaryKey) {
         StringBuilder warningMessage = new StringBuilder("Clinical attribute " + attribute);
-        if (isSampleData) {
-            warningMessage.append(" for sample " + record.get("SAMPLE_ID"));
-        } else {
-            warningMessage.append(" for patient " + record.get("PATIENT_ID"));
-        }
+        warningMessage.append(" for record with " + primaryKey + ":" + record.get(primaryKey));
         warningMessage.append(" was previously seen with value '" + existingValue + "'");
         warningMessage.append(" but another conflicting value has been encountered : '" + record.get(attribute) + "'");
         warningMessage.append(" - ignoring this subsequent value.");

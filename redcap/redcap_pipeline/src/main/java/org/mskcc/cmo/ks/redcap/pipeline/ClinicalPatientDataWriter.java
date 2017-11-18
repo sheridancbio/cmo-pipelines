@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Memorial Sloan-Kettering Cancer Center.
+ * Copyright (c) 2016 - 2017 Memorial Sloan-Kettering Cancer Center.
  *
  * This library is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS
@@ -29,17 +29,18 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+
 package org.mskcc.cmo.ks.redcap.pipeline;
 
 import java.io.*;
 import java.util.*;
 import org.apache.log4j.Logger;
 import org.springframework.batch.item.ExecutionContext;
-import org.springframework.batch.item.ItemStreamException;
-import org.springframework.batch.item.ItemStreamWriter;
 import org.springframework.batch.item.file.FlatFileHeaderCallback;
 import org.springframework.batch.item.file.FlatFileItemWriter;
 import org.springframework.batch.item.file.transform.PassThroughLineAggregator;
+import org.springframework.batch.item.ItemStreamException;
+import org.springframework.batch.item.ItemStreamWriter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.FileSystemResource;
 
@@ -59,21 +60,17 @@ public class ClinicalPatientDataWriter implements ItemStreamWriter<ClinicalDataC
     private Map<String, List<String>> header;
 
     private static final String OUTPUT_FILENAME = "data_clinical_patient.txt";
-    private File stagingFile;
-    private Set<String> patientsProcessed = new HashSet();
-    private Set<String> skippedPatients = new HashSet();
+    private File stagingFile = new File(directory, OUTPUT_FILENAME);
     private FlatFileItemWriter<String> flatFileItemWriter = new FlatFileItemWriter<String>();
-    private List<String> writeList = new ArrayList<>();
 
     private final Logger log = Logger.getLogger(ClinicalPatientDataWriter.class);
 
     @Override
     public void open(ExecutionContext ec) throws ItemStreamException {
         if (writeClinicalPatient) {
-            this.stagingFile = new File(directory, OUTPUT_FILENAME);
             PassThroughLineAggregator aggr = new PassThroughLineAggregator();
             flatFileItemWriter.setLineAggregator(aggr);
-            flatFileItemWriter.setResource( new FileSystemResource(stagingFile));
+            flatFileItemWriter.setResource(new FileSystemResource(stagingFile));
             flatFileItemWriter.setHeaderCallback(new FlatFileHeaderCallback() {
                 @Override
                 public void writeHeader(Writer writer) throws IOException {
@@ -105,13 +102,10 @@ public class ClinicalPatientDataWriter implements ItemStreamWriter<ClinicalDataC
     @Override
     public void write(List<? extends ClinicalDataComposite> items) throws Exception {
         if (writeClinicalPatient) {
-            writeList.clear();
+            List<String> writeList = new ArrayList<>();
+            Set<String> writtenPatientSet = new HashSet();
             for (ClinicalDataComposite composite : items) {
-                if (!patientsProcessed.add(composite.getData().get("PATIENT_ID"))) {
-                    if (skippedPatients.add(composite.getData().get("PATIENT_ID"))) {
-                        log.warn("Clinical data for patient " + composite.getData().get("PATIENT_ID")
-                            + " has already been added - skipping record.");
-                    }
+                if (!writtenPatientSet.add(composite.getData().get("PATIENT_ID"))) {
                     continue;
                 }
                 writeList.add(composite.getPatientResult());
