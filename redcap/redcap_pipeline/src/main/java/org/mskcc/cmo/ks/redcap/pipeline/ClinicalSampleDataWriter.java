@@ -64,11 +64,12 @@ public class ClinicalSampleDataWriter implements ItemStreamWriter<ClinicalDataCo
     public ClinicalDataSource clinicalDataSource;
 
     private static final String OUTPUT_FILENAME = "data_clinical_sample.txt";
-    private File stagingFile = new File(directory, OUTPUT_FILENAME);
+    private File stagingFile;
     private FlatFileItemWriter<String> flatFileItemWriter = new FlatFileItemWriter<String>();
 
     @Override
     public void open(ExecutionContext ec) throws ItemStreamException {
+        this.stagingFile  = new File(directory, OUTPUT_FILENAME);
         if (writeClinicalSample) {
             PassThroughLineAggregator aggr = new PassThroughLineAggregator();
             flatFileItemWriter.setLineAggregator(aggr);

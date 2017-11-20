@@ -58,15 +58,16 @@ public class ClinicalPatientDataWriter implements ItemStreamWriter<ClinicalDataC
 
     @Value("#{stepExecutionContext['patientHeader']}")
     private Map<String, List<String>> header;
-
+    private Set<String> writtenPatientSet = new HashSet();
     private static final String OUTPUT_FILENAME = "data_clinical_patient.txt";
-    private File stagingFile = new File(directory, OUTPUT_FILENAME);
+    private File stagingFile;
     private FlatFileItemWriter<String> flatFileItemWriter = new FlatFileItemWriter<String>();
 
     private final Logger log = Logger.getLogger(ClinicalPatientDataWriter.class);
 
     @Override
     public void open(ExecutionContext ec) throws ItemStreamException {
+        this.stagingFile = new File(directory, OUTPUT_FILENAME);
         if (writeClinicalPatient) {
             PassThroughLineAggregator aggr = new PassThroughLineAggregator();
             flatFileItemWriter.setLineAggregator(aggr);
@@ -103,7 +104,6 @@ public class ClinicalPatientDataWriter implements ItemStreamWriter<ClinicalDataC
     public void write(List<? extends ClinicalDataComposite> items) throws Exception {
         if (writeClinicalPatient) {
             List<String> writeList = new ArrayList<>();
-            Set<String> writtenPatientSet = new HashSet();
             for (ClinicalDataComposite composite : items) {
                 if (!writtenPatientSet.add(composite.getData().get("PATIENT_ID"))) {
                     continue;
