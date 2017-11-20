@@ -34,7 +34,10 @@ package org.mskcc.cmo.ks.redcap.pipeline;
 
 import java.util.*;
 import org.apache.log4j.Logger;
-import org.mskcc.cmo.ks.redcap.source.*;
+import org.mskcc.cmo.ks.redcap.source.ClinicalDataSource;
+import org.mskcc.cmo.ks.redcap.source.MetadataManager;
+import org.mskcc.cmo.ks.redcap.pipeline.util.ConflictingAttributeValuesException;
+import org.mskcc.cmo.ks.redcap.pipeline.util.RedcapUtils;
 import org.springframework.batch.item.ExecutionContext;
 import org.springframework.batch.item.ItemStreamException;
 import org.springframework.batch.item.ItemStreamReader;
@@ -48,10 +51,13 @@ import org.springframework.beans.factory.annotation.Value;
 public class ClinicalDataReader implements ItemStreamReader<Map<String, String>> {
 
     @Autowired
-    public ClinicalDataSource clinicalDataSource;
+    private ClinicalDataSource clinicalDataSource;
 
     @Autowired
-    public MetadataManager metadataManager;
+    private MetadataManager metadataManager;
+
+    @Autowired
+    private RedcapUtils redcapUtils;
 
     @Value("#{jobParameters[rawData]}")
     private Boolean rawData;
@@ -72,7 +78,6 @@ public class ClinicalDataReader implements ItemStreamReader<Map<String, String>>
 
     @Override
     public void open(ExecutionContext ec) throws ItemStreamException {
-
         String projectTitle = (redcapProjectTitle == null) ? clinicalDataSource.getNextClinicalProjectTitle(stableId) : redcapProjectTitle;
         if (rawData && clinicalDataSource.redcapDataTypeIsTimeline(projectTitle)) {
             ec.put("writeRawClinicalData", false);
@@ -186,19 +191,17 @@ public class ClinicalDataReader implements ItemStreamReader<Map<String, String>>
             if (!record.containsKey(attribute)) {
                 continue;
             }
-            String existingValue = existingData.getOrDefault(attribute, "");
-            String recordValue = record.getOrDefault(attribute, "");
-            if (!existingValue.isEmpty() && !recordValue.isEmpty() && !attribute.equals("SAMPLE_ID") && !attribute.equals("PATIENT_ID")) {
-                if (isSampleData) {
-                    log.info("Clinical attribute " + attribute + " already loaded for sample " + record.get("SAMPLE_ID") + " - skipping.");
-                }
-                else {
-                    log.info("Clinical attribute " + attribute + " already loaded for patient " + record.get("PATIENT_ID") + " - skipping.");
-                }
+            String existingValue = existingData.get(attribute);
+            String replacementValue = null;
+            try {
+                replacementValue = redcapUtils.getReplacementValueForAttribute(existingValue, record.get(attribute));
+            } catch (ConflictingAttributeValuesException e) {
+                logWarningOverConflictingValues(existingValue, record, attribute, isSampleData);
+            }
+            if (replacementValue == null) {
                 continue;
             }
-            String value = (!existingValue.isEmpty()) ? existingValue : recordValue;
-            existingData.put(attribute, value);
+            existingData.put(attribute, replacementValue);
         }
         if (isSampleData) {
             compiledClinicalSampleRecords.put(record.get("SAMPLE_ID"), existingData);
@@ -206,6 +209,19 @@ public class ClinicalDataReader implements ItemStreamReader<Map<String, String>>
         else {
             compiledClinicalPatientRecords.put(record.get("PATIENT_ID"), existingData);
         }
+    }
+
+    private void logWarningOverConflictingValues(String existingValue, Map<String, String> record, String attribute, boolean isSampleData) {
+        StringBuilder warningMessage = new StringBuilder("Clinical attribute " + attribute);
+        if (isSampleData) {
+            warningMessage.append(" for sample " + record.get("SAMPLE_ID"));
+        } else {
+            warningMessage.append(" for patient " + record.get("PATIENT_ID"));
+        }
+        warningMessage.append(" was previously seen with value '" + existingValue + "'");
+        warningMessage.append(" but another conflicting value has been encountered : '" + record.get(attribute) + "'");
+        warningMessage.append(" - ignoring this subsequent value.");
+        log.info(warningMessage.toString());
     }
 
     @Override
@@ -221,4 +237,5 @@ public class ClinicalDataReader implements ItemStreamReader<Map<String, String>>
         }
         return null;
     }
+
 }
