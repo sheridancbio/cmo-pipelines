@@ -463,4 +463,19 @@ public class RedcapSessionManager {
         ResponseEntity<RedcapAttributeMetadata[]> responseEntity = restTemplate.exchange(getRedcapApiURI(), HttpMethod.POST, requestEntity, RedcapAttributeMetadata[].class);
         return responseEntity.getBody();
     }
+
+    public RedcapAttributeMetadata[] getRedcapNamespace() {
+        RestTemplate restTemplate = new RestTemplate();
+        log.info("Getting attribute namespace...");
+        String namespaceToken = getNamespaceToken();
+        LinkedMultiValueMap<String, String> uriVariables = new LinkedMultiValueMap<>();
+        uriVariables.add("token", namespaceToken);
+        uriVariables.add("content", "record");
+        uriVariables.add("format", "json");
+        uriVariables.add("type", "flat");
+        HttpEntity<LinkedMultiValueMap<String, Object>> requestEntity = getRequestEntity(uriVariables);
+        ResponseEntity<RedcapAttributeMetadata[]> responseEntity = restTemplate.exchange(getRedcapApiURI(), HttpMethod.POST, requestEntity, RedcapAttributeMetadata[].class);
+        return responseEntity.getBody();
+    }
+
 }
