@@ -68,10 +68,16 @@ function addDateAddedData {
     $PYTHON_BINARY $PORTAL_HOME/scripts/update-date-added.py --date-added-file=$STUDY_DATA_DIRECTORY/data_clinical_supp_date.txt --clinical-file=$STUDY_DATA_DIRECTORY/data_clinical.txt
 }
 
-# Function for alerting slack channel of import failure
+# Function for alerting slack channel of any failures
 function sendFailureMessageMskPipelineLogsSlack {
     MESSAGE=$1
     curl -X POST --data-urlencode "payload={\"channel\": \"#msk-pipeline-logs\", \"username\": \"cbioportal_importer\", \"text\": \"MSK cBio pipelines import process failed: $MESSAGE\", \"icon_emoji\": \":tired_face:\"}" https://hooks.slack.com/services/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
+}
+
+# Function for alerting slack channel of successful imports
+function sendSuccessMessageMskPipelineLogsSlack {
+    STUDY_ID=$1
+    curl -X POST --data-urlencode "payload={\"channel\": \"#msk-pipeline-logs\", \"username\": \"cbioportal_importer\", \"text\": \"MSK cBio pipelines import success: $STUDY_ID\", \"icon_emoji\": \":tada:\"}" https://hooks.slack.com/services/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
 }
 
 # Function for restarting tomcats
@@ -315,6 +321,8 @@ if [ $IMPORT_STATUS_IMPACT -eq 0 ]; then
     if [ $? -gt 0 ]; then
         RESTART_AFTER_IMPACT_IMPORT=0
         sendFailureMessageMskPipelineLogsSlack "MSKIMPACT import"
+    else
+        sendSuccessMessageMskPipelineLogsSlack "MSKIMPACT"
     fi
 else
     if [ $DB_VERSION_FAIL -gt 0 ]; then
@@ -341,6 +349,7 @@ if [ $IMPORT_STATUS_HEME -eq 0 ]; then
     bash $PORTAL_HOME/scripts/import-temp-study.sh --study-id="mskimpact_heme" --temp-study-id="temporary_mskimpact_heme" --backup-study-id="yesterday_mskimpact_heme" --portal-name="mskheme-portal" --study-path="$MSK_HEMEPACT_DATA_HOME" --notification-file="$mskheme_notification_file" --tmp-directory="$tmp" --email-list="$email_list" --oncotree-version="${ONCOTREE_VERSION_TO_USE}" --importer-jar="$PORTAL_HOME/lib/msk-dmp-importer.jar" --transcript-overrides-source="mskcc"
     if [ $? -eq 0 ]; then
         RESTART_AFTER_DMP_PIPELINES_IMPORT=1
+        sendSuccessMessageMskPipelineLogsSlack "HEMEPACT"
     else
         sendFailureMessageMskPipelineLogsSlack "HEMEPACT import"
     fi
@@ -358,6 +367,7 @@ if [ $IMPORT_STATUS_RAINDANCE -eq 0 ]; then
     bash $PORTAL_HOME/scripts/import-temp-study.sh --study-id="mskraindance" --temp-study-id="temporary_mskraindance" --backup-study-id="yesterday_mskraindance" --portal-name="mskraindance-portal" --study-path="$MSK_RAINDANCE_DATA_HOME" --notification-file="$mskraindance_notification_file" --tmp-directory="$tmp" --email-list="$email_list" --oncotree-version="${ONCOTREE_VERSION_TO_USE}" --importer-jar="$PORTAL_HOME/lib/msk-dmp-importer.jar" --transcript-overrides-source="mskcc"
     if [ $? -eq 0 ]; then
         RESTART_AFTER_DMP_PIPELINES_IMPORT=1
+        sendSuccessMessageMskPipelineLogsSlack "RAINDANCE"
     else
         sendFailureMessageMskPipelineLogsSlack "RAINDANCE import"
     fi
@@ -375,6 +385,7 @@ if [ $IMPORT_STATUS_ARCHER -eq 0 ]; then
     bash $PORTAL_HOME/scripts/import-temp-study.sh --study-id="mskarcher" --temp-study-id="temporary_mskarcher" --backup-study-id="yesterday_mskarcher" --portal-name="mskarcher-portal" --study-path="$MSK_ARCHER_DATA_HOME" --notification-file="$mskarcher_notification_file" --tmp-directory="$tmp" --email-list="$email_list" --oncotree-version="${ONCOTREE_VERSION_TO_USE}" --importer-jar="$PORTAL_HOME/lib/msk-dmp-importer.jar" --transcript-overrides-source="mskcc"
     if [ $? -eq 0 ]; then
         RESTART_AFTER_DMP_PIPELINES_IMPORT=1
+        sendSuccessMessageMskPipelineLogsSlack "ARCHER"
     else
         sendFailureMessageMskPipelineLogsSlack "ARCHER import"
     fi
@@ -473,6 +484,7 @@ if [ $MERGE_FAIL -eq 0 ]; then
         sendFailureMessageMskPipelineLogsSlack "MIXEDPACT import"
     else
         RESTART_AFTER_DMP_PIPELINES_IMPORT=1
+        sendSuccessMessageMskPipelineLogsSlack "MIXEDPACT"
     fi
 else
     echo "Something went wrong with merging clinical studies."
@@ -575,6 +587,7 @@ if [ $MSK_KINGS_SUBSET_FAIL -eq 0 ]; then
         sendFailureMessageMskPipelineLogsSlack "KINGSCOUNTY import"
     else
         RESTART_AFTER_MSK_AFFILIATE_IMPORT=1
+        sendSuccessMessageMskPipelineLogsSlack "KINGSCOUNTY"
     fi
 else
     echo "Something went wrong with subsetting clinical studies for KINGSCOUNTY."
@@ -601,6 +614,7 @@ if [ $MSK_LEHIGH_SUBSET_FAIL -eq 0 ]; then
         sendFailureMessageMskPipelineLogsSlack "LEHIGHVALLEY import"
     else
         RESTART_AFTER_MSK_AFFILIATE_IMPORT=1
+        sendSuccessMessageMskPipelineLogsSlack "LEHIGHVALLEY"
     fi
 else
     echo "Something went wrong with subsetting clinical studies for LEHIGHVALLEY."
@@ -627,6 +641,7 @@ if [ $MSK_QUEENS_SUBSET_FAIL -eq 0 ]; then
         sendFailureMessageMskPipelineLogsSlack "QUEENSCANCERCENTER import"
     else
         RESTART_AFTER_MSK_AFFILIATE_IMPORT=1
+        sendSuccessMessageMskPipelineLogsSlack "QUEENSCANCERCENTER"
     fi
 else
     echo "Something went wrong with subsetting clinical studies for QUEENSCANCERCENTER."
@@ -653,6 +668,7 @@ if [ $MSK_MCI_SUBSET_FAIL -eq 0 ]; then
         sendFailureMessageMskPipelineLogsSlack "MIAMICANCERINSTITUTE import"
     else
         RESTART_AFTER_MSK_AFFILIATE_IMPORT=1
+        sendSuccessMessageMskPipelineLogsSlack "MIAMICANCERINSTITUTE"
     fi
 else
     echo "Something went wrong with subsetting clinical studies for MIAMICANCERINSTITUTE."
@@ -679,6 +695,7 @@ if [ $MSK_HARTFORD_SUBSET_FAIL -eq 0 ]; then
         sendFailureMessageMskPipelineLogsSlack "HARTFORDHEALTHCARE import"
     else
         RESTART_AFTER_MSK_AFFILIATE_IMPORT=1
+        sendSuccessMessageMskPipelineLogsSlack "HARTFORDHEALTHCARE"
     fi
 else
     echo "Something went wrong with subsetting clinical studies for HARTFORDHEALTHCARE."
@@ -805,6 +822,7 @@ if [ $LYMPHOMA_SUPER_COHORT_SUBSET_FAIL -eq 0 ]; then
         sendFailureMessageMskPipelineLogsSlack "LYMPHOMASUPERCOHORT import"
     else
         RESTART_AFTER_MSK_AFFILIATE_IMPORT=1
+        sendSuccessMessageMskPipelineLogsSlack "LYMPHOMASUPERCOHORT"
     fi
 else
     echo "Something went wrong with subsetting clinical studies for Lymphoma super cohort."
