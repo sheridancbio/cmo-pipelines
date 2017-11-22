@@ -134,6 +134,9 @@ public class GMLMutationDataReader implements ItemStreamReader<AnnotatedRecord> 
                         catch (HttpServerErrorException e) {
                             log.warn("Failed to annotate a record from json! Sample: " + sampleId + " Variant: " + record.getCHROMOSOME() + ":" + record.getSTART_POSITION() + record.getREFERENCE_ALLELE() + ">" + record.getTUMOR_SEQ_ALLELE2());
                             annotatedRecord = cvrUtilities.buildCVRAnnotatedRecord(record);
+                        } catch (GenomeNexusAnnotationFailureException e) {
+                            log.warn("Failed to annotate a record from json! Sample: " + sampleId + " Variant: " + record.getCHROMOSOME() + ":" + record.getSTART_POSITION() + record.getREFERENCE_ALLELE() + ">" + record.getTUMOR_SEQ_ALLELE2() + " : " + e.getMessage());
+                            annotatedRecord = cvrUtilities.buildCVRAnnotatedRecord(record);
                         }
                         mutationRecords.add(annotatedRecord);
                         header.addAll(record.getHeaderWithAdditionalFields());
@@ -173,9 +176,11 @@ public class GMLMutationDataReader implements ItemStreamReader<AnnotatedRecord> 
                     AnnotatedRecord to_add_annotated;
                     try {
                         to_add_annotated = annotator.annotateRecord(to_add, false, "mskcc", forceAnnotation);
-                    }
-                    catch (HttpServerErrorException e) {
+                    } catch (HttpServerErrorException e) {
                         log.warn("Failed to annotate a record from existing file! Sample: " + to_add.getTUMOR_SAMPLE_BARCODE() + " Variant: " + to_add.getCHROMOSOME() + ":" + to_add.getSTART_POSITION() + to_add.getREFERENCE_ALLELE() + ">" + to_add.getTUMOR_SEQ_ALLELE2());
+                        to_add_annotated = cvrUtilities.buildCVRAnnotatedRecord(to_add);
+                    } catch (GenomeNexusAnnotationFailureException e) {
+                        log.warn("Failed to annotate a record from existing file! Sample: " + to_add.getTUMOR_SAMPLE_BARCODE() + " Variant: " + to_add.getCHROMOSOME() + ":" + to_add.getSTART_POSITION() + to_add.getREFERENCE_ALLELE() + ">" + to_add.getTUMOR_SEQ_ALLELE2() + " : " + e.getMessage());
                         to_add_annotated = cvrUtilities.buildCVRAnnotatedRecord(to_add);
                     }
                     if (!cvrUtilities.isDuplicateRecord(to_add, mutationMap.get(to_add.getTUMOR_SAMPLE_BARCODE())) && !(germlineSamples.contains(to_add.getTUMOR_SAMPLE_BARCODE()) && to_add.getMUTATION_STATUS().equals("GERMLINE"))) {
