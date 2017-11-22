@@ -122,6 +122,9 @@ public class CVRUnfilteredMutationDataReader implements ItemStreamReader<Annotat
                 } catch (HttpServerErrorException e) {
                     log.warn("Failed to annotate a record from json! Sample: " + sampleId + " Variant: " + record.getCHROMOSOME() + ":" + record.getSTART_POSITION() + record.getREFERENCE_ALLELE() + ">" + record.getTUMOR_SEQ_ALLELE2());
                     annotatedRecord = cvrUtilities.buildCVRAnnotatedRecord(record);
+                } catch (GenomeNexusAnnotationFailureException e) {
+                    log.warn("Failed to annotate a record from json! Sample: " + sampleId + " Variant: " + record.getCHROMOSOME() + ":" + record.getSTART_POSITION() + record.getREFERENCE_ALLELE() + ">" + record.getTUMOR_SEQ_ALLELE2() + " : " + e.getMessage());
+                    annotatedRecord = cvrUtilities.buildCVRAnnotatedRecord(record);
                 }
                 annotatedRecord.getAdditionalProperties().put("IS_NEW", cvrUtilities.IS_NEW);
                 mutationRecords.add(annotatedRecord);
@@ -165,6 +168,9 @@ public class CVRUnfilteredMutationDataReader implements ItemStreamReader<Annotat
                             to_add_annotated = annotator.annotateRecord(to_add, false, "mskcc", forceAnnotation);
                         } catch (HttpServerErrorException e) {
                             log.warn("Failed to annotate a record from existing file! Sample: " + to_add.getTUMOR_SAMPLE_BARCODE() + " Variant: " + to_add.getCHROMOSOME() + ":" + to_add.getSTART_POSITION() + to_add.getREFERENCE_ALLELE() + ">" + to_add.getTUMOR_SEQ_ALLELE2());
+                            to_add_annotated = cvrUtilities.buildCVRAnnotatedRecord(to_add);
+                        } catch (GenomeNexusAnnotationFailureException e) {
+                            log.warn("Failed to annotate a record from existing file! Sample: " + to_add.getTUMOR_SAMPLE_BARCODE() + " Variant: " + to_add.getCHROMOSOME() + ":" + to_add.getSTART_POSITION() + to_add.getREFERENCE_ALLELE() + ">" + to_add.getTUMOR_SEQ_ALLELE2() + " : " + e.getMessage());
                             to_add_annotated = cvrUtilities.buildCVRAnnotatedRecord(to_add);
                         }
                         mutationRecords.add(to_add_annotated);
