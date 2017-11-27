@@ -37,6 +37,7 @@ import org.cbioportal.models.*;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.*;
+import java.text.*;
 import java.util.*;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
@@ -68,6 +69,7 @@ public class CVRUtilities {
     public final String GENE_PANEL = "gene_panels/impact468_gene_panel.txt";
     public final String IS_NEW = "NEWRECORD";
     public static final Integer DEFAULT_MAX_NUM_SAMPLES_TO_REMOVE = -1;
+    public static final SimpleDateFormat CVR_DATE_FORMAT = new SimpleDateFormat("EEE, dd MMM yyyy kk:mm:ss zzz");
 
     private final String CENTER_MSKCC = "MSKCC";
     private final String DEFAULT_BUILD_NUMBER = "37";
@@ -75,12 +77,13 @@ public class CVRUtilities {
     private final String VALIDATION_STATUS_UNKNOWN = "Unknown";
     private final String DEFAULT_IMPACT_SEQUENCER = "MSK-IMPACT";
 
+
     Logger log = Logger.getLogger(CVRUtilities.class);
     private String genesStableId;
     private String genesDescription;
     private String genesCancerStudyId;
     private List<String> geneSymbols;
-    
+
     private List<String> variationList = new ArrayList();
     @Autowired
     private void createVariationList() {
@@ -375,5 +378,37 @@ public class CVRUtilities {
         }
         return "UNK";
     }
-    
+
+    /**
+     * Calculates the age at seq report for a list of CVRClinical records given a patient age
+     * and the reference calculation date.
+     * @param referenceCalculationDate
+     * @param records
+     * @param patientAge
+     * @throws ParseException
+     */
+    public void calculateAgeAtSeqReportForPatient(Date referenceCalculationDate, List<CVRClinicalRecord> records, String patientAge) throws ParseException {
+        for (CVRClinicalRecord record : records) {
+            if (record.getSEQ_DATE() != null && !record.getSEQ_DATE().isEmpty() && !record.getSEQ_DATE().equals("NA")) {
+                Date cvrDateSequenced = CVR_DATE_FORMAT.parse(record.getSEQ_DATE());
+                // We know age of patient now from darwin, and the time at which the patient was sequenced.
+                // The age of the patient when sequenced is therefore AGE_NOW - YEARS_SINCE_SEQUENCING
+                // This converts the date arithmetic from miliseconds to years.
+                // 1000ms -> 1s, 60s -> 1m, 60m -> 1h, 24h -> 1d, 365.2422d -> 1y
+                Double diffYears = (referenceCalculationDate.getTime() - cvrDateSequenced.getTime()) / 1000L / 60L / 60L / 24L / 365.2422;
+                Double ageAtSeqReport = Math.ceil(Integer.parseInt(patientAge) - diffYears);
+                if (ageAtSeqReport > 90) {
+                    ageAtSeqReport = 90D;
+                }
+                if (ageAtSeqReport < 15) {
+                    ageAtSeqReport = 15D;
+                }
+                record.setAGE_AT_SEQ_REPORT(String.valueOf(ageAtSeqReport.intValue()));
+            }
+            else {
+                record.setAGE_AT_SEQ_REPORT("NA");
+            }
+        }
+    }
+
 }
