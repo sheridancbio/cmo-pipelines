@@ -5,7 +5,7 @@
 echo $(date)
 tmp=$PORTAL_HOME/tmp/import-cron-cmo-triage
 if [[ -d "$tmp" && "$tmp" != "/" ]]; then
-	rm -rf "$tmp"/*
+    rm -rf "$tmp"/*
 fi
 cmo_email_list="cbioportal-cmo-importer@cbio.mskcc.org"
 pipeline_email_list="cbioportal-pipelines@cbio.mskcc.org"
@@ -123,18 +123,24 @@ then
         IMPORT_FAIL=1
         EMAIL_BODY="Triage import failed"
         echo -e "Sending email $EMAIL_BODY"
-        echo -e "$EMAIL_BODY" | mail -s "Import failure: triage" $pipelines_email_list
+        echo -e "$EMAIL_BODY" | mail -s "Import failure: triage" $pipeline_email_list
     fi
     num_studies_updated=`cat $tmp/num_studies_updated.txt`
 
     # redeploy war
     if [[ $IMPORT_FAIL -eq 0 && $num_studies_updated -gt 0 ]]; then
-	    #echo "'$num_studies_updated' studies have been updated, redeploying triage-portal war..."
-    	echo "'$num_studies_updated' studies have been updated.  Restarting triage-tomcat server..."
-	    /usr/bin/sudo /etc/init.d/triage-tomcat restart
-    	#echo "'$num_studies_updated' studies have been updated (no longer need to restart triage-tomcat server...)"
+        TOMCAT_SERVER_PRETTY_DISPLAY_NAME="Triage Tomcat"
+        TOMCAT_SERVER_DISPLAY_NAME="triage-tomcat"
+        #echo "'$num_studies_updated' studies have been updated, redeploying triage-portal war..."
+        echo "'$num_studies_updated' studies have been updated.  Restarting triage-tomcat server..."
+        if ! /usr/bin/sudo /etc/init.d/triage-tomcat restart ; then
+            EMAIL_BODY="Attempt to trigger a restart of the $TOMCAT_SERVER_DISPLAY_NAME server failed"
+            echo -e "Sending email $EMAIL_BODY"
+            echo -e "$EMAIL_BODY" | mail -s "$TOMCAT_SERVER_PRETTY_DISPLAY_NAME Restart Error : unable to trigger restart" $pipeline_email_list
+        fi
+        #echo "'$num_studies_updated' studies have been updated (no longer need to restart triage-tomcat server...)"
     else
-	    echo "No studies have been updated, skipping redeploy of triage-portal war..."
+        echo "No studies have been updated, skipping redeploy of triage-portal war..."
     fi
 
     # import ran and either failed or succeeded
@@ -151,5 +157,5 @@ then
 fi
 
 if [[ -d "$tmp" && "$tmp" != "/" ]]; then
-	rm -rf "$tmp"/*
+    rm -rf "$tmp"/*
 fi

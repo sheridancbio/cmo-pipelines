@@ -4,7 +4,7 @@
 
 tmp=$PORTAL_HOME/tmp/import-cron-cmo-msk
 if [[ -d "$tmp" && "$tmp" != "/" ]]; then
-	rm -rf "$tmp"/*
+    rm -rf "$tmp"/*
 fi
 email_list="cbioportal-cmo-importer@cbio.mskcc.org"
 now=$(date "+%Y-%m-%d-%H-%M-%S")
@@ -51,12 +51,28 @@ if [[ $DB_VERSION_FAIL -eq 0 && $CMO_FETCH_FAIL -eq 0 ]]; then
 
     # redeploy war
     if [[ $IMPORT_FAIL -eq 0 && $num_studies_updated -gt 0 ]]; then
-	    echo "'$num_studies_updated' studies have been updated, requesting redeployment of msk portal war..."
-        ssh -i $HOME/.ssh/id_rsa_msk_tomcat_restarts_key cbioportal_importer@dashi.cbio.mskcc.org touch /srv/data/portal-cron/msk-tomcat-restart
-        ssh -i $HOME/.ssh/id_rsa_msk_tomcat_restarts_key cbioportal_importer@dashi2.cbio.mskcc.org touch /srv/data/portal-cron/msk-tomcat-restart
-	    echo "'$num_studies_updated' studies have been updated (no longer need to restart schultz-tomcat server...)"
+        echo "'$num_studies_updated' studies have been updated, requesting redeployment of msk portal war..."
+        TOMCAT_HOST_LIST=(dashi.cbio.mskcc.org dashi2.cbio.mskcc.org)
+        TOMCAT_HOST_USERNAME=cbioportal_importer
+        TOMCAT_HOST_SSH_KEY_FILE=${HOME}/.ssh/id_rsa_msk_tomcat_restarts_key
+        TOMCAT_SERVER_RESTART_PATH=/srv/data/portal-cron/msk-tomcat-restart
+        TOMCAT_SERVER_PRETTY_DISPLAY_NAME="MSK Tomcat" # e.g. Public Tomcat
+        TOMCAT_SERVER_DISPLAY_NAME="msk-tomcat" # e.g. schultz-tomcat
+        SSH_OPTIONS="-i ${TOMCAT_HOST_SSH_KEY_FILE} -o BATCHMODE=yes -o ConnectTimeout=3"
+        declare -a failed_restart_server_list
+        for server in ${TOMCAT_HOST_LIST[@]}; do
+            if ! ssh ${SSH_OPTIONS} ${TOMCAT_HOST_USERNAME}@${server} touch ${TOMCAT_SERVER_RESTART_PATH} ; then
+                failed_restart_server_list[${#failed_restart_server_list[*]}]=${server}
+            fi
+        done
+        if [ ${#failed_restart_server_list[*]} -ne 0 ] ; then
+            EMAIL_BODY="Attempt to trigger a restart of the $TOMCAT_SERVER_DISPLAY_NAME server on the following hosts failed: ${failed_restart_server_list[*]}"
+            echo -e "Sending email $EMAIL_BODY"
+            echo -e "$EMAIL_BODY" | mail -s "$TOMCAT_SERVER_PRETTY_DISPLAY_NAME Restart Error : unable to trigger restart" $email_list
+        fi
+        echo "'$num_studies_updated' studies have been updated (no longer need to restart $TOMCAT_SERVER_DISPLAY_NAME server...)"
     else
-	    echo "No studies have been updated, skipping redeploy of msk portal war..."
+        echo "No studies have been updated, skipping redeploy of msk portal war..."
     fi
 fi
 
@@ -70,5 +86,5 @@ fi
 $JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27184 -Xmx16g -ea -Dspring.profiles.active=dbcp -Djava.io.tmpdir="$tmp" -cp $PORTAL_HOME/lib/msk-cmo-importer.jar org.mskcc.cbio.importer.Admin --send-update-notification --portal msk-automation-portal --notification-file "$msk_automation_notification_file"
 
 if [[ -d "$tmp" && "$tmp" != "/" ]]; then
-	rm -rf "$tmp"/*
+    rm -rf "$tmp"/*
 fi
