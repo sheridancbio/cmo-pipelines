@@ -32,12 +32,14 @@
 
 package org.mskcc.cmo.ks.redcap.pipeline;
 
-import java.util.*;
+import java.io.IOException;
 import org.apache.log4j.Logger;
+import org.mskcc.cmo.ks.redcap.pipeline.util.MetaFileUtil;
 import org.mskcc.cmo.ks.redcap.source.ClinicalDataSource;
 import org.springframework.batch.core.ExitStatus;
 import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.core.StepExecutionListener;
+import org.springframework.batch.item.ItemStreamException;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -60,27 +62,24 @@ public class ClinicalDataStepListener implements StepExecutionListener {
         boolean writeClinicalSample = (boolean)se.getExecutionContext().get("writeClinicalSample");
         boolean writeClinicalPatient = (boolean)se.getExecutionContext().get("writeClinicalPatient");
         String stableId = se.getJobParameters().getString("stableId");
+        String directory = se.getJobParameters().getString("directory");
         if (writeClinicalSample) {
-            List<String> clinicalSampleFiles = (List<String>)se.getJobExecution().getExecutionContext().get("clinicalSampleFiles");
-            if (clinicalSampleFiles == null) {
-                clinicalSampleFiles = new ArrayList<>();
+            String clinicalSampleFilename = (String)se.getExecutionContext().get("clinicalSampleFile");
+            try {
+                MetaFileUtil.createMetaClinicalFile(directory, clinicalSampleFilename, MetaFileUtil.CLINICAL_SAMPLE_DATATYPE, stableId);
+            } catch (IOException ex) {
+                log.error("Error writing meta clinical sample file: " + stableId);
+                throw new ItemStreamException(ex);
             }
-            clinicalSampleFiles.add((String)se.getExecutionContext().get("clinicalSampleFile"));
-            se.getJobExecution().getExecutionContext().put("clinicalSampleFiles", clinicalSampleFiles);
         }
         if (writeClinicalPatient) {
-            List<String> clinicalPatientFiles = (List<String>)se.getJobExecution().getExecutionContext().get("clinicalPatientFiles");
-            if (clinicalPatientFiles == null) {
-                clinicalPatientFiles = new ArrayList<>();
+            String clinicalPatientFilename = (String)se.getExecutionContext().get("clinicalPatientFile");
+            try {
+                MetaFileUtil.createMetaClinicalFile(directory, clinicalPatientFilename, MetaFileUtil.CLINICAL_PATIENT_DATATYPE, stableId);
+            } catch (IOException ex) {
+                log.error("Error writing meta clinical patient file: " + stableId);
+                throw new ItemStreamException(ex);
             }
-            clinicalPatientFiles.add((String)se.getExecutionContext().get("clinicalPatientFile"));
-            se.getJobExecution().getExecutionContext().put("clinicalPatientFiles", clinicalPatientFiles);
-        }
-        if (clinicalDataSource.hasMoreClinicalData(stableId)) {
-            return new ExitStatus("CLINICAL");
-        }
-        if (clinicalDataSource.hasMoreTimelineData(stableId)) {
-            return new ExitStatus("TIMELINE");
         }
         return ExitStatus.COMPLETED;
     }

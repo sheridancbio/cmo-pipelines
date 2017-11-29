@@ -66,19 +66,33 @@ public class TimelineReader implements ItemStreamReader<Map<String, String>> {
 
     @Override
     public void open(ExecutionContext ec) throws ItemStreamException {
-        String projectTitle = (redcapProjectTitle == null) ? clinicalDataSource.getNextTimelineProjectTitle(stableId) : redcapProjectTitle;
-        log.info("Getting timeline header for project: " + projectTitle);
-        timelineHeader = clinicalDataSource.getProjectHeader(projectTitle);
-        timelineRecords = clinicalDataSource.exportRawDataForProjectTitle(projectTitle);
-        if (!rawData) {
-            // merge remaining timeline data sources if in merge mode and more timeline data exists
-            if (clinicalDataSource.hasMoreTimelineData(stableId)) {
-                mergeTimelineDataSources();
+        boolean writeTimelineData = clinicalDataSource.hasMoreTimelineData(stableId);        
+        if (writeTimelineData) {
+            String projectTitle = (redcapProjectTitle == null) ? clinicalDataSource.getNextTimelineProjectTitle(stableId) : redcapProjectTitle;
+            log.info("Getting timeline header for project: " + projectTitle);
+            timelineHeader = clinicalDataSource.getProjectHeader(projectTitle);
+            timelineRecords = clinicalDataSource.exportRawDataForProjectTitle(projectTitle);
+            if (!rawData) {
+                // merge remaining timeline data sources if in merge mode and more timeline data exists
+                if (clinicalDataSource.hasMoreTimelineData(stableId)) {
+                    mergeTimelineDataSources();
+                }
             }
+            // update execution context with project title and full timeline header        
+            ec.put("projectTitle", projectTitle);
+            ec.put("timelineHeader", timelineHeader);
         }
-        // update execution context with project title and full timeline header
-        ec.put("projectTitle", projectTitle);
-        ec.put("timelineHeader", timelineHeader);
+        else {
+            String message = "No timeline data for ";
+            if (stableId != null) {
+                message += "stable id: " + stableId;
+            }
+            else {
+                message += "redcap project title: " + redcapProjectTitle;
+            }
+            log.warn(message);
+        }
+        ec.put("writeTimelineData", writeTimelineData);
     }
     
     private void mergeTimelineDataSources() {
