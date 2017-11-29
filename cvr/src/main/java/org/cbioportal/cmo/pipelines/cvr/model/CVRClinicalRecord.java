@@ -49,7 +49,6 @@ public class CVRClinicalRecord {
     private String primarySite;
     private String cancerTypeDetailed;
     private String genePanel;
-    private String otherSampleId;
     private String otherPatientId;
     private String soComments;
     private String sampleCoverage;
@@ -77,7 +76,6 @@ public class CVRClinicalRecord {
         this.primarySite = metaData.getPrimarySite();
         this.cancerTypeDetailed = metaData.getTumorTypeName();
         this.genePanel = metaData.getGenePanel();
-        this.otherSampleId = metaData.getLegacySampleId();
         this.otherPatientId = metaData.getLegacyPatientId();
         this.soComments = metaData.getSoComments();
         this.sampleCoverage = String.valueOf(metaData.getSampleCoverage());
@@ -104,7 +102,6 @@ public class CVRClinicalRecord {
         this.primarySite = "";
         this.cancerTypeDetailed = "";
         this.genePanel = metaData.getGenePanel();
-        this.otherSampleId = metaData.getLegacySampleId();
         this.otherPatientId = metaData.getLegacyPatientId();
         this.soComments = metaData.getSoComments();
         this.sampleCoverage = String.valueOf(metaData.getSampleCoverage());
@@ -191,14 +188,6 @@ public class CVRClinicalRecord {
 
     public void setGENE_PANEL(String genePanel) {
         this.genePanel = genePanel;
-    }
-
-    public String getOTHER_SAMPLE_ID() {
-        return this.otherSampleId != null ? this.otherSampleId : "";
-    }
-
-    public void setOTHER_SAMPLE_ID(String otherSampleId) {
-        this.otherSampleId = otherSampleId;
     }
 
     public String getOTHER_PATIENT_ID() {
@@ -335,7 +324,6 @@ public class CVRClinicalRecord {
         fieldNames.add("PRIMARY_SITE");
         fieldNames.add("CANCER_TYPE_DETAILED");
         fieldNames.add("GENE_PANEL");
-        fieldNames.add("OTHER_SAMPLE_ID");
         fieldNames.add("OTHER_PATIENT_ID");
         fieldNames.add("SO_COMMENTS");
         fieldNames.add("SAMPLE_COVERAGE");
