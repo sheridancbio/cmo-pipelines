@@ -36,8 +36,9 @@ import org.cbioportal.cmo.pipelines.cvr.*;
 import org.cbioportal.cmo.pipelines.cvr.model.*;
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
-import java.text.SimpleDateFormat;
 import org.apache.log4j.Logger;
 import org.springframework.batch.item.*;
 import org.springframework.batch.item.file.FlatFileItemReader;
@@ -54,7 +55,7 @@ public class CVRClinicalDataReader implements ItemStreamReader<CVRClinicalRecord
 
     @Value("#{jobParameters[stagingDirectory]}")
     private String stagingDirectory;
-    
+
     @Value("#{jobParameters[studyId]}")
     private String studyId;
 
@@ -63,19 +64,18 @@ public class CVRClinicalDataReader implements ItemStreamReader<CVRClinicalRecord
 
     @Autowired
     public CVRUtilities cvrUtilities;
-    
+
     @Autowired
     public CvrSampleListUtil cvrSampleListUtil;
 
     private List<CVRClinicalRecord> clinicalRecords = new ArrayList();
     private Map<String, List<CVRClinicalRecord>> patientToRecordMap = new HashMap();
-    private SimpleDateFormat cvrDateFormat = new SimpleDateFormat("EEE, dd MMM yyyy kk:mm:ss zzz");
 
     Logger log = Logger.getLogger(CVRClinicalDataReader.class);
 
     @Override
     public void open(ExecutionContext ec) throws ItemStreamException {
-        processClinicalFile(ec);      
+        processClinicalFile(ec);
         processJsonFile();
         if (studyId.equals("mskimpact")) {
             processSeqDateFile(ec);
@@ -108,7 +108,7 @@ public class CVRClinicalDataReader implements ItemStreamReader<CVRClinicalRecord
         }
         return null;
     }
-    
+
     private void processClinicalFile(ExecutionContext ec) {
         File mskimpactClinicalFile = new File(stagingDirectory, clinicalFilename);
         if (!mskimpactClinicalFile.exists()) {
@@ -144,10 +144,10 @@ public class CVRClinicalDataReader implements ItemStreamReader<CVRClinicalRecord
             throw new ItemStreamException(e);
         }
         finally {
-            reader.close();            
-        }    
+            reader.close();
+        }
     }
-    
+
     private void processJsonFile() {
         CVRData cvrData = new CVRData();
         // load cvr data from cvr_data.json file
@@ -162,17 +162,28 @@ public class CVRClinicalDataReader implements ItemStreamReader<CVRClinicalRecord
             CVRClinicalRecord record = new CVRClinicalRecord(result.getMetaData());
             List<CVRClinicalRecord> records = patientToRecordMap.getOrDefault(record.getPATIENT_ID(), new ArrayList<CVRClinicalRecord>());
             records.add(record);
-            patientToRecordMap.put(record.getPATIENT_ID(), records);          
+            patientToRecordMap.put(record.getPATIENT_ID(), records);
             clinicalRecords.add(record);
-        }        
+        }
     }
-    
+
     private void processAgeFile(ExecutionContext ec) {
         File mskimpactAgeFile = new File(stagingDirectory, cvrUtilities.DARWIN_AGE_FILE);
         if (!mskimpactAgeFile.exists()) {
             log.error("File does not exist - skipping data loading from age file: " + mskimpactAgeFile.getName());
             return;
         }
+        // get file creation date as reference time to use for calculating age at seq report
+        Date fileCreationDate;
+        try {
+            BasicFileAttributes attributes = Files.readAttributes(mskimpactAgeFile.toPath(), BasicFileAttributes.class);
+            fileCreationDate = new Date(attributes.creationTime().toMillis());
+        }
+        catch (IOException e) {
+            log.error("Error getting file creation date from: " + mskimpactAgeFile.getName());
+            throw new ItemStreamException(e);
+        }
+
         log.info("Loading age data from : " + mskimpactAgeFile.getName());
         DelimitedLineTokenizer tokenizer = new DelimitedLineTokenizer(DelimitedLineTokenizer.DELIMITER_TAB);
         DefaultLineMapper<MskimpactAge> mapper = new DefaultLineMapper<>();
@@ -188,28 +199,8 @@ public class CVRClinicalDataReader implements ItemStreamReader<CVRClinicalRecord
             MskimpactAge mskimpactAge;
             while ((mskimpactAge = reader.read()) != null) {
                 if (patientToRecordMap.keySet().contains(mskimpactAge.getPATIENT_ID())) {
-                    for (CVRClinicalRecord record : patientToRecordMap.get(mskimpactAge.getPATIENT_ID())) {
-                        if (record.getSEQ_DATE() != null && !record.getSEQ_DATE().isEmpty() && !record.getSEQ_DATE().equals("NA")) {
-                            Date now = new Date();
-                            Date cvrDateSequenced = cvrDateFormat.parse(record.getSEQ_DATE());
-                            // We know age of patient now from darwin, and the time at which the patient was sequenced.
-                            // The age of the patient when sequenced is therefore AGE_NOW - YEARS_SINCE_SEQUENCING
-                            // This converts the date arithmetic from miliseconds to years.
-                            // 1000ms -> 1s, 60s -> 1m, 60m -> 1h, 24h -> 1d, 365.2422d -> 1y
-                            Double diffYears = (now.getTime() - cvrDateSequenced.getTime()) / 1000L / 60L / 60L / 24L / 365.2422;
-                            Double ageAtSeqReport = Math.ceil(Integer.parseInt(mskimpactAge.getAGE()) - diffYears);
-                            if (ageAtSeqReport > 90) {
-                                ageAtSeqReport = 90D;
-                            }
-                            if (ageAtSeqReport < 15) {
-                                ageAtSeqReport = 15D;
-                            }
-                            record.setAGE_AT_SEQ_REPORT(String.valueOf(ageAtSeqReport.intValue()));
-                        }
-                        else {
-                            record.setAGE_AT_SEQ_REPORT("NA");
-                        }
-                    }                        
+                    cvrUtilities.calculateAgeAtSeqReportForPatient(fileCreationDate,
+                            patientToRecordMap.get(mskimpactAge.getPATIENT_ID()), mskimpactAge.getAGE());
                 }
             }
         }
@@ -221,7 +212,7 @@ public class CVRClinicalDataReader implements ItemStreamReader<CVRClinicalRecord
             reader.close();
         }
     }
-    
+
     private void processSeqDateFile(ExecutionContext ec) {
         File mskimpactSeqDateFile = new File(stagingDirectory, cvrUtilities.SEQ_DATE_CLINICAL_FILE);
         if (!mskimpactSeqDateFile.exists()) {
@@ -238,7 +229,7 @@ public class CVRClinicalDataReader implements ItemStreamReader<CVRClinicalRecord
         reader.setLineMapper(mapper);
         reader.setLinesToSkip(1);
         reader.open(ec);
-        
+
         MskimpactSeqDate mskimpactSeqDate;
         try{
             while ((mskimpactSeqDate = reader.read()) != null) {
