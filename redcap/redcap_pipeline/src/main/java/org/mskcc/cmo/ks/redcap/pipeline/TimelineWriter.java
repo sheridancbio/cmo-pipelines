@@ -64,6 +64,9 @@ public class TimelineWriter  implements ItemStreamWriter<String> {
     
     @Value("#{stepExecutionContext['projectTitle']}")
     private String projectTitle;
+    
+    @Value("#{stepExecutionContext['writeTimelineData']}")
+    private boolean writeTimelineData;
 
     @Value("#stepExecutionContext['standardTimelineDataFields']")
     private List<String> standardTimelineDataFields;
@@ -80,21 +83,25 @@ public class TimelineWriter  implements ItemStreamWriter<String> {
         else {
             this.stagingFile = new File(directory, OUTPUT_FILENAME_PREFIX + ".txt");
         }
-        PassThroughLineAggregator aggr = new PassThroughLineAggregator();
-        flatFileItemWriter.setLineAggregator(aggr);
-        flatFileItemWriter.setResource(new FileSystemResource(stagingFile));
-        flatFileItemWriter.setHeaderCallback(new FlatFileHeaderCallback() {
-            @Override
-            public void writeHeader(Writer writer) throws IOException {
-                writer.write(getHeaderLine(timelineHeader));
-            }
-        });
-        flatFileItemWriter.open(ec);
+        if (writeTimelineData) {
+            PassThroughLineAggregator aggr = new PassThroughLineAggregator();
+            flatFileItemWriter.setLineAggregator(aggr);
+            flatFileItemWriter.setResource(new FileSystemResource(stagingFile));
+            flatFileItemWriter.setHeaderCallback(new FlatFileHeaderCallback() {
+                @Override
+                public void writeHeader(Writer writer) throws IOException {
+                    writer.write(getHeaderLine(timelineHeader));
+                }
+            });
+            flatFileItemWriter.open(ec);
+        }
     }
 
     @Override
     public void update(ExecutionContext ec) throws ItemStreamException {
-        ec.put("timelineFile", stagingFile.getName());
+        if (writeTimelineData) {
+            ec.put("timelineFile", stagingFile.getName());
+        }        
     }
 
     @Override
@@ -104,7 +111,9 @@ public class TimelineWriter  implements ItemStreamWriter<String> {
 
     @Override
     public void write(List<? extends String> items) throws Exception {
-         flatFileItemWriter.write(items);
+        if (writeTimelineData) {
+            flatFileItemWriter.write(items);
+        }
     }
 
     private String getHeaderLine(List<String> metaData) {

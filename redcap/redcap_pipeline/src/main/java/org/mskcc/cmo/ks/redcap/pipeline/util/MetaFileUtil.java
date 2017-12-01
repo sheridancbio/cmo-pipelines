@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 - 2017 Memorial Sloan-Kettering Cancer Center.
+ * Copyright (c) 2017 Memorial Sloan-Kettering Cancer Center.
  *
  * This library is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS
@@ -29,52 +29,56 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-package org.mskcc.cmo.ks.redcap.pipeline;
 
+package org.mskcc.cmo.ks.redcap.pipeline.util;
+
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
-import org.springframework.batch.core.StepContribution;
-import org.springframework.batch.core.scope.context.ChunkContext;
-import org.springframework.batch.core.step.tasklet.Tasklet;
-import org.springframework.batch.item.ExecutionContext;
-import org.springframework.batch.repeat.RepeatStatus;
-import org.springframework.beans.factory.annotation.Value;
+import java.nio.file.*;
+import java.util.*;
 
 /**
  *
- * @author heinsz
+ * @author ochoaa
  */
-public class MetaFileStepTasklet implements Tasklet {
-
-    @Value("#{jobParameters[stableId]}")
-    private String cancerStudyIdentifier;
-
-    @Value("#{jobParameters[directory]}")
-    private String directory;
-
-    @Override
-    public RepeatStatus execute(StepContribution sc, ChunkContext cc) throws Exception {
-        ExecutionContext jobExecutionContext = cc.getStepContext().getStepExecution().getJobExecution().getExecutionContext();
-        List<String> clinicalSampleFiles = (List<String>)jobExecutionContext.get("clinicalSampleFiles");
-        List<String> clinicalPatientFiles = (List<String>)jobExecutionContext.get("clinicalPatientFiles");
-        List<String> timelineFiles = (List<String>)jobExecutionContext.get("timelineFiles");
-        for (String clinicalSampleFile : clinicalSampleFiles) {
-            createMetaFile(clinicalSampleFile, "SAMPLE_ATTRIBUTES", "clinical");
-        }
-        for (String clinicalPatientFile : clinicalPatientFiles) {
-            createMetaFile(clinicalPatientFile, "PATIENT_ATTRIBUTES", "clinical");
-        }
-        for (String timelineFile : timelineFiles) {
-            createMetaFile(timelineFile, "TIMELINE", "timeline");
-        }
-        return RepeatStatus.FINISHED;
+public class MetaFileUtil {
+    public static String CLINICAL_SAMPLE_DATATYPE = "SAMPLE_ATTRIBUTES";
+    public static String CLINICAL_PATIENT_DATATYPE = "PATIENT_ATTRIBUTES";
+    public static String TIMELINE_DATATYPE = "TIMELINE";
+    
+    /**
+     * Creates meta clinical file for patient or sample data.
+     * @param directory
+     * @param clinicalFilename
+     * @param datatype
+     * @param cancerStudyIdentifier
+     * @throws IOException 
+     */
+    public static void createMetaClinicalFile(String directory, String clinicalFilename, String datatype, String cancerStudyIdentifier) throws IOException {
+        createMetaFile(directory, clinicalFilename, datatype, "clinical", cancerStudyIdentifier);
     }
-
-    private void createMetaFile(String clinicalFilename, String datatype, String replacementContext) throws Exception {
+    
+    /**
+     * Creates timeline meta file.
+     * @param directory
+     * @param clinicalFilename
+     * @param cancerStudyIdentifier
+     * @throws IOException 
+     */
+    public static void createMetaTimelineFile(String directory, String clinicalFilename, String cancerStudyIdentifier) throws IOException {
+        createMetaFile(directory, clinicalFilename, TIMELINE_DATATYPE, "timeline", cancerStudyIdentifier);
+    }
+    
+    /**
+     * Meta file writer helper function.
+     * @param directory
+     * @param clinicalFilename
+     * @param datatype
+     * @param replacementContext
+     * @param cancerStudyIdentifier
+     * @throws IOException 
+     */
+    private static void createMetaFile(String directory, String clinicalFilename, String datatype, String replacementContext, String cancerStudyIdentifier) throws IOException {
         List<String> rows = new ArrayList<>();
         rows.add("cancer_study_identifier: " + cancerStudyIdentifier);
         rows.add("genetic_alteration_type: CLINICAL");
@@ -83,5 +87,4 @@ public class MetaFileStepTasklet implements Tasklet {
         Path file = Paths.get(directory, clinicalFilename.replace("data_" + replacementContext, "meta_" + replacementContext));
         Files.write(file, rows, StandardCharsets.UTF_8);
     }
-
 }

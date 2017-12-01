@@ -32,14 +32,16 @@
 
 package org.mskcc.cmo.ks.redcap.pipeline;
 
+import java.io.IOException;
 import java.util.*;
 import org.apache.log4j.Logger;
+import org.mskcc.cmo.ks.redcap.pipeline.util.MetaFileUtil;
 import org.mskcc.cmo.ks.redcap.source.ClinicalDataSource;
 import org.springframework.batch.core.ExitStatus;
 import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.core.StepExecutionListener;
+import org.springframework.batch.item.ItemStreamException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 
 /**
  *
@@ -61,15 +63,17 @@ public class TimelineDataStepListener implements StepExecutionListener {
 
     @Override
     public ExitStatus afterStep(StepExecution se) {
-        List<String> timelineFiles = (List<String>)se.getJobExecution().getExecutionContext().get("timelineFiles");
+        boolean writeTimelineData = (boolean)se.getExecutionContext().get("writeTimelineData");
         String stableId = se.getJobParameters().getString("stableId");
-        if (timelineFiles == null) {
-            timelineFiles = new ArrayList<>();
-        }
-        timelineFiles.add((String)se.getExecutionContext().get("timelineFile"));
-        se.getJobExecution().getExecutionContext().put("timelineFiles", timelineFiles);
-        if (clinicalDataSource.hasMoreTimelineData(stableId)) {
-            return new ExitStatus("TIMELINE");
+        String directory = se.getJobParameters().getString("directory");
+        if (writeTimelineData) {
+            String timelineFilename = (String)se.getExecutionContext().get("timelineFile");
+            try {
+                MetaFileUtil.createMetaTimelineFile(directory, timelineFilename, stableId);
+            } catch (IOException ex) {
+                log.error("Error writing meta timeline file: " + stableId);
+                throw new ItemStreamException(ex);
+            }
         }
         return ExitStatus.COMPLETED;
     }

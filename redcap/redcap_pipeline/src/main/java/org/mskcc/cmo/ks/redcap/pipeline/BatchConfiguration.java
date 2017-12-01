@@ -74,15 +74,7 @@ public class BatchConfiguration {
     public Job redcapExportJob() {
         return jobBuilderFactory.get(REDCAP_EXPORT_JOB)
                 .start(exportClinicalDataStep())
-                    .on("CLINICAL")
-                    .to(exportClinicalDataStep())
-                .on("TIMELINE")
-                    .to(exportTimelineDataStep())
-                    .on("TIMELINE")
-                    .to(exportTimelineDataStep())
-                .on("COMPLETED")
-                .to(metaFileStep())
-                .end()
+                .next(exportTimelineDataStep())
                 .build();
     }
 
@@ -159,11 +151,6 @@ public class BatchConfiguration {
         return stepBuilderFactory.get("importRedcapProjectDataStep")
                 .tasklet(importRedcapProjectDataTasklet())
                 .build();
-    }
-
-    @Bean
-    public Step metaFileStep() {
-        return stepBuilderFactory.get("metaFileStep").tasklet(metaFileStepTasklet()).build();
     }
 
     @Bean
@@ -284,12 +271,4 @@ public class BatchConfiguration {
     public RawTimelineDataStepListener exportRawTimelineDataStepListener() {
         return new RawTimelineDataStepListener();
     }
-
-    // meta file tasklet
-    @Bean
-    @StepScope
-    public Tasklet metaFileStepTasklet() {
-        return new MetaFileStepTasklet();
-    }
-
 }
