@@ -80,13 +80,56 @@ function sendSuccessMessageMskPipelineLogsSlack {
     curl -X POST --data-urlencode "payload={\"channel\": \"#msk-pipeline-logs\", \"username\": \"cbioportal_importer\", \"text\": \"MSK cBio pipelines import success: $STUDY_ID\", \"icon_emoji\": \":tada:\"}" https://hooks.slack.com/services/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
 }
 
-# Function for restarting tomcats
-function restartTomcats {
+# Function for restarting MSK tomcats
+# TODO obviously restartMSKTomcats and restartSchultzTomcats should really be one function ...
+function restartMSKTomcats {
     # redeploy war
     echo "Requesting redeployment of msk portal war..."
     echo $(date)
-    ssh -i $HOME/.ssh/id_rsa_msk_tomcat_restarts_key cbioportal_importer@dashi.cbio.mskcc.org touch /srv/data/portal-cron/msk-tomcat-restart
-    ssh -i $HOME/.ssh/id_rsa_msk_tomcat_restarts_key cbioportal_importer@dashi2.cbio.mskcc.org touch /srv/data/portal-cron/msk-tomcat-restart
+    TOMCAT_HOST_LIST=(dashi.cbio.mskcc.org dashi2.cbio.mskcc.org)
+    TOMCAT_HOST_USERNAME=cbioportal_importer
+    TOMCAT_HOST_SSH_KEY_FILE=${HOME}/.ssh/id_rsa_msk_tomcat_restarts_key
+    TOMCAT_SERVER_RESTART_PATH=/srv/data/portal-cron/msk-tomcat-restart
+    TOMCAT_SERVER_PRETTY_DISPLAY_NAME="MSK Tomcat" # e.g. Public Tomcat
+    TOMCAT_SERVER_DISPLAY_NAME="msk-tomcat" # e.g. schultz-tomcat
+    SSH_OPTIONS="-i ${TOMCAT_HOST_SSH_KEY_FILE} -o BATCHMODE=yes -o ConnectTimeout=3"
+    declare -a failed_restart_server_list
+    for server in ${TOMCAT_HOST_LIST[@]}; do
+        if ! ssh ${SSH_OPTIONS} ${TOMCAT_HOST_USERNAME}@${server} touch ${TOMCAT_SERVER_RESTART_PATH} ; then
+            failed_restart_server_list[${#failed_restart_server_list[*]}]=${server}
+        fi
+    done
+    if [ ${#failed_restart_server_list[*]} -ne 0 ] ; then
+        EMAIL_BODY="Attempt to trigger a restart of the $TOMCAT_SERVER_DISPLAY_NAME server on the following hosts failed: ${failed_restart_server_list[*]}"
+        echo -e "Sending email $EMAIL_BODY"
+        echo -e "$EMAIL_BODY" | mail -s "$TOMCAT_SERVER_PRETTY_DISPLAY_NAME Restart Error : unable to trigger restart" $email_list
+    fi
+}
+
+# Function for restarting Schultz tomcats
+# TODO obviously restartMSKTomcats and restartSchultzTomcats should really be one function ...
+function restartSchultzTomcats {
+    # redeploy war
+    echo "Requesting redeployment of schultz portal war..."
+    echo $(date)
+    TOMCAT_HOST_LIST=(dashi.cbio.mskcc.org dashi2.cbio.mskcc.org)
+    TOMCAT_HOST_USERNAME=cbioportal_importer
+    TOMCAT_HOST_SSH_KEY_FILE=${HOME}/.ssh/id_rsa_schultz_tomcat_restarts_key
+    TOMCAT_SERVER_RESTART_PATH=/srv/data/portal-cron/schultz-tomcat-restart
+    TOMCAT_SERVER_PRETTY_DISPLAY_NAME="Schultz Tomcat" # e.g. Public Tomcat
+    TOMCAT_SERVER_DISPLAY_NAME="schultz-tomcat" # e.g. schultz-tomcat
+    SSH_OPTIONS="-i ${TOMCAT_HOST_SSH_KEY_FILE} -o BATCHMODE=yes -o ConnectTimeout=3"
+    declare -a failed_restart_server_list
+    for server in ${TOMCAT_HOST_LIST[@]}; do
+        if ! ssh ${SSH_OPTIONS} ${TOMCAT_HOST_USERNAME}@${server} touch ${TOMCAT_SERVER_RESTART_PATH} ; then
+            failed_restart_server_list[${#failed_restart_server_list[*]}]=${server}
+        fi
+    done
+    if [ ${#failed_restart_server_list[*]} -ne 0 ] ; then
+        EMAIL_BODY="Attempt to trigger a restart of the $TOMCAT_SERVER_DISPLAY_NAME server on the following hosts failed: ${failed_restart_server_list[*]}"
+        echo -e "Sending email $EMAIL_BODY"
+        echo -e "$EMAIL_BODY" | mail -s "$TOMCAT_SERVER_PRETTY_DISPLAY_NAME Restart Error : unable to trigger restart" $email_list
+    fi
 }
 
 
@@ -338,7 +381,7 @@ if [ $RESTART_AFTER_IMPACT_IMPORT -eq 0 ]; then
     echo "Failed to update MSK-IMPACT - next tomcat restart will execute after successful updates to other MSK clinical pipelines and/or MSK affiliate studies..."
     echo $(date)
 else
-    restartTomcats
+    restartMSKTomcats
 fi
 
 # set 'RESTART_AFTER_DMP_PIPELINES_IMPORT' flag to 1 if RAINDANCE, ARCHER, HEMEPACT, or MIXEDPACT succesfully update
@@ -513,7 +556,7 @@ if [ $RESTART_AFTER_DMP_PIPELINES_IMPORT -eq 0 ]; then
     echo "Failed to update HEMEPACT, RAINDANCE, ARCHER, and MIXEDPACT - next tomcat restart will execute after successful updates to MSK affiliate studies..."
     echo $(date)
 else
-    restartTomcats
+    restartMSKTomcats
 fi
 
 ## Subset MIXEDPACT on INSTITUTE for institute specific impact studies
@@ -851,7 +894,7 @@ fi
 if [ $RESTART_AFTER_MSK_AFFILIATE_IMPORT -eq 0 ]; then
     echo "Failed to update all MSK affiliate studies"
 else
-    restartTomcats
+    restartMSKTomcats
 fi
 
 # check updated data back into mercurial
