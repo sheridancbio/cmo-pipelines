@@ -43,6 +43,8 @@ import java.util.*;
 import javax.annotation.Resource;
 import static com.querydsl.core.alias.Alias.$;
 import static com.querydsl.core.alias.Alias.alias;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 /**
  *
  * @author jake
@@ -72,11 +74,11 @@ public class MskimpactPatientDemographicsReader implements ItemStreamReader<Mski
     @Value("#{jobParameters[studyID]}")
     private String studyID;
 
+    @Resource(name="studyIdRegexMap")
+    Map<String, Pattern> studyIdRegexMap;
+
     @Autowired
     SQLQueryFactory darwinQueryFactory;
-
-    @Resource(name="studyIdRegexMap")
-    Map<String, String> studyIdRegexMap;
 
     private List<MskimpactPatientDemographics> darwinDemographicsResults;
     private Set<String> processedIds = new HashSet<>();
@@ -92,7 +94,7 @@ public class MskimpactPatientDemographicsReader implements ItemStreamReader<Mski
     @Transactional
     private List<MskimpactPatientDemographics> getDarwinDemographicsResults(){
         log.info("Start of Darwin Patient Demographics View Import...");
-        
+
         Map<Integer, String> naaccrEthnicityMap = new HashMap<>();
         Map<Integer, String> naaccrRaceMap = new HashMap<>();
         Map<Integer, String> naaccrSexMap = new HashMap<>();
@@ -116,7 +118,7 @@ public class MskimpactPatientDemographicsReader implements ItemStreamReader<Mski
                 $(qNAACCRSexMapping.getNSCM_CBIOPORTAL_LABEL())))
                 .from($(qNAACCRSexMapping))
                 .fetch();
-        
+
         // Make maps out of the NAACCR lists for quick lookups
         for (NAACCREthnicityMapping ethnicityMapping : naaccrEthnicityMappings) {
             naaccrEthnicityMap.put(ethnicityMapping.getNECM_CODE(), ethnicityMapping.getNECM_CBIOPORTAL_LABEL());
@@ -126,7 +128,7 @@ public class MskimpactPatientDemographicsReader implements ItemStreamReader<Mski
         }
         for (NAACCRSexMapping sexMapping : naaccrSexMappings) {
             naaccrSexMap.put(sexMapping.getNSCM_CODE(), sexMapping.getNSCM_CBIOPORTAL_LABEL());
-        }        
+        }
 
         log.info("Query darwin tables for patient/sample demographics data...");
         MskimpactNAACCRClinical qMskimpactNAACCRClinical = alias(MskimpactNAACCRClinical.class, patientDemographicsView);
@@ -147,7 +149,8 @@ public class MskimpactPatientDemographicsReader implements ItemStreamReader<Mski
                 $(qMskImpactLatestActivity.getAGE_AT_LAST_KNOWN_ALIVE_YEAR_IN_DAYS()),
                 $(qMskImpactPatientIcdoRecord.getAGE_AT_TM_DX_DATE_IN_DAYS()),
                 $(qMskImpactPatientDemographics.getAGE_AT_DATE_OF_DEATH_IN_DAYS()),
-                $(qMskImpactPatientDemographics.getPED_IND())))
+                $(qMskImpactPatientDemographics.getPED_IND()),
+                $(qMskimpactPathologyDmp.getSAMPLE_ID_PATH_DMP())))
                 .from($(qMskImpactPatientDemographics))
                 .fullJoin($(qMskImpactPatientIcdoRecord))
                 .on($(qMskImpactPatientDemographics.getDMP_ID_DEMO()).eq($(qMskImpactPatientIcdoRecord.getDMP_ID_ICDO())))
@@ -156,16 +159,21 @@ public class MskimpactPatientDemographicsReader implements ItemStreamReader<Mski
                 .innerJoin($(qMskimpactPathologyDmp))
                 .on($(qMskImpactPatientDemographics.getPT_ID_DEMO()).eq($(qMskimpactPathologyDmp.getPT_ID_PATH_DMP())))
                 .orderBy($(qMskImpactPatientIcdoRecord.getTM_DX_YEAR()).asc())
-                .where($(qMskimpactPathologyDmp.getSAMPLE_ID_PATH_DMP()).like(studyIdRegexMap.get(studyID)))
                 .fetch();
-        
+
         // Translate the NAACCR codes for each result
+        List<MskimpactPatientDemographics> filteredDarwinDemographicsResults = new ArrayList<>();
         for (MskimpactPatientDemographics result : darwinDemographicsResults) {
+            Matcher matcher = studyIdRegexMap.get(studyID).matcher(result.getSAMPLE_ID_PATH_DMP());
+            if (!matcher.matches()) {
+                continue;
+            }
             result.setGENDER(naaccrSexMap.getOrDefault(Integer.parseInt(result.getPT_NAACCR_SEX_CODE()), "NA"));
             result.setRACE(naaccrRaceMap.getOrDefault(Integer.parseInt(result.getPT_NAACCR_RACE_CODE_PRIMARY()), "NA"));
             result.setETHNICITY(naaccrEthnicityMap.getOrDefault(Integer.parseInt(result.getPT_NAACCR_ETHNICITY_CODE()), "NA"));
+            filteredDarwinDemographicsResults.add(result);
         }
-        return darwinDemographicsResults;
+        return filteredDarwinDemographicsResults;
     }
 
     @Override

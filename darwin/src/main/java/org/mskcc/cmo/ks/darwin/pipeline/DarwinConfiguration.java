@@ -36,6 +36,7 @@ import com.querydsl.sql.SQLQueryFactory;
 import com.querydsl.sql.DB2Templates;
 import java.sql.SQLException;
 import java.util.*;
+import java.util.regex.Pattern;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
@@ -66,18 +67,10 @@ public class DarwinConfiguration {
     @Value("${darwin.schema}")
     private String schema;
 
-    @Value("${darwin.mskimpact_suffix}")
-    private String mskimpactSuffix;
-
-    @Value("${darwin.mskimpact_heme_suffix}")
-    private String mskimpactHemeSuffix;
-
-    @Value("${darwin.mskraindance_suffix}")
-    private String mskraindanceSuffix;
-
-    @Value("${darwin.mskarcher_suffix}")
-    private String mskarcherSuffix;            
-
+    private final Pattern MSKIMPACT_REGEX = Pattern.compile("P-\\d*-T\\d*-IM\\d*");
+    private final Pattern MSKIMPACT_HEME_REGEX = Pattern.compile("P-\\d*-T\\d*-IH\\d*");
+    private final Pattern MSKARCHER_REGEX = Pattern.compile("P-\\d*-T\\d*-A[H|S]\\d*");
+    private final Pattern MSKRAINDANCE_REGEX = Pattern.compile("P-\\d*-T\\d*-T[B|S]\\d*");
 
     @Bean
     public SQLQueryFactory darwinQueryFactory() throws SQLException{
@@ -98,13 +91,13 @@ public class DarwinConfiguration {
         return dataSource;
     }
 
-    @Bean(name="studyIdRegexMap")    
-    public Map<String, String> studyIdRegexMap() {
-        Map<String, String> studyIdRegexMap = new HashMap<>();
-        studyIdRegexMap.put("mskimpact", mskimpactSuffix);
-        studyIdRegexMap.put("mskimpact_heme", mskimpactHemeSuffix);
-        studyIdRegexMap.put("mskarcher", mskarcherSuffix);
-        studyIdRegexMap.put("mskraindance", mskraindanceSuffix);
+    @Bean(name="studyIdRegexMap")
+    public Map<String, Pattern> studyIdRegexMap() {
+        Map<String, Pattern> studyIdRegexMap = new HashMap<>();
+        studyIdRegexMap.put("mskimpact", MSKIMPACT_REGEX);
+        studyIdRegexMap.put("mskimpact_heme", MSKIMPACT_HEME_REGEX);
+        studyIdRegexMap.put("mskarcher", MSKARCHER_REGEX);
+        studyIdRegexMap.put("mskraindance", MSKRAINDANCE_REGEX);
         return studyIdRegexMap;
     }
 }

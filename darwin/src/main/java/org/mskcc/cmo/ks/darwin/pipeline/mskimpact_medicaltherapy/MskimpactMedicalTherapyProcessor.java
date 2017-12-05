@@ -71,7 +71,8 @@ public class MskimpactMedicalTherapyProcessor implements ItemProcessor<List<Mski
                                            darwinUtils.convertWhitespace(oldestRecord.getDOSE_UNIT()),
                                            oldestRecord.getDISPENSED_QUANTITY(),
                                            oldestRecord.getAGE_AT_DISPENSE_DATE_IN_DAYS(),
-                                           youngestRecord.getAGE_AT_DISPENSE_DATE_IN_DAYS());
+                                           youngestRecord.getAGE_AT_DISPENSE_DATE_IN_DAYS(),
+                                           oldestRecord.getSAMPLE_ID_PATH_DMP());
     }
 
     private void checkConsistencyOfRecords(List<MskimpactMedicalTherapy> listMedicalTherapyRecords) {

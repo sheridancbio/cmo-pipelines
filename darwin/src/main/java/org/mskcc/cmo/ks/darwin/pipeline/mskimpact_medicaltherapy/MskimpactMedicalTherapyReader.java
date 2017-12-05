@@ -48,10 +48,12 @@ import org.apache.commons.collections.MapIterator;
 import org.apache.commons.collections.map.MultiKeyMap;
 
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javax.annotation.Resource;
 
 /**
- * Code reads information out of DVCBIO.PHARMACY_V looking 
+ * Code reads information out of DVCBIO.PHARMACY_V looking
  * for records in which immunotherapy related drugs were dispensed.
  *
  * @author Benjamin Gross
@@ -73,7 +75,7 @@ public class MskimpactMedicalTherapyReader implements ItemStreamReader<List<Mski
     private String studyID;
 
     @Resource(name="studyIdRegexMap")
-    Map<String, String> studyIdRegexMap;
+    Map<String, Pattern> studyIdRegexMap;
 
     @Autowired
     SQLQueryFactory darwinQueryFactory;
@@ -93,7 +95,7 @@ public class MskimpactMedicalTherapyReader implements ItemStreamReader<List<Mski
         if (log.isInfoEnabled()) {
             log.info("Start of " + pharmacyView + " record fetching...");
         }
-        
+
         MskimpactMedicalTherapy pharmacyViewRecord = alias(MskimpactMedicalTherapy.class, pharmacyView);
         MskimpactPathologyDmp pathologyViewRecord = alias(MskimpactPathologyDmp.class, pathologyView);
         List<MskimpactMedicalTherapy> pharmacyViewResults =
@@ -108,19 +110,26 @@ public class MskimpactMedicalTherapyReader implements ItemStreamReader<List<Mski
             .from($(pharmacyViewRecord))
             .innerJoin($(pathologyViewRecord))
             .on($(pharmacyViewRecord.getPT_ID_PHARMACY()).eq($(pathologyViewRecord.getPT_ID_PATH_DMP())))
-            .where($(pathologyViewRecord.getSAMPLE_ID_PATH_DMP()).like(studyIdRegexMap.get(studyID))
-                   .and(getDrugClause(pharmacyViewRecord)))
+            .where(getDrugClause(pharmacyViewRecord))
             .fetch();
 
-        if (log.isInfoEnabled()) {
-            log.info("Fetched " + pharmacyViewResults.size() + " records from " + pharmacyView + ".");
+        List<MskimpactMedicalTherapy> filteredPharmacyViewResults = new ArrayList<>();
+        for (MskimpactMedicalTherapy result : pharmacyViewResults) {
+            Matcher matcher = studyIdRegexMap.get(studyID).matcher(result.getSAMPLE_ID_PATH_DMP());
+            if (matcher.matches()) {
+                filteredPharmacyViewResults.add(result);
+            }
         }
 
-        return pharmacyViewResults;
+        if (log.isInfoEnabled()) {
+            log.info("Fetched " + filteredPharmacyViewResults.size() + " records from " + pharmacyView + ".");
+        }
+
+        return filteredPharmacyViewResults;
     }
 
     /**
-     * This method constructs part of the pharmacy view 'where' clause 
+     * This method constructs part of the pharmacy view 'where' clause
      * such that only records that contain a drug or drugs of interest (provided by application.properties)
      * are returned from the query.
      */
