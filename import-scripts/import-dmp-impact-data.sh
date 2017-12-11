@@ -23,6 +23,7 @@ queenscancercenter_notification_file=$(mktemp $tmp/queenscancercenter-portal-upd
 miamicancerinstitute_notification_file=$(mktemp $tmp/miamicancerinstitute-portal-update-notification.$now.XXXXXX)
 hartfordhealthcare_notification_file=$(mktemp $tmp/hartfordhealthcare-portal-update-notification.$now.XXXXXX)
 lymphoma_super_cohort_notification_file=$(mktemp $tmp/lymphoma-super-cohort-portal-update-notification.$now.XXXXXX)
+sclc_mskimpact_notification_file=$(mktemp $tmp/sclc-mskimpact-portal-update-notification.$now.XXXXXX)
 
 
 # fetch clinical data mercurial
@@ -199,6 +200,7 @@ MSK_QUEENS_SUBSET_FAIL=0
 MSK_LEHIGH_SUBSET_FAIL=0
 MSK_MCI_SUBSET_FAIL=0
 MSK_HARTFORD_SUBSET_FAIL=0
+SCLC_MSKIMPACT_SUBSET_FAIL=0
 IMPORT_FAIL_MIXEDPACT=0
 IMPORT_FAIL_KINGS=0
 IMPORT_FAIL_LEHIGH=0
@@ -206,6 +208,7 @@ IMPORT_FAIL_QUEENS=0
 IMPORT_FAIL_MCI=0
 IMPORT_FAIL_HARTFORD=0
 IMPORT_FAIL_LYMPHOMA=0
+IMPORT_FAIL_SCLC_MSKIMPACT=0
 LYMPHOMA_SUPER_COHORT_SUBSET_FAIL=0
 
 # fetch new/updated IMPACT samples using CVR Web service   (must come after mercurial fetching)
@@ -444,7 +447,7 @@ fi
 echo "Beginning merge of MSK-IMPACT, HEMEPACT, RAINDANCE, ARCHER data..."
 echo $(date)
 
-# first touch meta_clinical.txt and meta_SV.txt in each directory if not already exists
+# first create meta_clinical.txt and meta_SV.txt in each directory if not already exists
 if [ ! -f $MSK_IMPACT_DATA_HOME/meta_clinical.txt ]; then
     touch $MSK_IMPACT_DATA_HOME/meta_clinical.txt
 fi
@@ -461,7 +464,7 @@ if [ ! -f $MSK_HEMEPACT_DATA_HOME/meta_SV.txt ]; then
     touch $MSK_HEMEPACT_DATA_HOME/meta_SV.txt
 fi
 
-# raindance doesn't have SV data so no need to touch that meta file
+# raindance doesn't have SV data so no need to create that meta file
 if [ ! -f $MSK_RAINDANCE_DATA_HOME/meta_clinical.txt ]; then
     touch $MSK_RAINDANCE_DATA_HOME/meta_clinical.txt
 fi
@@ -561,7 +564,7 @@ fi
 
 ## Subset MIXEDPACT on INSTITUTE for institute specific impact studies
 
-# first touch meta_clinical.txt in mixedpact if not already exists
+# first create meta_clinical.txt in mixedpact if not already exists
 if [ ! -f $MSK_MIXEDPACT_DATA_HOME/meta_clinical.txt ]; then
     touch $MSK_MIXEDPACT_DATA_HOME/meta_clinical.txt
 fi
@@ -612,7 +615,6 @@ else
     echo "MSK Hartford Healthcare subset successful!"
     addCancerTypeCaseLists $MSK_HARTFORD_DATA_HOME "msk_hartfordhealthcare"
 fi
-
 # remove the meta clinical file from mixedpact
 if [ $(wc -l < $MSK_MIXEDPACT_DATA_HOME/meta_clinical.txt) -eq 0 ]; then
     rm $MSK_MIXEDPACT_DATA_HOME/meta_clinical.txt
@@ -755,13 +757,61 @@ else
     cd $MSK_HARTFORD_DATA_HOME;$HG_BINARY add *;$HG_BINARY add case_lists/*;$HG_BINARY commit -m "Latest HARTFORDHEALTHCARE dataset"
 fi
 
-
 ## END Subset MIXEDPACT on INSTITUTE
+
+# Subset MSKIMPACT on ONCOTREE_CODE for SCLC cohort
+
+RESTART_AFTER_SCLC_IMPORT=0
+# create mskimpact meta clinical file
+if [ ! -f $MSK_IMPACT_DATA_HOME/meta_clinical.txt ]; then
+    touch $MSK_IMPACT_DATA_HOME/meta_clinical.txt
+fi
+bash $PORTAL_HOME/scripts/subset-impact-data.sh -i=sclc_mskimpact_2017 -o=$MSK_SCLC_DATA_HOME -m=$MSK_IMPACT_DATA_HOME -f="ONCOTREE_CODE=SCLC" -s=$tmp/sclc_subset.txt
+if [ $? -gt 0 ]; then
+    echo "MSKIMPACT SCLC subset failed! Study will not be updated in the portal."
+    sendFailureMessageMskPipelineLogsSlack "SCLCMSKIMPACT subset"
+    SCLC_MSKIMPACT_SUBSET_FAIL=1
+else
+    echo "MSKIMPACT SCLC subset successful!"
+    addCancerTypeCaseLists $MSK_SCLC_DATA_HOME "sclc_mskimpact_2017"
+fi
+# remove the meta clinical file from mskimpact
+if [ $(wc -l < $MSK_IMPACT_DATA_HOME/meta_clinical.txt) -eq 0 ]; then
+    rm $MSK_IMPACT_DATA_HOME/meta_clinical.txt
+fi
+
+# update sclc_mskimpact_2017 in portal only if subset was successful
+if [ $SCLC_MSKIMPACT_SUBSET_FAIL -eq 0 ]; then
+    echo "Importing sclc_mskimpact_2017 study..."
+    echo $(date)
+    bash $PORTAL_HOME/scripts/import-temp-study.sh --study-id="sclc_mskimpact_2017" --temp-study-id="temporary_sclc_mskimpact_2017" --backup-study-id="yesterday_sclc_mskimpact_2017" --portal-name="msk-sclc-portal" --study-path="$MSK_SCLC_DATA_HOME" --notification-file="$sclc_mskimpact_notification_file" --tmp-directory="$tmp" --email-list="$email_list" --oncotree-version="${ONCOTREE_VERSION_TO_USE}" --importer-jar="$PORTAL_HOME/lib/msk-dmp-importer.jar" --transcript-overrides-source="mskcc"
+    if [ $? -gt 0 ]; then
+        IMPORT_FAIL_SCLC_MSKIMPACT=1
+        sendFailureMessageMskPipelineLogsSlack "SCLCMSKIMPACT import"
+    else
+        RESTART_AFTER_SCLC_IMPORT=1
+        sendSuccessMessageMskPipelineLogsSlack "SCLCMSKIMPACT"
+    fi
+else
+    echo "Something went wrong with subsetting clinical studies for SCLCMSKIMPACT."
+    IMPORT_FAIL_SCLC_MSKIMPACT=1
+fi
+# commit or revert changes for SCLCMSKIMPACT
+if [ $IMPORT_FAIL_SCLC_MSKIMPACT -gt 0 ]; then
+    echo "SCLCMSKIMPACT subset and/or updates failed! Reverting data to last commit."
+    cd $MSK_SCLC_DATA_HOME;$HG_BINARY update -C
+    rm $MSK_SCLC_DATA_HOME/*.orig
+    rm $MSK_SCLC_DATA_HOME/case_lists/*.orig
+else
+    echo "Committing SCLCMSKIMPACT data"
+    cd $MSK_SCLC_DATA_HOME;$HG_BINARY add *;$HG_BINARY add case_lists/*;$HG_BINARY commit -m "Latest SCLCMSKIMPACT dataset"
+fi
+# END Subset MSKIMPACT on ONCOTREE_CODE for SCLC cohort
 
 # Create lymphoma "super" cohort
 # Subset MSK-IMPACT and HEMEPACT by Cancer Type
 
-# first touch meta_clinical.txt and meta_SV.txt in mskimpact, hemepact, and fmibat if not already exists - need these to generate merged subsets
+# first create meta_clinical.txt and meta_SV.txt in mskimpact, hemepact, and fmibat if not already exists - need these to generate merged subsets
 if [ ! -f $MSK_IMPACT_DATA_HOME/meta_clinical.txt ]; then
     touch $MSK_IMPACT_DATA_HOME/meta_clinical.txt
 fi
@@ -897,6 +947,14 @@ else
     restartMSKTomcats
 fi
 
+## SCHULTZ TOMCAT RESTART
+# Restart only if sclc_mskimpact_2017 import succeeded
+if [ $RESTART_AFTER_SCLC_IMPORT -eq 0 ]; then
+    echo "Failed to update SCLC MSKIMPCAT cohort"
+else
+    restartSchultzTomcats
+fi
+
 # check updated data back into mercurial
 echo "Pushing DMP-IMPACT updates back to msk-impact repository..."
 echo $(date)
@@ -973,6 +1031,12 @@ EMAIL_BODY="Failed to subset Hartford Healthcare data. Subset study will not be 
 if [ $MSK_HARTFORD_SUBSET_FAIL -gt 0 ]; then
     echo -e "Sending email $EMAIL_BODY"
     echo -e "$EMAIL_BODY" |  mail -s "HARTFORDHEALTHCARE Subset Failure: Study will not be updated." $email_list
+fi
+
+EMAIL_BODY="Failed to subset MSKIMPACT SCLC data. Subset study will not be updated."
+if [ $SCLC_MSKIMPACT_SUBSET_FAIL -gt 0 ]; then 
+    echo -e "Sending email $EMAIL_BODY"
+    echo -e "$EMAIL_BODY" | mail -s "SCLCMSKIMPACT Subset Failure: Study will not be updated." $email_list
 fi
 
 echo "Fetching and importing of clinical datasets complete!"
