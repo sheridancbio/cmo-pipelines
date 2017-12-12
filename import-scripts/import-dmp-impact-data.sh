@@ -299,31 +299,31 @@ fi
 
 # generate case lists by cancer type and add "DATE ADDED" info to clinical data for MSK-IMPACT
 addCancerTypeCaseLists $MSK_IMPACT_DATA_HOME "mskimpact"
-cd $STUDY_DATA_DIRECTORY; $HG_BINARY add; $HG_BINARY commit -m "Latest MSK-IMPACT Dataset: Case Lists"
+cd $STUDY_DATA_DIRECTORY; $HG_BINARY add *; $HG_BINARY commit -m "Latest MSK-IMPACT Dataset: Case Lists"
 addDateAddedData $MSK_IMPACT_DATA_HOME "mskimpact"
-cd $STUDY_DATA_DIRECTORY;$HG_BINARY add;$HG_BINARY commit -m "Latest MSK-IMPACT Dataset: Sample Date Clinical File"
+cd $STUDY_DATA_DIRECTORY;$HG_BINARY add *;$HG_BINARY commit -m "Latest MSK-IMPACT Dataset: Sample Date Clinical File"
 
 # generate case lists by cancer type and add "DATE ADDED" info to clinical data for RAINDANCE
 addCancerTypeCaseLists $MSK_RAINDANCE_DATA_HOME "mskraindance"
-cd $STUDY_DATA_DIRECTORY; $HG_BINARY add; $HG_BINARY commit -m "Latest RAINDANCE Dataset: Case Lists"
+cd $STUDY_DATA_DIRECTORY; $HG_BINARY add *; $HG_BINARY commit -m "Latest RAINDANCE Dataset: Case Lists"
 addDateAddedData $MSK_RAINDANCE_DATA_HOME "mskraindance"
-cd $STUDY_DATA_DIRECTORY;$HG_BINARY add;$HG_BINARY commit -m "Latest RAINDANCE Dataset: Sample Date Clinical File"
+cd $STUDY_DATA_DIRECTORY;$HG_BINARY add *;$HG_BINARY commit -m "Latest RAINDANCE Dataset: Sample Date Clinical File"
 
 # generate case lists by cancer type and add "DATE ADDED" info to clinical data for HEMEPACT
 addCancerTypeCaseLists $MSK_HEMEPACT_DATA_HOME "mskimpact_heme"
-cd $STUDY_DATA_DIRECTORY; $HG_BINARY add; $HG_BINARY commit -m "Latest HEMEPACT Dataset: Case Lists"
+cd $STUDY_DATA_DIRECTORY; $HG_BINARY add *; $HG_BINARY commit -m "Latest HEMEPACT Dataset: Case Lists"
 addDateAddedData $MSK_HEMEPACT_DATA_HOME "mskimpact_heme"
-cd $STUDY_DATA_DIRECTORY;$HG_BINARY add;$HG_BINARY commit -m "Latest HEMEPACT Dataset: Sample Date Clinical File"
+cd $STUDY_DATA_DIRECTORY;$HG_BINARY add *;$HG_BINARY commit -m "Latest HEMEPACT Dataset: Sample Date Clinical File"
 
 # generate case lists by cancer type and add "DATE ADDED" info to clinical data for ARCHER
 addCancerTypeCaseLists $MSK_ARCHER_DATA_HOME "mskarcher"
-cd $STUDY_DATA_DIRECTORY; $HG_BINARY add; $HG_BINARY commit -m "Latest ARCHER Dataset: Case Lists"
+cd $STUDY_DATA_DIRECTORY; $HG_BINARY add *; $HG_BINARY commit -m "Latest ARCHER Dataset: Case Lists"
 addDateAddedData $MSK_ARCHER_DATA_HOME "mskarcher"
-cd $STUDY_DATA_DIRECTORY;$HG_BINARY add;$HG_BINARY commit -m "Latest ARCHER Dataset: Sample Date Clinical File"
+cd $STUDY_DATA_DIRECTORY;$HG_BINARY add *;$HG_BINARY commit -m "Latest ARCHER Dataset: Sample Date Clinical File"
 
 # Merge Archer fusion data into the impact cohort
 $PYTHON_BINARY $PORTAL_HOME/scripts/archer_fusions_merger.py --archer-fusions $MSK_ARCHER_DATA_HOME/data_fusions.txt --linked-mskimpact-cases-filename $MSK_ARCHER_DATA_HOME/linked_mskimpact_cases.txt --msk-fusions $MSK_IMPACT_DATA_HOME/data_fusions.txt --clinical-filename $MSK_IMPACT_DATA_HOME/data_clinical.txt --archer-samples-filename $tmp/archer_ids.txt
-cd $MSK_IMPACT_DATA_HOME; $HG_BINARY add; $HG_BINARY commit -m "Adding ARCHER fusions to MSKIMPACT"
+cd $MSK_IMPACT_DATA_HOME; $HG_BINARY add *; $HG_BINARY commit -m "Adding ARCHER fusions to MSKIMPACT"
 
 # check database version before importing anything
 echo "Checking if database version is compatible"
@@ -545,7 +545,7 @@ if [ $IMPORT_FAIL_MIXEDPACT -gt 0 ]; then
     rm $MSK_MIXEDPACT_DATA_HOME/case_lists/*.orig
 else
     echo "Committing MIXEDPACT data"
-    cd $MSK_MIXEDPACT_DATA_HOME;$HG_BINARY add;$HG_BINARY commit -m "Latest MIXEDPACT dataset"
+    cd $MSK_MIXEDPACT_DATA_HOME;$HG_BINARY add *;$HG_BINARY commit -m "Latest MIXEDPACT dataset"
 fi
 ## END MSK-IMPACT, HEMEPACT, and RAINDANCE merge
 
