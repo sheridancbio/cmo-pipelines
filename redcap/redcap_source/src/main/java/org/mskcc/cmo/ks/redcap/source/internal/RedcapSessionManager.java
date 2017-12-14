@@ -38,6 +38,8 @@ import java.io.*;
 import java.net.*;
 import java.util.*;
 import java.util.function.Predicate;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.apache.log4j.Logger;
 import org.mskcc.cmo.ks.redcap.models.ProjectInfoResponse;
@@ -49,18 +51,26 @@ import org.springframework.beans.factory.annotation.*;
 import org.springframework.http.*;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
 @Repository
 public class RedcapSessionManager {
 
+    private static final String CSFR_TOKEN_REGEX = "var redcap_csrf_token = '([^']+)';";
+
     private static URI redcapBaseURI = null;
     private static URI redcapApiURI = null;
+    private static Boolean cachedUsePostRequestForEraseProjectData = null;
 
     @Value("${redcap_base_url}")
     private String redcapBaseUrl;
     @Value("${redcap_erase_project_data_url_path}")
     private String redcapEraseProjectDataUrlPath;
+    @Value("${redcap_project_setup_url_path}")
+    private String redcapProjectSetupUrlPath;
+    @Value("${redcap_erase_project_data_http_method}")
+    private String redcapEraseProjectDataHttpMethod;
     @Value("${redcap_username}")
     private String redcapUsername;
     @Value("${redcap_password}")
@@ -112,9 +122,29 @@ public class RedcapSessionManager {
         return redcapApiURI;
     }
 
+    private boolean usePostRequestForEraseProjectData() {
+        if (cachedUsePostRequestForEraseProjectData == null) {
+            if (redcapEraseProjectDataHttpMethod != null && redcapEraseProjectDataHttpMethod.trim().equalsIgnoreCase("GET")) {
+                cachedUsePostRequestForEraseProjectData = Boolean.FALSE;
+            } else {
+                cachedUsePostRequestForEraseProjectData = Boolean.TRUE;
+            }
+        }
+        return cachedUsePostRequestForEraseProjectData.booleanValue();
+    }
+
+    private URI getRedcapProjectSetupURI(String projectId) {
+        URI base = getRedcapURI();
+        return base.resolve(redcapProjectSetupUrlPath + "?pid=" + projectId);
+    }
+
     private URI getRedcapEraseProjectDataURI(String projectId) {
         URI base = getRedcapURI();
-        return base.resolve(redcapEraseProjectDataUrlPath + "/?pid=" + projectId + "&action=erase_data");
+        if (usePostRequestForEraseProjectData()) {
+            return base.resolve(redcapEraseProjectDataUrlPath + "?pid=" + projectId);
+        } else {
+            return base.resolve(redcapEraseProjectDataUrlPath + "?pid=" + projectId + "&action=erase_data");
+        }
     }
 
     // SECTION : RedCap project token handling
@@ -131,7 +161,7 @@ public class RedcapSessionManager {
 
     public String getTokenByProjectTitle(String projectTitle) {
         checkAllTokensHaveBeenFetched();
-        return allTokensProjectTitleToApiTokenMap.get(projectTitle); 
+        return allTokensProjectTitleToApiTokenMap.get(projectTitle);
     }
 
     public Map<String, String> getClinicalTokenMapByStableId(String stableId) {
@@ -407,11 +437,46 @@ public class RedcapSessionManager {
     }
 
     private void deleteRedcapProjectData(String cookie, String projectId) {
+        String csfrToken = null;
+        if (usePostRequestForEraseProjectData()) {
+            csfrToken = getCSFRTokenFromProjectSetupPage(cookie, projectId);
+        }
+        submitEraseAllDataRequest(cookie, projectId, csfrToken);
+    }
+
+    private String getCSFRTokenFromProjectSetupPage(String cookie, String projectId) {
+        String projectSetupPageContent = getProjectSetupPageContent(cookie, projectId);
+        Pattern csfrTokenRegexPattern = Pattern.compile(CSFR_TOKEN_REGEX);
+        Matcher csfrTokenMatcher = csfrTokenRegexPattern.matcher(projectSetupPageContent);
+        if (csfrTokenMatcher.find() && csfrTokenMatcher.groupCount() > 0) {
+            return csfrTokenMatcher.group(1);
+        }
+        return ""; // we expect this to cause failure during the erase_project_data function call .. but ... we can try
+    }
+
+    private String getProjectSetupPageContent(String cookie, String projectId) {
         RestTemplate restTemplate = new RestTemplate();
         HttpHeaders headers = new HttpHeaders();
         headers.add(HttpHeaders.COOKIE, cookie);
         HttpEntity<?> rq = new HttpEntity<>(headers);
-        HttpEntity<?> response = restTemplate.exchange(getRedcapEraseProjectDataURI(projectId), HttpMethod.GET, rq, String.class);
+        ResponseEntity<String> response = restTemplate.exchange(getRedcapProjectSetupURI(projectId), HttpMethod.GET, rq, String.class);
+        return response.getBody();
+    }
+
+    private void submitEraseAllDataRequest(String cookie, String projectId, String csfrToken) {
+        RestTemplate restTemplate = new RestTemplate();
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(HttpHeaders.COOKIE, cookie);
+        if (usePostRequestForEraseProjectData()) {
+            MultiValueMap<String, String> args = new LinkedMultiValueMap<String, String>();
+            args.add("action", "erase_data");
+            args.add("redcap_csrf_token", csfrToken);
+            HttpEntity< MultiValueMap<String, String> > rq = new HttpEntity< MultiValueMap<String, String> >(args, headers);
+            ResponseEntity<String> response = restTemplate.exchange(getRedcapEraseProjectDataURI(projectId), HttpMethod.POST, rq, String.class);
+        } else {
+            HttpEntity<?> rq = new HttpEntity<>(headers);
+            ResponseEntity<String> response = restTemplate.exchange(getRedcapEraseProjectDataURI(projectId), HttpMethod.GET, rq, String.class);
+        }
     }
 
     public JsonNode[] getRedcapDataForProjectByToken(String projectToken) {
