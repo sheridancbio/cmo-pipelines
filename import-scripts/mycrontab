@@ -24,3 +24,5 @@ MAILTO=cbioportal-pipelines@cbio.mskcc.org
 0 9 * * 1 /usr/bin/python /data/portal-cron/scripts/missing_oncotree_meta_links.py 2>&1 | mail -r "oncotree-pipelines@cbio.mskcc.org" -s "Missing Oncotree NCI/UMLS codes" oncotree-pipelines@cbio.mskcc.org
 # make sure we can execute all scripts, execute daily at midnight
 23 55 * * * chmod u+x /data/portal-cron/scripts/*.sh /data/portal-cron/scripts/*.py || echo "Failure in crontab: chmod exited with non-zero exit status" | mail -r "cbioportal-pipelines@cbio.mskcc.org" -s "Failure in crontab" cbioportal-pipelines@cbio.mskcc.org
+# REDCap Cron Job (runs every minute)
+* * * * * /usr/bin/php /srv/www/html/redcap/cron.php > /dev/null 2>/dev/null
