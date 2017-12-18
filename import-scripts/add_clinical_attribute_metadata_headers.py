@@ -9,6 +9,7 @@
 # google.pw
 # google.spreadsheet
 # google.clinical_attributes_worksheet
+# default properties file can be found at portal_configuration/properties/clinical-metadata
 # ------------------------------------------------------------------------------
 import argparse
 import gdata.docs.client
