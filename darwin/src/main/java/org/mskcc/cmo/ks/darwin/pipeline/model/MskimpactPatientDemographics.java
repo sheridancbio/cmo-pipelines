@@ -40,6 +40,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * @author jake
  */
 public class MskimpactPatientDemographics {
+
     private final Integer currentYear = Calendar.getInstance().get(1);
     private String PT_ID_DEMO;
     private String DMP_ID_DEMO;
@@ -67,11 +68,12 @@ public class MskimpactPatientDemographics {
     private String PT_NAACCR_RACE_CODE_PRIMARY;
     private String PT_NAACCR_SEX_CODE;
     private String PED_IND;
+    private String SAMPLE_ID_PATH_DMP;
     private Map<String, Object> additionalProperties = new HashMap<>();
 
     public MskimpactPatientDemographics() {}
 
-    public MskimpactPatientDemographics(String DMP_ID_DEMO, String PT_NAACCR_SEX_CODE, String PT_NAACCR_RACE_CODE_PRIMARY, String PT_NAACCR_ETHNICITY_CODE, String RELIGION, String PT_VITAL_STATUS, Integer PT_BIRTH_YEAR, Integer PT_DEATH_YEAR, Integer TM_DX_YEAR, Integer AGE_AT_LAST_KNOWN_ALIVE_IN_DAYS, Integer AGE_AT_TM_DX_DATE_IN_DAYS, Integer AGE_AT_DATE_OF_DEATH_IN_DAYS, String PED_IND){
+    public MskimpactPatientDemographics(String DMP_ID_DEMO, String PT_NAACCR_SEX_CODE, String PT_NAACCR_RACE_CODE_PRIMARY, String PT_NAACCR_ETHNICITY_CODE, String RELIGION, String PT_VITAL_STATUS, Integer PT_BIRTH_YEAR, Integer PT_DEATH_YEAR, Integer TM_DX_YEAR, Integer AGE_AT_LAST_KNOWN_ALIVE_IN_DAYS, Integer AGE_AT_TM_DX_DATE_IN_DAYS, Integer AGE_AT_DATE_OF_DEATH_IN_DAYS, String PED_IND, String SAMPLE_ID_PATH_DMP){
         this.DMP_ID_DEMO =  StringUtils.isNotEmpty(DMP_ID_DEMO) ? DMP_ID_DEMO : "NA";
         this.PT_NAACCR_SEX_CODE =  StringUtils.isNotEmpty(PT_NAACCR_SEX_CODE) ? PT_NAACCR_SEX_CODE : "-1";
         this.PT_NAACCR_RACE_CODE_PRIMARY =  StringUtils.isNotEmpty(PT_NAACCR_RACE_CODE_PRIMARY) ? PT_NAACCR_RACE_CODE_PRIMARY : "-1";
@@ -86,8 +88,9 @@ public class MskimpactPatientDemographics {
         this.AGE_AT_TM_DX_DATE_IN_DAYS = AGE_AT_TM_DX_DATE_IN_DAYS;
         this.AGE_AT_DATE_OF_DEATH_IN_DAYS = AGE_AT_DATE_OF_DEATH_IN_DAYS;
         this.PED_IND = PED_IND;
+        this.SAMPLE_ID_PATH_DMP = SAMPLE_ID_PATH_DMP;
     }
-    
+
     public MskimpactPatientDemographics(String DMP_ID_DEMO, Integer PT_BIRTH_YEAR, Integer PT_DEATH_YEAR) {
         this.DMP_ID_DEMO = StringUtils.isNotEmpty(DMP_ID_DEMO) ? DMP_ID_DEMO : "NA";
         this.PT_BIRTH_YEAR = PT_BIRTH_YEAR != null ? PT_BIRTH_YEAR : -1;
@@ -315,18 +318,18 @@ public class MskimpactPatientDemographics {
             return "NA";
         }
     }
-    
+
     public String getYearsSinceBirth() {
         if (PT_BIRTH_YEAR > -1) {
             return String.valueOf(currentYear - PT_BIRTH_YEAR);
         }
         return "NA";
     }
-    
+
     public void setPED_IND(String PED_IND) {
         this.PED_IND = PED_IND;
     }
-    
+
     public String getPED_IND() {
         if (PED_IND.equals("Y")) {
             return "Yes";
@@ -336,7 +339,7 @@ public class MskimpactPatientDemographics {
         }
         else {
             return PED_IND;
-        }        
+        }
     }
 
     @Override
@@ -357,7 +360,7 @@ public class MskimpactPatientDemographics {
         fieldNames.add("PED_IND");
         return fieldNames;
     }
-    
+
     public static List<String> getPatientDemographicsHeaders() {
         List<String> fieldNames = new ArrayList<>();
         fieldNames.add("PATIENT_ID");
@@ -371,21 +374,21 @@ public class MskimpactPatientDemographics {
         fieldNames.add("PED_IND");
         return fieldNames;
     }
-    
+
     public static List<String> getAgeFieldNames() {
         List<String> fieldNames = new ArrayList<>();
         fieldNames.add("DMP_ID_DEMO");
         fieldNames.add("YearsSinceBirth");
         return fieldNames;
     }
-    
+
     public static List<String> getAgeHeaders() {
         List<String> fieldNames = new ArrayList<>();
         fieldNames.add("PATIENT_ID");
         fieldNames.add("AGE");
         return fieldNames;
     }
-    
+
     public static List<String> getVitalStatusFieldNames() {
         List<String> fieldNames = new ArrayList<>();
         fieldNames.add("DMP_ID_DEMO");
@@ -393,7 +396,7 @@ public class MskimpactPatientDemographics {
         fieldNames.add("AGE_AT_LAST_KNOWN_ALIVE_IN_DAYS");
         return fieldNames;
     }
-    
+
     public static List<String> getVitalStatusHeaders() {
         List<String> fieldNames = new ArrayList<>();
         fieldNames.add("PATIENT_ID");
@@ -401,7 +404,7 @@ public class MskimpactPatientDemographics {
         fieldNames.add("AGE_AT_LAST_FOLLOWUP");
         return fieldNames;
     }
-    
+
     public void setAdditionalProperty(String name, Object value) {
         this.additionalProperties.put(name, value);
     }
@@ -466,4 +469,17 @@ public class MskimpactPatientDemographics {
         this.ETHNICITY = ETHNICITY;
     }
 
+    /**
+     * @return the SAMPLE_ID_PATH_DMP
+     */
+    public String getSAMPLE_ID_PATH_DMP() {
+        return SAMPLE_ID_PATH_DMP;
+    }
+
+    /**
+     * @param SAMPLE_ID_PATH_DMP the SAMPLE_ID_PATH_DMP to set
+     */
+    public void setSAMPLE_ID_PATH_DMP(String SAMPLE_ID_PATH_DMP) {
+        this.SAMPLE_ID_PATH_DMP = SAMPLE_ID_PATH_DMP;
+    }
 }

@@ -44,6 +44,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.apache.log4j.Logger;
 
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javax.annotation.Resource;
 
 /**
@@ -61,7 +63,7 @@ public class MskimpactBrainSpineClinicalReader implements ItemStreamReader<Mskim
     SQLQueryFactory darwinQueryFactory;
 
     @Resource(name="studyIdRegexMap")
-    Map<String, String> studyIdRegexMap;
+    Map<String, Pattern> studyIdRegexMap;
 
     private List<MskimpactBrainSpineClinical> clinicalBrainSpineResults;
 
@@ -88,12 +90,20 @@ public class MskimpactBrainSpineClinicalReader implements ItemStreamReader<Mskim
                 $(qCBSR.getHISTOLOGY()),
                 $(qCBSR.getWHO_GRADE()),
                 $(qCBSR.getMGMT_STATUS())))
-            .where($(qCBSR.getDMP_PATIENT_ID_BRAINSPINECLIN()).isNotEmpty().and($(qCBSR.getDMP_SAMPLE_ID_BRAINSPINECLIN()).like(studyIdRegexMap.get(studyID))))
+            .where($(qCBSR.getDMP_PATIENT_ID_BRAINSPINECLIN()).isNotEmpty())
             .from($(qCBSR))
             .fetch();
 
-        log.info("Imported " + clinicalBrainSpineResults.size() + " records from Clinical Brain Spine View.");
-        return clinicalBrainSpineResults;
+        List<MskimpactBrainSpineClinical> filteredClinicalBrainSpineResults = new ArrayList<>();
+        for (MskimpactBrainSpineClinical result : clinicalBrainSpineResults) {
+            Matcher matcher = studyIdRegexMap.get(studyID).matcher(result.getDMP_SAMPLE_ID_BRAINSPINECLIN());
+            if (matcher.matches()) {
+                filteredClinicalBrainSpineResults.add(result);
+            }
+        }
+
+        log.info("Imported " + filteredClinicalBrainSpineResults.size() + " records from Clinical Brain Spine View.");
+        return filteredClinicalBrainSpineResults;
     }
 
     @Override

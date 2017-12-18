@@ -51,6 +51,7 @@ public class MskimpactMedicalTherapy implements Comparable<MskimpactMedicalThera
     private Float DISPENSED_QUANTITY;
     private Integer START_DATE;
     private Integer STOP_DATE;
+    private String SAMPLE_ID_PATH_DMP;
 
     public MskimpactMedicalTherapy() {}
 
@@ -59,21 +60,21 @@ public class MskimpactMedicalTherapy implements Comparable<MskimpactMedicalThera
      */
     public MskimpactMedicalTherapy(String PT_ID_PHARMACY, String DMP_ID_PHARMACY,
                                    Integer AGE_AT_DISPENSE_DATE_IN_DAYS, String GENERIC_DRUG_NAME,
-                                   Float DOSAGE, String DOSE_UNIT, Float DISPENSED_QUANTITY) {
+                                   Float DOSAGE, String DOSE_UNIT, Float DISPENSED_QUANTITY, String SAMPLE_ID_PATH_DMP) {
         this(PT_ID_PHARMACY, DMP_ID_PHARMACY, AGE_AT_DISPENSE_DATE_IN_DAYS,
              GENERIC_DRUG_NAME, DOSAGE, DOSE_UNIT, DISPENSED_QUANTITY,
-             AGE_AT_DISPENSE_DATE_IN_DAYS, AGE_AT_DISPENSE_DATE_IN_DAYS);
+             AGE_AT_DISPENSE_DATE_IN_DAYS, AGE_AT_DISPENSE_DATE_IN_DAYS,SAMPLE_ID_PATH_DMP);
     }
 
     /**
-     * All fields are coming from DVCBIO.PHARMACY_V with the exception of 
+     * All fields are coming from DVCBIO.PHARMACY_V with the exception of
      * START_DATE, STOP_DATE  which are chosen "AGE_AT_DISPENSE_DATE_IN_DAYS" of patient
      * - see MksimpactMedicalTherapyProcessor for more information.
      */
     public MskimpactMedicalTherapy(String PT_ID_PHARMACY, String DMP_ID_PHARMACY,
                                    Integer AGE_AT_DISPENSE_DATE_IN_DAYS, String GENERIC_DRUG_NAME,
                                    Float DOSAGE, String DOSE_UNIT, Float DISPENSED_QUANTITY,
-                                   Integer START_DATE, Integer STOP_DATE) {
+                                   Integer START_DATE, Integer STOP_DATE, String SAMPLE_ID_PATH_DMP) {
         this.PT_ID_PHARMACY = PT_ID_PHARMACY.trim();
         this.DMP_ID_PHARMACY = DMP_ID_PHARMACY.trim();
         this.AGE_AT_DISPENSE_DATE_IN_DAYS = AGE_AT_DISPENSE_DATE_IN_DAYS;
@@ -83,6 +84,7 @@ public class MskimpactMedicalTherapy implements Comparable<MskimpactMedicalThera
         this.DISPENSED_QUANTITY = DISPENSED_QUANTITY;
         this.START_DATE = START_DATE;
         this.STOP_DATE = STOP_DATE;
+        this.SAMPLE_ID_PATH_DMP = SAMPLE_ID_PATH_DMP;
     }
 
     public String getPT_ID_PHARMACY() {
@@ -119,6 +121,20 @@ public class MskimpactMedicalTherapy implements Comparable<MskimpactMedicalThera
 
     public Integer getSTOP_DATE() {
         return STOP_DATE;
+    }
+
+    /**
+     * @return the SAMPLE_ID_PATH_DMP
+     */
+    public String getSAMPLE_ID_PATH_DMP() {
+        return SAMPLE_ID_PATH_DMP;
+    }
+
+    /**
+     * @param SAMPLE_ID_PATH_DMP the SAMPLE_ID_PATH_DMP to set
+     */
+    public void setSAMPLE_ID_PATH_DMP(String SAMPLE_ID_PATH_DMP) {
+        this.SAMPLE_ID_PATH_DMP = SAMPLE_ID_PATH_DMP;
     }
 
     public static List<String> getHeaders(){
