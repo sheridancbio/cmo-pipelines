@@ -5,6 +5,7 @@
 # (3): mskimpact data directory
 # (4): data filter criteria to subset IMPACT data with (either SEQ_DATE or <ATTRIBUTE_NAME>=[ATTRIBUTE_VAL1,ATTRIBUTE_VAL2,...])
 # (5): output subset filename
+# (6): data_clinical filename containing attribute being filtered in (4)
 
 for i in "$@"; do
 case $i in
@@ -32,6 +33,10 @@ case $i in
     PORTAL_SCRIPTS_DIRECTORY="${i#*=}"
     shift # past argument=value
     ;;
+    -c=*|--clinical-filename=*)
+    CLINICAL_FILENAME="${i#*=}"
+    shift # past argument=value
+    ;;
     *)
       # default option
       echo "This option does not exist!  " "${i#*=}"
@@ -44,6 +49,7 @@ echo -e "\tOUTPUT_DIRECTORY="$OUTPUT_DIRECTORY
 echo -e "\tMSK_IMPACT_DATA_DIRECTORY="$MSK_IMPACT_DATA_DIRECTORY
 echo -e "\tFILTER_CRITERIA="$FILTER_CRITERIA
 echo -e "\tSUBSET_FILENAME="$SUBSET_FILENAME
+echo -e "\tCLINICAL_FILENAME=$CLINICAL_FILENAME
 if [ -z $PORTAL_SCRIPTS_DIRECTORY ]; then
     PORTAL_SCRIPTS_DIRECTORY="$PORTAL_HOME/scripts"
 fi
@@ -55,13 +61,13 @@ if [ $STUDY_ID == "genie" ]; then
     # in the case of genie data, the input data directory must be the msk-impact data home, where we expect to see darwin_naaccr.txt
     # copy the darwin genie files to the output directory with different filenames
     cp $MSK_IMPACT_DATA_DIRECTORY/darwin/darwin_naaccr.txt $OUTPUT_DIRECTORY/data_clinical_supp_patient.txt
-    cut -f1,2 $MSK_IMPACT_DATA_DIRECTORY/data_clinical.txt > $OUTPUT_DIRECTORY/data_clinical_supp_sample.txt
+    cut -f1,2 $MSK_IMPACT_DATA_DIRECTORY/$CLINICAL_FILENAME > $OUTPUT_DIRECTORY/data_clinical_supp_sample.txt
     
     # run the generate clinical subset script to generate list of sample ids to subset from impact data - subset of sample ids will be written to given $SUBSET_FILENAME
     $PYTHON_BINARY $PORTAL_SCRIPTS_DIRECTORY/generate-clinical-subset.py --study-id="genie" --clinical-file="$OUTPUT_DIRECTORY/data_clinical_supp_sample.txt" --clinical-supp-file="$CLINICAL_SUPP_FILE" --filter-criteria="$FILTER_CRITERIA" --subset-filename="$SUBSET_FILENAME" --anonymize-date='true' --clinical-patient-file="$OUTPUT_DIRECTORY/data_clinical_supp_patient.txt"
 
     # expand data_clinical_supp_sample.txt with ONCOTREE_CODE, SAMPLE_TYPE, GENE_PANEL from data_clinical.txt
-    $PYTHON_BINARY $PORTAL_SCRIPTS_DIRECTORY/expand-clinical-data.py --study-id="genie" --clinical-file="$OUTPUT_DIRECTORY/data_clinical_supp_sample.txt" --clinical-supp-file="$MSK_IMPACT_DATA_DIRECTORY/data_clinical.txt" --fields="ONCOTREE_CODE,SAMPLE_TYPE,GENE_PANEL" --identifier-column-name="SAMPLE_ID"
+    $PYTHON_BINARY $PORTAL_SCRIPTS_DIRECTORY/expand-clinical-data.py --study-id="genie" --clinical-file="$OUTPUT_DIRECTORY/data_clinical_supp_sample.txt" --clinical-supp-file="$MSK_IMPACT_DATA_DIRECTORY/$CLINICAL_FILENAME" --fields="ONCOTREE_CODE,SAMPLE_TYPE,GENE_PANEL" --identifier-column-name="SAMPLE_ID"
     $PYTHON_BINARY $PORTAL_SCRIPTS_DIRECTORY/add-age-at-seq-report.py --clinical-file="$OUTPUT_DIRECTORY/data_clinical_supp_sample.txt" --seq-date-file="$MSK_IMPACT_DATA_DIRECTORY/cvr/seq_date.txt" --age-file="$MSK_IMPACT_DATA_DIRECTORY/darwin/darwin_age.txt" --convert-to-days="true"
     # expand data_clinical_supp_patient.txt with AGE_AT_DEATH, AGE_AT_LAST_FOLLOWUP, OS_STATUS
     $PYTHON_BINARY $PORTAL_SCRIPTS_DIRECTORY/expand-clinical-data.py --study-id="genie" --clinical-file="$OUTPUT_DIRECTORY/data_clinical_supp_patient.txt" --clinical-supp-file="$MSK_IMPACT_DATA_DIRECTORY/data_clinical_supp_darwin_demographics.txt" --fields="OS_STATUS" --identifier-column-name="PATIENT_ID"
@@ -91,6 +97,6 @@ if [ $STUDY_ID == "genie" ]; then
     fi
 else
     # generate subset list of sample ids based on filter criteria and subset MSK-IMPACT using generated list in $SUBSET_FILENAME
-    $PYTHON_BINARY $PORTAL_SCRIPTS_DIRECTORY/generate-clinical-subset.py --study-id="$STUDY_ID" --clinical-file="$MSK_IMPACT_DATA_DIRECTORY/data_clinical.txt" --filter-criteria="$FILTER_CRITERIA" --subset-filename="$SUBSET_FILENAME"
+    $PYTHON_BINARY $PORTAL_SCRIPTS_DIRECTORY/generate-clinical-subset.py --study-id="$STUDY_ID" --clinical-file="$MSK_IMPACT_DATA_DIRECTORY/$CLINICAL_FILENAME" --filter-criteria="$FILTER_CRITERIA" --subset-filename="$SUBSET_FILENAME"
     $PYTHON_BINARY $PORTAL_SCRIPTS_DIRECTORY/merge.py -d $OUTPUT_DIRECTORY -i "$STUDY_ID" -s "$SUBSET_FILENAME" -x "true" -m "true" $MSK_IMPACT_DATA_DIRECTORY
 fi
