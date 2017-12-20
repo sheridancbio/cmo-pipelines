@@ -8,13 +8,14 @@ if [[ -d "$tmp" && "$tmp" != "/" ]]; then
 fi
 email_list="cbioportal-pipelines@cbio.mskcc.org"
 now=$(date "+%Y-%m-%d-%H-%M-%S")
+JAVA_PROXY_ARGS="-Dhttp.proxyHost=jxi2.mskcc.org -Dhttp.proxyPort=8080"
 genie_portal_notification_file=$(mktemp $tmp/genie-portal-update-notification.$now.XXXXXX)
 ONCOTREE_VERSION_TO_USE=oncotree_latest_stable
 
 DB_VERSION_FAIL=0
 # check database version before importing anything
 echo "Checking if database version is compatible"
-$JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27186 -ea -Dspring.profiles.active=dbcp -Djava.io.tmpdir="$tmp" -cp $PORTAL_HOME/lib/genie-importer.jar org.mskcc.cbio.importer.Admin --check-db-version
+$JAVA_HOME/bin/java $JAVA_PROXY_ARGS -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27186 -ea -Dspring.profiles.active=dbcp -Djava.io.tmpdir="$tmp" -cp $PORTAL_HOME/lib/genie-importer.jar org.mskcc.cbio.importer.Admin --check-db-version
 if [ $? -gt 0 ]; then
     echo "Database version expected by portal does not match version in database!"
     DB_VERSION_FAIL=1
@@ -23,7 +24,7 @@ fi
 # fetch updates in genie repository
 echo "fetching updates from genie..."
 GENIE_FETCH_FAIL=0
-$JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27186 -Xmx16g -ea -Dspring.profiles.active=dbcp -Djava.io.tmpdir="$tmp" -cp $PORTAL_HOME/lib/genie-importer.jar org.mskcc.cbio.importer.Admin --fetch-data --data-source genie --run-date latest
+$JAVA_HOME/bin/java $JAVA_PROXY_ARGS -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27186 -Xmx16g -ea -Dspring.profiles.active=dbcp -Djava.io.tmpdir="$tmp" -cp $PORTAL_HOME/lib/genie-importer.jar org.mskcc.cbio.importer.Admin --fetch-data --data-source genie --run-date latest
 if [ $? -gt 0 ]; then
     echo "genie fetch failed!"
     GENIE_FETCH_FAIL=1
@@ -35,10 +36,10 @@ fi
 if [[ $DB_VERSION_FAIL -eq 0 && $GENIE_FETCH_FAIL -eq 0 ]]; then
     # import genie studies into genie portal
     echo "importing cancer type updates into genie portal database..."
-    $JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27186 -Xmx16g -ea -Dspring.profiles.active=dbcp -Djava.io.tmpdir="$tmp" -cp $PORTAL_HOME/lib/genie-importer.jar org.mskcc.cbio.importer.Admin --import-types-of-cancer --oncotree-version ${ONCOTREE_VERSION_TO_USE}
+    $JAVA_HOME/bin/java $JAVA_PROXY_ARGS -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27186 -Xmx16g -ea -Dspring.profiles.active=dbcp -Djava.io.tmpdir="$tmp" -cp $PORTAL_HOME/lib/genie-importer.jar org.mskcc.cbio.importer.Admin --import-types-of-cancer --oncotree-version ${ONCOTREE_VERSION_TO_USE}
     echo "importing study data into genie portal database..."
     IMPORT_FAIL=0
-    $JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27186 -Xmx64g -ea -Dspring.profiles.active=dbcp -Djava.io.tmpdir="$tmp" -cp $PORTAL_HOME/lib/genie-importer.jar org.mskcc.cbio.importer.Admin --update-study-data --portal genie-portal --update-worksheet --notification-file "$genie_portal_notification_file" --oncotree-version ${ONCOTREE_VERSION_TO_USE} --transcript-overrides-source mskcc
+    $JAVA_HOME/bin/java $JAVA_PROXY_ARGS -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27186 -Xmx64g -ea -Dspring.profiles.active=dbcp -Djava.io.tmpdir="$tmp" -cp $PORTAL_HOME/lib/genie-importer.jar org.mskcc.cbio.importer.Admin --update-study-data --portal genie-portal --update-worksheet --notification-file "$genie_portal_notification_file" --oncotree-version ${ONCOTREE_VERSION_TO_USE} --transcript-overrides-source mskcc
     if [ $? -gt 0 ]; then
         echo "Genie import failed!"
         IMPORT_FAIL=1
@@ -82,7 +83,7 @@ if [ $DB_VERSION_FAIL -gt 0 ]; then
     echo -e "$EMAIL_BODY" | mail -s "GENIE Update Failure: DB version is incompatible" $email_list
 fi
 
-$JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27186 -Xmx16g -ea -Dspring.profiles.active=dbcp -Djava.io.tmpdir="$tmp" -cp $PORTAL_HOME/lib/genie-importer.jar org.mskcc.cbio.importer.Admin --send-update-notification --portal genie-portal --notification-file "$genie_portal_notification_file"
+$JAVA_HOME/bin/java $JAVA_PROXY_ARGS -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27186 -Xmx16g -ea -Dspring.profiles.active=dbcp -Djava.io.tmpdir="$tmp" -cp $PORTAL_HOME/lib/genie-importer.jar org.mskcc.cbio.importer.Admin --send-update-notification --portal genie-portal --notification-file "$genie_portal_notification_file"
 
 if [[ -d "$tmp" && "$tmp" != "/" ]]; then    
     rm -rf "$tmp"/*
