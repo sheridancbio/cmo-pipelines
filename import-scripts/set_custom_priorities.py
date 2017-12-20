@@ -30,6 +30,9 @@ def createCBCustomPrioritiesMap():
 def createDefaultMskimpactPrioritiesMap():
     custom_priorities_map = {
         "12_245_PARTC_CONSENTED" : "1",
+        "AGE_CURRENT" : "1",
+        "CANCER_TYPE" : "1",
+        "CANCER_TYPE_DETAILED" : "1",
         "OS_STATUS" : "1",
         "SAMPLE_TYPE" : "1",
         "SEX" : "1",
