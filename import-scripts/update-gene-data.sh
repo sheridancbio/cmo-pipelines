@@ -4,6 +4,7 @@ tmp=$PORTAL_HOME/tmp/update-gene-data
 if [[ -d "$tmp" && "$tmp" != "/" ]]; then
     rm -rf "$tmp"/*
 fi
+JAVA_PROXY_ARGS="-Dhttp.proxyHost=jxi2.mskcc.org -Dhttp.proxyPort=8080"
 email_list="cbioportal-pipelines@cbio.mskcc.org"
 
 echo "Updating portal configuration repository..."
@@ -11,6 +12,7 @@ cd $PORTAL_CONFIG_HOME; $HG_BINARY pull -u
 
 cd $tmp
 echo "Downloading gene data resources from NCBI..."
+export http_proxy='http://jxi2.mskcc.org:8080'
 wget ftp.ncbi.nih.gov:gene/DATA/GENE_INFO/Mammalia/Homo_sapiens.gene_info.gz
 wget ftp.ncbi.nih.gov:/genomes/Homo_sapiens/GFF/ref_GRCh38.p7_top_level.gff3.gz
 gunzip $tmp/Homo_sapiens.gene_info.gz
@@ -38,7 +40,7 @@ function runGeneUpdatePipeline {
     export DATABASE_NAME=$DATABASE_NAME
 
     echo "Starting gene data update job on database: $DATABASE_NAME"
-    $JAVA_HOME/bin/java -jar $PORTAL_HOME/lib/gene_data_updater.jar -d $tmp/Homo_sapiens.gene_info -l $tmp/ref_GRCh38.p7_top_level.gff3 -n $tmp/gene-update-notification.txt
+    $JAVA_HOME/bin/java $JAVA_PROXY_ARGS -jar $PORTAL_HOME/lib/gene_data_updater.jar -d $tmp/Homo_sapiens.gene_info -l $tmp/ref_GRCh38.p7_top_level.gff3 -n $tmp/gene-update-notification.txt
     if [ $? -ne 0 ]; then 
         echo "Error updating gene data"
         echo -e "Error updating gene data." | mail -s "Gene Data Update Failure: $DATABASE_NAME" $email_list

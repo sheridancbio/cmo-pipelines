@@ -5,6 +5,7 @@
 echo $(date)
 tmp=$PORTAL_HOME/tmp/import-cron-dmp-msk
 email_list="cbioportal-pipelines@cbio.mskcc.org"
+JAVA_PROXY_ARGS="-Dhttp.proxyHost=jxi2.mskcc.org -Dhttp.proxyPort=8080 -Dhttp.nonProxyHosts=draco.mskcc.org|pidvudb1.mskcc.org|phcrdbd2.mskcc.org|dashi-dev.cbio.mskcc.org|pipelines.cbioportal.mskcc.org|localhost"
 
 if [[ -d "$tmp" && "$tmp" != "/" ]]; then
     rm -rf "$tmp"/*
@@ -28,7 +29,7 @@ sclc_mskimpact_notification_file=$(mktemp $tmp/sclc-mskimpact-portal-update-noti
 
 # fetch clinical data mercurial
 echo "fetching updates from msk-impact repository..."
-$JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -ea -Dspring.profiles.active=dbcp -Djava.io.tmpdir="$tmp" -cp $PORTAL_HOME/lib/msk-dmp-importer.jar org.mskcc.cbio.importer.Admin --fetch-data --data-source dmp-clinical-data-mercurial --run-date latest
+$JAVA_HOME/bin/java $JAVA_PROXY_ARGS -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -ea -Dspring.profiles.active=dbcp -Djava.io.tmpdir="$tmp" -cp $PORTAL_HOME/lib/msk-dmp-importer.jar org.mskcc.cbio.importer.Admin --fetch-data --data-source dmp-clinical-data-mercurial --run-date latest
 
 # lets clean clinical data files
 echo "cleaning all clinical & timeline data files - replacing carriage returns with newlines..."
@@ -138,7 +139,7 @@ function restartSchultzTomcats {
 # fetch CRDB data
 echo "fetching CRDB data"
 echo $(date)
-$JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -jar $PORTAL_HOME/lib/crdb_fetcher.jar -stage $MSK_IMPACT_DATA_HOME
+$JAVA_HOME/bin/java $JAVA_PROXY_ARGS -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -jar $PORTAL_HOME/lib/crdb_fetcher.jar -stage $MSK_IMPACT_DATA_HOME
 if [ $? -gt 0 ]; then 
     cd $MSK_IMPACT_DATA_HOME;$HG_BINARY update -C;rm *.orig
     sendFailureMessageMskPipelineLogsSlack "MSKIMPACT CRDB Fetch"
@@ -150,7 +151,7 @@ fi
 
 echo "fetching Darwin impact data"
 echo $(date)
-$JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -jar $PORTAL_HOME/lib/darwin_fetcher.jar -d $MSK_IMPACT_DATA_HOME -s mskimpact
+$JAVA_HOME/bin/java $JAVA_PROXY_ARGS -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -jar $PORTAL_HOME/lib/darwin_fetcher.jar -d $MSK_IMPACT_DATA_HOME -s mskimpact
 if [ $? -gt 0 ]; then 
     cd $MSK_IMPACT_DATA_HOME;$HG_BINARY update -C;rm *.orig
     sendFailureMessageMskPipelineLogsSlack "MSKIMPACT DARWIN Fetch"
@@ -160,7 +161,7 @@ fi
 
 echo "fetching Darwin heme data"
 echo $(date)
-$JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -jar $PORTAL_HOME/lib/darwin_fetcher.jar -d $MSK_HEMEPACT_DATA_HOME -s mskimpact_heme
+$JAVA_HOME/bin/java $JAVA_PROXY_ARGS -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -jar $PORTAL_HOME/lib/darwin_fetcher.jar -d $MSK_HEMEPACT_DATA_HOME -s mskimpact_heme
 if [ $? -gt 0 ]; then 
     cd $MSK_IMPACT_DATA_HOME;$HG_BINARY update -C;rm *.orig
     sendFailureMessageMskPipelineLogsSlack "HEMEPACT DARWIN Fetch"
@@ -170,7 +171,7 @@ fi
 
 echo "fetching Darwin raindance data"
 echo $(date)
-$JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -jar $PORTAL_HOME/lib/darwin_fetcher.jar -d $MSK_RAINDANCE_DATA_HOME -s mskraindance
+$JAVA_HOME/bin/java $JAVA_PROXY_ARGS -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -jar $PORTAL_HOME/lib/darwin_fetcher.jar -d $MSK_RAINDANCE_DATA_HOME -s mskraindance
 if [ $? -gt 0 ]; then 
     cd $MSK_IMPACT_DATA_HOME;$HG_BINARY update -C;rm *.orig
     sendFailureMessageMskPipelineLogsSlack "RAINDANCE DARWIN Fetch"
@@ -180,7 +181,7 @@ fi
 
 echo "fetching Darwin archer data"
 echo $(date)
-$JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -jar $PORTAL_HOME/lib/darwin_fetcher.jar -d $MSK_ARCHER_DATA_HOME -s mskarcher
+$JAVA_HOME/bin/java $JAVA_PROXY_ARGS -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -jar $PORTAL_HOME/lib/darwin_fetcher.jar -d $MSK_ARCHER_DATA_HOME -s mskarcher
 if [ $? -gt 0 ]; then 
     cd $MSK_IMPACT_DATA_HOME;$HG_BINARY update -C;rm *.orig
     sendFailureMessageMskPipelineLogsSlack "ARCHER DARWIN Fetch"
@@ -214,7 +215,7 @@ LYMPHOMA_SUPER_COHORT_SUBSET_FAIL=0
 # fetch new/updated IMPACT samples using CVR Web service   (must come after mercurial fetching)
 echo "fetching samples from CVR Web service  ..."
 echo $(date)
-$JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -jar $PORTAL_HOME/lib/cvr_fetcher.jar -d $MSK_IMPACT_DATA_HOME -i mskimpact -r 150
+$JAVA_HOME/bin/java $JAVA_PROXY_ARGS -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -jar $PORTAL_HOME/lib/cvr_fetcher.jar -d $MSK_IMPACT_DATA_HOME -i mskimpact -r 150
 if [ $? -gt 0 ]; then
     echo "CVR fetch failed!"
     cd $MSK_IMPACT_DATA_HOME;$HG_BINARY update -C;rm *.orig
@@ -237,7 +238,7 @@ fi
 # fetch new/updated IMPACT germline samples using CVR Web service   (must come after normal cvr fetching)
 echo "fetching CVR GML data ..."
 echo $(date)
-$JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -jar $PORTAL_HOME/lib/cvr_fetcher.jar -d $MSK_IMPACT_DATA_HOME -g -i mskimpact
+$JAVA_HOME/bin/java $JAVA_PROXY_ARGS -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -jar $PORTAL_HOME/lib/cvr_fetcher.jar -d $MSK_IMPACT_DATA_HOME -g -i mskimpact
 if [ $? -gt 0 ]; then
     echo "CVR Germline fetch failed!"
     cd $MSK_IMPACT_DATA_HOME;$HG_BINARY update -C;rm *.orig
@@ -251,7 +252,7 @@ fi
 # fetch new/updated raindance samples using CVR Web service (must come after mercurial fetching). The -s flag skips segment data fetching
 echo "fetching CVR raindance data..."
 echo $(date)
-$JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -jar $PORTAL_HOME/lib/cvr_fetcher.jar -d $MSK_RAINDANCE_DATA_HOME -s -i mskraindance
+$JAVA_HOME/bin/java $JAVA_PROXY_ARGS -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -jar $PORTAL_HOME/lib/cvr_fetcher.jar -d $MSK_RAINDANCE_DATA_HOME -s -i mskraindance
 if [ $? -gt 0 ]; then
     echo "CVR raindance fetch failed!"
     echo "This will not affect importing of mskimpact"
@@ -268,7 +269,7 @@ fi
 # fetch new/updated heme samples using CVR Web service (must come after mercurial fetching). Threshold is set to 50 since heme contains only 190 samples (07/12/2017)
 echo "fetching CVR heme data..."
 echo $(date)
-$JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -jar $PORTAL_HOME/lib/cvr_fetcher.jar -d $MSK_HEMEPACT_DATA_HOME -i mskimpact_heme -r 50
+$JAVA_HOME/bin/java $JAVA_PROXY_ARGS -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -jar $PORTAL_HOME/lib/cvr_fetcher.jar -d $MSK_HEMEPACT_DATA_HOME -i mskimpact_heme -r 50
 if [ $? -gt 0 ]; then
       echo "CVR heme fetch failed!"
       echo "This will not affect importing of mskimpact"
@@ -283,7 +284,7 @@ fi
 echo "fetching CVR archer data..."
 echo $(date)
 # archer has -b option to block warnings for samples with zero variants (all samples will have zero variants)
-$JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -jar $PORTAL_HOME/lib/cvr_fetcher.jar -d $MSK_ARCHER_DATA_HOME -i mskarcher -s -b
+$JAVA_HOME/bin/java $JAVA_PROXY_ARGS -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -jar $PORTAL_HOME/lib/cvr_fetcher.jar -d $MSK_ARCHER_DATA_HOME -i mskarcher -s -b
 if [ $? -gt 0 ]; then
     echo "CVR Archer fetch failed!"
     echo "This will not affect importing of mskimpact"
@@ -328,7 +329,7 @@ cd $MSK_IMPACT_DATA_HOME; $HG_BINARY add *; $HG_BINARY commit -m "Adding ARCHER 
 # check database version before importing anything
 echo "Checking if database version is compatible"
 echo $(date)
-$JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -ea -Dspring.profiles.active=dbcp -Djava.io.tmpdir="$tmp" -cp $PORTAL_HOME/lib/msk-dmp-importer.jar org.mskcc.cbio.importer.Admin --check-db-version
+$JAVA_HOME/bin/java $JAVA_PROXY_ARGS -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -ea -Dspring.profiles.active=dbcp -Djava.io.tmpdir="$tmp" -cp $PORTAL_HOME/lib/msk-dmp-importer.jar org.mskcc.cbio.importer.Admin --check-db-version
 if [ $? -gt 0 ]; then
     echo "Database version expected by portal does not match version in database!"
     sendFailureMessageMskPipelineLogsSlack "MSK DMP Importer DB version check"
@@ -339,7 +340,7 @@ fi
 if [ $DB_VERSION_FAIL -eq 0 ]; then
     # import into portal database
     echo "importing cancer type updates into msk portal database..."
-    $JAVA_HOME/bin/java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -ea -Dspring.profiles.active=dbcp -Djava.io.tmpdir="$tmp" -cp $PORTAL_HOME/lib/msk-dmp-importer.jar org.mskcc.cbio.importer.Admin --import-types-of-cancer --oncotree-version ${ONCOTREE_VERSION_TO_USE}
+    $JAVA_HOME/bin/java $JAVA_PROXY_ARGS -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -ea -Dspring.profiles.active=dbcp -Djava.io.tmpdir="$tmp" -cp $PORTAL_HOME/lib/msk-dmp-importer.jar org.mskcc.cbio.importer.Admin --import-types-of-cancer --oncotree-version ${ONCOTREE_VERSION_TO_USE}
     if [ $? -gt 0 ]; then
         sendFailureMessageMskPipelineLogsSlack "Cancer type updates"
     fi

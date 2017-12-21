@@ -8,14 +8,15 @@ if [[ -d "$tmp" && "$tmp" != "/" ]] ; then
 fi
 
 now=$(date "+%Y-%m-%d-%H-%M-%S")
+JAVA_PROXY_ARGS="-Dhttp.proxyHost=jxi2.mskcc.org -Dhttp.proxyPort=8080"
 pdx_automation_notification_file=$(mktemp $tmp/pdx-automation-portal-update-notification.$now.XXXXXX)
 ONCOTREE_VERSION_TO_USE=oncotree_latest_stable
 
 # import vetted studies into MSK portal
 echo "importing cancer type updates into msk portal database..."
-$JAVA_HOME/bin/java -Xmx16g -ea -Dspring.profiles.active=dbcp -Djava.io.tmpdir="$tmp" -cp $PORTAL_HOME/lib/msk-pdx-importer.jar org.mskcc.cbio.importer.Admin -import_types_of_cancer --oncotree-version ${ONCOTREE_VERSION_TO_USE}
+$JAVA_HOME/bin/java $JAVA_PROXY_ARGS -Xmx16g -ea -Dspring.profiles.active=dbcp -Djava.io.tmpdir="$tmp" -cp $PORTAL_HOME/lib/msk-pdx-importer.jar org.mskcc.cbio.importer.Admin -import_types_of_cancer --oncotree-version ${ONCOTREE_VERSION_TO_USE}
 echo "importing study data into msk portal database..."
-$JAVA_HOME/bin/java -Xmx16g -ea -Dspring.profiles.active=dbcp -Djava.io.tmpdir="$tmp" -cp $PORTAL_HOME/lib/msk-pdx-importer.jar org.mskcc.cbio.importer.Admin -update_study_data pdx-portal:t:$pdx_automation_notification_file:t --oncotree-version ${ONCOTREE_VERSION_TO_USE}
+$JAVA_HOME/bin/java $JAVA_PROXY_ARGS -Xmx16g -ea -Dspring.profiles.active=dbcp -Djava.io.tmpdir="$tmp" -cp $PORTAL_HOME/lib/msk-pdx-importer.jar org.mskcc.cbio.importer.Admin -update_study_data pdx-portal:t:$pdx_automation_notification_file:t --oncotree-version ${ONCOTREE_VERSION_TO_USE}
 num_studies_updated=$?
 
 # redeploy war
@@ -46,7 +47,7 @@ else
     echo "No studies have been updated.."
 fi
 
-$JAVA_HOME/bin/java -Xmx16g -ea -Dspring.profiles.active=dbcp -Djava.io.tmpdir="$tmp" -cp $PORTAL_HOME/lib/msk-pdx-importer.jar org.mskcc.cbio.importer.Admin -send_update_notification pdx-portal:$pdx_automation_notification_file
+$JAVA_HOME/bin/java $JAVA_PROXY_ARGS -Xmx16g -ea -Dspring.profiles.active=dbcp -Djava.io.tmpdir="$tmp" -cp $PORTAL_HOME/lib/msk-pdx-importer.jar org.mskcc.cbio.importer.Admin -send_update_notification pdx-portal:$pdx_automation_notification_file
 
 if [[ -d "$tmp" && "$tmp" != "/" ]] ; then
     rm -rf "$tmp"/*
