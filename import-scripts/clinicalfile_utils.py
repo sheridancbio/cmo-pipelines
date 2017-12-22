@@ -15,19 +15,49 @@ def get_header(file):
 def is_old_format(file):
     return all([linecache.getline(file, header_line).startswith("#") for header_line in range(1,6)])
 
-# get existing priority mapping in a given file
-def get_priority_mapping(file):
-    priority_mapping = {}
-    if is_old_format(file):
-        attributes = linecache.getline(file, 6).rstrip().split('\t')
-        priorities = linecache.getline(file, 5).rstrip().replace("#", "").split('\t')
-    else:
-        attributes = linecache.getline(file, 5).rstrip().split('\t')
-        priorities = linecache.getline(file, 4).rstrip().replace("#", "").split('\t')
+def get_metadata_mapping(file, attribute_line):
+    metadata_mapping = {}
+    metadata = linecache.getline(file, attribute_line).rstrip().replace("#", "").split('\t')
+    attributes = get_header(file)
     for i in range(len(attributes)):
-        priority_mapping[attributes[i]] = priorities[i]
-    return priority_mapping
+        metadata_mapping[attributes[i]] = metadata[i]
+    return metadata_mapping
 
+# get existing priority mapping in a given file
+def get_description_mapping(file):
+    return get_metadata_mapping(file, 2)
+
+def get_datatype_mapping(file):
+    return get_metadata_mapping(file, 3)
+
+def get_display_name_mapping(file):
+    return get_metadata_mapping(file, 1)
+
+def get_priority_mapping(file):
+    if is_old_format(file):
+        return get_metadata_mapping(file, 5)
+    else:
+        return get_metadata_mapping(file, 4)
+
+def get_attribute_type_mapping(file):
+    if is_old_format(file):
+        return get_metadata_mapping(file, 4)
+    else:
+        attribute_type_mapping = {}
+        attributes = get_header(file)
+        for attribute in attributes: 
+            attribute_type_mapping[attribute] = "NA"
+        return attribute_type_mapping
+
+def get_all_metadata_mappings(file):
+    all_metadata_mapping = {}
+    all_metadata_mapping["DISPLAY_NAME"] = get_display_name_mapping(file)
+    all_metadata_mapping["DESCRIPTION"] = get_description_mapping(file)
+    all_metadata_mapping["DATATYPE"] = get_datatype_mapping(file)
+    all_metadata_mapping["ATTRIBUTE_TYPE"] = get_attribute_type_mapping(file)
+    all_metadata_mapping["PRIORITY"] = get_priority_mapping(file)
+    return all_metadata_mapping
+     
 def write_header_line(line, output_file):
     os.write(output_file, '#')
     os.write(output_file, '\t'.join(line))
