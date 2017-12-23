@@ -366,7 +366,7 @@ if [ $IMPORT_STATUS_IMPACT -eq 0 ]; then
     # add metadata headers (-m for mixed format)
     $PYTHON_BINARY $PORTAL_HOME/scripts/add_clinical_attribute_metadata_headers.py -s $PORTAL_DATA_HOME/portal-configuration/google-docs/client_secrets.json -c $PORTAL_DATA_HOME/portal-configuration/google-docs/creds.dat -p $PORTAL_DATA_HOME/portal-configuration/properties/clinical-metadata/metadata.google.properties -m -f $MSK_IMPACT_DATA_HOME/data_clinical*
     # reset priorities, insert overrides
-    $PYTHON_BINARY $PORTAL_HOME/scripts/set_custom_overrides.py -r -s mskimpact -f $MSK_IMPACT_DATE_HOME/data_clinical*
+    $PYTHON_BINARY $PORTAL_HOME/scripts/set_custom_overrides.py -r -s mskimpact -f $MSK_IMPACT_DATA_HOME/data_clinical*
     bash $PORTAL_HOME/scripts/import-temp-study.sh --study-id="mskimpact" --temp-study-id="temporary_mskimpact" --backup-study-id="yesterday_mskimpact" --portal-name="mskimpact-portal" --study-path="$MSK_IMPACT_DATA_HOME" --notification-file="$mskimpact_notification_file" --tmp-directory="$tmp" --email-list="$email_list" --oncotree-version="${ONCOTREE_VERSION_TO_USE}" --importer-jar="$PORTAL_HOME/lib/msk-dmp-importer.jar" --transcript-overrides-source="mskcc"
     # set flag 'RESTART_AFTER_IMPACT_IMPORT' to 0 if MSKIMPACT did not update successfully
     if [ $? -gt 0 ]; then
