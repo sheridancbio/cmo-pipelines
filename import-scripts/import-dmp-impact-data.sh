@@ -368,6 +368,7 @@ if [ $IMPORT_STATUS_IMPACT -eq 0 ]; then
     # reset priorities, insert overrides
     $PYTHON_BINARY $PORTAL_HOME/scripts/set_custom_overrides.py -r -s mskimpact -f $MSK_IMPACT_DATA_HOME/data_clinical*
     bash $PORTAL_HOME/scripts/import-temp-study.sh --study-id="mskimpact" --temp-study-id="temporary_mskimpact" --backup-study-id="yesterday_mskimpact" --portal-name="mskimpact-portal" --study-path="$MSK_IMPACT_DATA_HOME" --notification-file="$mskimpact_notification_file" --tmp-directory="$tmp" --email-list="$email_list" --oncotree-version="${ONCOTREE_VERSION_TO_USE}" --importer-jar="$PORTAL_HOME/lib/msk-dmp-importer.jar" --transcript-overrides-source="mskcc"
+    $HG_BINARY --cwd $MSK_IMPACT_DATA_HOME revert $MSK_IMPACT_DATA_HOME/data_clinical*;rm $MSK_IMPACT_DATA_HOME/*.orig
     # set flag 'RESTART_AFTER_IMPACT_IMPORT' to 0 if MSKIMPACT did not update successfully
     if [ $? -gt 0 ]; then
         RESTART_AFTER_IMPACT_IMPORT=0
