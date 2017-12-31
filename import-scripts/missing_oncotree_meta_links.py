@@ -17,7 +17,7 @@ import json
 import time
 from collections import defaultdict
 
-oncotree_versions = ("oncotree_development", "oncotree_latest_stable")
+oncotree_versions = ("oncotree_candidate_release", "oncotree_latest_stable")
 oncotree_base_uri = "http://oncotree.mskcc.org/oncotree/api/tumorTypes?flat=true&version=%s"
 crosswalk_base_uri = "http://data.mskcc.org/ontologies/api/concept/crosswalk?vocabularyId=ONCOTREE&conceptId=%s"
 
