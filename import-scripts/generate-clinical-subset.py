@@ -16,15 +16,18 @@ IMPACT_SAMPLE_PATTERN = re.compile('P-\d*-T\d\d-IM\d*')
 
 def filter_samples_by_clinical_attributes(clinical_filename, impact_data_only):
 	""" Filters samples by clinical attribute and values. """
-	data_file = open(clinical_filename)
-	data_reader = csv.DictReader(data_file, dialect = 'excel-tab')
+	header = get_file_header(clinical_filename)
+	data_file = open(clinical_filename)	
+	data_reader = [line for line in data_file.readlines() if not line.startswith('#')][1:] # read every line except metadata headers and then skip file header
+
 	for line in data_reader:
-		if not keep_sample(line):
+		data = dict(zip(header, map(str.strip, line.split('\t'))))
+		if not keep_sample(data):
 			continue
-		if impact_data_only and not is_impact_sample(line['SAMPLE_ID'].strip()):
+		if impact_data_only and not is_impact_sample(data['SAMPLE_ID'].strip()):
 			continue
-		FILTERED_SAMPLE_IDS.add(line['SAMPLE_ID'].strip())
-		pid = '-'.join(line['SAMPLE_ID'].strip().split('-')[0:2])
+		FILTERED_SAMPLE_IDS.add(data['SAMPLE_ID'].strip())
+		pid = '-'.join(data['SAMPLE_ID'].strip().split('-')[0:2])
 		FILTERED_PATIENT_IDS.add(pid)
 	data_file.close()
 
@@ -45,14 +48,15 @@ def update_data_with_sequencing_date(study_id, clinical_filename):
 
 	# load data from clinical_filename and write data to output directory
 	data_file = open(clinical_filename, 'rU')
-	data_reader = csv.DictReader(data_file, dialect = 'excel-tab')
+	data_reader = [line for line in data_file.readlines() if not line.startswith('#')][1:]
 	output_data = ['\t'.join(header)]
 	for line in data_reader:
-		if not line['SAMPLE_ID'].strip() in FILTERED_SAMPLE_IDS:			
+		data = dict(zip(header, map(str.strip, line.split('\t'))))
+		if not data['SAMPLE_ID'].strip() in FILTERED_SAMPLE_IDS:			
 			continue
-		# update line with supplemental sample clinical data and format data as string for output file
-		line.update(SUPPLEMENTAL_SAMPLE_CLINICAL_DATA.get(line['SAMPLE_ID'].strip(), {}))
-		data = map(lambda v: line.get(v,''), header)
+		# update data with supplemental sample clinical data and format data as string for output file
+		data.update(SUPPLEMENTAL_SAMPLE_CLINICAL_DATA.get(data['SAMPLE_ID'].strip(), {}))
+		data = map(lambda v: data.get(v,''), header)
 		output_data.append('\t'.join(data))
 	data_file.close()
 
@@ -66,20 +70,21 @@ def filter_samples_by_sequencing_date(clinical_supp_filename, sequencing_date_li
 	""" Generates list of sample IDs from sequencing date file meeting the sequencing date limit criteria. """
 	seq_date_limit = datetime.strptime(sequencing_date_limit, '%Y/%m/%d %H:%M:%S')
 
-
+	header = get_file_header(clinical_supp_filename)
 	data_file = open(clinical_supp_filename, 'rU')
-	data_reader = csv.DictReader(data_file, dialect = 'excel-tab')
+	data_reader = [line for line in data_file.readlines() if not line.startswith('#')][1:]
 	for line in data_reader:
+		data = dict(zip(header, map(str.strip, line.split('\t'))))
 		try:
-			sample_id = line['SAMPLE_ID'].strip()
+			sample_id = data['SAMPLE_ID'].strip()
 		except KeyError:
-			sample_id = line['DMP_ASSAY_ID'].strip()
+			sample_id = data['DMP_ASSAY_ID'].strip()
 
 		# skip if not impact sample if only looking for impact data only
 		if impact_data_only and not is_impact_sample(sample_id):
 			continue
 
-		seq_date_val = line['SEQ_DATE']
+		seq_date_val = data['SEQ_DATE']
 		if not seq_date_val:
 			continue
 		raw_sample_seq_date = datetime.strptime(seq_date_val, '%a, %d %b %Y %H:%M:%S %Z')
@@ -110,13 +115,14 @@ def filter_patient_clinical_data(clin_patient_file, study_id):
 	""" Filters patient clinical data file by ids in FILTERED_PATIENT_IDS. """	
 	header = get_file_header(clin_patient_file)
 	data_file = open(clin_patient_file, 'rU')
-	data_reader = csv.DictReader(data_file, dialect = 'excel-tab')
+	data_reader = [line for line in data_file.readlines() if not line.startswith('#')][1:]
 	output_data = ['\t'.join(header)]
 	for line in data_reader:
-		if not line['PATIENT_ID'] in FILTERED_PATIENT_IDS:
+		data = dict(zip(header, map(str.strip, line.split('\t'))))
+		if not data['PATIENT_ID'] in FILTERED_PATIENT_IDS:
 			continue
-		data = map(lambda v: line.get(v,''), header)
-		output_data.append('\t'.join(data))
+		formatted_data = map(lambda v: data.get(v,''), header)
+		output_data.append('\t'.join(formatted_data))
 	data_file.close()
 
 	# write data to output file
