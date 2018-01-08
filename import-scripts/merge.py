@@ -216,6 +216,8 @@ def merge_files(data_filenames, file_type, reference_set, keep_match, output_dir
     gene_sample_dict = {}
     is_first_profile_datafile = True
     rows = []
+    patient_id_to_row_index = {} # only used for CLINICAL_PATIENT_FILE_PATTERN files
+    replicated_patient_id_row_count = 0
 
     for f in data_filenames:
         # update sequenced samples tag if data_mutations* file
@@ -240,7 +242,17 @@ def merge_files(data_filenames, file_type, reference_set, keep_match, output_dir
             elif merge_style is MERGE_STYLES[NORMAL]:
                 data_values = map(lambda x: data.get(x, ''), file_header)
                 if data_okay_to_add(is_clinical_or_timeline_file, file_header, reference_set, data_values, keep_match):
-                    rows.append(normal_row(data, new_header))
+                    if file_type == CLINICAL_PATIENT_META_PATTERN:
+                        patient_id = data['PATIENT_ID']
+                        if patient_id in patient_id_to_row_index:
+                            previous_record = rows[patient_id_to_row_index[patient_id]]
+                            replicated_patient_id_row_count += 1
+                            merge_rows(previous_record, data, new_header, patient_id)
+                        else:
+                            patient_id_to_row_index[patient_id] = len(rows) 
+                            rows.append(normal_row(data, new_header))
+                    else:
+                        rows.append(normal_row(data, new_header))
 
         is_first_profile_datafile = False
         data_file.close()
@@ -256,9 +268,9 @@ def merge_files(data_filenames, file_type, reference_set, keep_match, output_dir
         write_normal(rows, output_filename, new_header)
 
     print >> OUTPUT_FILE, 'Validating merge for: ' + output_filename
-    validate_merge(file_type, data_filenames, output_filename, reference_set, keep_match, merge_style)
+    validate_merge(file_type, data_filenames, output_filename, reference_set, keep_match, merge_style, replicated_patient_id_row_count)
 
-def validate_merge(file_type, data_filenames, merged_filename, reference_set, keep_match, merge_style):
+def validate_merge(file_type, data_filenames, merged_filename, reference_set, keep_match, merge_style, skipped_row_count):
     merged_file_summary = get_datafile_counts_summary(file_type, merged_filename, reference_set, keep_match, merge_style)
     merged_header = process_header(data_filenames, reference_set, keep_match, merge_style)
 
@@ -282,7 +294,7 @@ def validate_merge(file_type, data_filenames, merged_filename, reference_set, ke
     if merge_style is MERGE_STYLES[PROFILE]:
         total_rows = len(merged_gene_ids)
 
-    if total_rows != merged_file_summary['num_rows']:
+    if total_rows - skipped_row_count != merged_file_summary['num_rows']:
         print >> ERROR_FILE, 'Validation failed! Total rows calculated from data files does not match total rows in merged file!'
         print datafile_summaries
         sys.exit(2)
@@ -417,6 +429,20 @@ def process_header(data_filenames, reference_set, keep_match, merge_style):
             header.extend(new_header)
 
     return header
+
+def merge_rows(previous_row_list, current_row_dict, header, patient_id):
+    """
+        Merges non-empty values from current_row_dict into previous_row_list, 
+        overwriting any values that conflict.
+    """
+    for index, attribute in enumerate(header):
+        if attribute in current_row_dict:
+            value = process_datum(current_row_dict.get(attribute, ''))
+            if value:
+                if previous_row_list[index] and value != previous_row_list[index]:
+                    print >> ERROR_FILE, "Ignoring value '%s' in favor of prior value '%s' for attribute '%s' in patient '%s'" % (value, previous_row_list[index], attribute, patient_id)
+                else:
+                    previous_row_list[index] = value
 
 def normal_row(line, header):
     """
