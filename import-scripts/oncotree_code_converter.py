@@ -4,7 +4,7 @@ import fileinput
 import argparse
 import urllib2
 import re
-
+from clinicalfile_utils import *
 # globals
 
 PATTERN = re.compile('([A-Za-z\' ,-/]*) \\(([A-Za-z_]*)\\)')
@@ -68,7 +68,23 @@ def process_clinical_file(oncotree, clinical_filename):
 
     first = True
     header = []
+    file_has_metadata_headers = has_metadata_headers(clinical_filename)
+
+    # same logic checking for Cancer Type/ Cancer Type Detailed but applied to metadata headers
+    if file_has_metadata_headers:
+        metadata_lines = get_all_metadata_lines(clinical_filename)
+        if CANCER_TYPE not in get_header(clinical_filename):
+            add_metadata_for_attribute(CANCER_TYPE, metadata_lines)
+        if CANCER_TYPE_DETAILED not in get_header(clinical_filename):
+            add_metadata_for_attribute(CANCER_TYPE_DETAILED, metadata_lines)
+
+    metadata_headers_processed = False
     for line in fileinput.input(clinical_filename, inplace = 1):
+        if line.startswith('#'):
+            if file_has_metadata_headers and not metadata_headers_processed:
+                metadata_headers_processed = True
+                write_metadata_headers(metadata_lines, clinical_filename)
+            continue
         if first:
             first = False
             header = line.split('\t')
