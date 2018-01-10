@@ -305,21 +305,24 @@ def validate_merge(file_type, data_filenames, merged_filename, reference_set, ke
 def data_okay_to_add(is_clinical_or_timeline_file, file_header, reference_set, data_values, keep_match):
     """
         Checks reference list (either 'sublist' or 'excluded_samples_list') if any matches found in data values.
-        If keeping match then True is returned for positive match, otherwise False is returned. P-0013956-T01-IM5
+        If keeping match then True is returned for positive match, otherwise False is returned.
     """
     if len(reference_set) == 0:
         return True
     found = False
     if is_clinical_or_timeline_file and not 'SAMPLE_ID' in file_header:
         patient_id = data_values[file_header.index('PATIENT_ID')]
-        if patient_id in PATIENT_SAMPLE_MAP.keys():
-            found = True
+        found = (patient_id in PATIENT_SAMPLE_MAP.keys())
+        if not keep_match:
+            # if patient id not found in patient sample map and we are not keeping
+            # matches anyway then return False
+            if not found:
+                return False
             # if at least one sample is not in reference set and keep match is false 
             # then we want to return true so that data for this patient isn't filtered out
-            if not keep_match:
-                for sample_id in PATIENT_SAMPLE_MAP[patient_id]:
-                    if not sample_id in reference_set:
-                        return True
+            for sample_id in PATIENT_SAMPLE_MAP[patient_id]:
+                if not sample_id in reference_set:
+                    return True
     else:
         if len([True for val in data_values if val in reference_set]) > 0:
             found = True
