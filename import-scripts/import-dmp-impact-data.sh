@@ -55,9 +55,9 @@ function addCancerTypeCaseLists {
     # remove current case lists and run oncotree converter before creating new cancer case lists
     rm $STUDY_DATA_DIRECTORY/case_lists/*
     $PYTHON_BINARY $PORTAL_HOME/scripts/oncotree_code_converter.py --oncotree-url "http://oncotree.mskcc.org/oncotree/api/tumor_types.txt" --clinical-file $STUDY_DATA_DIRECTORY/data_clinical.txt
-    $PYTHON_BINARY $PORTAL_HOME/scripts/create_case_lists_by_cancer_type.py --clinical-file="$STUDY_DATA_DIRECTORY/data_clinical.txt" --output-directory="$STUDY_DATA_DIRECTORY/case_lists" --study-id="$STUDY_ID" --attribute="CANCER_TYPE"
+    $PYTHON_BINARY $PORTAL_HOME/scripts/create_case_lists_by_cancer_type.py --clinical-file-list="$STUDY_DATA_DIRECTORY/data_clinical.txt" --output-directory="$STUDY_DATA_DIRECTORY/case_lists" --study-id="$STUDY_ID" --attribute="CANCER_TYPE"
     if [ "$STUDY_ID" == "mskimpact" ] || [ "$STUDY_ID" == "mixedpact" ]; then
-        $PYTHON_BINARY $PORTAL_HOME/scripts/create_case_lists_by_cancer_type.py --clinical-file="$STUDY_DATA_DIRECTORY/data_clinical.txt" --output-directory="$STUDY_DATA_DIRECTORY/case_lists" --study-id="$STUDY_ID" --attribute="12_245_PARTC_CONSENTED"
+        $PYTHON_BINARY $PORTAL_HOME/scripts/create_case_lists_by_cancer_type.py --clinical-file-list="$STUDY_DATA_DIRECTORY/data_clinical.txt" --output-directory="$STUDY_DATA_DIRECTORY/case_lists" --study-id="$STUDY_ID" --attribute="12_245_PARTC_CONSENTED"
     fi
 }
 
