@@ -64,6 +64,9 @@ public class CRDBDatasetReader implements ItemStreamReader<CRDBDataset> {
     @Override
     public void open(ExecutionContext executionContext) throws ItemStreamException {
         this.crdbDatasetResults = getCrdbDatasetResults();
+        if (crdbDatasetResults.isEmpty()) {
+            throw new ItemStreamException("Error fetching records from CRDB Dataset View");
+        }
     }
 
     /**

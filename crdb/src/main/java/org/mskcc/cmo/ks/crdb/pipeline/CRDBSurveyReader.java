@@ -65,6 +65,9 @@ public class CRDBSurveyReader implements ItemStreamReader<CRDBSurvey> {
     @Override
     public void open(ExecutionContext executionContext) throws ItemStreamException {
         this.crdbSurveyResults = getCrdbSurveyResults();
+        if (crdbSurveyResults.isEmpty()) {
+            throw new ItemStreamException("Error fetching records from CRDB Survey View");
+        }
     }
 
     /**
