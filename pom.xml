@@ -9,10 +9,11 @@
   <url>https://github.com/cBioPortal/cmo-pipelines/</url>
 
   <modules>
+    <module>common</module>
     <module>gdd</module>
     <module>crdb</module>
     <module>darwin</module>
-    <module>redcap</module>    
+    <module>redcap</module>
     <module>cvr</module>
     <module>gene</module>
   </modules>
@@ -69,7 +70,6 @@
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-maven-plugin</artifactId>
       </plugin>
-
       <plugin>
         <groupId>com.querydsl</groupId>
         <artifactId>querydsl-maven-plugin</artifactId>

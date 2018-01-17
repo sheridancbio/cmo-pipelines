@@ -66,3 +66,9 @@ mapping_token=
 metadata_project=
 # The name of the RedCap project that contains the namespace mapping of external column headers to normalized
 namespace_project=
+
+# email properties
+email.server=localhost
+email.sender=
+email.recipient=
+email.subject=Failure in Darwin Pipeline
