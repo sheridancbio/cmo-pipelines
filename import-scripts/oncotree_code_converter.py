@@ -79,37 +79,45 @@ def process_clinical_file(oncotree, clinical_filename):
             add_metadata_for_attribute(CANCER_TYPE_DETAILED, metadata_lines)
 
     metadata_headers_processed = False
-    for line in fileinput.input(clinical_filename, inplace = 1):
-        if line.startswith('#'):
-            if file_has_metadata_headers and not metadata_headers_processed:
-                metadata_headers_processed = True
-                write_metadata_headers(metadata_lines, clinical_filename)
-            continue
-        if first:
-            first = False
-            header = line.split('\t')
-            if CANCER_TYPE not in header:
-                header.append(CANCER_TYPE)
-            if CANCER_TYPE_DETAILED not in header:
-                header.append(CANCER_TYPE_DETAILED)
-            print '\t'.join(header).replace('\n', '')
-            continue
-        data = line.split('\t')
-        oncotree_code = data[header.index(ONCOTREE_CODE)]
-        cancer_types = get_cancer_types(oncotree, oncotree_code)
-        if cancer_types[CANCER_TYPE_DETAILED] == NA:
-            no_matches.append(data[header.index(SAMPLE_ID)])
-        # Handle the case if CANCER_TYPE or CANCER_TYPE_DETAILED has to be appended to the header.
-        # Separate try-except in case one of the fields exists and the other doesn't
-        try:
-            data[header.index(CANCER_TYPE)] = cancer_types[CANCER_TYPE]
-        except IndexError:
-            data.append(cancer_types[CANCER_TYPE])
-        try:
-            data[header.index(CANCER_TYPE_DETAILED)] = cancer_types[CANCER_TYPE_DETAILED]
-        except IndexError:
-            data.append(cancer_types[CANCER_TYPE_DETAILED])
-        print '\t'.join(data).replace('\n', '')
+    # Python docs: "if the keyword argument inplace=1 is passed to fileinput.input()
+    # or to the FileInput constructor, the file is moved to a backup
+    # file and standard output is directed to the input file"
+    f = fileinput.input(clinical_filename, inplace = 1)
+    try:
+        for line in f:
+            line = line.rstrip("\n")
+            if line.startswith('#'):
+                if file_has_metadata_headers and not metadata_headers_processed:
+                    metadata_headers_processed = True
+                    write_metadata_headers(metadata_lines, clinical_filename)
+                continue
+            if first:
+                first = False
+                header = line.split('\t')
+                if CANCER_TYPE not in header:
+                    header.append(CANCER_TYPE)
+                if CANCER_TYPE_DETAILED not in header:
+                    header.append(CANCER_TYPE_DETAILED)
+                print '\t'.join(header)
+                continue
+            data = line.split('\t')
+            oncotree_code = data[header.index(ONCOTREE_CODE)]
+            cancer_types = get_cancer_types(oncotree, oncotree_code)
+            if cancer_types[CANCER_TYPE_DETAILED] == NA:
+                no_matches.append(data[header.index(SAMPLE_ID)])
+            # Handle the case if CANCER_TYPE or CANCER_TYPE_DETAILED has to be appended to the header.
+            # Separate try-except in case one of the fields exists and the other doesn't
+            try:
+                data[header.index(CANCER_TYPE)] = cancer_types[CANCER_TYPE]
+            except IndexError:
+                data.append(cancer_types[CANCER_TYPE])
+            try:
+                data[header.index(CANCER_TYPE_DETAILED)] = cancer_types[CANCER_TYPE_DETAILED]
+            except IndexError:
+                data.append(cancer_types[CANCER_TYPE_DETAILED])
+            print '\t'.join(data)
+    finally:
+        f.close()
 
 def report_failed_matches():
     """ Reports any samples from the file that could not match its oncotree code """
