@@ -41,7 +41,7 @@ import java.util.*;
 public interface ClinicalDataSource {
     boolean projectExists(String projectTitle);
     boolean redcapDataTypeIsTimeline(String projectTitle);
-    void importClinicalDataFile(String projectTitle, String filename, boolean overwriteProjectData);
+    void importClinicalDataFile(String projectTitle, String filename, boolean overwriteProjectData) throws Exception;
     List<String> getProjectHeader(String projectTitle);
     List<Map<String, String>> exportRawDataForProjectTitle(String projectTitle);
 

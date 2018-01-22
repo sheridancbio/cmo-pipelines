@@ -62,7 +62,11 @@ public class ImportRedcapProjectDataTasklet implements Tasklet {
 
     @Override
     public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
-        clinicalDataSource.importClinicalDataFile(redcapProjectTitle, filename, overwriteProjectData);
+        try {
+            clinicalDataSource.importClinicalDataFile(redcapProjectTitle, filename, overwriteProjectData);
+        } catch (Exception e) {
+            throw new RuntimeException(e.getMessage());
+        }
         return RepeatStatus.FINISHED;
     }
 
