@@ -48,13 +48,13 @@ import org.springframework.beans.factory.annotation.*;
  * @author heinsz
  */
 public class CVRCnaDataReader implements ItemStreamReader<CompositeCnaRecord>{
-    
+
     @Value("#{jobParameters[stagingDirectory]}")
     private String stagingDirectory;
 
     @Autowired
     public CVRUtilities cvrUtilities;
-    
+
     @Autowired
     public CvrSampleListUtil cvrSampleListUtil;
 
@@ -64,12 +64,12 @@ public class CVRCnaDataReader implements ItemStreamReader<CompositeCnaRecord>{
     private Set<String> newSamples = new HashSet<>();
 
     private List<CompositeCnaRecord> cnaRecords = new ArrayList();
-    
+
     Logger log = Logger.getLogger(CVRCnaDataReader.class);
-    
+
     @Override
     public void open(ExecutionContext ec) throws ItemStreamException {
-        CVRData cvrData = new CVRData();        
+        CVRData cvrData = new CVRData();
         // load cvr data from cvr_data.json file
         File cvrFile = new File(stagingDirectory, cvrUtilities.CVR_FILE);
         try {
@@ -78,9 +78,13 @@ public class CVRCnaDataReader implements ItemStreamReader<CompositeCnaRecord>{
             log.error("Error reading file: " + cvrFile.getName());
             throw new ItemStreamException(e);
         }
-        
+
         for (CVRMergedResult result : cvrData.getResults()) {
             String sampleId = result.getMetaData().getDmpSampleId();
+            if (!cvrSampleListUtil.getPortalSamples().contains(sampleId)) {
+                cvrSampleListUtil.addSampleRemoved(sampleId);
+                continue;
+            }
             samples.add(sampleId);
             newSamples.add(sampleId);
             List<CVRCnvVariant> variants = result.getCnvVariants();
