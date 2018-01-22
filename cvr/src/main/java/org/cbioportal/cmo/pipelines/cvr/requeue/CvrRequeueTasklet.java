@@ -54,26 +54,26 @@ public class CvrRequeueTasklet implements Tasklet {
 
     @Value("${dmp.server_name}")
     private String dmpServerName;
-    
+
     @Value("${dmp.tokens.requeue.impact}")
     private String dmpRequeue;
-    
+
     @Value("#{jobParameters[sessionId]}")
     private String sessionId;
 
     @Value("#{jobParameters[studyId]}")
     private String studyId;
-    
+
     @Value("#{jobParameters[testingMode]}")
     private boolean testingMode;
-    
+
     @Autowired
     private CvrSampleListUtil cvrSampleListUtil;
-    
+
     private List<CVRRequeueRecord> failedRequeue = new ArrayList();
-    
+
     Logger log = Logger.getLogger(CvrRequeueTasklet.class);
-    
+
     @Override
     public RepeatStatus execute(StepContribution sc, ChunkContext cc) throws Exception {
         if (cvrSampleListUtil.getDmpSamplesNotInPortal().isEmpty()) {
@@ -89,20 +89,17 @@ public class CvrRequeueTasklet implements Tasklet {
             }
             else {
                 this.failedRequeue = requeueSamples();
-            }            
-        }        
+            }
+        }
         // add failed requeue samples to execution context for listener
-        cc.getStepContext().getStepExecution().getJobExecution().getExecutionContext().put("portalSamplesNotInDmp", cvrSampleListUtil.getPortalSamplesNotInDmp());
-        cc.getStepContext().getStepExecution().getJobExecution().getExecutionContext().put("samplesRemovedList", cvrSampleListUtil.getSamplesRemovedList());
-        cc.getStepContext().getStepExecution().getJobExecution().getExecutionContext().put("sampleListStats", cvrSampleListUtil.getSampleListStats());
         cc.getStepContext().getStepExecution().getJobExecution().getExecutionContext().put("failedToRequeueSamples", failedRequeue);
-        
+
         return RepeatStatus.FINISHED;
     }
-    
+
     private List<CVRRequeueRecord> requeueSamples() {
         List<CVRRequeueRecord> failedRequeueList = new ArrayList();
-        
+
         // if sample fails to requeue then add to list
         for (String sampleId : cvrSampleListUtil.getDmpSamplesNotInPortal()) {
             CVRRequeueRecord requeuedSample = requeue(sampleId);
@@ -110,10 +107,10 @@ public class CvrRequeueTasklet implements Tasklet {
                 failedRequeueList.add(requeuedSample);
             }
         }
-        
+
         return failedRequeueList;
     }
-    
+
     private CVRRequeueRecord requeue(String sampleId) {
         log.info("Requeueing '" + sampleId + "'");
         String dmpRequeueUrl = dmpServerName + dmpRequeue + "/" + sessionId + "/" + sampleId;
@@ -132,11 +129,11 @@ public class CvrRequeueTasklet implements Tasklet {
         }
         return responseEntity.getBody();
     }
-    
+
     private HttpEntity getRequestEntity() {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
         return new HttpEntity<Object>(headers);
     }
-    
+
 }

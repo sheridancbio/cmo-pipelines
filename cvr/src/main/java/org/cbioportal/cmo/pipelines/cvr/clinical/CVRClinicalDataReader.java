@@ -100,6 +100,10 @@ public class CVRClinicalDataReader implements ItemStreamReader<CVRClinicalRecord
             CVRClinicalRecord record = clinicalRecords.remove(0);
             // portal samples may or may not be filtered by 'portalSamplesNotInDmp' is threshold check above
             // so we want to skip samples that aren't in this list
+            if (!record.getSAMPLE_ID().startsWith(record.getPATIENT_ID())) {
+                cvrSampleListUtil.addSamplesInvalidPatientIdList(record.getSAMPLE_ID());
+                continue;
+            }
             if (!cvrSampleListUtil.getPortalSamples().contains(record.getSAMPLE_ID())) {
                 cvrSampleListUtil.addSampleRemoved(record.getSAMPLE_ID());
                 continue;

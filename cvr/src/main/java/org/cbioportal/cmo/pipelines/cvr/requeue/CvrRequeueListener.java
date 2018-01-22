@@ -47,7 +47,7 @@ import org.springframework.beans.factory.annotation.Value;
  * @author Manda Wilson
  */
 public class CvrRequeueListener implements StepExecutionListener {
-    
+
     @Autowired
     private EmailUtil emailUtil;
 
@@ -64,7 +64,7 @@ public class CvrRequeueListener implements StepExecutionListener {
     public CvrSampleListUtil cvrSampleListUtil;
 
     Logger log = Logger.getLogger(CvrRequeueListener.class);
-    
+
     @Override
     public void beforeStep(StepExecution stepExecution) {
     }
@@ -74,16 +74,28 @@ public class CvrRequeueListener implements StepExecutionListener {
         log.debug("afterStep(): checking for portal samples not in dmp or for samples that failed to requeue...");
 
         String studyId = stepExecution.getJobParameters().getString("studyId");
-        Set<String> portalSamplesNotInDmp = (Set<String>) stepExecution.getJobExecution().getExecutionContext().get("portalSamplesNotInDmp");
-        Set<String> samplesRemoved = (Set<String>) stepExecution.getJobExecution().getExecutionContext().get("samplesRemoved");
-        Map<String, String> sampleListStats = (Map<String, String>) stepExecution.getJobExecution().getExecutionContext().get("sampleListStats");
+        Set<String> portalSamplesNotInDmp = cvrSampleListUtil.getPortalSamplesNotInDmp();
+        Set<String> samplesRemoved = cvrSampleListUtil.getSamplesRemovedList();
+        Map<String, String> sampleListStats = cvrSampleListUtil.getSampleListStats();
         List<CVRRequeueRecord> failedToRequeueSamples = (List<CVRRequeueRecord>) stepExecution.getJobExecution().getExecutionContext().get("failedToRequeueSamples");
         Set<String> zeroVariantSamples = cvrSampleListUtil.getNonWhitelistedZeroVariantSamples();
         Map<String, Integer> unfilteredSampleSnpCounts = cvrSampleListUtil.getUnfilteredSampleSnpCounts();
-    
+        Set<String> samplesInvalidPatientId = cvrSampleListUtil.getSamplesInvalidPatientIdList();
+
         String subject = "CVR pipeline master list errors: " +  studyId;
         StringBuilder body = new StringBuilder();
-        
+
+        // build email body text for samples with invalid patient ids
+        if (samplesInvalidPatientId != null && samplesInvalidPatientId.size() > 0) {
+            log.warn(samplesInvalidPatientId.size() + " samples with invalid patient ids");
+            body.append("\nSamples with invalid patient ids:\n");
+            for (String sampleId : samplesInvalidPatientId) {
+                body.append("\n\t");
+                body.append(sampleId);
+            }
+            body.append("\n");
+        }
+
         // build email body text for samples that failed requeue
         if (failedToRequeueSamples != null && failedToRequeueSamples.size() > 0) {
             log.warn(failedToRequeueSamples.size() + " samples from the dmp master list failed to requeue");
@@ -97,12 +109,12 @@ public class CvrRequeueListener implements StepExecutionListener {
         else {
             log.info("No samples failed to requeue");
         }
-        
+
         // build email body text for samples that were not in dmp master list
         if (portalSamplesNotInDmp != null && portalSamplesNotInDmp.size() > 0) {
             log.warn(portalSamplesNotInDmp.size() + " portal samples are not in the dmp master list");
             body.append("\nPortal samples not found in DMP master list  " + portalSamplesNotInDmp.size() + " samples: ");
-            
+
             int count = 1;
             for (String sample : portalSamplesNotInDmp) {
                 log.warn("Portal sample '" + sample + "' is not in the dmp master list");
@@ -121,15 +133,15 @@ public class CvrRequeueListener implements StepExecutionListener {
             }
             body.append("\n");
         }
-        
-        // build email body text for samples that were removed from data 
+
+        // build email body text for samples that were removed from data
         if (samplesRemoved != null && samplesRemoved.size() > 0) {
             log.warn("Data for " + samplesRemoved.size() + " samples removed from " + studyId);
             body.append("\nData was removed from the staging files for the following " + samplesRemoved.size() + " samples: ");
             for (String sample : samplesRemoved) {
                 body.append("\n\t");
                 body.append(sample);
-                log.warn("Portal sample '" + sample + "' is not in the dmp master list");
+                log.warn("Portal sample '" + sample + "' is not in the dmp master list or is linked to invalid patient id");
             }
             body.append("\n");
         }
@@ -173,12 +185,12 @@ public class CvrRequeueListener implements StepExecutionListener {
             }
             body.append("\n");
         }
-        
+
         if (!body.toString().isEmpty()) {
             String[] recipients = {defaultRecipient, dmpRecipient};
             emailUtil.sendEmail(sender, recipients, subject, body.toString());
         }
         return ExitStatus.COMPLETED;
     }
-    
+
 }

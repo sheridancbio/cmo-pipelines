@@ -54,6 +54,9 @@ public class CVRSeqDateClinicalDataWriter implements ItemStreamWriter<CompositeC
     @Value("#{jobParameters[stagingDirectory]}")
     private String stagingDirectory;
 
+    @Value("#{jobParameters[studyId]}")
+    private String studyId;
+
     @Autowired
     public CVRUtilities cvrUtilities;
 
@@ -62,17 +65,19 @@ public class CVRSeqDateClinicalDataWriter implements ItemStreamWriter<CompositeC
     // Set up the writer and print the json from CVR to a file
     @Override
     public void open(ExecutionContext ec) throws ItemStreamException {
-        File stagingFile = new File(stagingDirectory, cvrUtilities.SEQ_DATE_CLINICAL_FILE);
-        PassThroughLineAggregator aggr = new PassThroughLineAggregator();
-        flatFileItemWriter.setLineAggregator(aggr);
-        flatFileItemWriter.setHeaderCallback(new FlatFileHeaderCallback() {
-            @Override
-            public void writeHeader(Writer writer) throws IOException {
-                writer.write(StringUtils.join(CVRClinicalRecord.getSeqDateFieldNames(), "\t"));
-            }
-        });
-        flatFileItemWriter.setResource(new FileSystemResource(stagingFile));
-        flatFileItemWriter.open(ec);
+        if (studyId.equals("mskimpact")) {
+            File stagingFile = new File(stagingDirectory, cvrUtilities.SEQ_DATE_CLINICAL_FILE);
+            PassThroughLineAggregator aggr = new PassThroughLineAggregator();
+            flatFileItemWriter.setLineAggregator(aggr);
+            flatFileItemWriter.setHeaderCallback(new FlatFileHeaderCallback() {
+                @Override
+                public void writeHeader(Writer writer) throws IOException {
+                    writer.write(StringUtils.join(CVRClinicalRecord.getSeqDateFieldNames(), "\t"));
+                }
+            });
+            flatFileItemWriter.setResource(new FileSystemResource(stagingFile));
+            flatFileItemWriter.open(ec);
+        }
     }
 
     @Override
@@ -81,17 +86,21 @@ public class CVRSeqDateClinicalDataWriter implements ItemStreamWriter<CompositeC
 
     @Override
     public void close() throws ItemStreamException {
-        flatFileItemWriter.close();
+        if (studyId.equals("mskimpact")) {
+            flatFileItemWriter.close();
+        }
     }
 
     @Override
     public void write(List<? extends CompositeClinicalRecord> items) throws Exception {
-        List<String> writeList = new ArrayList<>();
-        for (CompositeClinicalRecord item : items) {
-            if (item.getSeqDateRecord()!= null) {
-                writeList.add(item.getSeqDateRecord());
+        if (studyId.equals("mskimpact")) {
+            List<String> writeList = new ArrayList<>();
+            for (CompositeClinicalRecord item : items) {
+                if (item.getSeqDateRecord()!= null) {
+                    writeList.add(item.getSeqDateRecord());
+                }
             }
+            flatFileItemWriter.write(writeList);
         }
-        flatFileItemWriter.write(writeList);
     }
 }
