@@ -1,9 +1,8 @@
 #!/bin/bash
 
-REDCAP_TESTING_MODE=1
-#JAVA_DEBUG_ARGS="-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182"
-JAVA_DEBUG_ARGS=""
-JAVA_TMPDIR="$PORTAL_HOME/tmp/import-redcap-test"
+CVR_TEST_MODE_ARGS=""
+JAVA_DEBUG_ARGS="-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182"
+JAVA_TMPDIR="$PORTAL_HOME/tmp/import-cron-dmp-msk"
 JAVA_IMPORTER_ARGS="$JAVA_PROXY_ARGS $JAVA_DEBUG_ARGS -ea -Dspring.profiles.active=dbcp -Djava.io.tmpdir=$JAVA_TMPDIR -Dhttp.nonProxyHosts=draco.mskcc.org|pidvudb1.mskcc.org|phcrdbd2.mskcc.org|dashi-dev.cbio.mskcc.org|pipelines.cbioportal.mskcc.org|localhost"
 
 ## FUNCTIONS
@@ -248,26 +247,8 @@ if [[ -d "$JAVA_TMPDIR" && "$JAVA_TMPDIR" != "/" ]] ; then
     rm -rf "$JAVA_TMPDIR"/*
 fi
 
-if [ $REDCAP_TESTING_MODE -ne 0 ] ; then
-    export MSK_IMPACT_DATA_HOME=$PORTAL_DATA_HOME/msk-impact/msk-impact-redcap
-    export MSK_RAINDANCE_DATA_HOME=$PORTAL_DATA_HOME/msk-impact/raindance_redcap
-    export MSK_HEMEPACT_DATA_HOME=$PORTAL_DATA_HOME/msk-impact/hemepact_redcap
-    export MSK_ARCHER_DATA_HOME=$PORTAL_DATA_HOME/msk-impact/mskarcher_redcap
-    export MSK_MIXEDPACT_DATA_HOME=$PORTAL_DATA_HOME/msk-impact/mixedpact_redcap
-    export MSK_KINGS_DATA_HOME=$PORTAL_DATA_HOME/msk-impact/msk_kingscounty_redcap
-    export MSK_LEHIGH_DATA_HOME=$PORTAL_DATA_HOME/msk-impact/msk_lehighvalley_redcap
-    export MSK_QUEENS_DATA_HOME=$PORTAL_DATA_HOME/msk-impact/msk_queenscancercenter_redcap
-    export MSK_MCI_DATA_HOME=$PORTAL_DATA_HOME/msk-impact/msk_miamicancerinstitute_redcap
-    export MSK_HARTFORD_DATA_HOME=$PORTAL_DATA_HOME/msk-impact/msk_hartfordhealthcare_redcap
-    export LYMPHOMA_SUPER_COHORT_DATA_HOME=$PORTAL_DATA_HOME/msk-impact/lymphoma_super_cohort_fmi_msk_redcap
-    export MSK_SCLC_DATA_HOME=$PORTAL_DATA_HOME/msk-impact/sclc_mskimpact_2017_redcap
-    export CVR_TEST_MODE_ARGS="--test"
-else
-    export CVR_TEST_MODE_ARGS=""
-fi
-
 if [ -z $JAVA_HOME ] | [ -z $HG_BINARY ] | [ -z $PORTAL_HOME ] | [ -z $MSK_IMPACT_DATA_HOME ] ; then
-    message="test could not run import-dmp-impact-with-redcap.sh: automation-environment.sh script must be run in order to set needed environment variables (like MSK_IMPACT_DATA_HOME, ...)"
+    message="test could not run import-dmp-impact.sh: automation-environment.sh script must be run in order to set needed environment variables (like MSK_IMPACT_DATA_HOME, ...)"
     echo ${message}
     echo -e "${message}" |  mail -s "import-dmp-impact-data failed to run." $email_list
     sendFailureMessageMskPipelineLogsSlack "${message}"
@@ -293,7 +274,7 @@ sclc_mskimpact_notification_file=$(mktemp $JAVA_TMPDIR/sclc-mskimpact-portal-upd
 
 # fetch clinical data mercurial
 echo "fetching updates from msk-impact repository..."
-$JAVA_HOME/bin/java $JAVA_IMPORTER_ARGS -cp $PORTAL_HOME/lib/triage-cmo-importer.jar org.mskcc.cbio.importer.Admin --fetch-data --data-source dmp-clinical-data-mercurial --run-date latest
+$JAVA_HOME/bin/java $JAVA_IMPORTER_ARGS -cp $PORTAL_HOME/lib/msk-dmp-importer.jar org.mskcc.cbio.importer.Admin --fetch-data --data-source dmp-clinical-data-mercurial --run-date latest
 if [ $? -gt 0 ] ; then
     sendFailureMessageMskPipelineLogsSlack "Fetch Msk-impact from Mercurial Failure"
     exit 2
@@ -790,7 +771,7 @@ fi
 # check database version before importing anything
 echo "Checking if database version is compatible"
 echo $(date)
-$JAVA_HOME/bin/java $JAVA_IMPORTER_ARGS -cp $PORTAL_HOME/lib/triage-cmo-importer.jar org.mskcc.cbio.importer.Admin --check-db-version
+$JAVA_HOME/bin/java $JAVA_IMPORTER_ARGS -cp $PORTAL_HOME/lib/msk-dmp-importer.jar org.mskcc.cbio.importer.Admin --check-db-version
 if [ $? -gt 0 ] ; then
     echo "Database version expected by portal does not match version in database!"
     sendFailureMessageMskPipelineLogsSlack "MSK DMP Importer DB version check"
@@ -804,7 +785,7 @@ fi
 if [ $DB_VERSION_FAIL -eq 0 ] ; then
     # import into portal database
     echo "importing cancer type updates into msk portal database..."
-    $JAVA_HOME/bin/java $JAVA_IMPORTER_ARGS -cp $PORTAL_HOME/lib/triage-cmo-importer.jar org.mskcc.cbio.importer.Admin --import-types-of-cancer --oncotree-version ${ONCOTREE_VERSION_TO_USE}
+    $JAVA_HOME/bin/java $JAVA_IMPORTER_ARGS -cp $PORTAL_HOME/lib/msk-dmp-importer.jar org.mskcc.cbio.importer.Admin --import-types-of-cancer --oncotree-version ${ONCOTREE_VERSION_TO_USE}
     if [ $? -gt 0 ] ; then
         sendFailureMessageMskPipelineLogsSlack "Cancer type updates"
     fi
@@ -829,7 +810,7 @@ if [ $IMPORT_STATUS_IMPACT -eq 0 ] ; then
     # add custom priorities, headers dont need to be added
     $PYTHON_BINARY $PORTAL_HOME/scripts/set_custom_overrides.py --study-id mskimpact --reset --files $MSK_IMPACT_DATA_HOME/data_clinical*
     echo $(date)
-    bash $PORTAL_HOME/scripts/import-temp-study-with-redcap.sh --study-id="mskimpact" --temp-study-id="temporary_mskimpact" --backup-study-id="yesterday_mskimpact" --portal-name="redcap-portal" --study-path="$MSK_IMPACT_DATA_HOME" --notification-file="$mskimpact_notification_file" --tmp-directory="$JAVA_TMPDIR" --email-list="$email_list" --oncotree-version="${ONCOTREE_VERSION_TO_USE}" --importer-jar="$PORTAL_HOME/lib/triage-cmo-importer.jar" --transcript-overrides-source="mskcc"
+    bash $PORTAL_HOME/scripts/import-temp-study.sh --study-id="mskimpact" --temp-study-id="temporary_mskimpact" --backup-study-id="yesterday_mskimpact" --portal-name="mskimpact-portal" --study-path="$MSK_IMPACT_DATA_HOME" --notification-file="$mskimpact_notification_file" --tmp-directory="$JAVA_TMPDIR" --email-list="$email_list" --oncotree-version="${ONCOTREE_VERSION_TO_USE}" --importer-jar="$PORTAL_HOME/lib/msk-dmp-importer.jar" --transcript-overrides-source="mskcc"
     if [ $? -eq 0 ] ; then
         RESTART_AFTER_IMPACT_IMPORT=1
         sendSuccessMessageMskPipelineLogsSlack "MSKIMPACT"
@@ -861,7 +842,7 @@ if [ $IMPORT_STATUS_HEME -eq 0 ] ; then
     # add custom priorities, headers dont need to be added
     #$PYTHON_BINARY $PORTAL_HOME/scripts/set_custom_overrides.py --study-id hemepact --reset --files $HEMEPACT_DATA_HOME/data_clinical*
     echo $(date)
-    bash $PORTAL_HOME/scripts/import-temp-study-with-redcap.sh --study-id="mskimpact_heme" --temp-study-id="temporary_mskimpact_heme" --backup-study-id="yesterday_mskimpact_heme" --portal-name="mskheme-redcap-portal" --study-path="$MSK_HEMEPACT_DATA_HOME" --notification-file="$mskheme_notification_file" --tmp-directory="$JAVA_TMPDIR" --email-list="$email_list" --oncotree-version="${ONCOTREE_VERSION_TO_USE}" --importer-jar="$PORTAL_HOME/lib/triage-cmo-importer.jar" --transcript-overrides-source="mskcc"
+    bash $PORTAL_HOME/scripts/import-temp-study.sh --study-id="mskimpact_heme" --temp-study-id="temporary_mskimpact_heme" --backup-study-id="yesterday_mskimpact_heme" --portal-name="mskheme-portal" --study-path="$MSK_HEMEPACT_DATA_HOME" --notification-file="$mskheme_notification_file" --tmp-directory="$JAVA_TMPDIR" --email-list="$email_list" --oncotree-version="${ONCOTREE_VERSION_TO_USE}" --importer-jar="$PORTAL_HOME/lib/msk-dmp-importer.jar" --transcript-overrides-source="mskcc"
     if [ $? -eq 0 ] ; then
         RESTART_AFTER_DMP_PIPELINES_IMPORT=1
         sendSuccessMessageMskPipelineLogsSlack "HEMEPACT"
@@ -881,7 +862,7 @@ if [ $IMPORT_STATUS_RAINDANCE -eq 0 ] ; then
     # add custom priorities, headers dont need to be added
     #$PYTHON_BINARY $PORTAL_HOME/scripts/set_custom_overrides.py --study-id raindance --reset --files $RAINDANCE_DATA_HOME/data_clinical*
     echo $(date)
-    bash $PORTAL_HOME/scripts/import-temp-study-with-redcap.sh --study-id="mskraindance" --temp-study-id="temporary_mskraindance" --backup-study-id="yesterday_mskraindance" --portal-name="mskraindance-redcap-portal" --study-path="$MSK_RAINDANCE_DATA_HOME" --notification-file="$mskraindance_notification_file" --tmp-directory="$JAVA_TMPDIR" --email-list="$email_list" --oncotree-version="${ONCOTREE_VERSION_TO_USE}" --importer-jar="$PORTAL_HOME/lib/triage-cmo-importer.jar" --transcript-overrides-source="mskcc"
+    bash $PORTAL_HOME/scripts/import-temp-study.sh --study-id="mskraindance" --temp-study-id="temporary_mskraindance" --backup-study-id="yesterday_mskraindance" --portal-name="mskraindance-portal" --study-path="$MSK_RAINDANCE_DATA_HOME" --notification-file="$mskraindance_notification_file" --tmp-directory="$JAVA_TMPDIR" --email-list="$email_list" --oncotree-version="${ONCOTREE_VERSION_TO_USE}" --importer-jar="$PORTAL_HOME/lib/msk-dmp-importer.jar" --transcript-overrides-source="mskcc"
     if [ $? -eq 0 ] ; then
         RESTART_AFTER_DMP_PIPELINES_IMPORT=1
         sendSuccessMessageMskPipelineLogsSlack "RAINDANCE"
@@ -901,7 +882,7 @@ if [ $IMPORT_STATUS_ARCHER -eq 0 ] ; then
     # add custom priorities, headers dont need to be added
     #$PYTHON_BINARY $PORTAL_HOME/scripts/set_custom_overrides.py --study-id archer --reset --files $ARCHER_DATA_HOME/data_clinical*
     echo $(date)
-    bash $PORTAL_HOME/scripts/import-temp-study-with-redcap.sh --study-id="mskarcher" --temp-study-id="temporary_mskarcher" --backup-study-id="yesterday_mskarcher" --portal-name="mskarcher-redcap-portal" --study-path="$MSK_ARCHER_DATA_HOME" --notification-file="$mskarcher_notification_file" --tmp-directory="$JAVA_TMPDIR" --email-list="$email_list" --oncotree-version="${ONCOTREE_VERSION_TO_USE}" --importer-jar="$PORTAL_HOME/lib/triage-cmo-importer.jar" --transcript-overrides-source="mskcc"
+    bash $PORTAL_HOME/scripts/import-temp-study.sh --study-id="mskarcher" --temp-study-id="temporary_mskarcher" --backup-study-id="yesterday_mskarcher" --portal-name="mskarcher-portal" --study-path="$MSK_ARCHER_DATA_HOME" --notification-file="$mskarcher_notification_file" --tmp-directory="$JAVA_TMPDIR" --email-list="$email_list" --oncotree-version="${ONCOTREE_VERSION_TO_USE}" --importer-jar="$PORTAL_HOME/lib/msk-dmp-importer.jar" --transcript-overrides-source="mskcc"
     if [ $? -eq 0 ] ; then
         RESTART_AFTER_DMP_PIPELINES_IMPORT=1
         sendSuccessMessageMskPipelineLogsSlack "ARCHER"
@@ -934,7 +915,7 @@ if [ ! -f $MSK_ARCHER_DATA_HOME/meta_SV.txt ] ; then
 fi
 
 # merge data from both directories and check exit code
-$PYTHON_BINARY $PORTAL_HOME/scripts/merge-with-redcap.py -d $MSK_MIXEDPACT_DATA_HOME -i mixedpact -m "true" -e $JAVA_TMPDIR/archer_ids.txt $MSK_IMPACT_DATA_HOME $MSK_HEMEPACT_DATA_HOME $MSK_RAINDANCE_DATA_HOME $MSK_ARCHER_DATA_HOME
+$PYTHON_BINARY $PORTAL_HOME/scripts/merge.py -d $MSK_MIXEDPACT_DATA_HOME -i mixedpact -m "true" -e $JAVA_TMPDIR/archer_ids.txt $MSK_IMPACT_DATA_HOME $MSK_HEMEPACT_DATA_HOME $MSK_RAINDANCE_DATA_HOME $MSK_ARCHER_DATA_HOME
 if [ $? -gt 0 ] ; then
     echo "MIXEDPACT merge failed! Study will not be updated in the portal."
     sendFailureMessageMskPipelineLogsSlack "MIXEDPACT merge"
@@ -965,7 +946,7 @@ fi
 if [ $MIXEDPACT_MERGE_FAIL -eq 0 ] ; then
     echo "Importing MIXEDPACT study..."
     echo $(date)
-    bash $PORTAL_HOME/scripts/import-temp-study-with-redcap.sh --study-id="mixedpact" --temp-study-id="temporary_mixedpact" --backup-study-id="yesterday_mixedpact" --portal-name="mixedpact-redcap-portal" --study-path="$MSK_MIXEDPACT_DATA_HOME" --notification-file="$mixedpact_notification_file" --tmp-directory="$JAVA_TMPDIR" --email-list="$email_list" --oncotree-version="${ONCOTREE_VERSION_TO_USE}" --importer-jar="$PORTAL_HOME/lib/triage-cmo-importer.jar" --transcript-overrides-source="mskcc"
+    bash $PORTAL_HOME/scripts/import-temp-study.sh --study-id="mixedpact" --temp-study-id="temporary_mixedpact" --backup-study-id="yesterday_mixedpact" --portal-name="mixedpact-portal" --study-path="$MSK_MIXEDPACT_DATA_HOME" --notification-file="$mixedpact_notification_file" --tmp-directory="$JAVA_TMPDIR" --email-list="$email_list" --oncotree-version="${ONCOTREE_VERSION_TO_USE}" --importer-jar="$PORTAL_HOME/lib/msk-dmp-importer.jar" --transcript-overrides-source="mskcc"
     if [ $? -gt 0 ] ; then
         IMPORT_FAIL_MIXEDPACT=1
         sendFailureMessageMskPipelineLogsSlack "MIXEDPACT import"
@@ -1004,7 +985,7 @@ fi
 ## Subset MIXEDPACT on INSTITUTE for institute specific impact studies
 
 # subset the mixedpact study for Queens Cancer Center, Lehigh Valley, Kings County Cancer Center, Miami Cancer Institute, and Hartford Health Care
-bash $PORTAL_HOME/scripts/subset-impact-data-with-redcap.sh -i=msk_kingscounty -o=$MSK_KINGS_DATA_HOME -m=$MSK_MIXEDPACT_DATA_HOME -f="INSTITUTE=Kings County Cancer Center" -s=$JAVA_TMPDIR/kings_subset.txt -c=data_clinical_sample.txt
+bash $PORTAL_HOME/scripts/subset-impact-data.sh -i=msk_kingscounty -o=$MSK_KINGS_DATA_HOME -m=$MSK_MIXEDPACT_DATA_HOME -f="INSTITUTE=Kings County Cancer Center" -s=$JAVA_TMPDIR/kings_subset.txt -c=data_clinical_sample.txt
 if [ $? -gt 0 ] ; then
     echo "MSK Kings County subset failed! Study will not be updated in the portal."
     sendFailureMessageMskPipelineLogsSlack "KINGSCOUNTY subset"
@@ -1017,7 +998,7 @@ else
     #$PYTHON_BINARY $PORTAL_HOME/scripts/set_custom_overrides.py -s msk_kingscounty -f $MSK_KINGS_DATA_HOME/data_clinical*
 fi
 
-bash $PORTAL_HOME/scripts/subset-impact-data-with-redcap.sh -i=msk_lehighvalley -o=$MSK_LEHIGH_DATA_HOME -m=$MSK_MIXEDPACT_DATA_HOME -f="INSTITUTE=Lehigh Valley Health Network" -s=$JAVA_TMPDIR/lehigh_subset.txt -c=data_clinical_sample.txt
+bash $PORTAL_HOME/scripts/subset-impact-data.sh -i=msk_lehighvalley -o=$MSK_LEHIGH_DATA_HOME -m=$MSK_MIXEDPACT_DATA_HOME -f="INSTITUTE=Lehigh Valley Health Network" -s=$JAVA_TMPDIR/lehigh_subset.txt -c=data_clinical_sample.txt
 if [ $? -gt 0 ] ; then
     echo "MSK Lehigh Valley subset failed! Study will not be updated in the portal."
     sendFailureMessageMskPipelineLogsSlack "LEHIGHVALLEY subset"
@@ -1030,7 +1011,7 @@ else
     #$PYTHON_BINARY $PORTAL_HOME/scripts/set_custom_overrides.py -s msk_lehighvalley -f $MSK_LEHIGH_DATA_HOME/data_clinical*
 fi
 
-bash $PORTAL_HOME/scripts/subset-impact-data-with-redcap.sh -i=msk_queenscancercenter -o=$MSK_QUEENS_DATA_HOME -m=$MSK_MIXEDPACT_DATA_HOME -f="INSTITUTE=Queens Cancer Center,Queens Hospital Cancer Center" -s=$JAVA_TMPDIR/queens_subset.txt -c=data_clinical_sample.txt
+bash $PORTAL_HOME/scripts/subset-impact-data.sh -i=msk_queenscancercenter -o=$MSK_QUEENS_DATA_HOME -m=$MSK_MIXEDPACT_DATA_HOME -f="INSTITUTE=Queens Cancer Center,Queens Hospital Cancer Center" -s=$JAVA_TMPDIR/queens_subset.txt -c=data_clinical_sample.txt
 if [ $? -gt 0 ] ; then
     echo "MSK Queens Cancer Center subset failed! Study will not be updated in the portal."
     sendFailureMessageMskPipelineLogsSlack "QUEENSCANCERCENTER subset"
@@ -1043,7 +1024,7 @@ else
     #$PYTHON_BINARY $PORTAL_HOME/scripts/set_custom_overrides.py -s msk_queenscancercenter -f $MSK_QUEENS_DATA_HOME/data_clinical*
 fi
 
-bash $PORTAL_HOME/scripts/subset-impact-data-with-redcap.sh -i=msk_miamicancerinstitute -o=$MSK_MCI_DATA_HOME -m=$MSK_MIXEDPACT_DATA_HOME -f="INSTITUTE=Miami Cancer Institute" -s=$JAVA_TMPDIR/mci_subset.txt -c=data_clinical_sample.txt
+bash $PORTAL_HOME/scripts/subset-impact-data.sh -i=msk_miamicancerinstitute -o=$MSK_MCI_DATA_HOME -m=$MSK_MIXEDPACT_DATA_HOME -f="INSTITUTE=Miami Cancer Institute" -s=$JAVA_TMPDIR/mci_subset.txt -c=data_clinical_sample.txt
 if [ $? -gt 0 ] ; then
     echo "MSK Miami Cancer Institute subset failed! Study will not be updated in the portal."
     sendFailureMessageMskPipelineLogsSlack "MIAMICANCERINSTITUTE subset"
@@ -1056,7 +1037,7 @@ else
     #$PYTHON_BINARY $PORTAL_HOME/scripts/set_custom_overrides.py -s msk_miamicancerinstitute -f $MSK_MCI_DATA_HOME/data_clinical*
 fi
 
-bash $PORTAL_HOME/scripts/subset-impact-data-with-redcap.sh -i=msk_hartfordhealthcare -o=$MSK_HARTFORD_DATA_HOME -m=$MSK_MIXEDPACT_DATA_HOME -f="INSTITUTE=Hartford Healthcare" -s=$JAVA_TMPDIR/hartford_subset.txt -c=data_clinical_sample.txt
+bash $PORTAL_HOME/scripts/subset-impact-data.sh -i=msk_hartfordhealthcare -o=$MSK_HARTFORD_DATA_HOME -m=$MSK_MIXEDPACT_DATA_HOME -f="INSTITUTE=Hartford Healthcare" -s=$JAVA_TMPDIR/hartford_subset.txt -c=data_clinical_sample.txt
 if [ $? -gt 0 ] ; then
     echo "MSK Hartford Healthcare subset failed! Study will not be updated in the portal."
     sendFailureMessageMskPipelineLogsSlack "HARTFORDHEALTHCARE subset"
@@ -1075,7 +1056,7 @@ RESTART_AFTER_MSK_AFFILIATE_IMPORT=0
 if [ $MSK_KINGS_SUBSET_FAIL -eq 0 ] ; then
     echo "Importing msk_kingscounty study..."
     echo $(date)
-    bash $PORTAL_HOME/scripts/import-temp-study-with-redcap.sh --study-id="msk_kingscounty" --temp-study-id="temporary_msk_kingscounty" --backup-study-id="yesterday_msk_kingscounty" --portal-name="msk-kingscounty-redcap-portal" --study-path="$MSK_KINGS_DATA_HOME" --notification-file="$kingscounty_notification_file" --tmp-directory="$JAVA_TMPDIR" --email-list="$email_list" --oncotree-version="${ONCOTREE_VERSION_TO_USE}" --importer-jar="$PORTAL_HOME/lib/triage-cmo-importer.jar" --transcript-overrides-source="mskcc"
+    bash $PORTAL_HOME/scripts/import-temp-study.sh --study-id="msk_kingscounty" --temp-study-id="temporary_msk_kingscounty" --backup-study-id="yesterday_msk_kingscounty" --portal-name="msk-kingscounty-portal" --study-path="$MSK_KINGS_DATA_HOME" --notification-file="$kingscounty_notification_file" --tmp-directory="$JAVA_TMPDIR" --email-list="$email_list" --oncotree-version="${ONCOTREE_VERSION_TO_USE}" --importer-jar="$PORTAL_HOME/lib/msk-dmp-importer.jar" --transcript-overrides-source="mskcc"
     if [ $? -gt 0 ] ; then
         IMPORT_FAIL_KINGS=1
         sendFailureMessageMskPipelineLogsSlack "KINGSCOUNTY import"
@@ -1100,7 +1081,7 @@ fi
 if [ $MSK_LEHIGH_SUBSET_FAIL -eq 0 ] ; then
     echo "Importing msk_lehighvalley study..."
     echo $(date)
-    bash $PORTAL_HOME/scripts/import-temp-study-with-redcap.sh --study-id="msk_lehighvalley" --temp-study-id="temporary_msk_lehighvalley" --backup-study-id="yesterday_msk_lehighvalley" --portal-name="msk-lehighvalley-redcap-portal" --study-path="$MSK_LEHIGH_DATA_HOME" --notification-file="$lehighvalley_notification_file" --tmp-directory="$JAVA_TMPDIR" --email-list="$email_list" --oncotree-version="${ONCOTREE_VERSION_TO_USE}" --importer-jar="$PORTAL_HOME/lib/triage-cmo-importer.jar" --transcript-overrides-source="mskcc"
+    bash $PORTAL_HOME/scripts/import-temp-study.sh --study-id="msk_lehighvalley" --temp-study-id="temporary_msk_lehighvalley" --backup-study-id="yesterday_msk_lehighvalley" --portal-name="msk-lehighvalley-portal" --study-path="$MSK_LEHIGH_DATA_HOME" --notification-file="$lehighvalley_notification_file" --tmp-directory="$JAVA_TMPDIR" --email-list="$email_list" --oncotree-version="${ONCOTREE_VERSION_TO_USE}" --importer-jar="$PORTAL_HOME/lib/msk-dmp-importer.jar" --transcript-overrides-source="mskcc"
     if [ $? -gt 0 ] ; then
         IMPORT_FAIL_LEHIGH=1
         sendFailureMessageMskPipelineLogsSlack "LEHIGHVALLEY import"
@@ -1125,7 +1106,7 @@ fi
 if [ $MSK_QUEENS_SUBSET_FAIL -eq 0 ] ; then
     echo "Importing msk_queenscancercenter study..."
     echo $(date)
-    bash $PORTAL_HOME/scripts/import-temp-study-with-redcap.sh --study-id="msk_queenscancercenter" --temp-study-id="temporary_msk_queenscancercenter" --backup-study-id="yesterday_msk_queenscancercenter" --portal-name="msk-queenscancercenter-redcap-portal" --study-path="$MSK_QUEENS_DATA_HOME" --notification-file="$queenscancercenter_notification_file" --tmp-directory="$JAVA_TMPDIR" --email-list="$email_list" --oncotree-version="${ONCOTREE_VERSION_TO_USE}" --importer-jar="$PORTAL_HOME/lib/triage-cmo-importer.jar" --transcript-overrides-source="mskcc"
+    bash $PORTAL_HOME/scripts/import-temp-study.sh --study-id="msk_queenscancercenter" --temp-study-id="temporary_msk_queenscancercenter" --backup-study-id="yesterday_msk_queenscancercenter" --portal-name="msk-queenscancercenter-portal" --study-path="$MSK_QUEENS_DATA_HOME" --notification-file="$queenscancercenter_notification_file" --tmp-directory="$JAVA_TMPDIR" --email-list="$email_list" --oncotree-version="${ONCOTREE_VERSION_TO_USE}" --importer-jar="$PORTAL_HOME/lib/msk-dmp-importer.jar" --transcript-overrides-source="mskcc"
     if [ $? -gt 0 ] ; then
         IMPORT_FAIL_QUEENS=1
         sendFailureMessageMskPipelineLogsSlack "QUEENSCANCERCENTER import"
@@ -1150,7 +1131,7 @@ fi
 if [ $MSK_MCI_SUBSET_FAIL -eq 0 ] ; then
     echo "Importing msk_miamicancerinstitute study..."
     echo $(date)
-    bash $PORTAL_HOME/scripts/import-temp-study-with-redcap.sh --study-id="msk_miamicancerinstitute" --temp-study-id="temporary_msk_miamicancerinstitute" --backup-study-id="yesterday_msk_miamicancerinstitute" --portal-name="msk-mci-redcap-portal" --study-path="$MSK_MCI_DATA_HOME" --notification-file="$miamicancerinstitute_notification_file" --tmp-directory="$JAVA_TMPDIR" --email-list="$email_list" --oncotree-version="${ONCOTREE_VERSION_TO_USE}" --importer-jar="$PORTAL_HOME/lib/triage-cmo-importer.jar" --transcript-overrides-source="mskcc"
+    bash $PORTAL_HOME/scripts/import-temp-study.sh --study-id="msk_miamicancerinstitute" --temp-study-id="temporary_msk_miamicancerinstitute" --backup-study-id="yesterday_msk_miamicancerinstitute" --portal-name="msk-mci-portal" --study-path="$MSK_MCI_DATA_HOME" --notification-file="$miamicancerinstitute_notification_file" --tmp-directory="$JAVA_TMPDIR" --email-list="$email_list" --oncotree-version="${ONCOTREE_VERSION_TO_USE}" --importer-jar="$PORTAL_HOME/lib/msk-dmp-importer.jar" --transcript-overrides-source="mskcc"
     if [ $? -gt 0 ] ; then
         IMPORT_FAIL_MCI=1
         sendFailureMessageMskPipelineLogsSlack "MIAMICANCERINSTITUTE import"
@@ -1175,7 +1156,7 @@ fi
 if [ $MSK_HARTFORD_SUBSET_FAIL -eq 0 ] ; then
     echo "Importing msk_hartfordhealthcare study..."
     echo $(date)
-    bash $PORTAL_HOME/scripts/import-temp-study-with-redcap.sh --study-id="msk_hartfordhealthcare" --temp-study-id="temporary_msk_hartfordhealthcare" --backup-study-id="yesterday_msk_hartfordhealthcare" --portal-name="msk-hartford-redcap-portal" --study-path="$MSK_HARTFORD_DATA_HOME" --notification-file="$hartfordhealthcare_notification_file" --tmp-directory="$JAVA_TMPDIR" --email-list="$email_list" --oncotree-version="${ONCOTREE_VERSION_TO_USE}" --importer-jar="$PORTAL_HOME/lib/triage-cmo-importer.jar" --transcript-overrides-source="mskcc"
+    bash $PORTAL_HOME/scripts/import-temp-study.sh --study-id="msk_hartfordhealthcare" --temp-study-id="temporary_msk_hartfordhealthcare" --backup-study-id="yesterday_msk_hartfordhealthcare" --portal-name="msk-hartford-portal" --study-path="$MSK_HARTFORD_DATA_HOME" --notification-file="$hartfordhealthcare_notification_file" --tmp-directory="$JAVA_TMPDIR" --email-list="$email_list" --oncotree-version="${ONCOTREE_VERSION_TO_USE}" --importer-jar="$PORTAL_HOME/lib/msk-dmp-importer.jar" --transcript-overrides-source="mskcc"
     if [ $? -gt 0 ] ; then
         IMPORT_FAIL_HARTFORD=1
         sendFailureMessageMskPipelineLogsSlack "HARTFORDHEALTHCARE import"
@@ -1201,7 +1182,7 @@ fi
 # Subset MSKIMPACT on ONCOTREE_CODE for SCLC cohort
 
 RESTART_AFTER_SCLC_IMPORT=0
-bash $PORTAL_HOME/scripts/subset-impact-data-with-redcap.sh -i=sclc_mskimpact_2017 -o=$MSK_SCLC_DATA_HOME -m=$MSK_IMPACT_DATA_HOME -f="ONCOTREE_CODE=SCLC" -s=$JAVA_TMPDIR/sclc_subset.txt -c=data_clinical_sample.txt
+bash $PORTAL_HOME/scripts/subset-impact-data.sh -i=sclc_mskimpact_2017 -o=$MSK_SCLC_DATA_HOME -m=$MSK_IMPACT_DATA_HOME -f="ONCOTREE_CODE=SCLC" -s=$JAVA_TMPDIR/sclc_subset.txt -c=data_clinical_sample.txt
 if [ $? -gt 0 ] ; then
     echo "MSKIMPACT SCLC subset failed! Study will not be updated in the portal."
     sendFailureMessageMskPipelineLogsSlack "SCLCMSKIMPACT subset"
@@ -1218,7 +1199,7 @@ fi
 if [ $SCLC_MSKIMPACT_SUBSET_FAIL -eq 0 ] ; then
     echo "Importing sclc_mskimpact_2017 study..."
     echo $(date)
-    bash $PORTAL_HOME/scripts/import-temp-study-with-redcap.sh --study-id="sclc_mskimpact_2017" --temp-study-id="temporary_sclc_mskimpact_2017" --backup-study-id="yesterday_sclc_mskimpact_2017" --portal-name="msk-sclc-redcap-portal" --study-path="$MSK_SCLC_DATA_HOME" --notification-file="$sclc_mskimpact_notification_file" --tmp-directory="$JAVA_TMPDIR" --email-list="$email_list" --oncotree-version="${ONCOTREE_VERSION_TO_USE}" --importer-jar="$PORTAL_HOME/lib/triage-cmo-importer.jar" --transcript-overrides-source="mskcc"
+    bash $PORTAL_HOME/scripts/import-temp-study.sh --study-id="sclc_mskimpact_2017" --temp-study-id="temporary_sclc_mskimpact_2017" --backup-study-id="yesterday_sclc_mskimpact_2017" --portal-name="msk-sclc-portal" --study-path="$MSK_SCLC_DATA_HOME" --notification-file="$sclc_mskimpact_notification_file" --tmp-directory="$JAVA_TMPDIR" --email-list="$email_list" --oncotree-version="${ONCOTREE_VERSION_TO_USE}" --importer-jar="$PORTAL_HOME/lib/msk-dmp-importer.jar" --transcript-overrides-source="mskcc"
     if [ $? -gt 0 ] ; then
         IMPORT_FAIL_SCLC_MSKIMPACT=1
         sendFailureMessageMskPipelineLogsSlack "SCLCMSKIMPACT import"
@@ -1260,13 +1241,13 @@ mv $FMI_BATLEVI_DATA_HOME/ignore_data_clinical_patient.txt $FMI_BATLEVI_DATA_HOM
 # **************************************** ORDER OF SUBSET
 # now subset sample files with lymphoma cases from mskimpact and hemepact
 LYMPHOMA_FILTER_CRITERIA="CANCER_TYPE=Non-Hodgkin Lymphoma,Hodgkin Lymphoma"
-$PYTHON_BINARY $PORTAL_HOME/scripts/generate-clinical-subset-with-redcap.py --study-id="lymphoma_super_cohort_fmi_msk" --clinical-file="$MSK_IMPACT_DATA_HOME/data_clinical_sample.txt" --filter-criteria="$LYMPHOMA_FILTER_CRITERIA" --subset-filename="$JAVA_TMPDIR/mskimpact_lymphoma_subset.txt"
+$PYTHON_BINARY $PORTAL_HOME/scripts/generate-clinical-subset.py --study-id="lymphoma_super_cohort_fmi_msk" --clinical-file="$MSK_IMPACT_DATA_HOME/data_clinical_sample.txt" --filter-criteria="$LYMPHOMA_FILTER_CRITERIA" --subset-filename="$JAVA_TMPDIR/mskimpact_lymphoma_subset.txt"
 if [ $? -gt 0 ] ; then
     echo "ERROR! Failed to generate subset of lymphoma samples from MSK-IMPACT. Skipping merge and update of lymphoma super cohort!"
     sendFailureMessageMskPipelineLogsSlack "LYMPHOMASUPERCOHORT subset from MSKIMPACT"
     LYMPHOMA_SUPER_COHORT_SUBSET_FAIL=1
 fi
-$PYTHON_BINARY $PORTAL_HOME/scripts/generate-clinical-subset-with-redcap.py --study-id="lymphoma_super_cohort_fmi_msk" --clinical-file="$MSK_HEMEPACT_DATA_HOME/data_clinical_sample.txt" --filter-criteria="$LYMPHOMA_FILTER_CRITERIA" --subset-filename="$JAVA_TMPDIR/mskimpact_heme_lymphoma_subset.txt"
+$PYTHON_BINARY $PORTAL_HOME/scripts/generate-clinical-subset.py --study-id="lymphoma_super_cohort_fmi_msk" --clinical-file="$MSK_HEMEPACT_DATA_HOME/data_clinical_sample.txt" --filter-criteria="$LYMPHOMA_FILTER_CRITERIA" --subset-filename="$JAVA_TMPDIR/mskimpact_heme_lymphoma_subset.txt"
 if [ $? -gt 0 ] ; then
     echo "ERROR! Failed to generate subset of lymphoma samples from MSK-IMPACT Heme. Skipping merge and update of lymphoma super cohort!"
     sendFailureMessageMskPipelineLogsSlack "LYMPHOMASUPERCOHORT subset from HEMEPACT"
@@ -1299,7 +1280,7 @@ fi
 
 # merge data from mskimpact and hemepact lymphoma subsets with FMI BAT study
 if [ $LYMPHOMA_SUPER_COHORT_SUBSET_FAIL -eq 0 ] ; then
-    $PYTHON_BINARY $PORTAL_HOME/scripts/merge-with-redcap.py  -d $LYMPHOMA_SUPER_COHORT_DATA_HOME -i "lymphoma_super_cohort_fmi_msk" -m "true" -s $JAVA_TMPDIR/lymphoma_subset_samples.txt $MSK_IMPACT_DATA_HOME $MSK_HEMEPACT_DATA_HOME $FMI_BATLEVI_DATA_HOME
+    $PYTHON_BINARY $PORTAL_HOME/scripts/merge.py  -d $LYMPHOMA_SUPER_COHORT_DATA_HOME -i "lymphoma_super_cohort_fmi_msk" -m "true" -s $JAVA_TMPDIR/lymphoma_subset_samples.txt $MSK_IMPACT_DATA_HOME $MSK_HEMEPACT_DATA_HOME $FMI_BATLEVI_DATA_HOME
     if [ $? -gt 0 ] ; then
         echo "Lymphoma super cohort subset failed! Lymphoma super cohort study will not be updated in the portal."
         sendFailureMessageMskPipelineLogsSlack "LYMPHOMASUPERCOHORT merge"
@@ -1331,7 +1312,7 @@ if [ $LYMPHOMA_SUPER_COHORT_SUBSET_FAIL -eq 0 ] ; then
     # $PYTHON_BINARY $PORTAL_HOME/scripts/set_custom_overrides.py -s lymphoma_super_cohort_fmi_msk -f $LYMPHOMA_SUPER_COHORT_DATA_HOME/data_clinical*
     echo "Importing lymphoma 'super' cohort study..."
     echo $(date)
-    bash $PORTAL_HOME/scripts/import-temp-study-with-redcap.sh --study-id="lymphoma_super_cohort_fmi_msk" --temp-study-id="temporary_lymphoma_super_cohort_fmi_msk" --backup-study-id="yesterday_lymphoma_super_cohort_fmi_msk" --portal-name="msk-fmi-lymphoma-redcap-portal" --study-path="$LYMPHOMA_SUPER_COHORT_DATA_HOME" --notification-file="$lymphoma_super_cohort_notification_file" --tmp-directory="$JAVA_TMPDIR" --email-list="$email_list" --oncotree-version="${ONCOTREE_VERSION_TO_USE}" --importer-jar="$PORTAL_HOME/lib/triage-cmo-importer.jar" --transcript-overrides-source="mskcc"
+    bash $PORTAL_HOME/scripts/import-temp-study.sh --study-id="lymphoma_super_cohort_fmi_msk" --temp-study-id="temporary_lymphoma_super_cohort_fmi_msk" --backup-study-id="yesterday_lymphoma_super_cohort_fmi_msk" --portal-name="msk-fmi-lymphoma-portal" --study-path="$LYMPHOMA_SUPER_COHORT_DATA_HOME" --notification-file="$lymphoma_super_cohort_notification_file" --tmp-directory="$JAVA_TMPDIR" --email-list="$email_list" --oncotree-version="${ONCOTREE_VERSION_TO_USE}" --importer-jar="$PORTAL_HOME/lib/msk-dmp-importer.jar" --transcript-overrides-source="mskcc"
     if [ $? -gt 0 ] ; then
         IMPORT_FAIL_LYMPHOMA=1
         sendFailureMessageMskPipelineLogsSlack "LYMPHOMASUPERCOHORT import"
