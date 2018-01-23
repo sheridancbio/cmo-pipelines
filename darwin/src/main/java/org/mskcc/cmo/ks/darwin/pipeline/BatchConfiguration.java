@@ -60,6 +60,7 @@ import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
  */
 @Configuration
 @EnableBatchProcessing
+@ComponentScan(basePackages="org.mskcc.cmo.ks.redcap.source.internal")
 public class BatchConfiguration {
 
     public static final String MSKIMPACT_JOB = "mskimpactJob";
