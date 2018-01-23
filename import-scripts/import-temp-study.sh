@@ -111,9 +111,12 @@ if [[ -z $CANCER_STUDY_IDENTIFIER || -z $TEMP_CANCER_STUDY_IDENTIFIER || -z $BAC
 	exit 1
 fi
 
+JAVA_PROXY_ARGS="-Dhttp.proxyHost=jxi2.mskcc.org -Dhttp.proxyPort=8080 -Dhttp.nonProxyHosts=draco.mskcc.org|pidvudb1.mskcc.org|phcrdbd2.mskcc.org|dashi-dev.cbio.mskcc.org|pipelines.cbioportal.mskcc.org|localhost"
+JAVA_DEBUG_ARGS="-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182"
+JAVA_IMPORTER_ARGS="$JAVA_PROXY_ARGS $JAVA_DEBUG_ARGS -ea -Dspring.profiles.active=dbcp -Djava.io.tmpdir=$TMP_DIRECTORY"
+
 # define validator notification filename based on cancer study id, remove if already exists, touch new file
 now=$(date "+%Y-%m-%d-%H-%M-%S")
-JAVA_PROXY_ARGS="-Dhttp.proxyHost=jxi2.mskcc.org -Dhttp.proxyPort=8080 -Dhttp.nonProxyHosts=draco.mskcc.org|pidvudb1.mskcc.org|phcrdbd2.mskcc.org|dashi-dev.cbio.mskcc.org|pipelines.cbioportal.mskcc.org|localhost"
 VALIDATION_NOTIFICATION_FILENAME=$(mktemp $TMP_DIRECTORY/validation_$CANCER_STUDY_IDENTIFIER.$now.XXXXXX)
 if [ -f $VALIDATION_NOTIFICATION_FILENAME ]; then
 	rm $VALIDATION_NOTIFICATION_FILENAME
@@ -134,7 +137,7 @@ if [[ -z ${ONCOTREE_VERSION_TO_USE} ]] ; then
 fi
 # import study using temp id
 echo "Importing study '$CANCER_STUDY_IDENTIFIER' as temporary study '$TEMP_CANCER_STUDY_IDENTIFIER'"
-$JAVA_HOME/bin/java $JAVA_PROXY_ARGS -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -Xmx64g -ea -Dspring.profiles.active=dbcp -Djava.io.tmpdir="$TMP_DIRECTORY" -cp $IMPORTER_JAR org.mskcc.cbio.importer.Admin --update-study-data --portal "$PORTAL_NAME" --notification-file "$NOTIFICATION_FILE" --temporary-id "$TEMP_CANCER_STUDY_IDENTIFIER" ${ONCOTREE_VERSION_TERM} --transcript-overrides-source "$TRANCRIPT_OVERRIDES_SOURCE"
+$JAVA_HOME/bin/java $JAVA_IMPORTER_ARGS -Xmx64g -cp $IMPORTER_JAR org.mskcc.cbio.importer.Admin --update-study-data --portal "$PORTAL_NAME" --notification-file "$NOTIFICATION_FILE" --temporary-id "$TEMP_CANCER_STUDY_IDENTIFIER" ${ONCOTREE_VERSION_TERM} --transcript-overrides-source "$TRANCRIPT_OVERRIDES_SOURCE"
 # we don't have to check the exit status here because if num_studies_updated != 1 we consider the import to have failed (we check num_studies_updated next)
 
 # check number of studies updated before continuing
@@ -150,32 +153,32 @@ if [ "$num_studies_updated" -ne 1 ]; then
 else
 	# validate
 	echo "Validating import..."
-	$JAVA_HOME/bin/java $JAVA_PROXY_ARGS -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -Xmx64g -ea -Dspring.profiles.active=dbcp -Djava.io.tmpdir="$TMP_DIRECTORY" -cp $IMPORTER_JAR org.mskcc.cbio.importer.Admin --validate-temp-study --temp-study-id $TEMP_CANCER_STUDY_IDENTIFIER --original-study-id $CANCER_STUDY_IDENTIFIER --notification-file "$VALIDATION_NOTIFICATION_FILENAME"
+	$JAVA_HOME/bin/java $JAVA_IMPORTER_ARGS -Xmx64g -cp $IMPORTER_JAR org.mskcc.cbio.importer.Admin --validate-temp-study --temp-study-id $TEMP_CANCER_STUDY_IDENTIFIER --original-study-id $CANCER_STUDY_IDENTIFIER --notification-file "$VALIDATION_NOTIFICATION_FILENAME"
 	if [ $? -gt 0 ]; then
 		echo "Failed to validate - deleting temp study '$TEMP_CANCER_STUDY_IDENTIFIER'"
-		$JAVA_HOME/bin/java $JAVA_PROXY_ARGS -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -Xmx64g -ea -Dspring.profiles.active=dbcp -Djava.io.tmpdir="$TMP_DIRECTORY" -cp $IMPORTER_JAR org.mskcc.cbio.importer.Admin --delete-cancer-study --cancer-study-ids $TEMP_CANCER_STUDY_IDENTIFIER
+		$JAVA_HOME/bin/java $JAVA_IMPORTER_ARGS -Xmx64g -cp $IMPORTER_JAR org.mskcc.cbio.importer.Admin --delete-cancer-study --cancer-study-ids $TEMP_CANCER_STUDY_IDENTIFIER
 		VALIDATION_FAIL=1
 	else
 		echo "Successful validation - renaming '$CANCER_STUDY_IDENTIFIER' and temp study '$TEMP_CANCER_STUDY_IDENTIFIER'"
-		$JAVA_HOME/bin/java $JAVA_PROXY_ARGS -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -Xmx64g -ea -Dspring.profiles.active=dbcp -Djava.io.tmpdir="$TMP_DIRECTORY" -cp $IMPORTER_JAR org.mskcc.cbio.importer.Admin --delete-cancer-study --cancer-study-ids $BACKUP_CANCER_STUDY_IDENTIFIER
+		$JAVA_HOME/bin/java $JAVA_IMPORTER_ARGS -Xmx64g -cp $IMPORTER_JAR org.mskcc.cbio.importer.Admin --delete-cancer-study --cancer-study-ids $BACKUP_CANCER_STUDY_IDENTIFIER
 		if [ $? -gt 0 ]; then
 			echo "Failed to delete backup study '$BACKUP_CANCER_STUDY_IDENTIFIER'!"
 			DELETE_FAIL=1
 		else
 			echo "Renaming '$CANCER_STUDY_IDENTIFIER' to '$BACKUP_CANCER_STUDY_IDENTIFIER'"
-			$JAVA_HOME/bin/java $JAVA_PROXY_ARGS -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -Xmx64g -ea -Dspring.profiles.active=dbcp -Djava.io.tmpdir="$TMP_DIRECTORY" -cp $IMPORTER_JAR org.mskcc.cbio.importer.Admin --rename-cancer-study --new-study-id $BACKUP_CANCER_STUDY_IDENTIFIER --original-study-id $CANCER_STUDY_IDENTIFIER
+			$JAVA_HOME/bin/java $JAVA_IMPORTER_ARGS -Xmx64g -cp $IMPORTER_JAR org.mskcc.cbio.importer.Admin --rename-cancer-study --new-study-id $BACKUP_CANCER_STUDY_IDENTIFIER --original-study-id $CANCER_STUDY_IDENTIFIER
 			if [ $? -gt 0 ]; then
 				echo "Failed to rename existing '$CANCER_STUDY_IDENTIFIER' to backup study '$BACKUP_CANCER_STUDY_IDENTIFIER'!"
 				RENAME_BACKUP_FAIL=1
 			else
 				echo "Updating groups of study '$BACKUP_CANCER_STUDY_IDENTIFIER' to KSBACKUP"
-				$JAVA_HOME/bin/java $JAVA_PROXY_ARGS -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -Xmx64g -ea -Dspring.profiles.active=dbcp -Djava.io.tmpdir="$TMP_DIRECTORY" -cp $IMPORTER_JAR org.mskcc.cbio.importer.Admin --update-groups --cancer-study-ids $BACKUP_CANCER_STUDY_IDENTIFIER --groups "KSBACKUP"
+				$JAVA_HOME/bin/java $JAVA_IMPORTER_ARGS -Xmx64g -cp $IMPORTER_JAR org.mskcc.cbio.importer.Admin --update-groups --cancer-study-ids $BACKUP_CANCER_STUDY_IDENTIFIER --groups "KSBACKUP"
 				if [ $? -gt 0 ]; then
 					echo "Failed to change groups for backup study '$BACKUP_CANCER_STUDY_IDENTIFIER!"
 					GROUPS_FAIL=1
 				fi
 				echo "Renaming temporary study '$TEMP_CANCER_STUDY_IDENTIFIER' to '$CANCER_STUDY_IDENTIFIER'"
-				$JAVA_HOME/bin/java $JAVA_PROXY_ARGS -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -Xmx64g -ea -Dspring.profiles.active=dbcp -Djava.io.tmpdir="$TMP_DIRECTORY" -cp $IMPORTER_JAR org.mskcc.cbio.importer.Admin --rename-cancer-study --new-study-id $CANCER_STUDY_IDENTIFIER --original-study-id $TEMP_CANCER_STUDY_IDENTIFIER
+				$JAVA_HOME/bin/java $JAVA_IMPORTER_ARGS -Xmx64g -cp $IMPORTER_JAR org.mskcc.cbio.importer.Admin --rename-cancer-study --new-study-id $CANCER_STUDY_IDENTIFIER --original-study-id $TEMP_CANCER_STUDY_IDENTIFIER
 				if [ $? -gt 0 ]; then
 					echo "Failed to rename temporary study '$TEMP_CANCER_STUDY_IDENTIFIER' to '$CANCER_STUDY_IDENTIFIER!"
 					RENAME_FAIL=1
@@ -183,7 +186,7 @@ else
 					# only consume samples if study is mskimpact
 					if [ $CANCER_STUDY_IDENTIFIER == "mskimpact" ]; then 
 						echo "Consuming mskimpact samples from cvr"
-						$JAVA_HOME/bin/java $JAVA_PROXY_ARGS -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -jar $PORTAL_HOME/lib/cvr_fetcher.jar -c $MSK_IMPACT_DATA_HOME/cvr_data.json
+						$JAVA_HOME/bin/java $JAVA_PROXY_ARGS $JAVA_DEBUG_ARGS -jar $PORTAL_HOME/lib/cvr_fetcher.jar -c $MSK_IMPACT_DATA_HOME/cvr_data.json
 					fi
 				fi
 			fi
@@ -246,7 +249,7 @@ fi
 # we only want to send the email on import failure
 # or if everything succeeds
 if [[ $IMPORT_FAIL -ne 0 || ($VALIDATION_FAIL -eq 0 && $DELETE_FAIL -eq 0 && $RENAME_BACKUP_FAIL -eq 0 && $RENAME_FAIL -eq 0 && $GROUPS_FAIL -eq 0) ]]; then
-    $JAVA_HOME/bin/java $JAVA_PROXY_ARGS -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182 -Xmx16g -ea -Dspring.profiles.active=dbcp -Djava.io.tmpdir="$TMP_DIRECTORY" -cp $IMPORTER_JAR org.mskcc.cbio.importer.Admin --send-update-notification --portal "$PORTAL_NAME" --notification-file "$NOTIFICATION_FILE"
+    $JAVA_HOME/bin/java $JAVA_IMPORTER_ARGS -Xmx16g -cp $IMPORTER_JAR org.mskcc.cbio.importer.Admin --send-update-notification --portal "$PORTAL_NAME" --notification-file "$NOTIFICATION_FILE"
 fi
 
 # determine if we need to exit with error code

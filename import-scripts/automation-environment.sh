@@ -25,6 +25,8 @@ export ARCHER_REDCAP_BACKUP=$REDCAP_BACKUP_DATA_HOME/archer
 # CMO_DATA_HOME looks unused
 #export CMO_DATA_HOME=/data/cbio-portal-data/bic-mskcc
 export JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk.x86_64
+export JAVA_SSL_ARGS="-Djavax.net.ssl.trustStore=$PORTAL_CONFIG_HOME/properties/redcap-pipeline/cacerts_java1.8_plus_pipelines"
+export JAVA_PROXY_ARGS="-Dhttp.proxyHost=jxi2.mskcc.org -Dhttp.proxyPort=8080"
 export PYTHON_BINARY=/data/tools/python2.7/bin/python
 export HG_BINARY=/usr/bin/hg
 export PATH=/home/grossb/local/bin/:$PATH:/usr/bin/:/bin/
