@@ -3,7 +3,26 @@
 # author: Zack Heins
 
 # ---------------------------------------------------------------
-#  Script to create case lists per cancer type
+# Selects sample sets based on clinical attribute values and
+# outputs case lists (one case list file per distinct value)
+#
+# This script scans any number of clinical files, storing
+# all clinical atributes in 2 maps/dictionaries:
+#     SAMPLE_ID -->  {attribute_name, attribute_value}
+#     PATIENT_ID --> {attribute_name, attribute_value}
+# Any inconsistencies in attribute values are ignored (the
+# first encountered value is chosen).
+#
+# If the attribute is present in the SAMPLE_ID map keys then
+# a case list is generated for each distinct value in that
+# attribute. Otherwise if the attribute is present in the
+# PATIENT_ID map keys then a case list is generated for each
+# distinct value in that attribute, adding all samples which
+# belong to PATIENT_ID
+# 
+# As a special case, if the attribute is
+# 12_245_PART_C_CONSENTED then only the value "YES" is
+# written to a case list, with a name containing "germline"
 # ---------------------------------------------------------------
 
 # ---------------------------------------------------------------
@@ -22,22 +41,75 @@ OUTPUT_FILE = sys.stdout
 # functions
 
 # ---------------------------------------------------------------
+def count_header_lines(filename):
+    count = 0
+    with open(filename, 'rU') as f:
+        for line in f:
+            if line.startswith('#'):
+                count += 1
+            else:
+                break
+    return count
+
+# ---------------------------------------------------------------
+def insert_into_set_dictionary(dictionary, key, value):
+    if key in dictionary:
+        dictionary[key].add(value)
+    else:
+        dictionary[key] = {value} # initialize single value set
+# ---------------------------------------------------------------
 # creates the case list dictionary
 # key = cancer_type
 # value = list of sids
-def create_case_lists_map(clinical_file_name, attribute):
-    clinical_file = open(clinical_file_name,'rU')
-    clinical_file_map = {}
-    reader = csv.DictReader(clinical_file,dialect='excel-tab')
-    for row in reader:
-        if row[attribute] not in clinical_file_map:
-            clinical_file_map[row[attribute]] = [row['SAMPLE_ID']]
-        else:
-            clinical_file_map[row[attribute]].append(row['SAMPLE_ID'])
-
-    clinical_file.close()
-
-    return clinical_file_map
+def create_case_lists_map(clinical_files, attribute, selected_values = None):
+    attribute_value_to_sample_id_map = {}
+    attribute_value_to_patient_id_map = {}
+    patient_id_to_sample_id_map = {}
+    attribute_is_a_patient_attribute = False # will be a patient attribute if ever seen without a sample_id
+    
+    # read all clinical files
+    for clinical_filename in clinical_files:
+        number_of_header_lines = count_header_lines(clinical_filename);
+        clinical_file = open(clinical_filename,'rU')
+        header_lines = [clinical_file.readline() for linenumber in range(0, number_of_header_lines)]
+        reader = csv.DictReader(clinical_file,dialect='excel-tab')
+        for row in reader:
+            sample_id = None
+            patient_id = None
+            attribute_value = None
+            if 'SAMPLE_ID' in row:
+                sample_id = row['SAMPLE_ID']
+            if 'PATIENT_ID' in row:
+                patient_id = row['PATIENT_ID']
+            if attribute in row:
+                attribute_value = row[attribute]
+                if not sample_id:
+                    attribute_is_a_patient_attribute = True
+            #find any patient to sample mapping
+            if sample_id and patient_id:
+                insert_into_set_dictionary(patient_id_to_sample_id_map, patient_id, sample_id)
+            #find all attribute mappings
+            if not attribute_value or (selected_values and attribute_value not in selected_values):
+                continue
+            if sample_id:
+                insert_into_set_dictionary(attribute_value_to_sample_id_map, attribute_value, sample_id)
+                continue
+            if patient_id:
+                insert_into_set_dictionary(attribute_value_to_patient_id_map, attribute_value, patient_id)
+        clinical_file.close()
+            
+    #construct case list map
+    case_list_map = {}
+    if attribute_is_a_patient_attribute:
+        for attribute_value in attribute_value_to_patient_id_map:
+            case_list_map[attribute_value] = set()
+            for patient in attribute_value_to_patient_id_map[attribute_value]:
+                for sample in patient_id_to_sample_id_map[patient]:
+                    case_list_map[attribute_value].add(sample);
+    else:
+        for attribute_value in attribute_value_to_sample_id_map:
+            case_list_map[attribute_value] = attribute_value_to_sample_id_map[attribute_value]
+    return case_list_map
 
 # ---------------------------------------------------------------
 # writes the file to case_lists directory inside the directory
@@ -58,44 +130,47 @@ def write_case_list_files(clinical_file_map, output_directory, study_id, name, d
                                     'stable_id: ' + stable_id + '\n' + 
                                     'case_list_name: ' + case_list_name + '\n' + 
                                     'case_list_description: ' + case_list_description + '\n' +
-                                    'case_list_ids: ' + case_list_ids)        
+                                    'case_list_ids: ' + case_list_ids)   
 
 # ---------------------------------------------------------------
 # gets clin file and processes it 
 def create_case_lists(clinical_file_name, output_directory, study_id, attribute):
-    case_lists_map = create_case_lists_map(clinical_file_name, attribute)
     if attribute == 'CANCER_TYPE':
+        case_lists_map = create_case_lists_map(clinical_file_name, attribute)
         # We do not want to filter off the value of the attribute in the case of case lists by cancer type - we want them all, so pass None as the filter
         write_case_list_files(case_lists_map, output_directory, study_id, 'Tumor Type: ', 'All tumors with cancer type ', None)
-    else:
+    elif attribute == '12_245_PARTC_CONSENTED':
+        case_lists_map = create_case_lists_map(clinical_file_name, attribute, 'YES')
         # If we want germline case list, the value of the column '12_245_PART_C_CONSENTED' will be YES or NO. Samples with YES for that value are the ones to add to the list
         write_case_list_files(case_lists_map, output_directory, study_id, 'Tumors with germline data 12_245_PARTC_CONSENTED ', 'Tumors with germline data available 12_245_PARTC_CONSENTED ', 'YES', 'germline')
+    else:
+        print >> ERROR_FILE, "Error : case lists cannot be generated for attribute " + attribute
+        sys.exit(2)
+
 
 # ---------------------------------------------------------------
-# displays usage of program
-def usage():
-    print >> OUTPUT_FILE, 'create_case_lists_by_cancer_type.py --clinical-file <path/to/clinical/file> --output-directory <path/to/output/directory> --study-id <cancer_study_identifier> --attribute <clinical column to base case list categories on>'
+def display_usage():
+    print >> OUTPUT_FILE, 'create_case_lists_by_cancer_type.py\n    --clinical-file-list <clinical_file_path1, clinical_file_path2, ...>\n    --output-directory <path/to/output/directory>\n    --study-id <cancer_study_identifier>\n    --attribute <clinical column to base case list categories on>\n'
 
 # ---------------------------------------------------------------
-# the main
 def main():
     # parse command line
     try:
-        opts,args = getopt.getopt(sys.argv[1:],'',['clinical-file=', 'output-directory=', 'study-id=', 'attribute='])
+        opts,args = getopt.getopt(sys.argv[1:],'',['clinical-file-list=', 'output-directory=', 'study-id=', 'attribute='])
     except getopt.error,msg:
         print >> ERROR_FILE,msg
-        usage()
+        display_usage()
         sys.exit(2)
 
-    clinical_file_name = ''
+    clinical_file_list_string = ''
     output_directory = ''
     study_id = ''
     attribute = ''
 
     # process options
     for o, a in opts:
-        if o == '--clinical-file':
-            clinical_file_name = a
+        if o == '--clinical-file-list':
+            clinical_file_list_string = a
         elif o == '--output-directory':
             output_directory = a
         elif o == '--study-id':
@@ -103,22 +178,27 @@ def main():
         elif o == '--attribute':
             attribute = a
     
-    if clinical_file_name == '' or output_directory == '' or study_id == '':
-        usage()
+    if clinical_file_list_string == '' or output_directory == '' or study_id == '' or attribute == '':
+        display_usage()
         sys.exit(2)
 
+    # process list arguemnts
+    clinical_files = [x.strip() for x in clinical_file_list_string.strip().split(',')]
+    
     # check existence of file
-    if not os.path.exists(os.path.abspath(clinical_file_name)):
-        print >> ERROR_FILE, 'clinical file cannot be found: ' + clinical_file_name
-        sys.exit(2)
+    error_found = False
+    for clinical_file in clinical_files:
+        if not os.path.exists(os.path.abspath(clinical_file)):
+            error_found = True
+            print >> ERROR_FILE, 'clinical file cannot be found: ' + clinical_file
     if not os.path.isdir(os.path.abspath(output_directory)):
+        error_found = True
         print >> ERROR_FILE, 'directory cannot be found or is not a directory: ' + output_directory
+    if error_found:
         sys.exit(2)
 
-    #do it all
-    create_case_lists(clinical_file_name, output_directory, study_id, attribute)
+    create_case_lists(clinical_files, output_directory, study_id, attribute)
 
 # ---------------------------------------------------------------
-# do a main
 if __name__ == '__main__':
     main()
