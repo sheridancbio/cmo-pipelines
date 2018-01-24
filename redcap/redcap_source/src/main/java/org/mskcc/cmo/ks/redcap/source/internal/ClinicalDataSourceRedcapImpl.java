@@ -69,8 +69,8 @@ public class ClinicalDataSourceRedcapImpl implements ClinicalDataSource {
     private List<String> sampleHeader;
     private List<String> patientHeader;
     private List<String> combinedHeader;
-    private Map<String, List<String>> fullPatientHeader = null;
-    private Map<String, List<String>> fullSampleHeader = null;
+    private Map<String, List<String>> fullPatientHeader = new HashMap<>();
+    private Map<String, List<String>> fullSampleHeader = new HashMap<>();
     private String nextClinicalId;
     private String nextTimelineId;
 
