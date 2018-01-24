@@ -67,6 +67,7 @@ def process_clinical_file(oncotree, clinical_filename):
     """ Insert cancer type/cancer type detailed in the clinical file """
 
     first = True
+    metadata_headers_processed = False
     header = []
     file_has_metadata_headers = has_metadata_headers(clinical_filename)
 
@@ -78,7 +79,6 @@ def process_clinical_file(oncotree, clinical_filename):
         if CANCER_TYPE_DETAILED not in get_header(clinical_filename):
             add_metadata_for_attribute(CANCER_TYPE_DETAILED, metadata_lines)
 
-    metadata_headers_processed = False
     # Python docs: "if the keyword argument inplace=1 is passed to fileinput.input()
     # or to the FileInput constructor, the file is moved to a backup
     # file and standard output is directed to the input file"
