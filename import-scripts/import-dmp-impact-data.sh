@@ -232,10 +232,21 @@ function import_archer_supp_date_to_redcap {
     return $return_value
 }
 
-# Function for importing raindance darwin files to redcap
-function remove_clinical_timeline_meta_files {
+# Function for removing raw clinical and timeline files from study directory
+function remove_raw_clinical_timeline_data_files {
     STUDY_DIRECTORY=$1
-    rm -f $STUDY_DIRECTORY/*clinical* $STUDY_DIRECTORY/*timeline*
+    # remove raw clinical files except patient and sample cbio format clinical files
+    for f in $STUDY_DIRECTORY/data_clinical*; do
+        if [[ $f != *"data_clinical_patient.txt"* && $f != *"data_clinical_sample.txt"* ]] ; then
+            rm -f $f
+        fi
+    done
+    # remove raw timeline files except cbio format timeline file
+    for f in $STUDY_DIRECTORY/data_timeline*; do
+        if [ $f != *"data_timeline.txt"* ] ; then
+            rm -f $f
+        fi
+    done
 }
 # -----------------------------------------------------------------------------------------------------------
 
@@ -254,8 +265,6 @@ if [ -z $JAVA_HOME ] | [ -z $HG_BINARY ] | [ -z $PORTAL_HOME ] | [ -z $MSK_IMPAC
     sendFailureMessageMskPipelineLogsSlack "${message}"
     exit 2
 fi
-
-##TODO : review HG commands for testing ... should only update the redcap versions of repos
 
 now=$(date "+%Y-%m-%d-%H-%M-%S")
 ONCOTREE_VERSION_TO_USE=oncotree_candidate_release
@@ -726,17 +735,17 @@ echo "Import into redcap finished"
 
 # -------------------------------------------------------------
 # remove extraneous files
-echo "removing all clinical & timeline files for mskimpact"
-remove_clinical_timeline_meta_files $MSK_IMPACT_DATA_HOME
+echo "removing raw clinical & timeline files for mskimpact"
+remove_raw_clinical_timeline_data_files $MSK_IMPACT_DATA_HOME
 
-echo "removing all clinical & timeline files for hemepact"
-remove_clinical_timeline_meta_files $MSK_HEMEPACT_DATA_HOME
+echo "removing raw clinical & timeline files for hemepact"
+remove_raw_clinical_timeline_data_files $MSK_HEMEPACT_DATA_HOME
 
-echo "removing all clinical & timeline files for mskraindance"
-remove_clinical_timeline_meta_files $MSK_RAINDANCE_DATA_HOME
+echo "removing raw clinical & timeline files for mskraindance"
+remove_raw_clinical_timeline_data_files $MSK_RAINDANCE_DATA_HOME
 
-echo "removing all clinical & timeline files for mskarcher"
-remove_clinical_timeline_meta_files $MSK_ARCHER_DATA_HOME
+echo "removing raw clinical & timeline files for mskarcher"
+remove_raw_clinical_timeline_data_files $MSK_ARCHER_DATA_HOME
 
 # -------------------------------------------------------------
 # export data in standard cbioportal mode from redcap
@@ -746,11 +755,13 @@ if [ $IMPORT_STATUS_IMPACT -eq 0 ] ; then
     export_stable_id_from_redcap mskimpact $MSK_IMPACT_DATA_HOME
     if [ $? -gt 0 ] ; then
         IMPORT_STATUS_IMPACT=1
+        cd $MSK_IMPACT_DATA_HOME ; $HG_BINARY update -C ; find . -name "*.orig" -delete
         sendFailureMessageMskPipelineLogsSlack "Mskimpact Redcap Export"
     else
         if [ $GENERATE_MASTERLIST_FAIL -eq 0 ] ; then
             $PYTHON_BINARY $PORTAL_HOME/scripts/filter_dropped_samples_patients.py -s $MSK_IMPACT_DATA_HOME/data_clinical_sample.txt -p $MSK_IMPACT_DATA_HOME/data_clinical_patient.txt -t $MSK_IMPACT_DATA_HOME/data_timeline.txt -f $JAVA_TMPDIR/sample_masterlist_for_filtering.txt
         fi
+        cd $MSK_IMPACT_DATA_HOME ; find . -name "*.orig" -delete ; $HG_BINARY add * ; $HG_BINARY commit -m "Latest MSK-IMPACT Dataset: Clinical and Timeline"
     fi
 fi
 
@@ -759,7 +770,10 @@ if [ $IMPORT_STATUS_HEME -eq 0 ] ; then
     export_stable_id_from_redcap mskimpact_heme $MSK_HEMEPACT_DATA_HOME
     if [ $? -gt 0 ] ; then
         IMPORT_STATUS_HEME=1
+        cd $MSK_HEMEPACT_DATA_HOME ; $HG_BINARY update -C ; find . -name "*.orig" -delete
         sendFailureMessageMskPipelineLogsSlack "Hemepact Redcap Export"
+    else
+        cd $MSK_HEMEPACT_DATA_HOME ; find . -name "*.orig" -delete ; $HG_BINARY add * ; $HG_BINARY commit -m "Latest HEMEPACT Dataset: Clinical and Timeline"
     fi
 fi
 
@@ -768,7 +782,10 @@ if [ $IMPORT_STATUS_RAINDANCE -eq 0 ] ; then
     export_stable_id_from_redcap mskraindance $MSK_RAINDANCE_DATA_HOME
     if [ $? -gt 0 ] ; then
         IMPORT_STATUS_RAINDANCE=1
+        cd $MSK_RAINDANCE_DATA_HOME ; $HG_BINARY update -C ; find . -name "*.orig" -delete
         sendFailureMessageMskPipelineLogsSlack "Raindance Redcap Export"
+    else
+        cd $MSK_RAINDANCE_DATA_HOME ; find . -name "*.orig" -delete ; $HG_BINARY add * ; $HG_BINARY commit -m "Latest RAINDANCE Dataset: Clinical and Timeline"
     fi
 fi
 
@@ -777,7 +794,10 @@ if [ $IMPORT_STATUS_ARCHER -eq 0 ] ; then
     export_stable_id_from_redcap mskarcher $MSK_ARCHER_DATA_HOME
     if [ $? -gt 0 ] ; then
         IMPORT_STATUS_ARCHER=1
+        cd $MSK_ARCHER_DATA_HOME ; $HG_BINARY update -C ; find . -name "*.orig" -delete
         sendFailureMessageMskPipelineLogsSlack "Archer Redcap Export"
+    else
+        cd $MSK_ARCHER_DATA_HOME ; find . -name "*.orig" -delete ; $HG_BINARY add * ; $HG_BINARY commit -m "Latest ARCHER Dataset: Clinical and Timeline"
     fi
 fi
 
@@ -1435,19 +1455,6 @@ fi
 
 echo "Fetching and importing of clinical datasets complete!"
 echo $(date)
-#TODO: every function for importing data into redcap should return a status (0=success, else fail) .. then these can be tracked later
 
-#cleanup redcap repos - delete all clinical/timeline files
-echo "removing all clinical & timeline files for mskimpact"
-remove_clinical_timeline_meta_files $MSK_IMPACT_DATA_HOME
-
-echo "removing all clinical & timeline files for hemepact"
-remove_clinical_timeline_meta_files $MSK_HEMEPACT_DATA_HOME
-
-echo "removing all clinical & timeline files for mskraindance"
-remove_clinical_timeline_meta_files $MSK_RAINDANCE_DATA_HOME
-
-echo "removing all clinical & timeline files for mskarcher"
-remove_clinical_timeline_meta_files $MSK_ARCHER_DATA_HOME
 
 exit 0
