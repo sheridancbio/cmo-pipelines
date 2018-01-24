@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 - 2017 Memorial Sloan-Kettering Cancer Center.
+ * Copyright (c) 2016 - 2018 Memorial Sloan-Kettering Cancer Center.
  *
  * This library is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS
@@ -32,7 +32,10 @@
 
 package org.cbioportal.cmo.pipelines;
 
-import org.cbioportal.cmo.pipelines.cvr.*;
+import org.cbioportal.cmo.pipelines.cvr.BatchConfiguration;
+import org.cbioportal.cmo.pipelines.cvr.CVRUtilities;
+import org.cbioportal.cmo.pipelines.cvr.SessionConfiguration;
+import org.cbioportal.cmo.pipelines.common.util.EmailUtil;
 
 import java.util.*;
 import org.apache.commons.cli.*;
@@ -159,7 +162,7 @@ public class CVRPipeline {
     private static void checkExceptions(JobExecution jobExecution, JobParameters jobParameters, EmailUtil emailUtil) {
         List<Throwable> exceptions = jobExecution.getAllFailureExceptions();
         if (exceptions.size() > 0) {
-            emailUtil.sendErrorEmail(exceptions, jobParameters.toString());
+            emailUtil.sendErrorEmail("CVR Pipeline", exceptions, jobParameters.toString());
             System.exit(1);
         }
     }

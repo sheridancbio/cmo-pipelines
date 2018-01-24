@@ -50,6 +50,7 @@ import org.springframework.batch.core.configuration.annotation.*;
 import org.springframework.context.annotation.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.batch.core.configuration.annotation.StepScope;
+import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.batch.item.support.*;
 import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
@@ -88,6 +89,7 @@ public class BatchConfiguration {
                 .next(mskimpactClinicalBrainSpineStep())
             //.next(mskimpactMedicalTherapyStep())
                 .next(mskimpactGeniePatientClinicalStep())
+                .next(mskimpactEmailStep())
                 .build();
     }
 
@@ -177,6 +179,19 @@ public class BatchConfiguration {
     }
 
     @Bean
+    public Step mskimpactEmailStep() {
+        return stepBuilderFactory.get("mskimpactEmailStep")
+        .tasklet(darwinEmailTasklet())
+        .build();
+    }
+
+    @Bean
+    @StepScope
+    public Tasklet darwinEmailTasklet() {
+        return new DarwinEmailTasklet();
+    }
+
+    @Bean
     @StepScope
     public DarwinUtils darwinUtils() {
         return new DarwinUtils();
@@ -204,13 +219,13 @@ public class BatchConfiguration {
     public ItemStreamWriter<MskimpactCompositeDemographics> mskimpactAgeWriter() {
         return new MskimpactAgeWriter();
     }
-    
+
     @Bean
     @StepScope
     public ItemStreamWriter<MskimpactCompositeDemographics> mskimpactVitalStatusWriter() {
         return new MskimpactVitalStatusWriter();
     }
-    
+
     @Bean
     @StepScope
     public CompositeItemWriter<MskimpactCompositeDemographics> mskimpactCompositeDemographicsWriter() {
@@ -286,7 +301,7 @@ public class BatchConfiguration {
     //
     @Bean
     public MskimpactTimelineBrainSpineModelToCompositeProcessor mskimpactTimelineBrainSpineModelToCompositeProcessorTypeStatus() {
-        return new MskimpactTimelineBrainSpineModelToCompositeProcessor(BrainSpineTimelineType.STATUS); 
+        return new MskimpactTimelineBrainSpineModelToCompositeProcessor(BrainSpineTimelineType.STATUS);
     }
 
     @Bean

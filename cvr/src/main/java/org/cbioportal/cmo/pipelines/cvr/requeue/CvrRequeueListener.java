@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Memorial Sloan-Kettering Cancer Center.
+ * Copyright (c) 2017-2018 Memorial Sloan-Kettering Cancer Center.
  *
  * This library is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS
@@ -32,8 +32,8 @@
 
 package org.cbioportal.cmo.pipelines.cvr.requeue;
 
+import org.cbioportal.cmo.pipelines.common.util.EmailUtil;
 import org.cbioportal.cmo.pipelines.cvr.CvrSampleListUtil;
-import org.cbioportal.cmo.pipelines.cvr.EmailUtil;
 import org.cbioportal.cmo.pipelines.cvr.model.CVRRequeueRecord;
 
 import java.util.*;

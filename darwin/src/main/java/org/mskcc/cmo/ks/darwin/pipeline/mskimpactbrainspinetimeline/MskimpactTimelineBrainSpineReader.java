@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Memorial Sloan-Kettering Cancer Center.
+ * Copyright (c) 2016-2018 Memorial Sloan-Kettering Cancer Center.
  *
  * This library is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS
@@ -32,6 +32,7 @@
 package org.mskcc.cmo.ks.darwin.pipeline.mskimpactbrainspinetimeline;
 
 import org.mskcc.cmo.ks.darwin.pipeline.model.MskimpactBrainSpineTimeline;
+import org.mskcc.cmo.ks.darwin.pipeline.util.DarwinSampleListUtil;
 
 import com.querydsl.core.types.Projections;
 import com.querydsl.sql.SQLQueryFactory;
@@ -55,6 +56,9 @@ public class MskimpactTimelineBrainSpineReader implements ItemStreamReader<Mskim
     @Autowired
     SQLQueryFactory darwinQueryFactory;
     
+    @Autowired
+    public DarwinSampleListUtil darwinSampleListUtil;
+
     private List<MskimpactBrainSpineTimeline> darwinTimelineResults;
     
     Logger log = Logger.getLogger(MskimpactTimelineBrainSpineReader.class);
@@ -94,8 +98,13 @@ public class MskimpactTimelineBrainSpineReader implements ItemStreamReader<Mskim
     
     @Override
     public MskimpactBrainSpineTimeline read() throws Exception{
-        if(!darwinTimelineResults.isEmpty()){
-            return darwinTimelineResults.remove(0);
+        while(!darwinTimelineResults.isEmpty()){
+            MskimpactBrainSpineTimeline darwinTimelineResult = darwinTimelineResults.remove(0);
+            if (darwinTimelineResult.getSTART_DATE().equals("NA")) {
+                darwinSampleListUtil.addFilteredMskimpactBrainSpineTimeline(darwinTimelineResult);
+            } else {
+                return darwinTimelineResult;
+            }
         }
         return null;
     }

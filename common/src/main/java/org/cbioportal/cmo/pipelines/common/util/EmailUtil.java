@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 - 2017 Memorial Sloan-Kettering Cancer Center.
+ * Copyright (c) 2016 - 2018 Memorial Sloan-Kettering Cancer Center.
  *
  * This library is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS
@@ -30,7 +30,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-package org.cbioportal.cmo.pipelines.cvr;
+package org.cbioportal.cmo.pipelines.common.util;
 
 import java.util.*;
 import java.util.Properties;
@@ -99,8 +99,8 @@ public class EmailUtil {
         }
     }
 
-    public void sendErrorEmail(List<Throwable> exceptions, String parameters) {
-        String body = "An error occured while running the CVR Pipeline with job parameters " + parameters + ".\n\n";
+    public void sendErrorEmail(String pipelineName, List<Throwable> exceptions, String parameters) {
+        String body = "An error occured while running the " + pipelineName + " with job parameters " + parameters + ".\n\n";
         List<String> messages = new ArrayList<>();
         for (Throwable exception : exceptions) {
             messages.add(ExceptionUtils.getFullStackTrace(exception));
