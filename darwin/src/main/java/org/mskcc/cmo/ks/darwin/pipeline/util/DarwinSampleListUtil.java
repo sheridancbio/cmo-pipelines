@@ -48,7 +48,7 @@ import java.util.*;
 @Configuration
 public class DarwinSampleListUtil {
 
-    private Set<MskimpactBrainSpineTimeline> filteredMskimpactBrainSpineTimelineList = new HashSet<>();
+    private Set<MskimpactBrainSpineTimeline> filteredMskimpactBrainSpineTimelineSet = new HashSet<>();
 
     Logger log = Logger.getLogger(DarwinSampleListUtil.class);
 
@@ -60,16 +60,16 @@ public class DarwinSampleListUtil {
     public DarwinSampleListUtil() {}
 
     /**
-     * @return the filteredMskimpactBrainSpineTimelineList
+     * @return the filteredMskimpactBrainSpineTimelineSet
      */
-    public Set<MskimpactBrainSpineTimeline> getFilteredMskimpactBrainSpineTimelineList() {
-        return filteredMskimpactBrainSpineTimelineList;
+    public Set<MskimpactBrainSpineTimeline> getFilteredMskimpactBrainSpineTimelineSet() {
+        return filteredMskimpactBrainSpineTimelineSet;
     }
 
     /**
-     * @param mskimpactBrainSpineTimeline the MskimpactBrainSpineTimeline to add
+     * @param mskimpactBrainSpineTimeline the MskimpactBrainSpineTimeline to add to filteredMskimpactBrainSpineTimelineSet
      */
     public void addFilteredMskimpactBrainSpineTimeline(MskimpactBrainSpineTimeline mskimpactBrainSpineTimeline) {
-        this.filteredMskimpactBrainSpineTimelineList.add(mskimpactBrainSpineTimeline);
+        this.filteredMskimpactBrainSpineTimelineSet.add(mskimpactBrainSpineTimeline);
     }
 }
