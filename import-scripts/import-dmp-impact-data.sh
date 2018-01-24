@@ -22,10 +22,10 @@ function addCancerTypeCaseLists {
     fi
     # remove current case lists and run oncotree converter before creating new cancer case lists
     rm $STUDY_DATA_DIRECTORY/case_lists/*
-    $PYTHON_BINARY $PORTAL_HOME/scripts/oncotree_code_converter_with_redcap.py --oncotree-url "http://oncotree.mskcc.org/oncotree/api/tumor_types.txt" --clinical-file $FILEPATH_1
-    $PYTHON_BINARY $PORTAL_HOME/scripts/create_case_lists_by_cancer_type_with_redcap.py --clinical-file-list="$CLINICAL_FILE_LIST" --output-directory="$STUDY_DATA_DIRECTORY/case_lists" --study-id="$STUDY_ID" --attribute="CANCER_TYPE"
+    $PYTHON_BINARY $PORTAL_HOME/scripts/oncotree_code_converter.py --oncotree-url "http://oncotree.mskcc.org/oncotree/api/tumor_types.txt" --clinical-file $FILEPATH_1
+    $PYTHON_BINARY $PORTAL_HOME/scripts/create_case_lists_by_cancer_type.py --clinical-file-list="$CLINICAL_FILE_LIST" --output-directory="$STUDY_DATA_DIRECTORY/case_lists" --study-id="$STUDY_ID" --attribute="CANCER_TYPE"
     if [ "$STUDY_ID" == "mskimpact" ] || [ "$STUDY_ID" == "mixedpact" ] ; then
-       $PYTHON_BINARY $PORTAL_HOME/scripts/create_case_lists_by_cancer_type_with_redcap.py --clinical-file-list="$CLINICAL_FILE_LIST" --output-directory="$STUDY_DATA_DIRECTORY/case_lists" --study-id="$STUDY_ID" --attribute="12_245_PARTC_CONSENTED"
+       $PYTHON_BINARY $PORTAL_HOME/scripts/create_case_lists_by_cancer_type.py --clinical-file-list="$CLINICAL_FILE_LIST" --output-directory="$STUDY_DATA_DIRECTORY/case_lists" --study-id="$STUDY_ID" --attribute="12_245_PARTC_CONSENTED"
     fi
 }
 
@@ -279,6 +279,7 @@ if [ $? -gt 0 ] ; then
     sendFailureMessageMskPipelineLogsSlack "Fetch Msk-impact from Mercurial Failure"
     exit 2
 fi
+
 # -----------------------------------------------------------------------------------------------------------
 
 DB_VERSION_FAIL=0
@@ -287,7 +288,7 @@ IMPORT_STATUS_HEME=0
 IMPORT_STATUS_RAINDANCE=0
 IMPORT_STATUS_ARCHER=0
 
-# Assume export of supp date from RedCap succeded unless it failed 
+# Assume export of supp date from RedCap succeded unless it failed
 EXPORT_SUPP_DATE_IMPACT_FAIL=0
 EXPORT_SUPP_DATE_HEME_FAIL=0
 EXPORT_SUPP_DATE_RAINDANCE_FAIL=0
@@ -444,7 +445,7 @@ if [ $IMPORT_STATUS_IMPACT -eq 0 ] ; then
         cd $MSK_IMPACT_DATA_HOME ; $HG_BINARY update -C ; find . -name "*.orig" -delete
         sendFailureMessageMskPipelineLogsSlack "MSKIMPACT CVR Germline Fetch"
         IMPORT_STATUS_IMPACT=1
-	#override the success of the tumor sample cvr fetch with a failed status
+        #override the success of the tumor sample cvr fetch with a failed status
         FETCH_CVR_IMPACT_FAIL=1
     else
         echo "committing CVR germline data"
@@ -549,7 +550,7 @@ if [ $IMPORT_STATUS_ARCHER -eq 0 ] ; then
         # mskarcher does not provide copy number, mutations, or seg data, renaming gene matrix file until we get the mskarcher gene panel imported
         echo "Removing unused files"
         cd $MSK_ARCHER_DATA_HOME ; rm -f data_CNA.txt data_mutations_* mskarcher_data_cna_hg19.seg
-	cd $MSK_ARCHER_DATA_HOME ; mv data_gene_matrix.txt ignore_data_gene_matrix.txt
+        cd $MSK_ARCHER_DATA_HOME ; mv data_gene_matrix.txt ignore_data_gene_matrix.txt
         cd $MSK_ARCHER_DATA_HOME ; $HG_BINARY commit -m "Latest archer dataset"
     fi
 fi
@@ -839,8 +840,6 @@ RESTART_AFTER_DMP_PIPELINES_IMPORT=0
 
 ## TEMP STUDY IMPORT: MSKIMPACT_HEME
 if [ $IMPORT_STATUS_HEME -eq 0 ] ; then
-    # add custom priorities, headers dont need to be added
-    #$PYTHON_BINARY $PORTAL_HOME/scripts/set_custom_overrides.py --study-id hemepact --reset --files $HEMEPACT_DATA_HOME/data_clinical*
     echo $(date)
     bash $PORTAL_HOME/scripts/import-temp-study.sh --study-id="mskimpact_heme" --temp-study-id="temporary_mskimpact_heme" --backup-study-id="yesterday_mskimpact_heme" --portal-name="mskheme-portal" --study-path="$MSK_HEMEPACT_DATA_HOME" --notification-file="$mskheme_notification_file" --tmp-directory="$JAVA_TMPDIR" --email-list="$email_list" --oncotree-version="${ONCOTREE_VERSION_TO_USE}" --importer-jar="$PORTAL_HOME/lib/msk-dmp-importer.jar" --transcript-overrides-source="mskcc"
     if [ $? -eq 0 ] ; then
@@ -859,8 +858,6 @@ fi
 
 ## TEMP STUDY IMPORT: MSKRAINDANCE
 if [ $IMPORT_STATUS_RAINDANCE -eq 0 ] ; then
-    # add custom priorities, headers dont need to be added
-    #$PYTHON_BINARY $PORTAL_HOME/scripts/set_custom_overrides.py --study-id raindance --reset --files $RAINDANCE_DATA_HOME/data_clinical*
     echo $(date)
     bash $PORTAL_HOME/scripts/import-temp-study.sh --study-id="mskraindance" --temp-study-id="temporary_mskraindance" --backup-study-id="yesterday_mskraindance" --portal-name="mskraindance-portal" --study-path="$MSK_RAINDANCE_DATA_HOME" --notification-file="$mskraindance_notification_file" --tmp-directory="$JAVA_TMPDIR" --email-list="$email_list" --oncotree-version="${ONCOTREE_VERSION_TO_USE}" --importer-jar="$PORTAL_HOME/lib/msk-dmp-importer.jar" --transcript-overrides-source="mskcc"
     if [ $? -eq 0 ] ; then
@@ -879,8 +876,6 @@ fi
 
 # TEMP STUDY IMPORT: MSKARCHER
 if [ $IMPORT_STATUS_ARCHER -eq 0 ] ; then
-    # add custom priorities, headers dont need to be added
-    #$PYTHON_BINARY $PORTAL_HOME/scripts/set_custom_overrides.py --study-id archer --reset --files $ARCHER_DATA_HOME/data_clinical*
     echo $(date)
     bash $PORTAL_HOME/scripts/import-temp-study.sh --study-id="mskarcher" --temp-study-id="temporary_mskarcher" --backup-study-id="yesterday_mskarcher" --portal-name="mskarcher-portal" --study-path="$MSK_ARCHER_DATA_HOME" --notification-file="$mskarcher_notification_file" --tmp-directory="$JAVA_TMPDIR" --email-list="$email_list" --oncotree-version="${ONCOTREE_VERSION_TO_USE}" --importer-jar="$PORTAL_HOME/lib/msk-dmp-importer.jar" --transcript-overrides-source="mskcc"
     if [ $? -eq 0 ] ; then
@@ -932,7 +927,6 @@ else
     addCancerTypeCaseLists $MSK_MIXEDPACT_DATA_HOME "mixedpact" "data_clinical_sample.txt" "data_clinical_patient.txt"
 fi
 
-
 # check that meta_SV.txt are actually empty files before deleting from IMPACT, HEME, and RAINDANCE studies
 if [ $(wc -l < $MSK_IMPACT_DATA_HOME/meta_SV.txt) -eq 0 ] ; then
     rm $MSK_IMPACT_DATA_HOME/meta_SV.txt
@@ -965,7 +959,7 @@ if [ $IMPORT_FAIL_MIXEDPACT -gt 0 ] ; then
     cd $MSK_MIXEDPACT_DATA_HOME ; $HG_BINARY update -C ; find . -name "*.orig" -delete
 else
     echo "Committing MIXEDPACT data"
-    cd $MSK_MIXEDPACT_DATA_HOME ; find . -name "*.orig" -delete ; $HG_BINARY add * ; $HG_BINARY forget data_clinical* ; $HG_BINARY forget data_timeline* ; $HG_BINARY commit -m "Latest MIXEDPACT dataset"
+    cd $MSK_MIXEDPACT_DATA_HOME ; find . -name "*.orig" -delete ; $HG_BINARY add * ; $HG_BINARY commit -m "Latest MIXEDPACT dataset"
 fi
 ## END MSK-IMPACT, HEMEPACT, and RAINDANCE merge
 
@@ -993,9 +987,8 @@ if [ $? -gt 0 ] ; then
 else
     echo "MSK Kings County subset successful!"
     addCancerTypeCaseLists $MSK_KINGS_DATA_HOME "msk_kingscounty" "data_clinical_sample.txt" "data_clinical_patient.txt"
-    # add metadata headers and overrides before importing
+    # add metadata headers before importing
     $PYTHON_BINARY $PORTAL_HOME/scripts/add_clinical_attribute_metadata_headers.py -s $PORTAL_DATA_HOME/portal-configuration/google-docs/client_secrets.json -c $PORTAL_DATA_HOME/portal-configuration/google-docs/creds.dat -p $PORTAL_DATA_HOME/portal-configuration/properties/clinical-metadata/metadata.google.properties -f $MSK_KINGS_DATA_HOME/data_clinical*
-    #$PYTHON_BINARY $PORTAL_HOME/scripts/set_custom_overrides.py -s msk_kingscounty -f $MSK_KINGS_DATA_HOME/data_clinical*
 fi
 
 bash $PORTAL_HOME/scripts/subset-impact-data.sh -i=msk_lehighvalley -o=$MSK_LEHIGH_DATA_HOME -m=$MSK_MIXEDPACT_DATA_HOME -f="INSTITUTE=Lehigh Valley Health Network" -s=$JAVA_TMPDIR/lehigh_subset.txt -c=data_clinical_sample.txt
@@ -1006,9 +999,8 @@ if [ $? -gt 0 ] ; then
 else
     echo "MSK Lehigh Valley subset successful!"
     addCancerTypeCaseLists $MSK_LEHIGH_DATA_HOME "msk_lehighvalley" "data_clinical_sample.txt" "data_clinical_patient.txt"
-    # add metadata headers and overrides before importing
+    # add metadata headers before importing
     $PYTHON_BINARY $PORTAL_HOME/scripts/add_clinical_attribute_metadata_headers.py -s $PORTAL_DATA_HOME/portal-configuration/google-docs/client_secrets.json -c $PORTAL_DATA_HOME/portal-configuration/google-docs/creds.dat -p $PORTAL_DATA_HOME/portal-configuration/properties/clinical-metadata/metadata.google.properties -f $MSK_LEHIGH_DATA_HOME/data_clinical*
-    #$PYTHON_BINARY $PORTAL_HOME/scripts/set_custom_overrides.py -s msk_lehighvalley -f $MSK_LEHIGH_DATA_HOME/data_clinical*
 fi
 
 bash $PORTAL_HOME/scripts/subset-impact-data.sh -i=msk_queenscancercenter -o=$MSK_QUEENS_DATA_HOME -m=$MSK_MIXEDPACT_DATA_HOME -f="INSTITUTE=Queens Cancer Center,Queens Hospital Cancer Center" -s=$JAVA_TMPDIR/queens_subset.txt -c=data_clinical_sample.txt
@@ -1019,9 +1011,8 @@ if [ $? -gt 0 ] ; then
 else
     echo "MSK Queens Cancer Center subset successful!"
     addCancerTypeCaseLists $MSK_QUEENS_DATA_HOME "msk_queenscancercenter" "data_clinical_sample.txt" "data_clinical_patient.txt"
-    # add metadata headers and overrides before importing
+    # add metadata headers before importing
     $PYTHON_BINARY $PORTAL_HOME/scripts/add_clinical_attribute_metadata_headers.py -s $PORTAL_DATA_HOME/portal-configuration/google-docs/client_secrets.json -c $PORTAL_DATA_HOME/portal-configuration/google-docs/creds.dat -p $PORTAL_DATA_HOME/portal-configuration/properties/clinical-metadata/metadata.google.properties -f $MSK_QUEENS_DATA_HOME/data_clinical*
-    #$PYTHON_BINARY $PORTAL_HOME/scripts/set_custom_overrides.py -s msk_queenscancercenter -f $MSK_QUEENS_DATA_HOME/data_clinical*
 fi
 
 bash $PORTAL_HOME/scripts/subset-impact-data.sh -i=msk_miamicancerinstitute -o=$MSK_MCI_DATA_HOME -m=$MSK_MIXEDPACT_DATA_HOME -f="INSTITUTE=Miami Cancer Institute" -s=$JAVA_TMPDIR/mci_subset.txt -c=data_clinical_sample.txt
@@ -1032,9 +1023,8 @@ if [ $? -gt 0 ] ; then
 else
     echo "MSK Miami Cancer Institute subset successful!"
     addCancerTypeCaseLists $MSK_MCI_DATA_HOME "msk_miamicancerinstitute" "data_clinical_sample.txt" "data_clinical_patient.txt"
-    # add metadata headers and overrides before importing
+    # add metadata headers before importing
     $PYTHON_BINARY $PORTAL_HOME/scripts/add_clinical_attribute_metadata_headers.py -s $PORTAL_DATA_HOME/portal-configuration/google-docs/client_secrets.json -c $PORTAL_DATA_HOME/portal-configuration/google-docs/creds.dat -p $PORTAL_DATA_HOME/portal-configuration/properties/clinical-metadata/metadata.google.properties -f $MSK_MCI_DATA_HOME/data_clinical*
-    #$PYTHON_BINARY $PORTAL_HOME/scripts/set_custom_overrides.py -s msk_miamicancerinstitute -f $MSK_MCI_DATA_HOME/data_clinical*
 fi
 
 bash $PORTAL_HOME/scripts/subset-impact-data.sh -i=msk_hartfordhealthcare -o=$MSK_HARTFORD_DATA_HOME -m=$MSK_MIXEDPACT_DATA_HOME -f="INSTITUTE=Hartford Healthcare" -s=$JAVA_TMPDIR/hartford_subset.txt -c=data_clinical_sample.txt
@@ -1045,9 +1035,8 @@ if [ $? -gt 0 ] ; then
 else
     echo "MSK Hartford Healthcare subset successful!"
     addCancerTypeCaseLists $MSK_HARTFORD_DATA_HOME "msk_hartfordhealthcare" "data_clinical_sample.txt" "data_clinical_patient.txt"
-    # add metadata headers and overrides before importing
+    # add metadata headers before importing
     $PYTHON_BINARY $PORTAL_HOME/scripts/add_clinical_attribute_metadata_headers.py -s $PORTAL_DATA_HOME/portal-configuration/google-docs/client_secrets.json -c $PORTAL_DATA_HOME/portal-configuration/google-docs/creds.dat -p $PORTAL_DATA_HOME/portal-configuration/properties/clinical-metadata/metadata.google.properties -f $MSK_HARTFORD_DATA_HOME/data_clinical*
-    #$PYTHON_BINARY $PORTAL_HOME/scripts/set_custom_overrides.py -s msk_hartfordhealthcare -f $MSK_HARTFORD_DATA_HOME/data_clinical*
 fi
 
 # set 'RESTART_AFTER_MSK_AFFILIATE_IMPORT' flag to 1 if Kings County, Lehigh Valley, Queens Cancer Center, Miami Cancer Institute, or Lymphoma super cohort succesfully update
@@ -1074,7 +1063,7 @@ if [ $IMPORT_FAIL_KINGS -gt 0 ] ; then
     cd $MSK_KINGS_DATA_HOME ; $HG_BINARY update -C ; find . -name "*.orig" -delete
 else
     echo "Committing KINGSCOUNTY data"
-    cd $MSK_KINGS_DATA_HOME ; find . -name "*.orig" -delete ; $HG_BINARY add * ; $HG_BINARY forget data_clinical* ; $HG_BINARY forget data_timeline* ; $HG_BINARY commit -m "Latest KINGSCOUNTY dataset"
+    cd $MSK_KINGS_DATA_HOME ; find . -name "*.orig" -delete ; $HG_BINARY add * ; $HG_BINARY commit -m "Latest KINGSCOUNTY dataset"
 fi
 
 # update msk_lehighvalley in portal only if subset was successful
@@ -1099,7 +1088,7 @@ if [ $IMPORT_FAIL_LEHIGH -gt 0 ] ; then
     cd $MSK_LEHIGH_DATA_HOME ; $HG_BINARY update -C ; find . -name "*.orig" -delete
 else
     echo "Committing LEHIGHVALLEY data"
-    cd $MSK_LEHIGH_DATA_HOME ; find . -name "*.orig" -delete ; $HG_BINARY add * ; $HG_BINARY forget data_clinical* ; $HG_BINARY forget data_timeline* ; $HG_BINARY commit -m "Latest LEHIGHVALLEY dataset"
+    cd $MSK_LEHIGH_DATA_HOME ; find . -name "*.orig" -delete ; $HG_BINARY add * ; $HG_BINARY commit -m "Latest LEHIGHVALLEY dataset"
 fi
 
 # update msk_queenscancercenter in portal only if subset was successful
@@ -1124,7 +1113,7 @@ if [ $IMPORT_FAIL_QUEENS -gt 0 ] ; then
     cd $MSK_QUEENS_DATA_HOME ; $HG_BINARY update -C ; find . -name "*.orig" -delete
 else
     echo "Committing QUEENSCANCERCENTER data"
-    cd $MSK_QUEENS_DATA_HOME ; find . -name "*.orig" -delete ; $HG_BINARY add * ; $HG_BINARY forget data_clinical* ; $HG_BINARY forget data_timeline* ; $HG_BINARY commit -m "Latest QUEENSCANCERCENTER dataset"
+    cd $MSK_QUEENS_DATA_HOME ; find . -name "*.orig" -delete ; $HG_BINARY add * ; $HG_BINARY commit -m "Latest QUEENSCANCERCENTER dataset"
 fi
 
 # update msk_miamicancerinstitute in portal only if subset was successful
@@ -1149,7 +1138,7 @@ if [ $IMPORT_FAIL_MCI -gt 0 ] ; then
     cd $MSK_MCI_DATA_HOME ; $HG_BINARY update -C ; find . -name "*.orig" -delete
 else
     echo "Committing MIAMICANCERINSTITUTE data"
-    cd $MSK_MCI_DATA_HOME ; find . -name "*.orig" -delete ; $HG_BINARY add * ; $HG_BINARY forget data_clinical* ; $HG_BINARY forget data_timeline* ; $HG_BINARY commit -m "Latest MIAMICANCERINSTITUTE dataset"
+    cd $MSK_MCI_DATA_HOME ; find . -name "*.orig" -delete ; $HG_BINARY add * ; $HG_BINARY commit -m "Latest MIAMICANCERINSTITUTE dataset"
 fi
 
 # update msk_hartfordhealthcare in portal only if subset was successful
@@ -1174,7 +1163,7 @@ if [ $IMPORT_FAIL_HARTFORD -gt 0 ] ; then
     cd $MSK_HARTFORD_DATA_HOME ; $HG_BINARY update -C ; find . -name "*.orig" -delete
 else
     echo "Committing HARTFORDHEALTHCARE data"
-    cd $MSK_HARTFORD_DATA_HOME ; find . -name "*.orig" -delete ; $HG_BINARY add * ; $HG_BINARY forget data_clinical* ; $HG_BINARY forget data_timeline* ; $HG_BINARY commit -m "Latest HARTFORDHEALTHCARE dataset"
+    cd $MSK_HARTFORD_DATA_HOME ; find . -name "*.orig" -delete ; $HG_BINARY add * ; $HG_BINARY commit -m "Latest HARTFORDHEALTHCARE dataset"
 fi
 
 ## END Subset MIXEDPACT on INSTITUTE
@@ -1190,9 +1179,8 @@ if [ $? -gt 0 ] ; then
 else
     echo "MSKIMPACT SCLC subset successful!"
     addCancerTypeCaseLists $MSK_SCLC_DATA_HOME "sclc_mskimpact_2017" "data_clinical_sample.txt" "data_clinical_patient.txt"
-    # add metadata headers and overrides before importing
+    # add metadata headers before importing
     $PYTHON_BINARY $PORTAL_HOME/scripts/add_clinical_attribute_metadata_headers.py -s $PORTAL_DATA_HOME/portal-configuration/google-docs/client_secrets.json -c $PORTAL_DATA_HOME/portal-configuration/google-docs/creds.dat -p $PORTAL_DATA_HOME/portal-configuration/properties/clinical-metadata/metadata.google.properties -f $MSK_SCLC_DATA_HOME/data_clinical*
-    #$PYTHON_BINARY $PORTAL_HOME/scripts/set_custom_overrides.py -s sclc_mskimpact_2017 -f $MSK_SCLC_DATA_HOME/data_clinical*
 fi
 
 # update sclc_mskimpact_2017 in portal only if subset was successful
@@ -1217,7 +1205,7 @@ if [ $IMPORT_FAIL_SCLC_MSKIMPACT -gt 0 ] ; then
     cd $MSK_SCLC_DATA_HOME ; $HG_BINARY update -C ; find . -name "*.orig" -delete
 else
     echo "Committing SCLCMSKIMPACT data"
-    cd $MSK_SCLC_DATA_HOME ; find . -name "*.orig" -delete ; $HG_BINARY add * ; $HG_BINARY forget data_clinical* ; $HG_BINARY forget data_timeline* ; $HG_BINARY commit -m "Latest SCLCMSKIMPACT dataset"
+    cd $MSK_SCLC_DATA_HOME ; find . -name "*.orig" -delete ; $HG_BINARY add * ; $HG_BINARY commit -m "Latest SCLCMSKIMPACT dataset"
 fi
 # END Subset MSKIMPACT on ONCOTREE_CODE for SCLC cohort
 #-------------------------------------------------------------------------------------------------------------------------------------
@@ -1232,11 +1220,6 @@ fi
 if [ ! -f $MSK_HEMEPACT_DATA_HOME/meta_SV.txt ] ; then
     touch $MSK_HEMEPACT_DATA_HOME/meta_SV.txt
 fi
-
-# move data_clinical.txt to ignored filename pattern and rename patient/sample clinical files
-mv $FMI_BATLEVI_DATA_HOME/data_clinical.txt $FMI_BATLEVI_DATA_HOME/ignore_data_clinical.txt
-mv $FMI_BATLEVI_DATA_HOME/ignore_data_clinical_sample.txt $FMI_BATLEVI_DATA_HOME/data_clinical_sample.txt
-mv $FMI_BATLEVI_DATA_HOME/ignore_data_clinical_patient.txt $FMI_BATLEVI_DATA_HOME/data_clinical_patient.txt
 
 # **************************************** ORDER OF SUBSET
 # now subset sample files with lymphoma cases from mskimpact and hemepact
@@ -1291,7 +1274,7 @@ if [ $LYMPHOMA_SUPER_COHORT_SUBSET_FAIL -eq 0 ] ; then
     rm $LYMPHOMA_SUPER_COHORT_DATA_HOME/seq_date.txt
 fi
 
-# check that meta_clinical.txt and meta_SV.txt are actually empty files before deleting from IMPACT, HEME, and RAINDANCE studies
+# check that meta_SV.txt is actually an empty file before deleting from IMPACT and HEMEPACT studies
 if [ $(wc -l < $MSK_IMPACT_DATA_HOME/meta_SV.txt) -eq 0 ] ; then
     rm $MSK_IMPACT_DATA_HOME/meta_SV.txt
 fi
@@ -1300,16 +1283,10 @@ if [ $(wc -l < $MSK_HEMEPACT_DATA_HOME/meta_SV.txt) -eq 0 ] ; then
     rm $MSK_HEMEPACT_DATA_HOME/meta_SV.txt
 fi
 
-# revert filenames from source FMI study
-mv $FMI_BATLEVI_DATA_HOME/ignore_data_clinical.txt $FMI_BATLEVI_DATA_HOME/data_clinical.txt
-mv $FMI_BATLEVI_DATA_HOME/data_clinical_sample.txt $FMI_BATLEVI_DATA_HOME/ignore_data_clinical_sample.txt
-mv $FMI_BATLEVI_DATA_HOME/data_clinical_patient.txt $FMI_BATLEVI_DATA_HOME/ignore_data_clinical_patient.txt
-
 # attempt to import if merge and subset successful
 if [ $LYMPHOMA_SUPER_COHORT_SUBSET_FAIL -eq 0 ] ; then
-    # add metadata headers and overrides before importing
+    # add metadata headers before importing
     $PYTHON_BINARY $PORTAL_HOME/scripts/add_clinical_attribute_metadata_headers.py -s $PORTAL_DATA_HOME/portal-configuration/google-docs/client_secrets.json -c $PORTAL_DATA_HOME/portal-configuration/google-docs/creds.dat -p $PORTAL_DATA_HOME/portal-configuration/properties/clinical-metadata/metadata.google.properties -f $LYMPHOMA_SUPER_COHORT_DATA_HOME/data_clinical*
-    # $PYTHON_BINARY $PORTAL_HOME/scripts/set_custom_overrides.py -s lymphoma_super_cohort_fmi_msk -f $LYMPHOMA_SUPER_COHORT_DATA_HOME/data_clinical*
     echo "Importing lymphoma 'super' cohort study..."
     echo $(date)
     bash $PORTAL_HOME/scripts/import-temp-study.sh --study-id="lymphoma_super_cohort_fmi_msk" --temp-study-id="temporary_lymphoma_super_cohort_fmi_msk" --backup-study-id="yesterday_lymphoma_super_cohort_fmi_msk" --portal-name="msk-fmi-lymphoma-portal" --study-path="$LYMPHOMA_SUPER_COHORT_DATA_HOME" --notification-file="$lymphoma_super_cohort_notification_file" --tmp-directory="$JAVA_TMPDIR" --email-list="$email_list" --oncotree-version="${ONCOTREE_VERSION_TO_USE}" --importer-jar="$PORTAL_HOME/lib/msk-dmp-importer.jar" --transcript-overrides-source="mskcc"
@@ -1331,7 +1308,7 @@ if [ $IMPORT_FAIL_LYMPHOMA -gt 0 ] ; then
     cd $LYMPHOMA_SUPER_COHORT_DATA_HOME ; $HG_BINARY update -C ; find . -name "*.orig" -delete
 else
     echo "Committing Lymphoma super cohort data"
-    cd $LYMPHOMA_SUPER_COHORT_DATA_HOME ; find . -name "*.orig" -delete ; $HG_BINARY add * ; $HG_BINARY forget data_clinical* ; $HG_BINARY forget data_timeline* ; $HG_BINARY commit -m "Latest Lymphoma Super Cohort dataset"
+    cd $LYMPHOMA_SUPER_COHORT_DATA_HOME ; find . -name "*.orig" -delete ; $HG_BINARY add * ; $HG_BINARY commit -m "Latest Lymphoma Super Cohort dataset"
 fi
 
 ## TOMCAT RESTART
@@ -1362,12 +1339,6 @@ fi
 echo "Pushing DMP-IMPACT updates back to msk-impact repository..."
 echo $(date)
 cd $MSK_IMPACT_DATA_HOME ; $HG_BINARY push
-#echo "############ DURING THIS TEST RUN, NO ACTUAL CHANGES SHOULD HAPPEN IN THE MERCURIAL REPO AND NO SAMPLES SHOULD BE CONSUMED"
-echo "############ DURING THIS TEST RUN, NO SAMPLES SHOULD BE CONSUMED"
-
-# clean up clinical and timeline files exported redcap by stable_id
-exported_redcap_clinical_files="$MSK_IMPACT_DATA_HOME/data_clinical_patient.txt $MSK_IMPACT_DATA_HOME/data_clinical_sample.txt $MSK_IMPACT_DATA_HOME/data_timeline.txt $MSK_HEMEPACT_DATA_HOME/data_clinical_patient.txt $MSK_HEMEPACT_DATA_HOME/data_clinical_sample.txt $MSK_HEMEPACT_DATA_HOME/data_timeline.txt $MSK_RAINDANCE_DATA_HOME/data_clinical_patient.txt $MSK_RAINDANCE_DATA_HOME/data_clinical_sample.txt $MSK_RAINDANCE_DATA_HOME/data_timeline.txt $MSK_ARCHER_DATA_HOME/data_clinical_patient.txt $MSK_ARCHER_DATA_HOME/data_clinical_sample.txt $MSK_ARCHER_DATA_HOME/data_timeline.txt"
-rm -f exported_redcap_clinical_files
 
 ### FAILURE EMAIL ###
 
@@ -1450,7 +1421,7 @@ fi
 
 echo "Fetching and importing of clinical datasets complete!"
 echo $(date)
-#TODO: every function for importing data into redcap shouddld return a status (0=success, else fail) .. then these can be tracked later
+#TODO: every function for importing data into redcap should return a status (0=success, else fail) .. then these can be tracked later
 
 #cleanup redcap repos - delete all clinical/timeline files
 echo "removing all clinical & timeline files for mskimpact"
@@ -1464,3 +1435,5 @@ remove_clinical_timeline_meta_files $MSK_RAINDANCE_DATA_HOME
 
 echo "removing all clinical & timeline files for mskarcher"
 remove_clinical_timeline_meta_files $MSK_ARCHER_DATA_HOME
+
+exit 0
