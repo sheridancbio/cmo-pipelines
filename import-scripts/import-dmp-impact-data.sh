@@ -321,6 +321,7 @@ IMPORT_FAIL_HARTFORD=0
 IMPORT_FAIL_LYMPHOMA=0
 IMPORT_FAIL_SCLC_MSKIMPACT=0
 LYMPHOMA_SUPER_COHORT_SUBSET_FAIL=0
+GENERATE_MASTERLIST_FAIL=0
 
 # export data_clinical and data_clinical_supp_date for each project from redcap (starting point)
 # if export fails:
@@ -601,6 +602,15 @@ if [ $IMPORT_STATUS_IMPACT -eq 0 ] && [ $FETCH_CVR_ARCHER_FAIL -eq 0 ] && [ $FET
     cd $MSK_IMPACT_DATA_HOME ; find . -name "*.orig" -delete ; $HG_BINARY add * ; $HG_BINARY forget data_clinical* ; $HG_BINARY forget data_timeline* ; $HG_BINARY commit -m "Adding ARCHER fusions to MSKIMPACT"
 fi
 
+# gets index of SAMPLE_ID from file (used in case SAMPLE_ID index changes)
+SAMPLE_ID_COLUMN=`sed -n $"1s/\t/\\\n/gp" $MSK_IMPACT_DATA_HOME/data_clinical_mskimpact_data_clinical_cvr.txt | grep -nx "SAMPLE_ID" | cut -d: -f1`
+# generates sample masterlist for filtering dropped samples/patients from supp files
+grep -v '^#' $MSK_IMPACT_DATA_HOME/data_clinical_mskimpact_data_clinical_cvr.txt | awk -v SAMPLE_ID_INDEX="$SAMPLE_ID_COLUMN" -F '\t' '{if ($SAMPLE_ID_INDEX != "SAMPLE_ID") print $SAMPLE_ID_INDEX;}' > $JAVA_TMPDIR/sample_masterlist_for_filtering.txt
+if [ $(wc -l < $JAVA_TMPDIR/sample_masterlist_for_filter.txt) -eq 0 ] ; then
+    echo "ERROR! Sample masterlist $JAVA_TMPDIR/sample_masterlist_for_filtering.txt is empty. Skipping patient/sample filtering for mskimpact!"
+    GENERATE_MASTERLIST_FAIL=1
+fi
+
 # -------------------------------- Import projects into redcap -----------------------------------
 
 # import newly fetched files into redcap
@@ -737,6 +747,10 @@ if [ $IMPORT_STATUS_IMPACT -eq 0 ] ; then
     if [ $? -gt 0 ] ; then
         IMPORT_STATUS_IMPACT=1
         sendFailureMessageMskPipelineLogsSlack "Mskimpact Redcap Export"
+    else
+        if [ $GENERATE_MASTERLIST_FAIL -eq 0 ] ; then
+            $PYTHON_BINARY $PORTAL_HOME/scripts/filter_dropped_samples_patients.py -s $MSK_IMPACT_DATA_HOME/data_clinical_sample.txt -p $MSK_IMPACT_DATA_HOME/data_clinical_patient.txt -t $MSK_IMPACT_DATA_HOME/data_timeline.txt -f $JAVA_TMPDIR/sample_masterlist_for_filtering.txt
+        fi
     fi
 fi
 
