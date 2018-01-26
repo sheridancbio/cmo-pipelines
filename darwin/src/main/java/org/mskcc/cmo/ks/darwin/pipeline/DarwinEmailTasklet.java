@@ -68,9 +68,9 @@ public class DarwinEmailTasklet implements Tasklet {
     public RepeatStatus execute(StepContribution stepContribution, ChunkContext chunkContext) throws Exception {
         StringBuilder body = new StringBuilder();
         String subject = "Darwin pipeline errors";
-        Set<MskimpactBrainSpineTimeline> filteredMskimpactBrainSpineTimelineList = darwinSampleListUtil.getFilteredMskimpactBrainSpineTimelineList();
-        if (filteredMskimpactBrainSpineTimelineList.size() > 0) {
-            body.append(constructFilteredMskimpactBrainSpineTimelineText(filteredMskimpactBrainSpineTimelineList));
+        Set<MskimpactBrainSpineTimeline> filteredMskimpactBrainSpineTimelineSet = darwinSampleListUtil.getFilteredMskimpactBrainSpineTimelineSet();
+        if (filteredMskimpactBrainSpineTimelineSet.size() > 0) {
+            body.append(constructFilteredMskimpactBrainSpineTimelineText(filteredMskimpactBrainSpineTimelineSet));
         }
         if (!body.toString().isEmpty()) {
             emailUtil.sendEmailToDefaultRecipient(subject, body.toString());
@@ -78,13 +78,13 @@ public class DarwinEmailTasklet implements Tasklet {
         return RepeatStatus.FINISHED;
     }
 
-    private String constructFilteredMskimpactBrainSpineTimelineText(Set<MskimpactBrainSpineTimeline> filteredMskimpactBrainSpineTimelineList) {
-        log.warn(filteredMskimpactBrainSpineTimelineList.size() + " records from Darwin were filtered"); 
+    private String constructFilteredMskimpactBrainSpineTimelineText(Set<MskimpactBrainSpineTimeline> filteredMskimpactBrainSpineTimelineSet) {
+        log.warn(filteredMskimpactBrainSpineTimelineSet.size() + " records from Darwin were filtered"); 
         StringBuilder text = new StringBuilder();
         text.append("\nFiltered ");
-        text.append(filteredMskimpactBrainSpineTimelineList.size());
+        text.append(filteredMskimpactBrainSpineTimelineSet.size());
         text.append(" MSK IMPACT Caisis GBM timeline records:\n");
-        for (MskimpactBrainSpineTimeline mskimpactBrainSpineTimeline : filteredMskimpactBrainSpineTimelineList) {
+        for (MskimpactBrainSpineTimeline mskimpactBrainSpineTimeline : filteredMskimpactBrainSpineTimelineSet) {
             text.append("\n\tPATIENT_ID: ");
             text.append(mskimpactBrainSpineTimeline.getDMP_PATIENT_ID_ALL_BRAINSPINETMLN());
             text.append(", START_DATE: ");
