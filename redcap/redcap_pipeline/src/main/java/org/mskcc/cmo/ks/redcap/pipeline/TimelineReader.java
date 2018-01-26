@@ -66,7 +66,10 @@ public class TimelineReader implements ItemStreamReader<Map<String, String>> {
 
     @Override
     public void open(ExecutionContext ec) throws ItemStreamException {
-        boolean writeTimelineData = clinicalDataSource.hasMoreTimelineData(stableId);        
+        boolean writeTimelineData = true;
+        if (redcapProjectTitle == null) {
+            writeTimelineData = clinicalDataSource.hasMoreTimelineData(stableId);
+        }
         if (writeTimelineData) {
             String projectTitle = (redcapProjectTitle == null) ? clinicalDataSource.getNextTimelineProjectTitle(stableId) : redcapProjectTitle;
             log.info("Getting timeline header for project: " + projectTitle);

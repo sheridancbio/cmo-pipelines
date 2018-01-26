@@ -178,7 +178,7 @@ public class ClinicalDataSourceRedcapImpl implements ClinicalDataSource {
     }
 
     @Override
-    public void importClinicalDataFile(String projectTitle, String filename, boolean overwriteProjectData) {
+    public void importClinicalDataFile(String projectTitle, String filename, boolean overwriteProjectData) throws Exception {
         String projectToken = redcapSessionManager.getTokenByProjectTitle(projectTitle);
         if (projectToken == null) {
             log.error("Project not found in redcap clinicalDataTokens or clincalTimelineTokens: " + projectTitle);
@@ -187,30 +187,50 @@ public class ClinicalDataSourceRedcapImpl implements ClinicalDataSource {
         try {
             File file = new File(filename);
             if (!file.exists()) {
-                log.error("error : could not find file " + filename);
-                return;
+                log.error("Error : could not find file " + filename);
+                throw new Exception("Error: could not find file: " + filename);
             }
             List<String> dataFileContentsTSV = readClinicalFile(file);
             if (dataFileContentsTSV.size() == 0) {
-                log.error("error: file " + filename + " was empty ... aborting attempt to import data");
-                return;
+                log.error("Error: file " + filename + " was empty ... aborting attempt to import data");
+                throw new Exception("Error: file " + filename + " was empty ... aborting attempt to import data");
             }
-            if (overwriteProjectData) {
-                redcapSessionManager.deleteRedcapProjectData(projectToken);
+            if (!dataFileHeadersEqualRedcapProjectHeaders(dataFileContentsTSV, projectToken)) {
+                log.error("Error: file " + filename + " has differing headers in redcap ... aborting attempt to import data");
+                throw new Exception("Error: file " + filename + " has differing headers in redcap ... aborting attempt to import data");
             }
             replaceExternalHeadersWithRedcapIds(dataFileContentsTSV);
             addRecordIdColumnIfMissingInFileAndPresentInProject(dataFileContentsTSV, projectToken);
             List<String> dataFileContentsCSV = convertTSVtoCSV(dataFileContentsTSV, true);
             String dataForImport = String.join("\n",dataFileContentsCSV.toArray(new String[0])) + "\n";
             if (dataFileContentsCSV.size() == 1) {
-                log.warn("file " + filename + " contained a single line (presumed to be the header). RedCap project has been cleared (now has 0 records).");
-            } else {
-                redcapSessionManager.importClinicalData(projectToken, dataForImport);
-                log.info("import completed, " + Integer.toString(dataFileContentsCSV.size() - 1) + " records imported");
+                log.error("Error: file "+ filename + " contained a single line (presumed to be the header) ... aborting attempt to import data");
+                throw new Exception("Error: file "+ filename + " contained a single line (presumed to be the header) ... aborting attempt to import data");
             }
+            if (overwriteProjectData) {
+                redcapSessionManager.deleteRedcapProjectData(projectToken);
+            }
+            redcapSessionManager.importClinicalData(projectToken, dataForImport);
+            log.info("import completed, " + Integer.toString(dataFileContentsCSV.size() - 1) + " records imported");
+
         } catch (IOException e) {
             log.error("IOException thrown while attempting to read file " + filename + " : " + e.getMessage());
+            throw new IOException("IOException thrown while attempting to read file " + filename + " : " + e.getMessage());
         }
+    }
+
+    private boolean dataFileHeadersEqualRedcapProjectHeaders(List<String> dataFileContentsTSV, String projectToken) {
+        List<String> normalizedDataFileHeader = Arrays.asList(externalFieldNamesToRedcapFieldIds(dataFileContentsTSV.get(0).split("\t",-1)));
+        List<RedcapProjectAttribute> redcapAttributes = redcapRepository.getAttributesByToken(projectToken);
+        List<String> redcapProjectHeader = new ArrayList<String>();
+        for (int i = 0; i < redcapAttributes.size(); i++) {
+            if (!redcapAttributes.get(i).getFieldName().equals("record_id")) {
+                redcapProjectHeader.add(redcapAttributes.get(i).getFieldName());
+            }
+        }
+        Collections.sort(normalizedDataFileHeader);
+        Collections.sort(redcapProjectHeader);
+        return normalizedDataFileHeader.equals(redcapProjectHeader);
     }
 
     private void replaceExternalHeadersWithRedcapIds(List<String> dataFileContentsTSV) {
