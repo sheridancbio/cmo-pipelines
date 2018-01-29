@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 
 from clinicalfile_utils import *
-from email.Utils import COMMASPACE
+from email.Utils import COMMASPACE, formatdate
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import argparse
@@ -84,19 +84,20 @@ def add_dropped_report(message, dropped_items_list, item_type, attachment_name):
         dropped_items_report.add_header('Content-Disposition', 'attachment', filename = attachment_name)
         message.attach(dropped_items_report)
 
-def add_email_body(message, dropped_items_list, item_type):
+def generate_message_body(dropped_items_list, item_type):
+    message_body = ""
     if len(dropped_items_list) > 0:
-        body = MIMEText("Number of " + item_type + " dropped: " + str(len(dropped_items_list)) + "\n")
-        message.attach(body)
+        message_body = message_body + "Number of " + item_type + " dropped: " + str(len(dropped_items_list)) + "\n"
+    return message_body
 
 def usage():
     print 'python filter_dropped_samples_patients.py --clinical-sample-file [path/to/clinical-sample/file] --clinical-patient-file [path/to/clinical-patient/file] --timeline-file [path/to/timeline/file] --filtered-samples-file [path/to/sample-masterlist/file]'
     sys.exit(2)
 
 def main():
-    usage_statement = '''filter_dropped_samples_patients.py: -f <FILTERED_SAMPLES_FILE> 
-                                           -s <CLINICAL_SAMPLE_FILE> 
-                                           [-t TIMELINE_FILE] 
+    usage_statement = '''filter_dropped_samples_patients.py: -f <FILTERED_SAMPLES_FILE>
+                                           -s <CLINICAL_SAMPLE_FILE>
+                                           [-t TIMELINE_FILE]
                                            [-p CLINICAL_PATIENT_FILE]'''
     parser = argparse.ArgumentParser(usage = usage_statement)
     parser.add_argument("-f", "--filtered-samples-file", help = "list of samples on masterlist", required = True)
@@ -134,23 +135,27 @@ def main():
 
     filter_dropped_samples(sample_file, patient_masterlist, dropped_sample_list, sample_masterlist)
     add_dropped_report(msg, dropped_sample_list, "clinical samples", DROPPED_SAMPLE_FILENAME)
-    add_email_body(msg, dropped_sample_list, "clinical_samples")
+    message_body = generate_message_body(dropped_sample_list, "clinical samples")
 
     if args.clinical_patient_file:
         filter_dropped_patients(patient_file, patient_masterlist, dropped_patient_list)
         add_dropped_report(msg, dropped_patient_list, "clinical patients", DROPPED_PATIENT_FILENAME)
-        add_email_body(msg, dropped_patient_list, "clinical_patients")
+        message_body = message_body + generate_message_body(dropped_patient_list, "clinical patients")
 
     if args.timeline_file:
         filter_dropped_patients(timeline_file, patient_masterlist, dropped_timeline_list)
         add_dropped_report(msg, dropped_timeline_list, "timeline patients", DROPPED_TIMELINE_FILENAME)
-        add_email_body(msg, dropped_timeline_list, "timeline patients")
+        message_body = message_body + generate_message_body(dropped_timeline_list, "timeline patients")
+
+    body = MIMEText(message_body, "plain")
+    msg.attach(body)
 
     assert type(MESSAGE_RECIPIENTS)==list
 
     msg['Subject'] = DROPPED_SAMPLES_PATIENTS_SUBJECT
     msg['From'] = MESSAGE_SENDER
     msg['To'] = COMMASPACE.join(MESSAGE_RECIPIENTS)
+    msg['Date'] = formatdate(localtime=True)
 
     all_recipients_list = []
     for recipient in MESSAGE_RECIPIENTS:
