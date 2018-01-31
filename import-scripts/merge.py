@@ -51,6 +51,21 @@ METHYLATION450_META_PATTERN = 'meta_methylation_hm450.txt'
 METHYLATION27_FILE_PATTERN = 'data_methylation_hm27.txt'
 METHYLATION27_META_PATTERN = 'meta_methylation_hm27.txt'
 
+METHYLATION_GB_HMEPIC_FILE_PATTERN = 'data_methylation_genebodies_hmEPIC.txt'
+METHYLATION_GB_HMEPIC_META_PATTERN = 'meta_methylation_genebodies_hmEPIC.txt'
+
+METHYLATION_PROMOTERS_HMEPIC_FILE_PATTERN = 'data_methylation_promoters_hmEPIC.txt'
+METHYLATION_PROMOTERS_HMEPIC_META_PATTERN = 'meta_methylation_promoters_hmEPIC.txt'
+
+METHYLATION_GB_WGBS_FILE_PATTERN = 'data_methylation_genebodies_wgbs.txt'
+METHYLATION_GB_WGBS_META_PATTERN = 'meta_methylation_genebodies_wgbs.txt'
+
+METHYLATION_PROMOTERS_WGBS_FILE_PATTERN = 'data_methylation_promoters_wgbs.txt'
+METHYLATION_PROMOTERS_WGBS_META_PATTERN = 'meta_methylation_promoters_wgbs.txt'
+
+RNASEQ_EXPRESSION_FILE_PATTERN = 'data_RNA_Seq_expression_median.txt'
+RNASEQ_EXPRESSION_META_PATTERN = 'meta_RNA_Seq_expression_median.txt'
+
 RPPA_FILE_PATTERN = 'data_rppa.txt'
 RPPA_META_PATTERN = 'meta_rppa.txt'
 
@@ -103,7 +118,12 @@ PROFILE_MERGE_PATTERNS = [CNA_META_PATTERN,
     EXPRESSION_META_PATTERN,
     METHYLATION27_META_PATTERN,
     METHYLATION450_META_PATTERN,
-    RPPA_META_PATTERN]
+    RPPA_META_PATTERN, 
+    METHYLATION_GB_HMEPIC_META_PATTERN, 
+    METHYLATION_PROMOTERS_HMEPIC_META_PATTERN,
+    METHYLATION_GB_WGBS_META_PATTERN,    
+    METHYLATION_PROMOTERS_WGBS_META_PATTERN,
+    RNASEQ_EXPRESSION_META_PATTERN]
 
 # Not everything in here is being used anymore, but mostly we want the map between meta and data files
 META_FILE_MAP = {MUTATION_META_PATTERN:(MUTATION_FILE_PATTERN, 'mutations'),
@@ -113,9 +133,14 @@ META_FILE_MAP = {MUTATION_META_PATTERN:(MUTATION_FILE_PATTERN, 'mutations'),
     SEG_HG19_META_PATTERN:(SEG_HG19_FILE_PATTERN, 'segment_hg19'),
     METHYLATION27_META_PATTERN:(METHYLATION27_FILE_PATTERN, 'methylation_hm27'),
     METHYLATION450_META_PATTERN:(METHYLATION450_FILE_PATTERN, 'methylation_hm450'),
+    METHYLATION_GB_HMEPIC_META_PATTERN:(METHYLATION_GB_HMEPIC_FILE_PATTERN, 'methylation_genebodies_hmEPIC'),
+    METHYLATION_PROMOTERS_HMEPIC_META_PATTERN:(METHYLATION_PROMOTERS_HMEPIC_FILE_PATTERN, 'methylation_promoters_hmEPIC'),
+    METHYLATION_GB_WGBS_META_PATTERN:(METHYLATION_GB_WGBS_FILE_PATTERN, 'methylation_genebodies_wgbs'),
+    METHYLATION_PROMOTERS_WGBS_META_PATTERN:(METHYLATION_PROMOTERS_WGBS_FILE_PATTERN, 'methylation_promoters_wgbs'),
     FUSION_META_PATTERN:(FUSION_FILE_PATTERN, 'mutations'),
     RPPA_META_PATTERN:(RPPA_FILE_PATTERN, 'rppa'),
     EXPRESSION_META_PATTERN:(EXPRESSION_FILE_PATTERN, 'expression'),
+    RNASEQ_EXPRESSION_META_PATTERN:(RNASEQ_EXPRESSION_FILE_PATTERN,'RNA_Seq_expression_median'),
     CLINICAL_META_PATTERN:(CLINICAL_FILE_PATTERN, 'clinical'),
     CLINICAL_PATIENT_META_PATTERN:(CLINICAL_PATIENT_FILE_PATTERN, 'clinical_patient'),
     CLINICAL_SAMPLE_META_PATTERN:(CLINICAL_SAMPLE_FILE_PATTERN, 'clinical_sample'),
@@ -674,6 +699,16 @@ def organize_files(studies, file_types, merge_clinical):
                 file_types[METHYLATION27_META_PATTERN].append(study_file)
             elif METHYLATION450_META_PATTERN in study_file:
                 file_types[METHYLATION450_META_PATTERN].append(study_file)
+            elif METHYLATION_GB_HMEPIC_META_PATTERN in study_file:
+                file_types[METHYLATION_GB_HMEPIC_META_PATTERN].append(study_file)
+            elif METHYLATION_PROMOTERS_HMEPIC_META_PATTERN in study_file:
+                file_types[METHYLATION_PROMOTERS_HMEPIC_META_PATTERN].append(study_file)
+            elif METHYLATION_GB_WGBS_META_PATTERN in study_file:
+                file_types[METHYLATION_GB_WGBS_META_PATTERN].append(study_file)
+            elif METHYLATION_PROMOTERS_WGBS_META_PATTERN in study_file:
+                file_types[METHYLATION_PROMOTERS_WGBS_META_PATTERN].append(study_file)
+            elif RNASEQ_EXPRESSION_META_PATTERN in study_file:
+                file_types[RNASEQ_EXPRESSION_META_PATTERN].append(study_file)
             elif RPPA_META_PATTERN in study_file:
                 file_types[RPPA_META_PATTERN].append(study_file)
             elif GENE_MATRIX_META_PATTERN in study_file:
@@ -701,6 +736,16 @@ def organize_files(studies, file_types, merge_clinical):
                 file_types[METHYLATION27_FILE_PATTERN].append(study_file)
             elif METHYLATION450_FILE_PATTERN in study_file:
                 file_types[METHYLATION450_FILE_PATTERN].append(study_file)
+            elif METHYLATION_GB_HMEPIC_FILE_PATTERN in study_file:
+                file_types[METHYLATION_GB_HMEPIC_FILE_PATTERN].append(study_file)
+            elif METHYLATION_PROMOTERS_HMEPIC_FILE_PATTERN in study_file:
+                file_types[METHYLATION_PROMOTERS_HMEPIC_FILE_PATTERN].append(study_file)
+            elif METHYLATION_GB_WGBS_FILE_PATTERN in study_file:
+                file_types[METHYLATION_GB_WGBS_FILE_PATTERN].append(study_file)
+            elif METHYLATION_PROMOTERS_WGBS_FILE_PATTERN in study_file:
+                file_types[METHYLATION_PROMOTERS_WGBS_FILE_PATTERN].append(study_file)
+            elif RNASEQ_EXPRESSION_FILE_PATTERN in study_file:
+                file_types[RNASEQ_EXPRESSION_FILE_PATTERN].append(study_file)
             elif RPPA_FILE_PATTERN in study_file:
                 file_types[RPPA_FILE_PATTERN].append(study_file)
             elif GENE_MATRIX_FILE_PATTERN in study_file:
@@ -783,6 +828,11 @@ def main():
         EXPRESSION_FILE_PATTERN: [],
         METHYLATION27_FILE_PATTERN: [],
         METHYLATION450_FILE_PATTERN: [],
+        METHYLATION_GB_HMEPIC_FILE_PATTERN: [],
+        METHYLATION_PROMOTERS_HMEPIC_FILE_PATTERN: [],
+        METHYLATION_GB_WGBS_FILE_PATTERN: [],
+        METHYLATION_PROMOTERS_WGBS_FILE_PATTERN: [],
+        RNASEQ_EXPRESSION_FILE_PATTERN: [],
         RPPA_FILE_PATTERN: [],
         GENE_MATRIX_FILE_PATTERN: [],
         SV_FILE_PATTERN: [],
@@ -796,6 +846,11 @@ def main():
         EXPRESSION_META_PATTERN: [],
         METHYLATION27_META_PATTERN: [],
         METHYLATION450_META_PATTERN: [],
+        METHYLATION_GB_HMEPIC_META_PATTERN: [],
+        METHYLATION_PROMOTERS_HMEPIC_META_PATTERN: [],
+        METHYLATION_GB_WGBS_META_PATTERN: [],
+        METHYLATION_PROMOTERS_WGBS_META_PATTERN: [],
+        RNASEQ_EXPRESSION_META_PATTERN: [],
         RPPA_META_PATTERN: [],
         GENE_MATRIX_META_PATTERN: [],
         SV_META_PATTERN: [],
