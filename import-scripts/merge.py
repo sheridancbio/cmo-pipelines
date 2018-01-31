@@ -736,7 +736,7 @@ def main():
     # get command line stuff
     parser = optparse.OptionParser()
     parser.add_option('-s', '--subset', action = 'store', dest = 'subset')
-    parser.add_option('-e', '--exluded-samples', action = 'store', dest = 'excludedsamples')
+    parser.add_option('-e', '--excluded-samples', action = 'store', dest = 'excludedsamples')
     parser.add_option('-d', '--output-directory', action = 'store', dest = 'outputdir')
     parser.add_option('-i', '--study-id', action = 'store', dest = 'studyid')
     parser.add_option('-t', '--cancer-type', action = 'store', dest = 'cancertype')
