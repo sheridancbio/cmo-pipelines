@@ -12,38 +12,41 @@ import urllib2
 # globals
 DEFAULT_ONCOTREE_BASE_URL = 'http://oncotree.mskcc.org/oncotree/'
 DEFAULT_ONCOTREE_VERSION = 'oncotree_latest_stable'
-DEFAULT_FORCE_CANCER_TYPE_FROM_ONCOTREE=False
+DEFAULT_FORCE_CANCER_TYPE_FROM_ONCOTREE = False
 CANCER_TYPE = 'CANCER_TYPE'
 CANCER_TYPE_DETAILED = 'CANCER_TYPE_DETAILED'
 ONCOTREE_CODE = 'ONCOTREE_CODE'
 SAMPLE_ID = 'SAMPLE_ID'
 
-no_matches = []
+samples_that_have_undefined_oncotree_codes = []
 
 # functions
 
-def get_oncotree_code_mappings(oncotree_tumortype_api_endpoint_url):
+def extract_oncotree_code_mappings_from_oncotree_json(oncotree_json):
     oncotree_code_to_info = {}
-    oncotree_raw_response = urllib2.urlopen(oncotree_tumortype_api_endpoint_url);
-    oncotree_response = json.load(oncotree_raw_response)
+    oncotree_response = json.loads(oncotree_json)
     for node in oncotree_response['data']:
         if not node['code']:
             sys.stderr.write('Encountered oncotree node without oncotree code : ' + node + '\n')
             continue
         oncotree_code = node['code']
         main_type = node['mainType']
-        cancer_type = 'NA'
+        cancer_type = unicode('NA')
         if main_type:
-            cancer_type = main_type['name']
-        cancer_type_detailed = node['name']
+            cancer_type = unicode(main_type['name'])
+        cancer_type_detailed = unicode(node['name'])
         if not cancer_type_detailed:
-            cancer_type_detailed = 'NA'
+            cancer_type_detailed = unicode('NA')
         oncotree_code_to_info[oncotree_code] = { CANCER_TYPE : cancer_type, CANCER_TYPE_DETAILED : cancer_type_detailed }
     return oncotree_code_to_info
 
+def get_oncotree_code_mappings(oncotree_tumortype_api_endpoint_url):
+    oncotree_raw_response = urllib2.urlopen(oncotree_tumortype_api_endpoint_url).read()
+    return extract_oncotree_code_mappings_from_oncotree_json(oncotree_raw_response)
+
 def get_oncotree_code_info(oncotree_code, oncotree_code_mappings):
     if not oncotree_code in oncotree_code_mappings:
-        return { CANCER_TYPE : 'NA', CANCER_TYPE_DETAILED: 'NA' }
+        return { CANCER_TYPE : unicode('NA'), CANCER_TYPE_DETAILED: unicode('NA') }
     return oncotree_code_mappings[oncotree_code]
 
 def format_output_line(fields):
@@ -60,7 +63,7 @@ def format_output_line(fields):
 def existing_data_is_not_available(data):
     if not data:
         return True
-    data_upper = data.trim().upper()
+    data_upper = data.strip().upper()
     if len(data_upper) == 0:
         return True
     if data_upper in ['NA','N/A','NOT AVAILABLE']:
@@ -106,7 +109,7 @@ def process_clinical_file(oncotree_mappings, clinical_filename, force_cancer_typ
             data = line.split('\t')
             oncotree_code = data[header.index(ONCOTREE_CODE)]
             if not oncotree_code or not oncotree_code in oncotree_mappings:
-                no_matches.append(data[header.index(SAMPLE_ID)])
+                samples_that_have_undefined_oncotree_codes.append(data[header.index(SAMPLE_ID)])
             oncotree_code_info = get_oncotree_code_info(oncotree_code, oncotree_mappings)
             # Handle the case if CANCER_TYPE or CANCER_TYPE_DETAILED has to be appended to the header.
             # Separate try-except in case one of the fields exists and the other doesn't
@@ -127,10 +130,10 @@ def process_clinical_file(oncotree_mappings, clinical_filename, force_cancer_typ
         f.close()
 
 def report_failures_to_match_oncotree_code():
-    if len(no_matches) > 0:
+    if len(samples_that_have_undefined_oncotree_codes) > 0:
         sys.stderr.write('WARNING: Could not find an oncotree code match for the following samples:\n')
         sys.stderr.write('         (default value of NA was inserted for CANCER_TYPE and CANCER_TYPE_DETAILED for oncotree code match failures)\n')
-        for sample_id in no_matches:
+        for sample_id in samples_that_have_undefined_oncotree_codes:
             sys.stderr.write('        ' + sample_id + '\n')
 
 def construct_oncotree_url(oncotree_base_url, oncotree_version):
@@ -151,7 +154,7 @@ def construct_oncotree_url(oncotree_base_url, oncotree_version):
     for version in oncotree_version_response['data']:
         if version['api_identifier'] == oncotree_version:
             #version exists
-            return oncotree_api_base_url + '/tumorTypes?version=' + oncotree_version + '&flat=true&deprecated=false'
+            return oncotree_api_base_url + 'tumorTypes?version=' + oncotree_version + '&flat=true&deprecated=false'
         else:
             found_versions.append(version['api_identifier'] + ' (' + version['description'] + ')')
     sys.stderr.write('ERROR: oncotree version ' + oncotree_version + ' was not found in the list of available versions:')
@@ -184,7 +187,7 @@ def main():
     parser.add_argument('-o', '--oncotree-url', action = 'store', dest = 'oncotree_base_url', required = False, help = 'The url of the oncotree web application (default is http://oncotree.org/oncotree/)')
     parser.add_argument('-v', '--oncotree-version', action = 'store', dest = 'oncotree_version', required = False, help = 'The oncotree version to use (default is oncotree_latest_stable)')
     parser.add_argument('-f', '--force', action = 'store_true', dest = 'force_cancer_type_from_oncotree', required = False, help = 'When given, all CANCER_TYPE/CANCER_TYPE_DETAILED values in the input file are overwritten based on oncotree code. When not given, only empty or NA values are overwritten.')
-    parser.set_defaults(oncotree_base_url=DEFAULT_ONCOTREE_BASE_URL, oncotree_version=DEFAULT_ONCOTREE_VERSION, force_cancer_type_from_oncotree=DEFAULT_FORCE_CANCER_TYPE_FROM_ONCOTREE)
+    parser.set_defaults(oncotree_base_url = DEFAULT_ONCOTREE_BASE_URL, oncotree_version = DEFAULT_ONCOTREE_VERSION, force_cancer_type_from_oncotree = DEFAULT_FORCE_CANCER_TYPE_FROM_ONCOTREE)
     args = parser.parse_args()
     clinical_filename = args.clinical_file
     exit_with_error_if_file_is_not_accessible(clinical_filename)
