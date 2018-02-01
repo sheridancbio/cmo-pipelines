@@ -581,7 +581,7 @@ if [ $IMPORT_STATUS_HEME -eq 0 ] && [ $FETCH_CVR_HEME_FAIL -eq 0 ] ; then
     addCancerTypeCaseLists $MSK_HEMEPACT_DATA_HOME "mskimpact_heme" "data_clinical_hemepact_data_clinical.txt"
     cd $MSK_HEMEPACT_DATA_HOME ; find . -name "*.orig" -delete ; $HG_BINARY add * ; $HG_BINARY forget data_clinical* ; $HG_BINARY forget data_timeline* ; $HG_BINARY commit -m "Latest HEMEPACT Dataset: Case Lists"
     if [ $EXPORT_SUPP_DATE_HEME_FAIL -eq 0 ] ; then
-        addDateAddedData $MSK_HEMEPACT_DATA_HOME "data_clinical_hempact_data_clinical.txt" "data_clinical_hemepact_data_clinical_supp_date.txt"
+        addDateAddedData $MSK_HEMEPACT_DATA_HOME "data_clinical_hemepact_data_clinical.txt" "data_clinical_hemepact_data_clinical_supp_date.txt"
     fi
 fi
 
