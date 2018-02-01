@@ -149,7 +149,11 @@ public class RedcapPipeline {
         }
         if (redcapJob != null) {
             JobExecution jobExecution = jobLauncher.run(redcapJob, builder.toJobParameters());
-        }
+            if (!jobExecution.getExitStatus().equals(ExitStatus.COMPLETED)) {
+                log.error("RedcapPipeline job failed with exit status: " + jobExecution.getExitStatus());
+                System.exit(1);
+            }
+        }        
     }
 
     public static char parseModeFromOptions(CommandLine commandLine)
