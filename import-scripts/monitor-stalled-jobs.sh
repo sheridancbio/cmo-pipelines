@@ -1,0 +1,83 @@
+#!/bin/bash
+
+# converts timestamp (D:H:M:S) to seconds
+convert_to_seconds() {
+    elapsed_time=$1
+    elapsed_time_in_seconds=`echo "$elapsed_time" | awk -F: '{ total=0; m=1; } { for (i=0; i < NF; i++) {total += $(NF-i)*m; m *= i >= 2 ? 24 : 60 }} {print total}'`
+    echo $elapsed_time_in_seconds
+}
+
+# function for sending notification emails
+send_email_notification() {
+    process_name=$1
+    hostname=`hostname`
+    ### FAILURE EMAIL ###
+    EMAIL_BODY="Following processes appear to be stalled.\nHostname: ${hostname}\ndate: ${now}\nrunning processes: see below\n\nCMD\tPID\tSTART_TIME\tETIME\n${process_name}\n"
+    echo -e "Sending email\n$EMAIL_BODY"
+    echo -e "$EMAIL_BODY" | mail -s "Alert: Import jobs stalled on ${hostname}" cbioportal-pipelines@cbio.mskcc.org
+}
+
+# Array of process names being checked
+checked_process_list=(
+    'import_portal_users_genie.sh'
+    'importUsers.py'
+    'import-dmp-impact-data.sh'
+    'import-temp-study.sh'
+)
+
+# Stalled times
+# import_portal_users_genie.sh: 5 minutes
+# importUsers.py: 15 minutes
+# import-dmp-impact-date.sh: 10 hours
+# import-temp-study.sh: 2 hours
+max_time=(300 900 36000 7200)
+email_times=(0 0 0 0)
+
+while :
+do
+    now=$(date "+%Y-%m-%d-%H-%M-%S")
+    echo date: ${now} : scanning for long running import jobs
+    myuidoutput=`id`
+    myuid=-1
+    if [[ ${myuidoutput} =~ uid=([[:digit:]]+).* ]]; then
+        myuid=${BASH_REMATCH[1]}
+    fi
+    if [ $myuid -eq -1 ]; then
+        echo Error : could not determine uid
+        exit 1
+    fi
+
+    ex1="CMD" #exclude the header from ps
+    ex2="grep\|ps\|tail\|vim" #exclude grep, ps, tail, and vim commands
+    ex3="triage\|hot-deploy" #exclude triage or hot-deploy imports
+    ex4="scan-for-stalled-import-jobs\.sh" #exclude this command (scan-for-stalled-import-jobs.sh)
+    ex5="\.log" #exclude accesses to log files (less, cat, grep)
+
+    for (( i=0; i<${#checked_process_list[@]}; i++ ));
+    do
+        # get ps for user and sort by elapsed time (take longest running process) and convert to seconds
+        ps_output=`export COLUMNS=24000 ; ps --user $myuid -o cmd:100,pid:15,start_time:15,etime:15 --sort=etime | grep "${checked_process_list[i]}" | grep -ve "$ex1\|$ex2\|$ex3\|$ex4\|$ex5" | sed 's/\s\s\s*/\t/g' | head -1`
+        ps_etime=`echo "$ps_output" | cut -f4 | sed 's/-/:/g'`
+        ps_etime_seconds=$(convert_to_seconds $ps_etime)
+
+        # if process is not stalled then set date to current time so next break triggers email
+        if [ $ps_etime_seconds -le ${max_time[i]} ] ; then
+            email_times[i]="$(date%H%M)"
+        else
+        # if process is stalled and current time is greater than 'email time' - send email and set email time to current time plus 3 hours
+            if [ $(date +%H%M) -gt ${email_times[i]} ] then
+                send_email_notification "$ps_output"
+                email_times[i]="$((10#$(date -d '+3 hours' +"%H%M")))"
+            fi
+        fi
+    done
+
+    # kill script at 23:30 - restart at midnight in crontab
+    if [ $(date +"%H%M") -gt 2330 ] ; then
+        echo "Exiting monitoring script... script will restart at midnight"
+        exit 0
+    fi
+
+    # sleep 10 minutes before trying again
+    sleep 600
+done
