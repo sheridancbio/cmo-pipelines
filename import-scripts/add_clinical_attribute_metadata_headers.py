@@ -212,7 +212,11 @@ def main():
     # get a set of attributes used across all input files
     for clinical_file in clinical_files:
         all_attributes = all_attributes.union(get_header(clinical_file))
-    metadata_dictionary = get_clinical_attribute_metadata_map(portal_properties.google_spreadsheet, client, all_attributes)
+    try:
+        metadata_dictionary = get_clinical_attribute_metadata_map(portal_properties.google_spreadsheet, client, all_attributes)
+    except gdata.service.RequestError:
+        print >> ERROR_FILE, 'Unable to construct metadata_dictionary, metadata headers will not be added. Could not access google sheet.'
+        sys.exit(2)
     # check metadata is defined for all attributes in google spreadsheet
     if len(metadata_dictionary.keys()) != len(all_attributes):
         print >> ERROR_FILE, 'Error, metadata not found for attribute(s): ' + ', '.join(all_attributes.difference(metadata_dictionary.keys()))
