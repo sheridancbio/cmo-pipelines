@@ -4,6 +4,7 @@ CVR_TEST_MODE_ARGS=""
 JAVA_DEBUG_ARGS="-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182"
 JAVA_TMPDIR="$PORTAL_HOME/tmp/import-cron-dmp-msk"
 JAVA_IMPORTER_ARGS="$JAVA_PROXY_ARGS $JAVA_DEBUG_ARGS -ea -Dspring.profiles.active=dbcp -Djava.io.tmpdir=$JAVA_TMPDIR -Dhttp.nonProxyHosts=draco.mskcc.org|pidvudb1.mskcc.org|phcrdbd2.mskcc.org|dashi-dev.cbio.mskcc.org|pipelines.cbioportal.mskcc.org|localhost"
+ONCOTREE_VERSION_TO_USE=oncotree_candidate_release
 
 ## FUNCTIONS
 
@@ -22,7 +23,7 @@ function addCancerTypeCaseLists {
     fi
     # remove current case lists and run oncotree converter before creating new cancer case lists
     rm $STUDY_DATA_DIRECTORY/case_lists/*
-    $PYTHON_BINARY $PORTAL_HOME/scripts/oncotree_code_converter.py --oncotree-url "http://oncotree.mskcc.org/oncotree/api/tumor_types.txt" --clinical-file $FILEPATH_1
+    $PYTHON_BINARY $PORTAL_HOME/scripts/oncotree_code_converter.py --oncotree-url "http://oncotree.mskcc.org/oncotree/" --oncotree-version $ONCOTREE_VERSION_TO_USE --clinical-file $FILEPATH_1 --force
     $PYTHON_BINARY $PORTAL_HOME/scripts/create_case_lists_by_cancer_type.py --clinical-file-list="$CLINICAL_FILE_LIST" --output-directory="$STUDY_DATA_DIRECTORY/case_lists" --study-id="$STUDY_ID" --attribute="CANCER_TYPE"
     if [ "$STUDY_ID" == "mskimpact" ] || [ "$STUDY_ID" == "mixedpact" ] ; then
        $PYTHON_BINARY $PORTAL_HOME/scripts/create_case_lists_by_cancer_type.py --clinical-file-list="$CLINICAL_FILE_LIST" --output-directory="$STUDY_DATA_DIRECTORY/case_lists" --study-id="$STUDY_ID" --attribute="12_245_PARTC_CONSENTED"
@@ -267,7 +268,6 @@ if [ -z $JAVA_HOME ] | [ -z $HG_BINARY ] | [ -z $PORTAL_HOME ] | [ -z $MSK_IMPAC
 fi
 
 now=$(date "+%Y-%m-%d-%H-%M-%S")
-ONCOTREE_VERSION_TO_USE=oncotree_candidate_release
 mskimpact_notification_file=$(mktemp $JAVA_TMPDIR/mskimpact-portal-update-notification.$now.XXXXXX)
 mskheme_notification_file=$(mktemp $JAVA_TMPDIR/mskheme-portal-update-notification.$now.XXXXXX)
 mskraindance_notification_file=$(mktemp $JAVA_TMPDIR/mskraindance-portal-update-notification.$now.XXXXXX)
