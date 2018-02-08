@@ -624,9 +624,10 @@ fi
 # gets index of SAMPLE_ID from file (used in case SAMPLE_ID index changes)
 SAMPLE_ID_COLUMN=`sed -n $"1s/\t/\\\n/gp" $MSK_IMPACT_DATA_HOME/data_clinical_mskimpact_data_clinical_cvr.txt | grep -nx "SAMPLE_ID" | cut -d: -f1`
 # generates sample masterlist for filtering dropped samples/patients from supp files
-grep -v '^#' $MSK_IMPACT_DATA_HOME/data_clinical_mskimpact_data_clinical_cvr.txt | awk -v SAMPLE_ID_INDEX="$SAMPLE_ID_COLUMN" -F '\t' '{if ($SAMPLE_ID_INDEX != "SAMPLE_ID") print $SAMPLE_ID_INDEX;}' > $JAVA_TMPDIR/sample_masterlist_for_filtering.txt
-if [ $(wc -l < $JAVA_TMPDIR/sample_masterlist_for_filter.txt) -eq 0 ] ; then
-    echo "ERROR! Sample masterlist $JAVA_TMPDIR/sample_masterlist_for_filtering.txt is empty. Skipping patient/sample filtering for mskimpact!"
+SAMPLE_MASTER_LIST_FOR_FILTERING_FILENAME="$JAVA_TMPDIR/sample_masterlist_for_filtering.txt"
+grep -v '^#' $MSK_IMPACT_DATA_HOME/data_clinical_mskimpact_data_clinical_cvr.txt | awk -v SAMPLE_ID_INDEX="$SAMPLE_ID_COLUMN" -F '\t' '{if ($SAMPLE_ID_INDEX != "SAMPLE_ID") print $SAMPLE_ID_INDEX;}' > $SAMPLE_MASTER_LIST_FOR_FILTERING_FILENAME
+if [ $(wc -l < $SAMPLE_MASTER_LIST_FOR_FILTERING_FILENAME) -eq 0 ] ; then
+    echo "ERROR! Sample masterlist $SAMPLE_MASTER_LIST_FOR_FILTERING_FILENAME is empty. Skipping patient/sample filtering for mskimpact!"
     GENERATE_MASTERLIST_FAIL=1
 fi
 
