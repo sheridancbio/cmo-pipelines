@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Memorial Sloan-Kettering Cancer Center.
+ * Copyright (c) 2017-2018 Memorial Sloan-Kettering Cancer Center.
  *
  * This library is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS
@@ -49,9 +49,8 @@ public class RedcapRepositoryTest {
     @Autowired
     private RedcapRepository redcapRepository;
 
-    /* This test mocks the RedcapSessionManager to add a project with fields {"PATIENT_ID", "CRDB_CONSENT_DATE_DAYS", "12_245_PARTA_CONSENTED"}.
-     * getRedcapDataForProject() is called to test whether the mocked data is returned for all fields, including fields which begin with a digit
-     * The proper resolution of redcap_id to EXTERNAL_COLUMN_HEADER should happen within this method.
+    /* This test mocks the RedcapSessionManager to add a project with fields {"PATIENT_ID", "CRDB_CONSENT_DATE_DAYS", "PARTA_CONSENTED_12_245"}.
+     * getRedcapDataForProject() is called to test whether the mocked data is returned for all fields.
      */
     @Test
     public void testGetDataForRedcapProjectID() {
@@ -81,16 +80,16 @@ public class RedcapRepositoryTest {
             Map<String, String> dataReturnedItem = dataReturned.get(pos);
             Map<String, String> expectedReturnValueItem = expectedReturnValue.get(pos);
             if (dataReturnedItem.size() != expectedReturnValueItem.size()) {
-                result.append("Different number of attribute for items at index " + Integer.toString(pos) + " returnedItem has (" + Integer.toString(dataReturnedItem.size()) + ") versus expectedItem has  (" + Integer.toString(expectedReturnValueItem.size()) + ")");
+                result.append("\n\tDifferent number of attribute for items at index " + Integer.toString(pos) + " returnedItem has (" + Integer.toString(dataReturnedItem.size()) + ") versus expectedItem has  (" + Integer.toString(expectedReturnValueItem.size()) + ")");
             }
             for (String key : dataReturnedItem.keySet()) {
                 if (!expectedReturnValueItem.containsKey(key)) {
-                    result.append("attribute name '" + key + "' returned but expected value does not contain any key with that name (in record number " + Integer.toString(pos) + ")");
+                    result.append("\n\tattribute name '" + key + "' returned but expected value does not contain any key with that name (in record number " + Integer.toString(pos) + ")");
                 } else {
                     String dataReturnedValue = dataReturnedItem.get(key);
                     String expectedValue = expectedReturnValueItem.get(key);
                     if (!dataReturnedValue.equals(expectedValue)) {
-                        result.append("attribute name '" + key + "' has value '" + dataReturnedValue + "' in returned value in record number " + Integer.toString(pos) + ", but expected value was '" + expectedValue);
+                        result.append("\n\tattribute name '" + key + "' has value '" + dataReturnedValue + "' in returned value in record number " + Integer.toString(pos) + ", but expected value was '" + expectedValue);
                     }
                }
             }
@@ -105,15 +104,15 @@ public class RedcapRepositoryTest {
         Map<String, String> returnValue3 = new HashMap<String, String>();
         returnValue1.put("PATIENT_ID", "P-0000004");
         returnValue1.put("CRDB_CONSENT_DATE_DAYS", "14484");
-        returnValue1.put("12_245_PARTA_CONSENTED", "YES");
+        returnValue1.put("PARTA_CONSENTED_12_245", "YES");
         returnValue.add(returnValue1);
         returnValue2.put("PATIENT_ID", "P-0000012");
         returnValue2.put("CRDB_CONSENT_DATE_DAYS", "21192");
-        returnValue2.put("12_245_PARTA_CONSENTED", "YES");
+        returnValue2.put("PARTA_CONSENTED_12_245", "YES");
         returnValue.add(returnValue2);
         returnValue3.put("PATIENT_ID", "P-9999999");
         returnValue3.put("CRDB_CONSENT_DATE_DAYS", "99999");
-        returnValue3.put("12_245_PARTA_CONSENTED", "");
+        returnValue3.put("PARTA_CONSENTED_12_245", "");
         returnValue.add(returnValue3);
         return returnValue;
     }

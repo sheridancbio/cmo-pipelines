@@ -21,7 +21,7 @@
 # belong to PATIENT_ID
 # 
 # As a special case, if the attribute is
-# 12_245_PART_C_CONSENTED then only the value "YES" is
+# PART_C_CONSENTED_12_245 then only the value "YES" is
 # written to a case list, with a name containing "germline"
 # ---------------------------------------------------------------
 
@@ -139,10 +139,10 @@ def create_case_lists(clinical_file_name, output_directory, study_id, attribute)
         case_lists_map = create_case_lists_map(clinical_file_name, attribute)
         # We do not want to filter off the value of the attribute in the case of case lists by cancer type - we want them all, so pass None as the filter
         write_case_list_files(case_lists_map, output_directory, study_id, 'Tumor Type: ', 'All tumors with cancer type ', None)
-    elif attribute == '12_245_PARTC_CONSENTED':
+    elif attribute == 'PARTC_CONSENTED_12_245':
         case_lists_map = create_case_lists_map(clinical_file_name, attribute, 'YES')
-        # If we want germline case list, the value of the column '12_245_PART_C_CONSENTED' will be YES or NO. Samples with YES for that value are the ones to add to the list
-        write_case_list_files(case_lists_map, output_directory, study_id, 'Tumors with germline data 12_245_PARTC_CONSENTED ', 'Tumors with germline data available 12_245_PARTC_CONSENTED ', 'YES', 'germline')
+        # If we want germline case list, the value of the column 'PART_C_CONSENTED_12_245' will be YES or NO. Samples with YES for that value are the ones to add to the list
+        write_case_list_files(case_lists_map, output_directory, study_id, 'Tumors with germline data PARTC_CONSENTED_12_245 ', 'Tumors with germline data available PARTC_CONSENTED_12_245 ', 'YES', 'germline')
     else:
         print >> ERROR_FILE, "Error : case lists cannot be generated for attribute " + attribute
         sys.exit(2)

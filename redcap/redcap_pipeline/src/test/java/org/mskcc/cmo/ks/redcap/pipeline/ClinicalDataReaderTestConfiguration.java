@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Memorial Sloan-Kettering Cancer Center.
+ * Copyright (c) 2017-2018 Memorial Sloan-Kettering Cancer Center.
  *
  * This library is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS
@@ -44,6 +44,7 @@ import org.mskcc.cmo.ks.redcap.pipeline.ClinicalDataReader;
 import org.mskcc.cmo.ks.redcap.pipeline.util.RedcapUtils;
 import org.mskcc.cmo.ks.redcap.source.ClinicalDataSource;
 import org.mskcc.cmo.ks.redcap.source.internal.ClinicalDataSourceRedcapImpl;
+import org.mskcc.cmo.ks.redcap.source.internal.GoogleSessionManager;
 import org.mskcc.cmo.ks.redcap.source.internal.MetadataCache;
 import org.mskcc.cmo.ks.redcap.source.internal.MetadataManagerRedcapImpl;
 import org.mskcc.cmo.ks.redcap.source.internal.RedcapRepository;
@@ -86,6 +87,15 @@ public class ClinicalDataReaderTestConfiguration {
     }
 
     @Bean
+    public GoogleSessionManager googleSessionManager() {
+        GoogleSessionManager googleSessionManager = Mockito.mock(GoogleSessionManager.class);
+        //configure meta data requests
+        RedcapAttributeMetadata[] mockReturnForGetMetadata = makeMockMetadata();
+        Mockito.when(googleSessionManager.getRedcapMetadata()).thenReturn(mockReturnForGetMetadata);
+        return googleSessionManager;
+    }
+
+    @Bean
     public MetadataCache metadataCache() {
         return new MetadataCache();
     }
@@ -116,13 +126,8 @@ public class ClinicalDataReaderTestConfiguration {
         //configure token requests
         Mockito.when(mockRedcapSessionManager.getTokenByProjectTitle(ArgumentMatchers.eq(MSKIMPACT_GBM_SAMPLE_CLINICAL_PROJECT_TITLE))).thenReturn(MSKIMPACT_GBM_SAMPLE_CLINICAL_PROJECT_TOKEN);
         Mockito.when(mockRedcapSessionManager.getTokenByProjectTitle(ArgumentMatchers.eq(MSKIMPACT_GBM_PATIENT_CLINICAL_PROJECT_TITLE))).thenReturn(MSKIMPACT_GBM_PATIENT_CLINICAL_PROJECT_TOKEN);
-        Mockito.when(mockRedcapSessionManager.getMetadataToken()).thenReturn(METADATA_TOKEN);
-        Mockito.when(mockRedcapSessionManager.getNamespaceToken()).thenReturn(NAMESPACE_TOKEN);
         Mockito.when(mockRedcapSessionManager.getTimelineTokenMapByStableId(ArgumentMatchers.eq(REDCAP_STABLE_ID))).thenReturn(makeMockTimelineTokenMap());
         Mockito.when(mockRedcapSessionManager.getClinicalTokenMapByStableId(ArgumentMatchers.eq(REDCAP_STABLE_ID))).thenReturn(makeMockClinicalTokenMap());
-        //configure meta data requests
-        Mockito.when(mockRedcapSessionManager.getRedcapMetadataByToken(ArgumentMatchers.eq(METADATA_TOKEN))).thenReturn(makeMockMetadata());
-        Mockito.when(mockRedcapSessionManager.getRedcapNamespace()).thenReturn(makeMockNamespace());
         //configure redcap data requests
         Mockito.when(mockRedcapSessionManager.getRedcapAttributeByToken(ArgumentMatchers.eq(MSKIMPACT_GBM_SAMPLE_CLINICAL_PROJECT_TOKEN))).thenReturn(makeMockGbmSampleAttributesData());
         Mockito.when(mockRedcapSessionManager.getRedcapAttributeByToken(ArgumentMatchers.eq(MSKIMPACT_GBM_PATIENT_CLINICAL_PROJECT_TOKEN))).thenReturn(makeMockGbmPatientAttributesData());
@@ -149,30 +154,21 @@ public class ClinicalDataReaderTestConfiguration {
     private RedcapAttributeMetadata[] makeMockMetadata() {
         RedcapAttributeMetadata[] metadata = new RedcapAttributeMetadata[4];
         metadata[0] = new RedcapAttributeMetadata();
-        metadata[0].setRecordId(1L);
         metadata[0].setNormalizedColumnHeader("PATIENT_ID");
-        metadata[0].setExternalColumnHeader("PATIENT_ID");
-        metadata[0].setRedcapId("patient_id");
         metadata[0].setAttributeType("PATIENT");
         metadata[0].setPriority("1");
         metadata[0].setDisplayName("Patient Id");
         metadata[0].setDatatype("STRING");
         metadata[0].setDescriptions("This identifies a patient");
         metadata[1] = new RedcapAttributeMetadata();
-        metadata[1].setRecordId(2L);
         metadata[1].setNormalizedColumnHeader("CANCER_TYPE");
-        metadata[1].setExternalColumnHeader("CANCER_TYPE");
-        metadata[1].setRedcapId("cancer_type");
         metadata[1].setAttributeType("SAMPLE");
         metadata[1].setPriority("1");
         metadata[1].setDisplayName("cancer type");
         metadata[1].setDatatype("STRING");
         metadata[1].setDescriptions("cancer type");
         metadata[2] = new RedcapAttributeMetadata();
-        metadata[2].setRecordId(3L);
         metadata[2].setNormalizedColumnHeader("AGE");
-        metadata[2].setExternalColumnHeader("AGE");
-        metadata[2].setRedcapId("age");
         metadata[2].setAttributeType("PATIENT");
         metadata[2].setPriority("1");
         metadata[2].setDisplayName("AGE");
@@ -180,10 +176,7 @@ public class ClinicalDataReaderTestConfiguration {
         metadata[2].setDescriptions("Patient age in years");
         //Added the following for getSampleHeader() / getPatientHeader() tests
         metadata[3] = new RedcapAttributeMetadata();
-        metadata[3].setRecordId(4L);
         metadata[3].setNormalizedColumnHeader("SAMPLE_ID");
-        metadata[3].setExternalColumnHeader("SAMPLE_ID");
-        metadata[3].setRedcapId("sample_id");
         metadata[3].setAttributeType("SAMPLE");
         metadata[3].setPriority("1");
         metadata[3].setDisplayName("Sample Id");

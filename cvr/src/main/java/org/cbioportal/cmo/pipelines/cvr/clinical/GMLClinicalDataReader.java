@@ -105,7 +105,7 @@ public class GMLClinicalDataReader implements ItemStreamReader<CVRClinicalRecord
                     
                     for (String id : cvrSampleListUtil.getNewDmpGmlPatients()) {
                         if (id.contains(to_add.getPATIENT_ID())) {
-                            to_add.set12_245_PARTC_CONSENTED("YES");
+                            to_add.setPARTC_CONSENTED_12_245("YES");
                             break;
                         }
                     }

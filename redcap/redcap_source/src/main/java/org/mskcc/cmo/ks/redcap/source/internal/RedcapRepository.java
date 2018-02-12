@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Memorial Sloan-Kettering Cancer Center.
+ * Copyright (c) 2017 - 2018 Memorial Sloan-Kettering Cancer Center.
  *
  * This library is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS
@@ -74,13 +74,15 @@ public class RedcapRepository {
             while (redcapNodeIterator.hasNext()) {
                 Map.Entry<String, JsonNode> entry = (Map.Entry<String, JsonNode>)redcapNodeIterator.next();
                 String redcapId = entry.getKey();
-                RedcapAttributeMetadata metadata = metadataCache.getMetadataByRedcapId(redcapId);
-                if (metadata == null) {
-                    if (redcapId.equals(redcapInstrumentCompleteFieldName)) {
-                        continue;
-                    }
-                    String errorString = "Error : attempt to export data from RedCap failed due to redcap_id " +
-                            redcapId + " not having metadata defined in the RedCap Metadata Project";
+                RedcapAttributeMetadata metadata = null;
+                if (redcapId.equals(redcapInstrumentCompleteFieldName)) {
+                    continue;
+                }
+                try {
+                    metadata = metadataCache.getMetadataByRedcapId(redcapId);
+                } catch (RuntimeException e) {
+                    String errorString = "Error: attempt to export data from redcap failed due to redcap_id " +
+                            redcapId + " not having metadata defined in the Google clinical attributes worksheet";
                     log.warn(errorString);
                     throw new RuntimeException(errorString);
                 }

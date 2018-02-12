@@ -65,7 +65,7 @@ public class DarwinPipeline {
 
     private static void launchJob(String[] args, String outputDirectory, String studyID) throws Exception{
         SpringApplication app = new SpringApplication(DarwinPipeline.class);
-
+        app.setWebEnvironment(false);
         ConfigurableApplicationContext ctx = app.run(args);
         JobLauncher jobLauncher = ctx.getBean(JobLauncher.class);
 

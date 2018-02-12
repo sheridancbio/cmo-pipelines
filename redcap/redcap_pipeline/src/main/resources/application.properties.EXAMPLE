@@ -16,7 +16,14 @@ redcap_login_hidden_input_name=
 
 # RedCap mapping token for ID_MAPPING - any tables that we want to access need to be in this project
 mapping_token=
-# The name of the RedCap project that contains the metadata about the clinical attributes in RedCap
-metadata_project=
-# The name of the RedCap project that contains the namespace mapping of external column headers to normalized
-namespace_project=
+
+# google docs credentials
+google.id=
+google.pw=
+
+# google docs portal importer configuration worksheet
+importer.google.service.private.key.file=
+importer.google.service.email=
+importer.spreadsheet_service_appname=
+importer.spreadsheet=
+importer.clinical_attributes_worksheet=

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Memorial Sloan-Kettering Cancer Center.
+ * Copyright (c) 2017-2018 Memorial Sloan-Kettering Cancer Center.
  *
  * This library is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS
@@ -42,6 +42,7 @@ import org.mskcc.cmo.ks.redcap.models.RedcapAttributeMetadata;
 import org.mskcc.cmo.ks.redcap.models.RedcapProjectAttribute;
 import org.mskcc.cmo.ks.redcap.source.ClinicalDataSource;
 import org.mskcc.cmo.ks.redcap.source.internal.ClinicalDataSourceRedcapImpl;
+import org.mskcc.cmo.ks.redcap.source.internal.GoogleSessionManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -66,6 +67,15 @@ public class RedcapSourceTestConfiguration {
     }
 
     @Bean
+    public GoogleSessionManager googleSessionManager() {
+        GoogleSessionManager googleSessionManager = Mockito.mock(GoogleSessionManager.class);
+        //configure meta data requests
+        RedcapAttributeMetadata[] mockReturnForGetMetadata = makeMockRedcapIdToMetadataList();
+        Mockito.when(googleSessionManager.getRedcapMetadata()).thenReturn(mockReturnForGetMetadata);
+        return googleSessionManager;
+    }
+
+    @Bean
     public MetadataCache metadataCache() {
         return new MetadataCache();
     }
@@ -82,14 +92,12 @@ public class RedcapSourceTestConfiguration {
         Mockito.when(redcapSessionManager.getClinicalTokenMapByStableId(SIMPLE_MIXED_TYPE_CLINICAL_STABLE_ID)).thenReturn(mockReturnClinicalTokenMap);
         //configure meta data requests
         RedcapAttributeMetadata[] mockReturnForGetMetadata = makeMockRedcapIdToMetadataList();
-        Mockito.when(redcapSessionManager.getRedcapMetadataByToken(Matchers.eq(METADATA_TOKEN))).thenReturn(mockReturnForGetMetadata);
         JsonNode[] mockReturnForGetData = makeMockReturnForGetData();
         //configure data requests
         Mockito.when(redcapSessionManager.getRedcapDataForProjectByToken(Matchers.eq(ONE_DIGIT_PROJECT_TOKEN))).thenReturn(mockReturnForGetData);
         RedcapProjectAttribute[] mockReturnForGetAttributesData = makeMockReturnForGetAttributesData();
         //Mockito.when(redcapSessionManager.getRedcapAttributeByToken(SIMPLE_MIXED_TYPE_CLINICAL_PROJECT_TOKEN)).thenReturn(mockReturnForGetAttributesData);
         Mockito.when(redcapSessionManager.getRedcapAttributeByToken(Matchers.any(String.class))).thenReturn(mockReturnForGetAttributesData);
-        Mockito.when(redcapSessionManager.getMetadataToken()).thenReturn(METADATA_TOKEN);
         Mockito.when(redcapSessionManager.getRedcapInstrumentNameByToken(SIMPLE_MIXED_TYPE_CLINICAL_PROJECT_TOKEN)).thenReturn(SIMPLE_MIXED_TYPE_CLINICAL_PROJECT_INSTRUMENT_NAME);
         return redcapSessionManager;
     }
@@ -102,61 +110,43 @@ public class RedcapSourceTestConfiguration {
     private RedcapAttributeMetadata[] makeMockRedcapIdToMetadataList() {
         RedcapAttributeMetadata[] metadata = new RedcapAttributeMetadata[6];
         metadata[0] = new RedcapAttributeMetadata();
-        metadata[0].setRecordId(1L);
         metadata[0].setNormalizedColumnHeader("PATIENT_ID");
-        metadata[0].setExternalColumnHeader("PATIENT_ID");
-        metadata[0].setRedcapId("patient_id");
         metadata[0].setAttributeType("PATIENT");
         metadata[0].setPriority("1");
         metadata[0].setDisplayName("Patient Id");
         metadata[0].setDatatype("STRING");
         metadata[0].setDescriptions("This identifies a patient");
         metadata[1] = new RedcapAttributeMetadata();
-        metadata[1].setRecordId(2L);
         metadata[1].setNormalizedColumnHeader("CRDB_CONSENT_DATE_DAYS");
-        metadata[1].setExternalColumnHeader("CRDB_CONSENT_DATE_DAYS");
-        metadata[1].setRedcapId("crdb_consent_date_days");
         metadata[1].setAttributeType("PATIENT");
         metadata[1].setPriority("1");
         metadata[1].setDisplayName("crdb consent date days");
         metadata[1].setDatatype("STRING");
         metadata[1].setDescriptions("days since consent");
         metadata[2] = new RedcapAttributeMetadata();
-        metadata[2].setRecordId(3L);
-        metadata[2].setNormalizedColumnHeader("12_245_PARTA_CONSENTED");
-        metadata[2].setExternalColumnHeader("12_245_PARTA_CONSENTED");
-        metadata[2].setRedcapId("parta_consented_12_245");
+        metadata[2].setNormalizedColumnHeader("PARTA_CONSENTED_12_245");
         metadata[2].setAttributeType("PATIENT");
         metadata[2].setPriority("1");
-        metadata[2].setDisplayName("12 245 PARTA CONSENTED");
+        metadata[2].setDisplayName("12-245 Part A Consented");
         metadata[2].setDatatype("STRING");
-        metadata[2].setDescriptions("Flag showing if patient has consented to 12 245 part a");
+        metadata[2].setDescriptions("12-245 Part A Consented Status");
         //Added the following for getSampleHeader() / getPatientHeader() tests
         metadata[3] = new RedcapAttributeMetadata();
-        metadata[3].setRecordId(4L);
         metadata[3].setNormalizedColumnHeader("SAMPLE_ID");
-        metadata[3].setExternalColumnHeader("SAMPLE_ID");
-        metadata[3].setRedcapId("sample_id");
         metadata[3].setAttributeType("SAMPLE");
         metadata[3].setPriority("1");
         metadata[3].setDisplayName("Sample Id");
         metadata[3].setDatatype("STRING");
         metadata[3].setDescriptions("This identifies a sample");
         metadata[4] = new RedcapAttributeMetadata();
-        metadata[4].setRecordId(5L);
         metadata[4].setNormalizedColumnHeader("NECROSIS");
-        metadata[4].setExternalColumnHeader("NECROSIS");
-        metadata[4].setRedcapId("necrosis");
         metadata[4].setAttributeType("SAMPLE");
         metadata[4].setPriority("1");
         metadata[4].setDisplayName("Necrosis");
         metadata[4].setDatatype("STRING");
         metadata[4].setDescriptions("State of tissue");
         metadata[5] = new RedcapAttributeMetadata();
-        metadata[5].setRecordId(6L);
         metadata[5].setNormalizedColumnHeader("ETHNICITY");
-        metadata[5].setExternalColumnHeader("ETHNICITY");
-        metadata[5].setRedcapId("ethnicity");
         metadata[5].setAttributeType("PATIENT");
         metadata[5].setPriority("1");
         metadata[5].setDisplayName("Ethnicity");

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Memorial Sloan-Kettering Cancer Center.
+ * Copyright (c) 2016 - 2018 Memorial Sloan-Kettering Cancer Center.
  *
  * This library is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS
@@ -29,6 +29,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+
 package org.mskcc.cmo.ks.darwin.pipeline.model;
 
 import java.util.*;
@@ -40,11 +41,10 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * @author heinsz
  */
 public class Skcm_mskcc_2015_chantClinicalRecord {
-    
     private String patientId;
     private String sampleId;
     private String melspcPtid;
-    private String  melspcStageYear;
+    private String melspcStageYear;
     private String melspcStgGrpName;
     private String melgPtid;
     private String melgStsDesc;
@@ -115,10 +115,10 @@ public class Skcm_mskcc_2015_chantClinicalRecord {
     private String melmsSiteDesc;
     private String melmsSiteYear;
     
-    
     private Map<String, Object> additionalProperties;    
     
-    public Skcm_mskcc_2015_chantClinicalRecord() {}
+    public Skcm_mskcc_2015_chantClinicalRecord() {
+    }
     
     public Skcm_mskcc_2015_chantClinicalRecord(String melspcPtid,
             String  melspcStageYear,
@@ -191,95 +191,93 @@ public class Skcm_mskcc_2015_chantClinicalRecord {
             String melmsSiteTypeDesc,
             String melmsSiteDesc,
             String melmsSiteYear) {
-this.melspcPtid = StringUtils.isNotEmpty(melspcPtid) ? melspcPtid : "NA";
-this.melspcStageYear = StringUtils.isNotEmpty(melspcStageYear) ? melspcStageYear : "NA";
-this.melspcStgGrpName = StringUtils.isNotEmpty(melspcStgGrpName) ? melspcStgGrpName : "NA";
-this.melgPtid = StringUtils.isNotEmpty(melgPtid) ? melgPtid : "NA";
-this.melgStsDesc = StringUtils.isNotEmpty(melgStsDesc) ? melgStsDesc : "NA";
-this.melgStsSrcDesc = StringUtils.isNotEmpty(melgStsSrcDesc) ? melgStsSrcDesc : "NA";
-this.melgActvStsDesc = StringUtils.isNotEmpty(melgActvStsDesc) ? melgActvStsDesc : "NA";
-this.melgDermagrphxDesc = StringUtils.isNotEmpty(melgDermagrphxDesc) ? melgDermagrphxDesc : "NA";
-this.melgPresStgYear = StringUtils.isNotEmpty(melgPresStgYear) ? melgPresStgYear : "NA";
-this.melgFamilyHxDesc = StringUtils.isNotEmpty(melgFamilyHxDesc) ? melgFamilyHxDesc : "NA";
-this.melg1stRecurYear = StringUtils.isNotEmpty(melg1stRecurYear) ? melg1stRecurYear : "NA";
-this.melgLocalDesc = StringUtils.isNotEmpty(melgLocalDesc) ? melgLocalDesc : "NA";
-this.melgNodalDesc = StringUtils.isNotEmpty(melgNodalDesc) ? melgNodalDesc : "NA";
-this.melgIntransitDesc = StringUtils.isNotEmpty(melgIntransitDesc) ? melgIntransitDesc : "NA";
-this.melgSysDesc = StringUtils.isNotEmpty(melgSysDesc) ? melgSysDesc : "NA";
-this.melgRecurNdszDesc = StringUtils.isNotEmpty(melgRecurNdszDesc) ? melgRecurNdszDesc : "NA";
-this.melgRecurNodalNo = StringUtils.isNotEmpty(melgRecurNodalNo) ? melgRecurNodalNo : "NA";
-this.melgLdh = StringUtils.isNotEmpty(melgLdh) ? melgLdh : "NA";
-this.melgLdhYear = StringUtils.isNotEmpty(melgLdhYear) ? melgLdhYear : "NA";
-this.melgMetsDesc = StringUtils.isNotEmpty(melgMetsDesc) ? melgMetsDesc : "NA";
-this.melgAdjvntTxDesc = StringUtils.isNotEmpty(melgAdjvntTxDesc) ? melgAdjvntTxDesc : "NA";
-this.melgSysTxDesc = StringUtils.isNotEmpty(melgSysTxDesc) ? melgSysTxDesc : "NA";
-this.melgRadTxDesc = StringUtils.isNotEmpty(melgRadTxDesc) ? melgRadTxDesc : "NA";
-this.melgSurgDesc = StringUtils.isNotEmpty(melgSurgDesc) ? melgSurgDesc : "NA";
-this.melgTissueBankAvail = StringUtils.isNotEmpty(melgTissueBankAvail) ? melgTissueBankAvail : "NA";
-this.melpPtid = StringUtils.isNotEmpty(melpPtid) ? melpPtid : "NA";
-this.melpPrimSeq = StringUtils.isNotEmpty(melpPrimSeq) ? melpPrimSeq : "NA";
-this.melpDxYear = StringUtils.isNotEmpty(melpDxYear) ? melpDxYear : "NA";
-this.melpMskReviewDesc = StringUtils.isNotEmpty(melpMskReviewDesc) ? melpMskReviewDesc : "NA";
-this.melpThicknessMm = StringUtils.isNotEmpty(melpThicknessMm) ? melpThicknessMm : "NA";
-this.melpClarkLvlDesc = StringUtils.isNotEmpty(melpClarkLvlDesc) ? melpClarkLvlDesc : "NA";
-this.melpUlcerationDesc = StringUtils.isNotEmpty(melpUlcerationDesc) ? melpUlcerationDesc : "NA";
-this.melpSiteDesc = StringUtils.isNotEmpty(melpSiteDesc) ? melpSiteDesc : "NA";
-this.melpSubSiteDesc = StringUtils.isNotEmpty(melpSubSiteDesc) ? melpSubSiteDesc : "NA";
-this.melpTilsDesc = StringUtils.isNotEmpty(melpTilsDesc) ? melpTilsDesc : "NA";
-this.melpRegressionDesc = StringUtils.isNotEmpty(melpRegressionDesc) ? melpRegressionDesc : "NA";
-this.melpMarginsDesc = StringUtils.isNotEmpty(melpMarginsDesc) ? melpMarginsDesc : "NA";
-this.melpMitidxUnkDesc = StringUtils.isNotEmpty(melpMitidxUnkDesc) ? melpMitidxUnkDesc : "NA";
-this.melpHistTypeDesc = StringUtils.isNotEmpty(melpHistTypeDesc) ? melpHistTypeDesc : "NA";
-this.melpSatellitesDesc = StringUtils.isNotEmpty(melpSatellitesDesc) ? melpSatellitesDesc : "NA";
-this.melpExtSlidesDesc = StringUtils.isNotEmpty(melpExtSlidesDesc) ? melpExtSlidesDesc : "NA";
-this.melpLnorgDxDesc = StringUtils.isNotEmpty(melpLnorgDxDesc) ? melpLnorgDxDesc : "NA";
-this.melpLnclinStsDesc = StringUtils.isNotEmpty(melpLnclinStsDesc) ? melpLnclinStsDesc : "NA";
-this.melpLnsentinbxDesx = StringUtils.isNotEmpty(melpLnsentinbxDesx) ? melpLnsentinbxDesx : "NA";
-this.melpLnsentinbxYear = StringUtils.isNotEmpty(melpLnsentinbxYear) ? melpLnsentinbxYear : "NA";
-this.melpLnprolysctDesc = StringUtils.isNotEmpty(melpLnprolysctDesc) ? melpLnprolysctDesc : "NA";
-this.melpLnprosuccDesc = StringUtils.isNotEmpty(melpLnprosuccDesc) ? melpLnprosuccDesc : "NA";
-this.melpLndsctCmpDesc = StringUtils.isNotEmpty(melpLndsctCmpDesc) ? melpLndsctCmpDesc : "NA";
-this.melpLndsctYear = StringUtils.isNotEmpty(melpLndsctYear) ? melpLndsctYear : "NA";
-this.melpLnmattedDesc = StringUtils.isNotEmpty(melpLnmattedDesc) ? melpLnmattedDesc : "NA";
-this.LnextnodstDesc = StringUtils.isNotEmpty(LnextnodstDesc) ? LnextnodstDesc : "NA";
-this.LnintrmetsDesc = StringUtils.isNotEmpty(LnintrmetsDesc) ? LnintrmetsDesc : "NA";
-this.melpLnsize = StringUtils.isNotEmpty(melpLnsize) ? melpLnsize : "NA";
-this.melpLnsizeUnkDesc = StringUtils.isNotEmpty(melpLnsizeUnkDesc) ? melpLnsizeUnkDesc : "NA";
-this.melpLnslnlargSize = StringUtils.isNotEmpty(melpLnslnlargSize) ? melpLnslnlargSize : "NA";
-this.melpLnihcDesc = StringUtils.isNotEmpty(melpLnihcDesc) ? melpLnihcDesc : "NA";
-this.melpLnimmS100Desc = StringUtils.isNotEmpty(melpLnimmS100Desc) ? melpLnimmS100Desc : "NA";
-this.melpLnimmhmb45Desc = StringUtils.isNotEmpty(melpLnimmhmb45Desc) ? melpLnimmhmb45Desc : "NA";
-this.melpLnimmMelaDesc = StringUtils.isNotEmpty(melpLnimmMelaDesc) ? melpLnimmMelaDesc : "NA";
-this.meliPtid = StringUtils.isNotEmpty(meliPtid) ? meliPtid : "NA";
-this.meliDmpPatientId = StringUtils.isNotEmpty(meliDmpPatientId) ? meliDmpPatientId : "NA";
-this.meliDmpSampleId = StringUtils.isNotEmpty(meliDmpSampleId) ? meliDmpSampleId : "NA";
-this.meliReportYear = StringUtils.isNotEmpty(meliReportYear)  ? meliReportYear : "NA";
-this.meliProcedureYear = StringUtils.isNotEmpty(meliProcedureYear) ? meliProcedureYear : "NA";
-this.meliTumorType = StringUtils.isNotEmpty(meliTumorType) ? meliTumorType : "NA";
-this.meliPrimarySite = StringUtils.isNotEmpty(meliPrimarySite) ? meliPrimarySite : "NA";
-this.meliMetSite = StringUtils.isNotEmpty(meliMetSite) ? meliMetSite : "NA";
-this.melmsPtid = StringUtils.isNotEmpty(melmsPtid) ? melmsPtid : "NA";
-this.melmsSiteTypeDesc = StringUtils.isNotEmpty(melmsSiteTypeDesc) ? melmsSiteTypeDesc : "NA";
-this.melmsSiteDesc = StringUtils.isNotEmpty(melmsSiteDesc) ? melmsSiteDesc : "NA";
-this.melmsSiteYear = StringUtils.isNotEmpty(melmsSiteYear) ? melmsSiteYear : "NA";
+        this.melspcPtid = StringUtils.isNotEmpty(melspcPtid) ? melspcPtid : "NA";
+        this.melspcStageYear = StringUtils.isNotEmpty(melspcStageYear) ? melspcStageYear : "NA";
+        this.melspcStgGrpName = StringUtils.isNotEmpty(melspcStgGrpName) ? melspcStgGrpName : "NA";
+        this.melgPtid = StringUtils.isNotEmpty(melgPtid) ? melgPtid : "NA";
+        this.melgStsDesc = StringUtils.isNotEmpty(melgStsDesc) ? melgStsDesc : "NA";
+        this.melgStsSrcDesc = StringUtils.isNotEmpty(melgStsSrcDesc) ? melgStsSrcDesc : "NA";
+        this.melgActvStsDesc = StringUtils.isNotEmpty(melgActvStsDesc) ? melgActvStsDesc : "NA";
+        this.melgDermagrphxDesc = StringUtils.isNotEmpty(melgDermagrphxDesc) ? melgDermagrphxDesc : "NA";
+        this.melgPresStgYear = StringUtils.isNotEmpty(melgPresStgYear) ? melgPresStgYear : "NA";
+        this.melgFamilyHxDesc = StringUtils.isNotEmpty(melgFamilyHxDesc) ? melgFamilyHxDesc : "NA";
+        this.melg1stRecurYear = StringUtils.isNotEmpty(melg1stRecurYear) ? melg1stRecurYear : "NA";
+        this.melgLocalDesc = StringUtils.isNotEmpty(melgLocalDesc) ? melgLocalDesc : "NA";
+        this.melgNodalDesc = StringUtils.isNotEmpty(melgNodalDesc) ? melgNodalDesc : "NA";
+        this.melgIntransitDesc = StringUtils.isNotEmpty(melgIntransitDesc) ? melgIntransitDesc : "NA";
+        this.melgSysDesc = StringUtils.isNotEmpty(melgSysDesc) ? melgSysDesc : "NA";
+        this.melgRecurNdszDesc = StringUtils.isNotEmpty(melgRecurNdszDesc) ? melgRecurNdszDesc : "NA";
+        this.melgRecurNodalNo = StringUtils.isNotEmpty(melgRecurNodalNo) ? melgRecurNodalNo : "NA";
+        this.melgLdh = StringUtils.isNotEmpty(melgLdh) ? melgLdh : "NA";
+        this.melgLdhYear = StringUtils.isNotEmpty(melgLdhYear) ? melgLdhYear : "NA";
+        this.melgMetsDesc = StringUtils.isNotEmpty(melgMetsDesc) ? melgMetsDesc : "NA";
+        this.melgAdjvntTxDesc = StringUtils.isNotEmpty(melgAdjvntTxDesc) ? melgAdjvntTxDesc : "NA";
+        this.melgSysTxDesc = StringUtils.isNotEmpty(melgSysTxDesc) ? melgSysTxDesc : "NA";
+        this.melgRadTxDesc = StringUtils.isNotEmpty(melgRadTxDesc) ? melgRadTxDesc : "NA";
+        this.melgSurgDesc = StringUtils.isNotEmpty(melgSurgDesc) ? melgSurgDesc : "NA";
+        this.melgTissueBankAvail = StringUtils.isNotEmpty(melgTissueBankAvail) ? melgTissueBankAvail : "NA";
+        this.melpPtid = StringUtils.isNotEmpty(melpPtid) ? melpPtid : "NA";
+        this.melpPrimSeq = StringUtils.isNotEmpty(melpPrimSeq) ? melpPrimSeq : "NA";
+        this.melpDxYear = StringUtils.isNotEmpty(melpDxYear) ? melpDxYear : "NA";
+        this.melpMskReviewDesc = StringUtils.isNotEmpty(melpMskReviewDesc) ? melpMskReviewDesc : "NA";
+        this.melpThicknessMm = StringUtils.isNotEmpty(melpThicknessMm) ? melpThicknessMm : "NA";
+        this.melpClarkLvlDesc = StringUtils.isNotEmpty(melpClarkLvlDesc) ? melpClarkLvlDesc : "NA";
+        this.melpUlcerationDesc = StringUtils.isNotEmpty(melpUlcerationDesc) ? melpUlcerationDesc : "NA";
+        this.melpSiteDesc = StringUtils.isNotEmpty(melpSiteDesc) ? melpSiteDesc : "NA";
+        this.melpSubSiteDesc = StringUtils.isNotEmpty(melpSubSiteDesc) ? melpSubSiteDesc : "NA";
+        this.melpTilsDesc = StringUtils.isNotEmpty(melpTilsDesc) ? melpTilsDesc : "NA";
+        this.melpRegressionDesc = StringUtils.isNotEmpty(melpRegressionDesc) ? melpRegressionDesc : "NA";
+        this.melpMarginsDesc = StringUtils.isNotEmpty(melpMarginsDesc) ? melpMarginsDesc : "NA";
+        this.melpMitidxUnkDesc = StringUtils.isNotEmpty(melpMitidxUnkDesc) ? melpMitidxUnkDesc : "NA";
+        this.melpHistTypeDesc = StringUtils.isNotEmpty(melpHistTypeDesc) ? melpHistTypeDesc : "NA";
+        this.melpSatellitesDesc = StringUtils.isNotEmpty(melpSatellitesDesc) ? melpSatellitesDesc : "NA";
+        this.melpExtSlidesDesc = StringUtils.isNotEmpty(melpExtSlidesDesc) ? melpExtSlidesDesc : "NA";
+        this.melpLnorgDxDesc = StringUtils.isNotEmpty(melpLnorgDxDesc) ? melpLnorgDxDesc : "NA";
+        this.melpLnclinStsDesc = StringUtils.isNotEmpty(melpLnclinStsDesc) ? melpLnclinStsDesc : "NA";
+        this.melpLnsentinbxDesx = StringUtils.isNotEmpty(melpLnsentinbxDesx) ? melpLnsentinbxDesx : "NA";
+        this.melpLnsentinbxYear = StringUtils.isNotEmpty(melpLnsentinbxYear) ? melpLnsentinbxYear : "NA";
+        this.melpLnprolysctDesc = StringUtils.isNotEmpty(melpLnprolysctDesc) ? melpLnprolysctDesc : "NA";
+        this.melpLnprosuccDesc = StringUtils.isNotEmpty(melpLnprosuccDesc) ? melpLnprosuccDesc : "NA";
+        this.melpLndsctCmpDesc = StringUtils.isNotEmpty(melpLndsctCmpDesc) ? melpLndsctCmpDesc : "NA";
+        this.melpLndsctYear = StringUtils.isNotEmpty(melpLndsctYear) ? melpLndsctYear : "NA";
+        this.melpLnmattedDesc = StringUtils.isNotEmpty(melpLnmattedDesc) ? melpLnmattedDesc : "NA";
+        this.LnextnodstDesc = StringUtils.isNotEmpty(LnextnodstDesc) ? LnextnodstDesc : "NA";
+        this.LnintrmetsDesc = StringUtils.isNotEmpty(LnintrmetsDesc) ? LnintrmetsDesc : "NA";
+        this.melpLnsize = StringUtils.isNotEmpty(melpLnsize) ? melpLnsize : "NA";
+        this.melpLnsizeUnkDesc = StringUtils.isNotEmpty(melpLnsizeUnkDesc) ? melpLnsizeUnkDesc : "NA";
+        this.melpLnslnlargSize = StringUtils.isNotEmpty(melpLnslnlargSize) ? melpLnslnlargSize : "NA";
+        this.melpLnihcDesc = StringUtils.isNotEmpty(melpLnihcDesc) ? melpLnihcDesc : "NA";
+        this.melpLnimmS100Desc = StringUtils.isNotEmpty(melpLnimmS100Desc) ? melpLnimmS100Desc : "NA";
+        this.melpLnimmhmb45Desc = StringUtils.isNotEmpty(melpLnimmhmb45Desc) ? melpLnimmhmb45Desc : "NA";
+        this.melpLnimmMelaDesc = StringUtils.isNotEmpty(melpLnimmMelaDesc) ? melpLnimmMelaDesc : "NA";
+        this.meliPtid = StringUtils.isNotEmpty(meliPtid) ? meliPtid : "NA";
+        this.meliDmpPatientId = StringUtils.isNotEmpty(meliDmpPatientId) ? meliDmpPatientId : "NA";
+        this.meliDmpSampleId = StringUtils.isNotEmpty(meliDmpSampleId) ? meliDmpSampleId : "NA";
+        this.meliReportYear = StringUtils.isNotEmpty(meliReportYear)  ? meliReportYear : "NA";
+        this.meliProcedureYear = StringUtils.isNotEmpty(meliProcedureYear) ? meliProcedureYear : "NA";
+        this.meliTumorType = StringUtils.isNotEmpty(meliTumorType) ? meliTumorType : "NA";
+        this.meliPrimarySite = StringUtils.isNotEmpty(meliPrimarySite) ? meliPrimarySite : "NA";
+        this.meliMetSite = StringUtils.isNotEmpty(meliMetSite) ? meliMetSite : "NA";
+        this.melmsPtid = StringUtils.isNotEmpty(melmsPtid) ? melmsPtid : "NA";
+        this.melmsSiteTypeDesc = StringUtils.isNotEmpty(melmsSiteTypeDesc) ? melmsSiteTypeDesc : "NA";
+        this.melmsSiteDesc = StringUtils.isNotEmpty(melmsSiteDesc) ? melmsSiteDesc : "NA";
+        this.melmsSiteYear = StringUtils.isNotEmpty(melmsSiteYear) ? melmsSiteYear : "NA";
     }
     
     public String getPATIENT_ID() {
         if (patientId != null) {
             return patientId;
         }
-        else if (!melspcPtid.equals("NA")) {
+        if (!melspcPtid.equals("NA")) {
             return melspcPtid;
         }
-        else if (!melgPtid.equals("NA")) {
+        if (!melgPtid.equals("NA")) {
             return melgPtid;
-        }        
-        else if (!melpPtid.equals("NA")) {
+        }
+        if (!melpPtid.equals("NA")) {
             return melpPtid;
         }
-        else {
-            return melmsPtid;
-        }
+        return melmsPtid;
     }
     
     public void setPATIENT_ID(String patientId) {
@@ -290,21 +288,19 @@ this.melmsSiteYear = StringUtils.isNotEmpty(melmsSiteYear) ? melmsSiteYear : "NA
         if (sampleId != null) {
             return sampleId;
         }
-        else if (!meliDmpSampleId.equals("NA")) {
+        if (!meliDmpSampleId.equals("NA")) {
             return meliDmpSampleId;
         }        
-        else if (!melpPrimSeq.equals("NA")) {
+        if (!melpPrimSeq.equals("NA")) {
             return melpPtid + "_" + melpPrimSeq;
         }        
-        else if (!melspcPtid.equals("NA")) {
+        if (!melspcPtid.equals("NA")) {
             return melspcPtid;
         }
-        else if (!melgPtid.equals("NA")) {
+        if (!melgPtid.equals("NA")) {
             return melgPtid;
         }
-        else {
-            return melmsPtid;
-        }
+        return melmsPtid;
     }
     
     public void setSAMPLE_ID(String sampleId) {

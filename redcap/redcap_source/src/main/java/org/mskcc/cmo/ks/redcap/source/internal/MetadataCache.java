@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Memorial Sloan-Kettering Cancer Center.
+ * Copyright (c) 2017 - 2018 Memorial Sloan-Kettering Cancer Center.
  *
  * This library is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS
@@ -57,31 +57,49 @@ public class MetadataCache {
     @Autowired
     private RedcapSessionManager redcapSessionManager;
 
-    private RedcapAttributeMetadata[] metadataArray = null;
-    private Map<String, RedcapAttributeMetadata> externalColumnHeaderToMetadata = null;
-    private Map<String, RedcapAttributeMetadata> redcapIdToMetadata = null;
+    @Autowired
+    private GoogleSessionManager googleSessionManager;
 
+    private RedcapAttributeMetadata[] metadataArray = null;
+    // mapping of normalized column header name to "RedcapProjectAttribute" object 
+    // where normalized column header is all caps and no spaces (i.e SAMPLE_ID : RedcapProjectAttribute(sample_id))
+    private Map<String, RedcapAttributeMetadata> normalizedColumnHeaderToMetadata = null;
     private final Logger log = Logger.getLogger(MetadataCache.class);
 
     public MetadataCache() {}
 
+    // when we want to get metadata from map, have to uppercase redcapId to match key
     public RedcapAttributeMetadata getMetadataByRedcapId(String redcapId) {
         ensureThatCacheIsInitialized();
-        return redcapIdToMetadata.get(redcapId);
+        RedcapAttributeMetadata redcapAttributeMetadata = normalizedColumnHeaderToMetadata.get(redcapId.toUpperCase());
+        if (redcapAttributeMetadata != null) {
+            return redcapAttributeMetadata;
+        } else {
+            String errorString = "Error : No RedcapAttributeMetadata found associated with redcap id: " + redcapId;
+            log.warn(errorString);
+            throw new RuntimeException(errorString);
+        }
     }
 
-    public RedcapAttributeMetadata getMetadataByExternalColumnHeader(String externalColumnHeader) {
+    public RedcapAttributeMetadata getMetadataByNormalizedColumnHeader(String normalizedColumnHeader) {
         ensureThatCacheIsInitialized();
-        return externalColumnHeaderToMetadata.get(externalColumnHeader);
+        RedcapAttributeMetadata redcapAttributeMetadata = normalizedColumnHeaderToMetadata.get(normalizedColumnHeader);
+        if (redcapAttributeMetadata != null) {
+            return redcapAttributeMetadata;
+        } else {
+            String errorString = "Error : No RedcapAttributeMetadata found associated with normalized column header: " + normalizedColumnHeader;
+            log.warn(errorString);
+            throw new RuntimeException(errorString);
+        }
     }
 
-    public List<RedcapAttributeMetadata> getMetadata () {
+    public List<RedcapAttributeMetadata> getMetadata() {
         ensureThatCacheIsInitialized();
         return Arrays.asList(metadataArray);
     }
 
     private void ensureThatCacheIsInitialized() {
-        if (externalColumnHeaderToMetadata != null && redcapIdToMetadata != null && metadataArray != null) {
+        if (normalizedColumnHeaderToMetadata != null && metadataArray != null) {
             return; // already initialized
         }
         initializeMetadataList();
@@ -89,45 +107,30 @@ public class MetadataCache {
     }
 
     private void initializeMetadataList() {
-        String metadataToken = redcapSessionManager.getMetadataToken(); //TODO: get the token from a RedcapTokenCache class
-        metadataArray = redcapSessionManager.getRedcapMetadataByToken(metadataToken);
+        //array returned from google spreadsheet
+        metadataArray = googleSessionManager.getRedcapMetadata();
     }
 
     private void initializeMetadataMaps() {
-        if (metadataArray != null) {
+        if (metadataArray == null) {
             initializeMetadataList();
         }
-        externalColumnHeaderToMetadata = new HashMap<String, RedcapAttributeMetadata>(metadataArray.length);
-        redcapIdToMetadata = new HashMap<String, RedcapAttributeMetadata>(metadataArray.length);
+        normalizedColumnHeaderToMetadata = new HashMap<String, RedcapAttributeMetadata>(metadataArray.length);
         for (RedcapAttributeMetadata metadataElement : metadataArray) {
-            addToExternalColumnHeaderMap(metadataElement);
-            addToRedcapIdMap(metadataElement);
+            addToNormalizedColumnHeaderMap(metadataElement);
         }
     }
 
-    private void addToExternalColumnHeaderMap(RedcapAttributeMetadata metadataElement) {
-        String externalColumnHeader = metadataElement.getExternalColumnHeader();
-        if (externalColumnHeader == null) {
-            String errorString = "Error : missing value in EXTERNAL_COLUMN_HEADER filed in Redcap Metadata project";
+    private void addToNormalizedColumnHeaderMap(RedcapAttributeMetadata metadataElement) {
+        String normalizedColumnHeader = metadataElement.getNormalizedColumnHeader();
+        if (normalizedColumnHeader == null) {
+            String errorString = "Error : missing value in NORMALIZED_COLUMN_HEADER in google worksheet";
             log.warn(errorString);
             throw new RuntimeException(errorString);
         }
-        if (externalColumnHeaderToMetadata.put(externalColumnHeader, metadataElement) != null) {
-            log.warn("overwrote externalColumnHeader '" + externalColumnHeader +
-                    "' with new value in externalColumnHeaderToMetadata map (externalColumnHeader was duplicated in redcap metadata project)");
-        }
-    }
-
-    private void addToRedcapIdMap(RedcapAttributeMetadata metadataElement) {
-        String redcapId = metadataElement.getRedcapId();
-        if (redcapId == null) {
-            String errorString = "Error : missing value in redcap_id field in Redcap Metadata project";
-            log.warn(errorString);
-            throw new RuntimeException(errorString);
-        }
-        if (redcapIdToMetadata.put(redcapId, metadataElement) != null) {
-            log.warn("overwrote redcapId '" + redcapId +
-                    "' with new value in redcapIdToMetadata map (redcapId was duplicated in redcap metadata project)");
+        if (normalizedColumnHeaderToMetadata.put(normalizedColumnHeader, metadataElement) != null) {
+            log.warn("overwrote normalizedColumnHeader '" + normalizedColumnHeader +
+                    "' with new value in normalizedColumnHeaderToMetadata map (normalizedColumnHeader duplicated in google worksheet)");
         }
     }
 }

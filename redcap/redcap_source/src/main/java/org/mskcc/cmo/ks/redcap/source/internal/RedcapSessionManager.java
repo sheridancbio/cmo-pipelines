@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Memorial Sloan-Kettering Cancer Center.
+ * Copyright (c) 2017 - 2018 Memorial Sloan-Kettering Cancer Center.
  *
  * This library is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS
@@ -79,18 +79,12 @@ public class RedcapSessionManager {
     private String redcapLoginHiddenInputName;
     @Value("${mapping_token}")
     private String mappingToken;
-    @Value("${metadata_project}")
-    private String metadataProjectStableId;
-    @Value("${namespace_project}")
-    private String namespaceProjectStableId;
 
     // entire token cache (used for looking up project titles during import)
     private Map<String, String> allTokensProjectTitleToApiTokenMap = null;
     private Map<String, String> allTokensApiTokenToProjectTitleMap = null;
     private Map<String, List<String>> allTokensStableIdToApiTokenListMap = null;
     private Map<String, String> allTokensApiTokenToStableIdMap = null;
-    String metadataToken = null;
-    String namespaceToken = null;
     // selected token cache (used for looking up stable ids during export)
     private Map<String, String> selectedClinicalDataTokens = null;
     private Map<String, String> selectedClinicalTimelineTokens = null;
@@ -147,18 +141,6 @@ public class RedcapSessionManager {
         }
     }
 
-    // SECTION : RedCap project token handling
-
-    public String getMetadataToken() {
-        checkAllTokensHaveBeenFetched();
-        return metadataToken;
-    }
-
-    public String getNamespaceToken() {
-        checkAllTokensHaveBeenFetched();
-        return namespaceToken;
-    }
-
     public String getTokenByProjectTitle(String projectTitle) {
         checkAllTokensHaveBeenFetched();
         return allTokensProjectTitleToApiTokenMap.get(projectTitle);
@@ -184,8 +166,7 @@ public class RedcapSessionManager {
 
     private void checkAllTokensHaveBeenFetched() {
         if (allTokensProjectTitleToApiTokenMap != null && allTokensApiTokenToProjectTitleMap != null &&
-                allTokensStableIdToApiTokenListMap != null && allTokensApiTokenToStableIdMap != null &&
-                metadataToken != null && namespaceToken != null) {
+                allTokensStableIdToApiTokenListMap != null && allTokensApiTokenToStableIdMap != null) {
             return;
         }
         // fetch tokens
@@ -193,8 +174,6 @@ public class RedcapSessionManager {
         allTokensApiTokenToProjectTitleMap = new HashMap<String, String>();
         allTokensStableIdToApiTokenListMap = new HashMap<String, List<String>>();
         allTokensApiTokenToStableIdMap = new HashMap<String, String>();
-        metadataToken = null;
-        namespaceToken = null;
         RestTemplate restTemplate = new RestTemplate();
 
         log.info("Getting tokens for clinical data processor...");
@@ -215,14 +194,6 @@ public class RedcapSessionManager {
             if (tokenStableId == null || tokenProjectTitle == null || tokenApiToken == null) {
                 throwRuntimeExceptionForIncompleteToken(tokenStableId, tokenProjectTitle, tokenApiToken);
             }
-            if (token.getStableId().equals(metadataProjectStableId)) {
-                metadataToken = tokenApiToken;
-                continue;
-            }
-            if (token.getStableId().equals(namespaceProjectStableId)) {
-                namespaceToken = tokenApiToken;
-                continue;
-            }
             if (allTokensProjectTitleToApiTokenMap.put(tokenProjectTitle, tokenApiToken) != null) {
                 throwRuntimeExceptionForDuplicatedProjectTitle(tokenProjectTitle);
             }
@@ -237,15 +208,6 @@ public class RedcapSessionManager {
             }
             apiTokenList.add(tokenApiToken);
         }
-        if (metadataToken == null || namespaceToken == null) {
-            throwRuntimeExceptionForMissingMetadataOrNamespaceToken();
-        }
-    }
-
-    private void throwRuntimeExceptionForMissingMetadataOrNamespaceToken() {
-        String errorMessage = "Error : RedCap mapping project is missing a necessary token. (Either stable_id " + metadataProjectStableId + " or stable_id " + namespaceProjectStableId + ")";
-        log.error(errorMessage);
-        throw new RuntimeException(errorMessage);
     }
 
     private void throwRuntimeExceptionForDuplicatedProjectTitle(String projectTitle) {
@@ -515,32 +477,4 @@ public class RedcapSessionManager {
         ResponseEntity<RedcapProjectAttribute[]> responseEntity = restTemplate.exchange(getRedcapApiURI(), HttpMethod.POST, requestEntity, RedcapProjectAttribute[].class);
         return responseEntity.getBody();
     }
-
-    public RedcapAttributeMetadata[] getRedcapMetadataByToken(String projectToken) {
-        RestTemplate restTemplate = new RestTemplate();
-        log.info("Getting attribute metadatas...");
-        LinkedMultiValueMap<String, String> uriVariables = new LinkedMultiValueMap<>();
-        uriVariables.add("token", projectToken);
-        uriVariables.add("content", "record");
-        uriVariables.add("format", "json");
-        uriVariables.add("type", "flat");
-        HttpEntity<LinkedMultiValueMap<String, Object>> requestEntity = getRequestEntity(uriVariables);
-        ResponseEntity<RedcapAttributeMetadata[]> responseEntity = restTemplate.exchange(getRedcapApiURI(), HttpMethod.POST, requestEntity, RedcapAttributeMetadata[].class);
-        return responseEntity.getBody();
-    }
-
-    public RedcapAttributeMetadata[] getRedcapNamespace() {
-        RestTemplate restTemplate = new RestTemplate();
-        log.info("Getting attribute namespace...");
-        String namespaceToken = getNamespaceToken();
-        LinkedMultiValueMap<String, String> uriVariables = new LinkedMultiValueMap<>();
-        uriVariables.add("token", namespaceToken);
-        uriVariables.add("content", "record");
-        uriVariables.add("format", "json");
-        uriVariables.add("type", "flat");
-        HttpEntity<LinkedMultiValueMap<String, Object>> requestEntity = getRequestEntity(uriVariables);
-        ResponseEntity<RedcapAttributeMetadata[]> responseEntity = restTemplate.exchange(getRedcapApiURI(), HttpMethod.POST, requestEntity, RedcapAttributeMetadata[].class);
-        return responseEntity.getBody();
-    }
-
 }
