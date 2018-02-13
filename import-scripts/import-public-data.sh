@@ -61,7 +61,18 @@ if [ $? -gt 0 ]; then
     echo -e "$EMAIL_BODY" | mail -s "Data fetch failure: private" $email_list
 fi
 
-if [[ $DB_VERSION_FAIL -eq 0 && $PRIVATE_FETCH_FAIL -eq 0 && $CMO_IMPACT_FETCH_FAIL -eq 0 && $CBIO_PORTAL_DATA_FETCH_FAIL -eq 0 ]]; then
+echo "fetching updates from datahub..."
+DATAHUB_FETCH_FAIL=0
+$JAVA_HOME/bin/java $JAVA_PROXY_ARGS -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27185 -Xmx16g -ea -Dspring.profiles.active=dbcp -Djava.io.tmpdir="$tmp" -cp $PORTAL_HOME/lib/public-importer.jar org.mskcc.cbio.importer.Admin --fetch-data --data-source datahub --run-date latest
+if [ $? -gt 0 ]; then
+    echo "datahub fetch failed!"
+    DATAHUB_FETCH_FAIL=1
+    EMAIL_BODY="The datahub data fetch failed."
+    echo -e "Sending email $EMAIL_BODY"
+    echo -e "$EMAIL_BODY" | mail -s "Data fetch failure: datahub" $pipeline_email_list
+fi
+
+if [[ $DB_VERSION_FAIL -eq 0 && $PRIVATE_FETCH_FAIL -eq 0 && $CMO_IMPACT_FETCH_FAIL -eq 0 && $CBIO_PORTAL_DATA_FETCH_FAIL -eq 0 && $DATAHUB_FETCH_FAIL -eq 0 ]]; then
     # import public studies into public portal
     echo "importing cancer type updates into public portal database..."
     $JAVA_HOME/bin/java $JAVA_PROXY_ARGS -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27185 -Xmx16g -ea -Dspring.profiles.active=dbcp -Djava.io.tmpdir="$tmp" -cp $PORTAL_HOME/lib/public-importer.jar org.mskcc.cbio.importer.Admin --import-types-of-cancer --oncotree-version ${ONCOTREE_VERSION_TO_USE}
