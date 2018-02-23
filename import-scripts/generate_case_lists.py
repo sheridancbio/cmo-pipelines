@@ -58,7 +58,6 @@ CASE_LIST_CONFIG_HEADER_COLUMNS = ["CASE_LIST_FILENAME", "STAGING_FILENAME", "ME
 CASE_LIST_UNION_DELIMITER = "|"
 CASE_LIST_INTERSECTION_DELIMITER = "&"
 MUTATION_STAGING_GENERAL_PREFIX = "data_mutations"
-CLINICAL_PREFIX = "data_clinical"
 SEQUENCED_SAMPLES_FILENAME = "sequenced_samples.txt"
 MUTATION_CASE_LIST_META_HEADER = "sequenced_samples"
 MUTATION_CASE_ID_COLUMN_HEADER = "Tumor_Sample_Barcode"
@@ -68,7 +67,6 @@ CANCER_STUDY_TAG = "<CANCER_STUDY>"
 NUM_CASES_TAG = "<NUM_CASES>"
 
 def generate_case_lists(case_list_config_filename, case_list_dir, study_dir, study_id, overwrite=False, verbose=False):
-    all_files_in_study_dir = [f for f in os.listdir(study_dir) if os.path.isfile(os.path.join(study_dir, f))]
     header = []
     with open(case_list_config_filename, 'r') as case_list_config_file:
         # get header and validate
@@ -116,17 +114,7 @@ def generate_case_lists(case_list_config_filename, case_list_dir, study_dir, stu
                     print "LOG: generate_case_lists(), processing staging file '%s'" % (staging_filename)
                 # compute the case set
                 case_list = []
-                # if mutations file, look and see if there are others
-                if MUTATION_STAGING_GENERAL_PREFIX in staging_filename:
-                    for filename in all_files_in_study_dir:
-                        if MUTATION_STAGING_GENERAL_PREFIX in filename and "_annotated" not in filename and "_unfiltered" not in filename:
-                            case_list.extend(get_case_list_from_staging_file(study_dir, filename, verbose))
-                elif CLINICAL_PREFIX in staging_filename:
-                    for filename in all_files_in_study_dir:
-                        if CLINICAL_PREFIX in filename:
-                            case_list.extend(get_case_list_from_staging_file(study_dir, filename, verbose))
-                else:
-                    case_list = get_case_list_from_staging_file(study_dir, staging_filename, verbose)
+                case_list = get_case_list_from_staging_file(study_dir, staging_filename, verbose)
 
                 if len(case_list) == 0:
                     if verbose:
