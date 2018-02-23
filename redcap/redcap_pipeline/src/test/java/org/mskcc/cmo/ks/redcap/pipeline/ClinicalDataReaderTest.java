@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Memorial Sloan-Kettering Cancer Center.
+ * Copyright (c) 2017-2018 Memorial Sloan-Kettering Cancer Center.
  *
  * This library is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS
@@ -53,7 +53,7 @@ public class ClinicalDataReaderTest {
     @Autowired
     private ClinicalDataReader clinicalDataReader;
 
-    /** This test reads two mocked redcap projects, one of which has no SAMPLE_ID attribute.
+    /** This test reads a set of mocked redcap projects.
      * Proper output is expected. In particular, no records should be missing the SAMPLE_ID field.
      */
     @Test
@@ -63,6 +63,7 @@ public class ClinicalDataReaderTest {
         StringBuilder errorMessage = new StringBuilder("\nFailures:\n");
         int failCount = 0;
         Map<String, Map<String, String>> expectedSampleToRecordMap = makeExpectedSampleToRecordMap();
+        // reads data from makeMockGbmSampleData() and makeMockGbmPatientData() in ClinicalDataReaderTestConfiguration
         Map<String, Map<String, String>> returnedSampleToRecordMap = new HashMap<>();
         // compare returned values to expected
         while (true) {

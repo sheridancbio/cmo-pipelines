@@ -85,6 +85,7 @@ public class RedcapPipeline {
     private static void checkIfProjectOrStableIdExistsAndExit(String[] args, CommandLine commandLine)
     {
         SpringApplication app = new SpringApplication(RedcapPipeline.class);
+        app.setWebEnvironment(false);
         ConfigurableApplicationContext ctx = app.run(args);
         String projectTitle = commandLine.getOptionValue("redcap-project-title");
         String stableId = commandLine.getOptionValue("stable-id");
@@ -112,6 +113,7 @@ public class RedcapPipeline {
     private static void launchJob(String[] args, char executionMode, CommandLine commandLine) throws Exception
     {
         SpringApplication app = new SpringApplication(RedcapPipeline.class);
+        app.setWebEnvironment(false);
         ConfigurableApplicationContext ctx = app.run(args);
         JobLauncher jobLauncher = ctx.getBean(JobLauncher.class);
         JobParametersBuilder builder = new JobParametersBuilder();

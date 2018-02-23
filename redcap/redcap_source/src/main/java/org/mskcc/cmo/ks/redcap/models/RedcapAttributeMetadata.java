@@ -45,24 +45,15 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
-    "record_id",
-    "external_column_header",
     "normalized_column_header",
     "display_name",
     "descriptions",
     "datatype",
     "attribute_type",
     "priority",
-    "note",
-    "redcap_id",
-    "clinical_metadata_complete"
 })
 public class RedcapAttributeMetadata {
 
-    @JsonProperty("record_id")
-    private Long recordId;
-    @JsonProperty("external_column_header")
-    private String externalColumnHeader;
     @JsonProperty("normalized_column_header")
     private String normalizedColumnHeader;
     @JsonProperty("display_name")
@@ -75,12 +66,6 @@ public class RedcapAttributeMetadata {
     private String attributeType;
     @JsonProperty("priority")
     private String priority;
-    @JsonProperty("note")
-    private String note;
-    @JsonProperty("redcap_id")
-    private String redcapId;
-    @JsonProperty("clinical_metadata_complete")
-    private String clinicalMetadataComplete;
     @JsonIgnore
     private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
@@ -92,70 +77,20 @@ public class RedcapAttributeMetadata {
 
     /**
     *
-    * @param recordId
     * @param normalizedColumnHeader
-    * @param clinicalMetadataComplete
-    * @param externalColumnHeader
     * @param priority
     * @param attributeType
     * @param datatype
     * @param displayName
-    * @param note
-    * @param redcapId
     * @param descriptions
     */
-    public RedcapAttributeMetadata(Long recordId, String externalColumnHeader, String normalizedColumnHeader, String displayName, String descriptions, String datatype, String attributeType, String priority, String note, String redcapId, String clinicalMetadataComplete) {
-        this.recordId = recordId;
-        this.externalColumnHeader = externalColumnHeader;
+    public RedcapAttributeMetadata(String normalizedColumnHeader, String displayName, String descriptions, String datatype, String attributeType, String priority) {
         this.normalizedColumnHeader = normalizedColumnHeader;
         this.displayName = displayName;
         this.descriptions = descriptions;
         this.datatype = datatype;
         this.attributeType = attributeType;
         this.priority = priority;
-        this.note = note;
-        this.redcapId = redcapId;
-        this.clinicalMetadataComplete = clinicalMetadataComplete;
-    }
-
-    /**
-    *
-    * @return
-    * The recordId
-    */
-    @JsonProperty("record_id")
-    public Long getRecordId() {
-        return recordId;
-    }
-
-    /**
-    *
-    * @param recordId
-    * The record_id
-    */
-    @JsonProperty("record_id")
-    public void setRecordId(Long recordId) {
-        this.recordId = recordId;
-    }
-
-    /**
-    *
-    * @return
-    * The externalColumnHeader
-    */
-    @JsonProperty("external_column_header")
-    public String getExternalColumnHeader() {
-        return externalColumnHeader;
-    }
-
-    /**
-    *
-    * @param externalColumnHeader
-    * The external_column_header
-    */
-    @JsonProperty("external_column_header")
-    public void setExternalColumnHeader(String externalColumnHeader) {
-        this.externalColumnHeader = externalColumnHeader;
     }
 
     /**
@@ -276,66 +211,6 @@ public class RedcapAttributeMetadata {
     @JsonProperty("priority")
     public void setPriority(String priority) {
         this.priority = priority;
-    }
-
-    /**
-    *
-    * @return
-    * The note
-    */
-    @JsonProperty("note")
-    public String getNote() {
-        return note;
-    }
-
-    /**
-    *
-    * @param note
-    * The note
-    */
-    @JsonProperty("note")
-    public void setNote(String note) {
-        this.note = note;
-    }
-
-    /**
-    *
-    * @return
-    * The note
-    */
-    @JsonProperty("redcap_id")
-    public String getRedcapId() {
-        return redcapId;
-    }
-
-    /**
-    *
-    * @param note
-    * The note
-    */
-    @JsonProperty("redcap_id")
-    public void setRedcapId(String redcapId) {
-        this.redcapId = redcapId;
-    }
-
-    /**
-    *
-    * @return
-    * The clinicalMetadataComplete
-    */
-    @JsonProperty("clinical_metadata_complete")
-    public String getClinicalMetadataComplete() {
-        return clinicalMetadataComplete;
-    }
-
-    /**
-    *
-    * @param clinicalMetadataComplete
-    * The clinical_metadata_complete
-    */
-    @JsonProperty("clinical_metadata_complete")
-    public void setClinicalMetadataComplete(String clinicalMetadataComplete) {
-        this.clinicalMetadataComplete = clinicalMetadataComplete;
     }
 
     @JsonAnyGetter

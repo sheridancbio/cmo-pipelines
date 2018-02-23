@@ -62,10 +62,6 @@ redcap_login_hidden_input_name=
 
 # RedCap mapping token for ID_MAPPING - any tables that we want to access need to be in this project
 mapping_token=
-# The name of the RedCap project that contains the metadata about the clinical attributes in RedCap
-metadata_project=
-# The name of the RedCap project that contains the namespace mapping of external column headers to normalized
-namespace_project=
 
 # email properties
 email.server=localhost

@@ -43,7 +43,7 @@ def createDefaultMskimpactMetadataMap():
         },
         "ATTRIBUTE_TYPE" : {},
         "PRIORITY" : {
-            "12_245_PARTC_CONSENTED" : "1",
+            "PARTC_CONSENTED_12_245" : "1",
             "AGE_CURRENT" : "1",
             "CANCER_TYPE" : "1",
             "CANCER_TYPE_DETAILED" : "1",

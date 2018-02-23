@@ -54,7 +54,7 @@ public class Skcm_mskcc_2015_chantClinicalPatientProcessor implements ItemProces
 
     @Override
     public Skcm_mskcc_2015_chantClinicalCompositeRecord process(final Skcm_mskcc_2015_chantClinicalCompositeRecord melanomaClinicalCompositeRecord) throws Exception {
-        Skcm_mskcc_2015_chantClinicalRecord melanomaClinicalRecord = melanomaClinicalCompositeRecord.getRecord();
+        Skcm_mskcc_2015_chantNormalizedClinicalRecord melanomaClinicalRecord = melanomaClinicalCompositeRecord.getRecord();
         List<String> header =  melanomaClinicalRecord.getFieldNames();
         List<String> record = new ArrayList<>();
 
@@ -68,8 +68,7 @@ public class Skcm_mskcc_2015_chantClinicalPatientProcessor implements ItemProces
             // get value by external column header (same as melanoma clinical record field name)
             // field data might contain '|'-delimited values - if only one unique
             // value then use that, otherwise just use the data that's there
-            String extColumn = patientHeader.get("external_header").get(i+1);  // need to shift by one b/c writer removes PATIENT_ID metadata for header
-            String value = melanomaClinicalRecord.getClass().getMethod("get" + extColumn).invoke(melanomaClinicalRecord).toString();
+            String value = melanomaClinicalRecord.getClass().getMethod("get" + normColumn).invoke(melanomaClinicalRecord).toString();
             Set<String> uniqueValues = new HashSet(Arrays.asList(darwinUtils.convertWhitespace(value).split("\\|")));
             List<String> values = Arrays.asList(value.split("\\|"));
             if (uniqueValues.size() == 1) {

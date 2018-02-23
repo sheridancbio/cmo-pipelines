@@ -44,7 +44,7 @@ import org.springframework.beans.factory.annotation.Value;
  *
  * @author heinsz
  */
-public class Skcm_mskcc_2015_chantClinicalSampleProcessor implements ItemProcessor<Skcm_mskcc_2015_chantClinicalRecord, Skcm_mskcc_2015_chantClinicalCompositeRecord> {
+public class Skcm_mskcc_2015_chantClinicalSampleProcessor implements ItemProcessor<Skcm_mskcc_2015_chantNormalizedClinicalRecord, Skcm_mskcc_2015_chantClinicalCompositeRecord> {
 
     @Autowired
     private DarwinUtils darwinUtils;
@@ -53,7 +53,7 @@ public class Skcm_mskcc_2015_chantClinicalSampleProcessor implements ItemProcess
     private Map<String, List<String>> sampleHeader;
 
     @Override
-    public Skcm_mskcc_2015_chantClinicalCompositeRecord process(final Skcm_mskcc_2015_chantClinicalRecord melanomaClinicalRecord) throws Exception {
+    public Skcm_mskcc_2015_chantClinicalCompositeRecord process(final Skcm_mskcc_2015_chantNormalizedClinicalRecord melanomaClinicalRecord) throws Exception {
         List<String> record = new ArrayList<>();
         // first add sample and patient id to record then iterate through rest of sample header
         record.add(darwinUtils.convertWhitespace(melanomaClinicalRecord.getSAMPLE_ID()).split("\\|")[0]);
@@ -66,8 +66,7 @@ public class Skcm_mskcc_2015_chantClinicalSampleProcessor implements ItemProcess
             // get value by external column header (same as melanoma clinical record field name)
             // field data might contain '|'-delimited values - if only one unique
             // value then use that, otherwise just use the data that's there
-            String extColumn = sampleHeader.get("external_header").get(i+1); // need to shift by one b/c writer removes SAMPLE_ID metadata for header
-            String value = melanomaClinicalRecord.getClass().getMethod("get" + extColumn).invoke(melanomaClinicalRecord).toString();
+            String value = melanomaClinicalRecord.getClass().getMethod("get" + normColumn).invoke(melanomaClinicalRecord).toString();
             Set<String> uniqueValues = new HashSet(Arrays.asList(darwinUtils.convertWhitespace(value).split("\\|")));
             List<String> values = Arrays.asList(value.split("\\|"));
             if (uniqueValues.size() == 1) {

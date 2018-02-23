@@ -230,11 +230,11 @@ public class CVRClinicalRecord {
         this.oncotreeCode = oncotreeCode;
     }
 
-    public String get12_245_PARTC_CONSENTED() {
+    public String getPARTC_CONSENTED_12_245() {
         return this.partCConsented != null ? this.partCConsented : "";
     }
 
-    public void set12_245_PARTC_CONSENTED(String partCConsented) {
+    public void setPARTC_CONSENTED_12_245(String partCConsented) {
         this.partCConsented = partCConsented;
     }
 
@@ -329,7 +329,7 @@ public class CVRClinicalRecord {
         fieldNames.add("SAMPLE_COVERAGE");
         fieldNames.add("TUMOR_PURITY");
         fieldNames.add("ONCOTREE_CODE");
-        fieldNames.add("12_245_PARTC_CONSENTED");
+        fieldNames.add("PARTC_CONSENTED_12_245");
         fieldNames.add("MSI_COMMENT");
         fieldNames.add("MSI_SCORE");
         fieldNames.add("MSI_TYPE");

@@ -11,20 +11,20 @@ package org.mskcc.cmo.ks.darwin.pipeline.model;
  */
 public class Skcm_mskcc_2015_chantClinicalCompositeRecord {
     
-    private Skcm_mskcc_2015_chantClinicalRecord record;
+    private Skcm_mskcc_2015_chantNormalizedClinicalRecord record;
     private String sampleRecord;
     private String patientRecord;
     
     public Skcm_mskcc_2015_chantClinicalCompositeRecord() {}
-    public Skcm_mskcc_2015_chantClinicalCompositeRecord(Skcm_mskcc_2015_chantClinicalRecord record) {
+    public Skcm_mskcc_2015_chantClinicalCompositeRecord(Skcm_mskcc_2015_chantNormalizedClinicalRecord record) {
         this.record = record;
     }
     
-    public Skcm_mskcc_2015_chantClinicalRecord getRecord() {
+    public Skcm_mskcc_2015_chantNormalizedClinicalRecord getRecord() {
         return this.record;
     }
     
-    public void setRecord(Skcm_mskcc_2015_chantClinicalRecord record) {
+    public void setRecord(Skcm_mskcc_2015_chantNormalizedClinicalRecord record) {
         this.record = record;
     }
     

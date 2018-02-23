@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 - 2017 Memorial Sloan-Kettering Cancer Center.
+ * Copyright (c) 2016 - 2018 Memorial Sloan-Kettering Cancer Center.
  *
  * This library is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS
@@ -303,20 +303,14 @@ public class ClinicalDataSourceRedcapImpl implements ClinicalDataSource {
         combinedHeader = makeHeader(combinedAttributeMap);
     }
 
+    //change so that redcap ids are just lower cased "externalFieldNames"
     public String[] externalFieldNamesToRedcapFieldIds(String[] externalFieldNames) {
         if (externalFieldNames == null) {
             return new String[0];
         }
         String[] redcapFieldIds = new String[externalFieldNames.length];
         for (int i = 0; i < externalFieldNames.length; i++) {
-            RedcapAttributeMetadata metadataForField = metadataCache.getMetadataByExternalColumnHeader(externalFieldNames[i]);
-            if (metadataForField == null) {
-                String errorString = "Error : attempt to persist file to RedCap failed due to external field name " +
-                        externalFieldNames[i] + " not having metadata defined in the RedCap Metadata Project";
-                log.warn(errorString);
-                throw new RuntimeException(errorString);
-            }
-            redcapFieldIds[i] = metadataForField.getRedcapId();
+            redcapFieldIds[i] =  metadataCache.getMetadataByNormalizedColumnHeader(externalFieldNames[i]).getNormalizedColumnHeader().toLowerCase();
         }
         return redcapFieldIds;
     }
@@ -361,7 +355,6 @@ public class ClinicalDataSourceRedcapImpl implements ClinicalDataSource {
         List<String> descriptions = new ArrayList<>();
         List<String> datatypes = new ArrayList<>();
         List<String> priorities = new ArrayList<>();
-        List<String> externalHeader = new ArrayList<>();
         List<String> header = new ArrayList<>();
 
         for (int i=0; i<fullHeader.get("header").size(); i++) {
@@ -370,7 +363,6 @@ public class ClinicalDataSourceRedcapImpl implements ClinicalDataSource {
                 descriptions.add(fullHeader.get("descriptions").get(i));
                 datatypes.add(fullHeader.get("datatypes").get(i));
                 priorities.add(fullHeader.get("priorities").get(i));
-                externalHeader.add(fullHeader.get("external_header").get(i));
                 header.add(fullHeader.get("header").get(i));
             }
         }
@@ -378,7 +370,6 @@ public class ClinicalDataSourceRedcapImpl implements ClinicalDataSource {
         fullPatientHeader.put("descriptions", descriptions);
         fullPatientHeader.put("datatypes", datatypes);
         fullPatientHeader.put("priorities", priorities);
-        fullPatientHeader.put("external_header", externalHeader);
         fullPatientHeader.put("header", header);
         return fullPatientHeader;
     }
@@ -394,7 +385,6 @@ public class ClinicalDataSourceRedcapImpl implements ClinicalDataSource {
         List<String> descriptions = new ArrayList<>();
         List<String> datatypes = new ArrayList<>();
         List<String> priorities = new ArrayList<>();
-        List<String> externalHeader = new ArrayList<>();
         List<String> header = new ArrayList<>();
 
         for (int i=0; i<fullHeader.get("header").size(); i++) {
@@ -403,7 +393,6 @@ public class ClinicalDataSourceRedcapImpl implements ClinicalDataSource {
                 descriptions.add(fullHeader.get("descriptions").get(i));
                 datatypes.add(fullHeader.get("datatypes").get(i));
                 priorities.add(fullHeader.get("priorities").get(i));
-                externalHeader.add(fullHeader.get("external_header").get(i));
                 header.add(fullHeader.get("header").get(i));
             }
         }
@@ -411,7 +400,6 @@ public class ClinicalDataSourceRedcapImpl implements ClinicalDataSource {
         fullSampleHeader.put("descriptions", descriptions);
         fullSampleHeader.put("datatypes", datatypes);
         fullSampleHeader.put("priorities", priorities);
-        fullSampleHeader.put("external_header", externalHeader);
         fullSampleHeader.put("header", header);
         return fullSampleHeader;
     }

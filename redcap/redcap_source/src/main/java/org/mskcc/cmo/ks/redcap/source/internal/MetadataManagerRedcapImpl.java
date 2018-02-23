@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 - 2017 Memorial Sloan-Kettering Cancer Center.
+ * Copyright (c) 2016 - 2018 Memorial Sloan-Kettering Cancer Center.
  *
  * This library is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS
@@ -61,48 +61,19 @@ public class MetadataManagerRedcapImpl implements MetadataManager {
     @Autowired
     private RedcapSessionManager redcapSessionManager;
 
-    private List<RedcapAttributeMetadata> namespace; //TODO: delete this functionality
-
     private final Logger log = Logger.getLogger(MetadataManagerRedcapImpl.class);
 
     @Override
     public Map<String, List<String>> getFullHeader(List<String> header) {
-        namespace = getNamespace();
         Map<String, RedcapAttributeMetadata> combinedAttributeMap = new LinkedHashMap<>();
-        List<RedcapAttributeMetadata> metaDataList =  metadataCache.getMetadata();
-        for (String attribute : header) {
-            String extColHeader = "";
-            for (RedcapAttributeMetadata namespaceEntry : namespace) {
-                if (namespaceEntry.getExternalColumnHeader().equalsIgnoreCase(attribute)) {
-                    // update attribute name and external column header values
-                    // since coming from a namespace and not the metadata source
-                    attribute = namespaceEntry.getNormalizedColumnHeader();
-                    extColHeader = namespaceEntry.getExternalColumnHeader();
-                }
-            }
-            for (RedcapAttributeMetadata meta : metaDataList) {
-                if (meta.getNormalizedColumnHeader().equalsIgnoreCase(attribute)) {
-                    // update external column header if not empty
-                    if (!extColHeader.isEmpty()) {
-                        meta.setExternalColumnHeader(extColHeader);
-                    }
-                    combinedAttributeMap.put(attribute, meta);
-                }
-            }
+        for (String attribute : header) { 
+            combinedAttributeMap.put(attribute, metadataCache.getMetadataByNormalizedColumnHeader(attribute));
         }
         return makeHeader(combinedAttributeMap);
     }
 
     private List<RedcapAttributeMetadata> getMetadata() {
         return metadataCache.getMetadata();
-    }
-
-    private List<RedcapAttributeMetadata> getNamespace() {
-        if (namespace != null) {
-            return namespace;
-        }
-        RedcapAttributeMetadata[] namespaceArray = redcapSessionManager.getRedcapNamespace();
-        return Arrays.asList(namespaceArray);
     }
 
     private Map<String,List<String>> makeHeader(Map<String, RedcapAttributeMetadata> attributeMap) {
@@ -112,7 +83,6 @@ public class MetadataManagerRedcapImpl implements MetadataManager {
         List<String> datatypes = new ArrayList<>();
         List<String> priorities = new ArrayList<>();
         List<String> attributeTypes = new ArrayList<>();
-        List<String> externalHeader = new ArrayList<>();
         List<String> header = new ArrayList<>();
 
         for (Map.Entry<String, RedcapAttributeMetadata> entry : attributeMap.entrySet()) {
@@ -121,7 +91,6 @@ public class MetadataManagerRedcapImpl implements MetadataManager {
             datatypes.add(entry.getValue().getDatatype());
             priorities.add(entry.getValue().getPriority());
             attributeTypes.add(entry.getValue().getAttributeType());
-            externalHeader.add(entry.getValue().getExternalColumnHeader());
             header.add(entry.getValue().getNormalizedColumnHeader());
         }
 
@@ -130,7 +99,6 @@ public class MetadataManagerRedcapImpl implements MetadataManager {
         headerMap.put("datatypes", datatypes);
         headerMap.put("priorities", priorities);
         headerMap.put("attribute_types", attributeTypes);
-        headerMap.put("external_header", externalHeader);
         headerMap.put("header", header);
         return headerMap;
     }

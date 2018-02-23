@@ -152,7 +152,7 @@ public class BatchConfiguration {
     @Bean
     public Step skcm_mskcc_2015_chantClinicalStep() {
         return stepBuilderFactory.get("skcm_mskcc_2015_chantClinicalStep")
-                .<Skcm_mskcc_2015_chantClinicalRecord, String> chunk(chunkSize)
+                .<Skcm_mskcc_2015_chantNormalizedClinicalRecord, String> chunk(chunkSize)
                 .reader(skcm_mskcc_2015_chantClinicalReader())
                 .processor(skcm_mskcc_2015_chantClinicalCompositeProcessor())
                 .writer(skcm_mskcc_2015_chantClinicalCompositeWriter())
