@@ -39,10 +39,10 @@ do
     echo date: ${now} : scanning for long running import jobs
     myuidoutput=`id`
     myuid=-1
-    if [[ ${myuidoutput} =~ uid=([[:digit:]]+).* ]]; then
+    if [[ ${myuidoutput} =~ uid=([[:digit:]]+).* ]] ; then
         myuid=${BASH_REMATCH[1]}
     fi
-    if [ $myuid -eq -1 ]; then
+    if [ $myuid -eq -1 ] ; then
         echo Error : could not determine uid
         exit 1
     fi
@@ -62,10 +62,10 @@ do
 
         # if process is not stalled then set date to current time so next break triggers email
         if [ $ps_etime_seconds -le ${max_time[i]} ] ; then
-            email_times[i]="$(date%H%M)"
+            email_times[i]="$(date +%H%M)"
         else
         # if process is stalled and current time is greater than 'email time' - send email and set email time to current time plus 3 hours
-            if [ $(date +%H%M) -gt ${email_times[i]} ] then
+            if [ $(date +%H%M) -gt ${email_times[i]} ] ; then
                 send_email_notification "$ps_output"
                 email_times[i]="$((10#$(date -d '+3 hours' +"%H%M")))"
             fi
