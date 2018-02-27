@@ -45,7 +45,7 @@
     <dependency>
       <groupId>org.cbioportal.annotator</groupId>
       <artifactId>annotator</artifactId>
-      <version>0.1.0</version>
+      <version>1.0.0</version>
     </dependency>
     <dependency>
       <groupId>javax.mail</groupId>
