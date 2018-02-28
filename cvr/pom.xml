@@ -69,7 +69,20 @@
       <version>19.0</version>
       <type>jar</type>
     </dependency>
+    <!-- cbioportal -->
+    <dependency>
+      <groupId>com.github.cbioportal</groupId>
+      <artifactId>cbioportal</artifactId>
+      <version>b6b7b3f8332b94f01adc9e9263af8f2fe2b4e09a</version>
+    </dependency>
   </dependencies>
+
+  <repositories>
+    <repository>
+      <id>jitpack.io</id>
+      <url>https://jitpack.io</url>
+    </repository>
+  </repositories>
 
   <build>
     <finalName>cvr_fetcher</finalName>
