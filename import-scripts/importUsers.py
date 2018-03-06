@@ -218,7 +218,8 @@ def get_worksheet_feed(client, ss, ws):
 # insert new users into table - this list does not contain users already in table
 
 def insert_new_users(cursor, new_user_list):
-    to_remove = []
+    # list of emails for users which returned an error when inserting into database
+    emails_to_remove = []
     for user in new_user_list:
         print >> OUTPUT_FILE, "new user: %s" % user.google_email;
         try:
@@ -233,8 +234,8 @@ def insert_new_users(cursor, new_user_list):
             print >> OUTPUT_FILE, msg
             print >> OUTPUT_FILE, "Removing user: %s" % user_name
             print >> ERROR_FILE, msg
-            to_remove.append(user)
-    return to_remove
+            emails_to_remove.append(user.google_email.lower())
+    return emails_to_remove
 
 # ------------------------------------------------------------------------------
 # get current users from database
@@ -319,7 +320,7 @@ def get_new_user_map(spreadsheet, worksheet_feed, current_user_map, portal_name,
                     user.authorities.extend([portal_name + ':' + au for au in authorities.split(';')])
                     to_return[google_email.lower()] = user
                 else:
-                    to_return[google_email] = User(inst_email, google_email, name, 1,
+                    to_return[google_email.lower()] = User(inst_email, google_email, name, 1,
                         [portal_name + ':' + au for au in authorities.split(';')])
 
     return to_return
@@ -431,15 +432,15 @@ def manage_users(client, spreadsheet, cursor, worksheet_feed, portal_name, mskcc
         print >> OUTPUT_FILE, 'We have found %s current portal users' % len(current_user_map)
     else:
         print >> OUTPUT_FILE, 'Error reading user table'
-        return None
+        return None, None
 
     # get list of new users and insert
     print >> OUTPUT_FILE, 'Checking for new users'
     new_user_map = get_new_user_map(spreadsheet, worksheet_feed, current_user_map, portal_name, mskcc_user_spreadsheet)
     if (len(new_user_map) > 0):
         print >> OUTPUT_FILE, 'We have %s new user(s) to add' % len(new_user_map)
-        to_remove = insert_new_users(cursor, new_user_map.values())
-        return new_user_map, to_remove
+        emails_to_remove = insert_new_users(cursor, new_user_map.values())
+        return new_user_map, emails_to_remove
     else:
         print >> OUTPUT_FILE, 'No new users to insert, exiting'
         return None, None
@@ -605,7 +606,7 @@ def main():
                                                 portal_properties.google_worksheet)
 
             # the 'guts' of the script
-            new_user_map, to_remove = manage_users(client, google_spreadsheet, cursor, worksheet_feed, portal_name_map[google_spreadsheet], mskcc_user_spreadsheet)
+            new_user_map, emails_to_remove = manage_users(client, google_spreadsheet, cursor, worksheet_feed, portal_name_map[google_spreadsheet], mskcc_user_spreadsheet)
 
             # update user authorities
             update_user_authorities(google_spreadsheet, cursor, worksheet_feed, portal_name_map[google_spreadsheet], mskcc_user_spreadsheet)
@@ -625,7 +626,7 @@ def main():
                             bcc_field = MESSAGE_BCC_GENIE
                             error_subject = ERROR_EMAIL_SUBJECT_GENIE
                             error_body = ERROR_EMAIL_BODY_GENIE
-                        if new_user_key not in to_remove:
+                        if new_user_key not in emails_to_remove:
                             print >> OUTPUT_FILE, ('Sending confirmation email to new user: %s at %s' %
                                                (new_user.name, new_user.inst_email))
                             send_mail([new_user.inst_email],subject,body, sender = from_field, bcc = bcc_field)
