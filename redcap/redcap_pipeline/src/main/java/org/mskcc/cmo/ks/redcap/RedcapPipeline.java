@@ -37,6 +37,7 @@ import org.apache.commons.cli.*;
 import org.apache.log4j.Logger;
 import org.mskcc.cmo.ks.redcap.pipeline.BatchConfiguration;
 import org.mskcc.cmo.ks.redcap.source.ClinicalDataSource;
+import org.mskcc.cmo.ks.redcap.source.MetadataManager;
 import org.springframework.batch.core.*;
 import org.springframework.batch.core.launch.JobLauncher;
 import org.springframework.beans.factory.annotation.*;
@@ -122,10 +123,17 @@ public class RedcapPipeline {
             String stableId = commandLine.getOptionValue("stable-id");
             String redcapProjectTitle = commandLine.getOptionValue("redcap-project-title");
             ClinicalDataSource clinicalDataSource = ctx.getBean(ClinicalDataSource.class);
+            MetadataManager metadataManager = ctx.getBean(MetadataManager.class);
             if (commandLine.hasOption("stable-id")) {
                 if (!clinicalDataSource.projectsExistForStableId(stableId)) {
                     log.error("no project for stable-id " + stableId + " exists in RedCap");
                     System.exit(1);
+                }
+                // checks if study-id has overrides in CDD - if not, use defaults
+                if (!metadataManager.checkOverridesExist(stableId)) {
+                    log.error("no metadata for stable-id " + stableId + " exists in CDD, exporing using default metadata values");
+                } else {
+                    metadataManager.setOverrideStudyId(stableId);
                 }
                 builder.addString("stableId", stableId);
             }
