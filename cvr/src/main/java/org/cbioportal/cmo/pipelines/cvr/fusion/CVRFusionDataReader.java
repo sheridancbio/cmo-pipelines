@@ -32,6 +32,7 @@
 
 package org.cbioportal.cmo.pipelines.cvr.fusion;
 
+import com.google.common.base.Strings;
 import org.cbioportal.cmo.pipelines.cvr.*;
 import org.cbioportal.cmo.pipelines.cvr.model.*;
 
@@ -118,7 +119,12 @@ public class CVRFusionDataReader implements ItemStreamReader<CVRFusionRecord> {
             String sampleId = result.getMetaData().getDmpSampleId();
             List<CVRSvVariant> variants = result.getSvVariants();
             for (CVRSvVariant variant : variants) {
-
+                // skip records where both gene 1 and gene 2 are null or empty
+                if (Strings.isNullOrEmpty(variant.getSite1_Gene()) && Strings.isNullOrEmpty(variant.getSite2_Gene())) {
+                    log.warn("Skipping fusion record where genes are missing for sample '" + sampleId + "'" + 
+                            (Strings.isNullOrEmpty(variant.getAnnotation()) ? "" :  " - record annotation: " + variant.getAnnotation()));
+                    continue;
+                }
                 CVRFusionRecord record = null;
                 try {
                     record = new CVRFusionRecord(variant, sampleId, false);
