@@ -167,13 +167,13 @@ def send_mail(to, subject, body, sender=MESSAGE_FROM_CMO, bcc=MESSAGE_BCC_CMO, s
 def get_gdata_credentials(secrets, creds, scope, force=False):
     storage = Storage(creds)
     credentials = storage.get()
-    
+
     if credentials.access_token_expired:
         credentials.refresh(httplib2.Http())
 
     if credentials is None or credentials.invalid or force:
       credentials = run_flow(flow_from_clientsecrets(secrets, scope=scope), storage, argparser.parse_args([]))
-        
+
     return credentials
 
 def google_login(secrets, creds, user, pw, app_name):
@@ -209,9 +209,13 @@ def get_feed_id(feed, name):
 
 def get_worksheet_feed(client, ss, ws):
 
-    ss_id = get_feed_id(client.GetSpreadsheetsFeed(), ss)
-    ws_id = get_feed_id(client.GetWorksheetsFeed(ss_id), ws)
-    
+    try:
+        ss_id = get_feed_id(client.GetSpreadsheetsFeed(), ss)
+        ws_id = get_feed_id(client.GetWorksheetsFeed(ss_id), ws)
+    except gdata.service.RequestError:
+        print >> ERROR_FILE, "There was an error connecting to google."
+        sys.exit(0)
+
     return client.GetListFeed(ss_id, ws_id)
 
 # ------------------------------------------------------------------------------
@@ -226,7 +230,7 @@ def insert_new_users(cursor, new_user_list):
             user_name = user.name
             if isinstance(user_name, unicode):
                 user_name = user_name.encode('utf-8')
-            cursor.execute("insert into users values('%s', '%s', '%s')" % (user.google_email.lower(), user_name, user.enabled)) 
+            cursor.execute("insert into users values('%s', '%s', '%s')" % (user.google_email.lower(), user_name, user.enabled))
             # authorities is semicolon delimited
             authorities = user.authorities
             cursor.executemany("insert into authorities values(%s, %s)", [(user.google_email.lower(), authority) for authority in authorities])
@@ -330,7 +334,7 @@ def delete_row_from_spreadsheet(client, spreadsheet, worksheet_feed, email):
     for entry in worksheet_feed.entry:
         google_email = entry.custom[OPENID_EMAIL_KEY].text.strip().lower()
         if google_email == email:
-            to_delete = entry 
+            to_delete = entry
     if to_delete != '':
         client.DeleteRow(to_delete)
 
@@ -354,7 +358,7 @@ def get_all_user_map(spreadsheet, worksheet_feed,mskcc_user_spreadsheet):
         to_return[google_email] = User(inst_email, google_email, "not_used", 1, "not_used")
 
     return to_return
-    
+
 # ------------------------------------------------------------------------------
 # get db connection
 def get_db_connection(portal_properties, port):
@@ -407,7 +411,7 @@ def get_portal_properties(portal_properties_filename):
         IMPORTER_SPREADSHEET not in properties or len(properties[IMPORTER_SPREADSHEET]) == 0):
         print >> ERROR_FILE, 'Missing one or more required properties, please check property file'
         return None
-    
+
     # return an instance of PortalProperties
     return PortalProperties(properties[CGDS_DATABASE_HOST],
                             properties[CGDS_DATABASE_NAME],
@@ -517,7 +521,7 @@ def get_portal_name_map(google_spreadsheet,client):
     print >> OUTPUT_FILE, 'Getting access control parameter from google spreadsheet'
     access_control_worksheet_feed = get_worksheet_feed(client,google_spreadsheet,ACCESS_CONTROL_WORKSHEET)
     for entry in access_control_worksheet_feed.entry:
-        if entry.custom[PORTAL_NAME_KEY] is not None and entry.custom[SPREADSHEET_NAME_KEY] is not None: 
+        if entry.custom[PORTAL_NAME_KEY] is not None and entry.custom[SPREADSHEET_NAME_KEY] is not None:
             portal_name[entry.custom[SPREADSHEET_NAME_KEY].text.strip()] = entry.custom[PORTAL_NAME_KEY].text.strip()
             if entry.custom[PORTAL_NAME_KEY].text.strip() == 'mskcc-portal':
                 mskcc_user_spreadsheet = entry.custom[SPREADSHEET_NAME_KEY].text.strip()
@@ -566,7 +570,7 @@ def main():
         elif o == '--port':
             port = a
 
-    if (secrets_filename == '' or creds_filename == '' or properties_filename == '' or send_email_confirm == '' or port == '' or 
+    if (secrets_filename == '' or creds_filename == '' or properties_filename == '' or send_email_confirm == '' or port == '' or
         (send_email_confirm != 'true' and send_email_confirm != 'false')):
         usage()
         sys.exit(2)
