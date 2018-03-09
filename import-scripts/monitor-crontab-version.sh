@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # function for sending notification emails
 send_email_notification() {
     diff_report=$1
@@ -7,10 +9,10 @@ send_email_notification() {
     echo -e "$EMAIL_BODY" | mail -s "Alert: Crontab out of sync on $HOSTNAME" cbioportal-pipelines@cbio.mskcc.org
 }
 
-if [ -z $PORTAL_HOME ] | [ -z $PORTAL_CONFIG_HOME ] ; then 
+if [ -z $PORTAL_HOME ] | [ -z $PORTAL_CONFIG_HOME ] ; then
     echo "monitor-crontab-version.sh could not be run: missing environment variables must be set using automation-environment.sh"
     exit 1
-fi 
+fi
 
 GITHUB_CRONTAB_URL="https://api.github.com/repos/knowledgesystems/cmo-pipelines/contents/import-scripts/mycrontab"
 GITHUB_AUTHORIZATION=$(cat $PORTAL_CONFIG_HOME/git/git-credentials | sed 's/https:\/\///; s/@github\.com//')
@@ -39,7 +41,7 @@ if [ $? -gt 0 ] ; then
 fi
 crontab -l > $CURRENT_CRONTAB_FILE
 
-diff_output=$(diff $GITHUB_CRONTAB_FILE $CURRENT_CRONTAB_FILE) 
+diff_output=$(diff $GITHUB_CRONTAB_FILE $CURRENT_CRONTAB_FILE)
 if [ $? -gt 0 ] ; then
     send_email_notification "$diff_output"
 fi
