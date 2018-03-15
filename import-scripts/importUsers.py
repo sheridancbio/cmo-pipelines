@@ -212,11 +212,12 @@ def get_worksheet_feed(client, ss, ws):
     try:
         ss_id = get_feed_id(client.GetSpreadsheetsFeed(), ss)
         ws_id = get_feed_id(client.GetWorksheetsFeed(ss_id), ws)
+        list_feed = client.GetListFeed(ss_id, ws_id)
     except gdata.service.RequestError:
         print >> ERROR_FILE, "There was an error connecting to google."
         sys.exit(0)
 
-    return client.GetListFeed(ss_id, ws_id)
+    return list_feed
 
 # ------------------------------------------------------------------------------
 # insert new users into table - this list does not contain users already in table
