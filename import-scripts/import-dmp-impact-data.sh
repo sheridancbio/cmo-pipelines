@@ -5,6 +5,7 @@ JAVA_DEBUG_ARGS="-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,addres
 JAVA_TMPDIR="$PORTAL_HOME/tmp/import-cron-dmp-msk"
 JAVA_IMPORTER_ARGS="$JAVA_PROXY_ARGS $JAVA_DEBUG_ARGS -ea -Dspring.profiles.active=dbcp -Djava.io.tmpdir=$JAVA_TMPDIR -Dhttp.nonProxyHosts=draco.mskcc.org|pidvudb1.mskcc.org|phcrdbd2.mskcc.org|dashi-dev.cbio.mskcc.org|pipelines.cbioportal.mskcc.org|localhost"
 ONCOTREE_VERSION_TO_USE=oncotree_candidate_release
+PERFORM_CRDB_FETCH=0  # if zero, no CRDB fetch or import to redcap will occur
 
 ## FUNCTIONS
 
@@ -349,7 +350,7 @@ GENERATE_MASTERLIST_FAIL=0
 
 echo "exporting impact data_clinical_supp_date.txt from redcap"
 export_project_from_redcap $MSK_IMPACT_DATA_HOME mskimpact_supp_date_cbioportal_added
-if [$? -gt 0 ] ; then
+if [ $? -gt 0 ] ; then
     EXPORT_SUPP_DATE_IMPACT_FAIL=1
     sendFailureMessageMskPipelineLogsSlack "MSKIMPACT Redcap export of mskimpact_supp_date_cbioportal_added"
 fi
@@ -407,13 +408,17 @@ fi
 
 # -------------------------------- all mskimpact project data fetches -----------------------------------
 
-# fetch CRDB data
-echo "fetching CRDB data"
-echo $(date)
-$JAVA_HOME/bin/java -jar $PORTAL_HOME/lib/crdb_fetcher.jar -stage $MSK_IMPACT_DATA_HOME
-# no need for hg update/commit ; CRDB generated files are stored in redcap and not mercurial
-if [ $? -gt 0 ] ; then
-    sendFailureMessageMskPipelineLogsSlack "MSKIMPACT CRDB Fetch"
+if [ $PERFORM_CRDB_FETCH -ne 0 ] ; then
+    # fetch CRDB data
+    echo "fetching CRDB data"
+    echo $(date)
+    $JAVA_HOME/bin/java -jar $PORTAL_HOME/lib/crdb_fetcher.jar -stage $MSK_IMPACT_DATA_HOME
+    # no need for hg update/commit ; CRDB generated files are stored in redcap and not mercurial
+    if [ $? -gt 0 ] ; then
+        sendFailureMessageMskPipelineLogsSlack "MSKIMPACT CRDB Fetch"
+    else
+        FETCH_CRDB_IMPACT_FAIL=0
+    fi
 else
     FETCH_CRDB_IMPACT_FAIL=0
 fi
@@ -636,14 +641,16 @@ fi
 # import newly fetched files into redcap
 echo "Starting import into redcap"
 
-# imports crdb data into redcap
-echo "importing mskimpact related clinical files into redcap"
-if [ $FETCH_CRDB_IMPACT_FAIL -eq 0 ] ; then
-    import_crdb_to_redcap
-    if [ $? -gt 0 ] ; then
-        #TODO: maybe implement retry loop here
-        #NOTE: we have decided to allow import of msk-impact project to proceed even when CRDB data has been lost from redcap (not setting IMPORT_STATUS_IMPACT)
-        sendFailureMessageMskPipelineLogsSlack "Mskimpact CRDB Redcap Import - Recovery Of Redcap Project Needed!"
+if [ $PERFORM_CRDB_FETCH -ne 0 ] ; then
+    # imports crdb data into redcap
+    echo "importing mskimpact related clinical files into redcap"
+    if [ $FETCH_CRDB_IMPACT_FAIL -eq 0 ] ; then
+        import_crdb_to_redcap
+        if [ $? -gt 0 ] ; then
+            #TODO: maybe implement retry loop here
+            #NOTE: we have decided to allow import of msk-impact project to proceed even when CRDB data has been lost from redcap (not setting IMPORT_STATUS_IMPACT)
+            sendFailureMessageMskPipelineLogsSlack "Mskimpact CRDB Redcap Import - Recovery Of Redcap Project Needed!"
+        fi
     fi
 fi
 
