@@ -349,7 +349,7 @@ GENERATE_MASTERLIST_FAIL=0
 
 echo "exporting impact data_clinical_supp_date.txt from redcap"
 export_project_from_redcap $MSK_IMPACT_DATA_HOME mskimpact_supp_date_cbioportal_added
-if [$? -gt 0 ] ; then
+if [ $? -gt 0 ] ; then
     EXPORT_SUPP_DATE_IMPACT_FAIL=1
     sendFailureMessageMskPipelineLogsSlack "MSKIMPACT Redcap export of mskimpact_supp_date_cbioportal_added"
 fi
