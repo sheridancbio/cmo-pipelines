@@ -2,7 +2,7 @@
 
 # ------------------------------------------------------------------------------
 # Script which updates cancer study group information within
-# portal db - cancer_study table.  Group information is read from 
+# portal db - cancer_study table.  Group information is read from
 # the portal_importer_configuration google spreadsheet.
 # The following properties must be specified in portal.properties:
 #
@@ -17,7 +17,7 @@
 # importer.cancer_studies_worksheet
 #
 # For each cancer study listed in the cancer_studies google worksheet,
-# the script will diff the 'Groups' column in the worksheet with the 
+# the script will diff the 'Groups' column in the worksheet with the
 # respective GROUPS column in the cancer_study table.  If the values
 # differ, the script will update the record in the table.
 #
@@ -139,10 +139,10 @@ def get_gdata_credentials(secrets, creds, scope, force=False):
     credentials = storage.get()
     if credentials is None or credentials.invalid or force:
       credentials = run_flow(flow_from_clientsecrets(secrets, scope=scope), storage, argparser.parse_args([]))
-      
+
     if credentials.access_token_expired:
         credentials.refresh(httplib2.Http())
-        
+
     return credentials
 
 def google_login(secrets, creds, user, pw, app_name):
@@ -177,10 +177,15 @@ def get_feed_id(feed, name):
 
 def get_worksheet_feed(client, ss, ws):
 
-    ss_id = get_feed_id(client.GetSpreadsheetsFeed(), ss)
-    ws_id = get_feed_id(client.GetWorksheetsFeed(ss_id), ws)
-    
-    return client.GetListFeed(ss_id, ws_id)
+    try:
+        ss_id = get_feed_id(client.GetSpreadsheetsFeed(), ss)
+        ws_id = get_feed_id(client.GetWorksheetsFeed(ss_id), ws)
+        list_feed = client.GetListFeed(ss_id, ws_id)
+    except gdata.service.RequestError:
+        print >> ERROR_FILE, "There was an error connecting to google."
+        sys.exit(0)
+
+    return list_feed
 
 
 # ------------------------------------------------------------------------------
@@ -232,7 +237,7 @@ def get_portal_properties(portal_properties_filename):
         IMPORTER_SPREADSHEET_SERVICE_APPNAME not in properties or len(properties[IMPORTER_SPREADSHEET_SERVICE_APPNAME]) == 0):
         print >> ERROR_FILE, 'Missing one or more required properties, please check property file'
         return None
-    
+
     # return an instance of PortalProperties
     return PortalProperties(properties[CGDS_DATABASE_HOST],
                             properties[CGDS_DATABASE_NAME],
@@ -297,10 +302,10 @@ def update_cancer_studies_in_db(cursor, cancer_studies):
     return True
 
 # ------------------------------------------------------------------------------
-# comparse gets list of cancer studies needing update 
+# comparse gets list of cancer studies needing update
 
 # ------------------------------------------------------------------------------
-# gets list of cancer studies needing update 
+# gets list of cancer studies needing update
 
 def get_cancer_studies_to_update(worksheet_cancer_studies, database_cancer_studies):
 
@@ -318,7 +323,7 @@ def get_cancer_studies_to_update(worksheet_cancer_studies, database_cancer_studi
 
     return to_return
 
-    
+
 # ------------------------------------------------------------------------------
 # adds new groups to cancer studies from the google spreadsheet into the cgds portal database
 # return a list of two elements, first is email body, second is updated cancer study list
@@ -335,7 +340,7 @@ def update_cancer_studies(cursor, worksheet_feed):
         return (MESSAGE_BODY_ERROR, None)
 
     # get map of cancer studies from database
-    print >> OUTPUT_FILE, 'Getting list of cancer studies from portal database' 
+    print >> OUTPUT_FILE, 'Getting list of cancer studies from portal database'
     database_cancer_studies_map = get_db_cancer_studies(cursor)
     if database_cancer_studies_map is not None:
         print >> OUTPUT_FILE, 'We have found %s cancer studies in portal database' % len(database_cancer_studies_map)
