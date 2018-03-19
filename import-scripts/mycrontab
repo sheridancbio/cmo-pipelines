@@ -25,3 +25,6 @@ MAILTO=cbioportal-pipelines@cbio.mskcc.org
 55 23 * * * chmod u+x /data/portal-cron/scripts/*.sh /data/portal-cron/scripts/*.py || echo "Failure in crontab: chmod exited with non-zero exit status" | mail -r "cbioportal-pipelines@cbio.mskcc.org" -s "Failure in crontab" cbioportal-pipelines@cbio.mskcc.org
 # REDCap Cron Job (runs every minute)
 * * * * * /usr/bin/php /srv/www/html/redcap/cron.php > /dev/null 2>/dev/null
+# CDD cache is scheduled to reset at 12:15, 12:30, and 12:45 - if all fail, by 1pm the cache would be null and the site will return a 503 error.
+# This writes to stderr and relies on the MAILTO (above) to send an email to cbioportal-pipelines@cbio.mskcc.org
+0 13 * * * /data/portal-cron/scripts/monitor-cdd.sh
