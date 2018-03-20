@@ -19,7 +19,7 @@ gunzip $tmp/Homo_sapiens.gene_info.gz
 gunzip $tmp/ref_GRCh38.p7_top_level.gff3.gz
 echo "Finished!"
 
-sed -i 's/^#//' $tmp/Homo_sapiens.gene_info
+sed -i 's/^#//; s/\"//' $tmp/Homo_sapiens.gene_info
 if [[ !  -f $tmp/Homo_sapiens.gene_info || $(wc -l < $tmp/Homo_sapiens.gene_info) -eq 0 ]]; then
     echo "Error downloading Homo_sapiens.gene_info from NCBI. Exiting..."
     exit 1
