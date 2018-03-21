@@ -55,18 +55,33 @@ import org.springframework.web.client.RestTemplate;
 public class MetadataCache {
 
     @Autowired
-    private RedcapSessionManager redcapSessionManager;
+    private CDDSessionManager cddSessionManager;
 
     @Autowired
     private GoogleSessionManager googleSessionManager;
 
     private RedcapAttributeMetadata[] metadataArray = null;
-    // mapping of normalized column header name to "RedcapProjectAttribute" object 
+    // mapping of normalized column header name to "RedcapProjectAttribute" object
     // where normalized column header is all caps and no spaces (i.e SAMPLE_ID : RedcapProjectAttribute(sample_id))
     private Map<String, RedcapAttributeMetadata> normalizedColumnHeaderToMetadata = null;
+    private String overrideStudyId = null;
     private final Logger log = Logger.getLogger(MetadataCache.class);
 
     public MetadataCache() {}
+
+    public void setOverrideStudyId(String studyId) {
+        if (metadataArray != null) {
+            String errorString = "Error : Attempting to set override studyId when metadata cache is already initialized.";
+            log.warn(errorString);
+            throw new RuntimeException(errorString);
+        } else { 
+            overrideStudyId = studyId;
+        }
+    }
+
+    public String getOverrideStudyId() {
+        return overrideStudyId;
+    }
 
     // when we want to get metadata from map, have to uppercase redcapId to match key
     public RedcapAttributeMetadata getMetadataByRedcapId(String redcapId) {
@@ -107,8 +122,11 @@ public class MetadataCache {
     }
 
     private void initializeMetadataList() {
-        //array returned from google spreadsheet
-        metadataArray = googleSessionManager.getRedcapMetadata();
+        if(overrideStudyId != null) {
+            metadataArray = cddSessionManager.getRedcapMetadataWithOverrides(overrideStudyId);
+        } else {
+            metadataArray = cddSessionManager.getRedcapMetadata();
+        }
     }
 
     private void initializeMetadataMaps() {

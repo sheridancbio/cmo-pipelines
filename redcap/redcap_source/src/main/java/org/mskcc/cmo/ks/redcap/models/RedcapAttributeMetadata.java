@@ -45,7 +45,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
-    "normalized_column_header",
+    "column_header",
     "display_name",
     "descriptions",
     "datatype",
@@ -54,7 +54,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 })
 public class RedcapAttributeMetadata {
 
-    @JsonProperty("normalized_column_header")
+    @JsonProperty("column_header")
     private String normalizedColumnHeader;
     @JsonProperty("display_name")
     private String displayName;
@@ -98,7 +98,7 @@ public class RedcapAttributeMetadata {
     * @return
     * The normalizedColumnHeader
     */
-    @JsonProperty("normalized_column_header")
+    @JsonProperty("column_header")
     public String getNormalizedColumnHeader() {
         return normalizedColumnHeader;
     }
@@ -108,7 +108,7 @@ public class RedcapAttributeMetadata {
     * @param normalizedColumnHeader
     * The normalized_column_header
     */
-    @JsonProperty("normalized_column_header")
+    @JsonProperty("column_header")
     public void setNormalizedColumnHeader(String normalizedColumnHeader) {
         this.normalizedColumnHeader = normalizedColumnHeader;
     }
@@ -138,7 +138,7 @@ public class RedcapAttributeMetadata {
     * @return
     * The descriptions
     */
-    @JsonProperty("descriptions")
+    @JsonProperty("description")
     public String getDescriptions() {
         return descriptions;
     }
@@ -148,7 +148,7 @@ public class RedcapAttributeMetadata {
     * @param descriptions
     * The descriptions
     */
-    @JsonProperty("descriptions")
+    @JsonProperty("description")
     public void setDescriptions(String descriptions) {
         this.descriptions = descriptions;
     }

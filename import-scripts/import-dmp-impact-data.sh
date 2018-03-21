@@ -860,8 +860,6 @@ fi
 ## TEMP STUDY IMPORT: MSKIMPACT
 RESTART_AFTER_IMPACT_IMPORT=0
 if [ $IMPORT_STATUS_IMPACT -eq 0 ] ; then
-    # add custom priorities, headers dont need to be added
-    $PYTHON_BINARY $PORTAL_HOME/scripts/set_custom_overrides.py --study-id mskimpact --reset --files $MSK_IMPACT_DATA_HOME/data_clinical*
     echo $(date)
     bash $PORTAL_HOME/scripts/import-temp-study.sh --study-id="mskimpact" --temp-study-id="temporary_mskimpact" --backup-study-id="yesterday_mskimpact" --portal-name="mskimpact-portal" --study-path="$MSK_IMPACT_DATA_HOME" --notification-file="$mskimpact_notification_file" --tmp-directory="$JAVA_TMPDIR" --email-list="$email_list" --oncotree-version="${ONCOTREE_VERSION_TO_USE}" --importer-jar="$PORTAL_HOME/lib/msk-dmp-importer.jar" --transcript-overrides-source="mskcc"
     if [ $? -eq 0 ] ; then
@@ -974,13 +972,7 @@ else
     echo "MIXEDPACT merge successful! Creating cancer type case lists..."
     echo $(date)
     # add metadata headers and overrides before importing
-    $PYTHON_BINARY $PORTAL_HOME/scripts/add_clinical_attribute_metadata_headers.py -s $PORTAL_DATA_HOME/portal-configuration/google-docs/client_secrets.json -c $PORTAL_DATA_HOME/portal-configuration/google-docs/creds.dat -p $PORTAL_DATA_HOME/portal-configuration/properties/clinical-metadata/metadata.google.properties -f $MSK_MIXEDPACT_DATA_HOME/data_clinical*
-    if [ $? -gt 0 ] ; then
-        MIXEDPACT_ADD_HEADER_FAIL=1
-        echo "Something went wrong while adding metadata headers for MIXEDPACT."
-    else
-        $PYTHON_BINARY $PORTAL_HOME/scripts/set_custom_overrides.py -s mixedpact -f $MSK_MIXEDPACT_DATA_HOME/data_clinical*
-    fi
+    $PYTHON_BINARY $PORTAL_HOME/scripts/add_clinical_attribute_metadata_headers.py -s mixedpact -f $MSK_MIXEDPACT_DATA_HOME/data_clinical*
     addCancerTypeCaseLists $MSK_MIXEDPACT_DATA_HOME "mixedpact" "data_clinical_sample.txt" "data_clinical_patient.txt"
 fi
 
@@ -1045,7 +1037,7 @@ else
     echo "MSK Kings County subset successful!"
     addCancerTypeCaseLists $MSK_KINGS_DATA_HOME "msk_kingscounty" "data_clinical_sample.txt" "data_clinical_patient.txt"
     # add metadata headers before importing
-    $PYTHON_BINARY $PORTAL_HOME/scripts/add_clinical_attribute_metadata_headers.py -s $PORTAL_DATA_HOME/portal-configuration/google-docs/client_secrets.json -c $PORTAL_DATA_HOME/portal-configuration/google-docs/creds.dat -p $PORTAL_DATA_HOME/portal-configuration/properties/clinical-metadata/metadata.google.properties -f $MSK_KINGS_DATA_HOME/data_clinical*
+    $PYTHON_BINARY $PORTAL_HOME/scripts/add_clinical_attribute_metadata_headers.py -f $MSK_KINGS_DATA_HOME/data_clinical*
     if [ $? -gt 0 ] ; then
         MSK_KINGS_ADD_HEADER_FAIL=1
         echo "Something went wrong while adding metadata headers for KINGSCOUNTY."
@@ -1061,7 +1053,7 @@ else
     echo "MSK Lehigh Valley subset successful!"
     addCancerTypeCaseLists $MSK_LEHIGH_DATA_HOME "msk_lehighvalley" "data_clinical_sample.txt" "data_clinical_patient.txt"
     # add metadata headers before importing
-    $PYTHON_BINARY $PORTAL_HOME/scripts/add_clinical_attribute_metadata_headers.py -s $PORTAL_DATA_HOME/portal-configuration/google-docs/client_secrets.json -c $PORTAL_DATA_HOME/portal-configuration/google-docs/creds.dat -p $PORTAL_DATA_HOME/portal-configuration/properties/clinical-metadata/metadata.google.properties -f $MSK_LEHIGH_DATA_HOME/data_clinical*
+    $PYTHON_BINARY $PORTAL_HOME/scripts/add_clinical_attribute_metadata_headers.py -f $MSK_LEHIGH_DATA_HOME/data_clinical*
     if [ $? -gt 0 ] ; then
         MSK_LEHIGH_ADD_HEADER_FAIL=1
         echo "Something went wrong while adding metadata headers for LEHIGHVALLEY."
@@ -1077,7 +1069,7 @@ else
     echo "MSK Queens Cancer Center subset successful!"
     addCancerTypeCaseLists $MSK_QUEENS_DATA_HOME "msk_queenscancercenter" "data_clinical_sample.txt" "data_clinical_patient.txt"
     # add metadata headers before importing
-    $PYTHON_BINARY $PORTAL_HOME/scripts/add_clinical_attribute_metadata_headers.py -s $PORTAL_DATA_HOME/portal-configuration/google-docs/client_secrets.json -c $PORTAL_DATA_HOME/portal-configuration/google-docs/creds.dat -p $PORTAL_DATA_HOME/portal-configuration/properties/clinical-metadata/metadata.google.properties -f $MSK_QUEENS_DATA_HOME/data_clinical*
+    $PYTHON_BINARY $PORTAL_HOME/scripts/add_clinical_attribute_metadata_headers.py -f $MSK_QUEENS_DATA_HOME/data_clinical*
     if [ $? -gt 0 ] ; then
         MSK_QUEENS_ADD_HEADER_FAIL=1
         echo "Something went wrong while adding metadata headers for QUEENSCANCERCENTER."
@@ -1093,7 +1085,7 @@ else
     echo "MSK Miami Cancer Institute subset successful!"
     addCancerTypeCaseLists $MSK_MCI_DATA_HOME "msk_miamicancerinstitute" "data_clinical_sample.txt" "data_clinical_patient.txt"
     # add metadata headers before importing
-    $PYTHON_BINARY $PORTAL_HOME/scripts/add_clinical_attribute_metadata_headers.py -s $PORTAL_DATA_HOME/portal-configuration/google-docs/client_secrets.json -c $PORTAL_DATA_HOME/portal-configuration/google-docs/creds.dat -p $PORTAL_DATA_HOME/portal-configuration/properties/clinical-metadata/metadata.google.properties -f $MSK_MCI_DATA_HOME/data_clinical*
+    $PYTHON_BINARY $PORTAL_HOME/scripts/add_clinical_attribute_metadata_headers.py -f $MSK_MCI_DATA_HOME/data_clinical*
     if [ $? -gt 0 ] ; then
         MSK_MCI_ADD_HEADER_FAIL=1
         echo "Something went wrong while adding metadata headers for MIAMICANCERINSTITUTE."
@@ -1109,7 +1101,7 @@ else
     echo "MSK Hartford Healthcare subset successful!"
     addCancerTypeCaseLists $MSK_HARTFORD_DATA_HOME "msk_hartfordhealthcare" "data_clinical_sample.txt" "data_clinical_patient.txt"
     # add metadata headers before importing
-    $PYTHON_BINARY $PORTAL_HOME/scripts/add_clinical_attribute_metadata_headers.py -s $PORTAL_DATA_HOME/portal-configuration/google-docs/client_secrets.json -c $PORTAL_DATA_HOME/portal-configuration/google-docs/creds.dat -p $PORTAL_DATA_HOME/portal-configuration/properties/clinical-metadata/metadata.google.properties -f $MSK_HARTFORD_DATA_HOME/data_clinical*
+    $PYTHON_BINARY $PORTAL_HOME/scripts/add_clinical_attribute_metadata_headers.py -f $MSK_HARTFORD_DATA_HOME/data_clinical*
     if [ $? -gt 0 ] ; then
         MSK_HARTFORD_ADD_HEADER_FAIL=1
         echo "Something went wrong while adding metadata headers for HARTFORDHEALTHCARE."
@@ -1257,7 +1249,7 @@ else
     echo "MSKIMPACT SCLC subset successful!"
     addCancerTypeCaseLists $MSK_SCLC_DATA_HOME "sclc_mskimpact_2017" "data_clinical_sample.txt" "data_clinical_patient.txt"
     # add metadata headers before importing
-    $PYTHON_BINARY $PORTAL_HOME/scripts/add_clinical_attribute_metadata_headers.py -s $PORTAL_DATA_HOME/portal-configuration/google-docs/client_secrets.json -c $PORTAL_DATA_HOME/portal-configuration/google-docs/creds.dat -p $PORTAL_DATA_HOME/portal-configuration/properties/clinical-metadata/metadata.google.properties -f $MSK_SCLC_DATA_HOME/data_clinical*
+    $PYTHON_BINARY $PORTAL_HOME/scripts/add_clinical_attribute_metadata_headers.py -s sclc_mskimpact_2017 -f $MSK_SCLC_DATA_HOME/data_clinical*
     if [ $? -gt 0 ] ; then
         SCLC_MSKIMPACT_ADD_HEADER_FAIL=1
         echo "Something went wrong while adding metadata headers for MSKIMPACT SCLC."
@@ -1351,7 +1343,7 @@ if [ $LYMPHOMA_SUPER_COHORT_SUBSET_FAIL -eq 0 ] ; then
         LYMPHOMA_SUPER_COHORT_SUBSET_FAIL=1
     else
         # add metadata headers before importing
-        $PYTHON_BINARY $PORTAL_HOME/scripts/add_clinical_attribute_metadata_headers.py -s $PORTAL_DATA_HOME/portal-configuration/google-docs/client_secrets.json -c $PORTAL_DATA_HOME/portal-configuration/google-docs/creds.dat -p $PORTAL_DATA_HOME/portal-configuration/properties/clinical-metadata/metadata.google.properties -f $LYMPHOMA_SUPER_COHORT_DATA_HOME/data_clinical*
+        $PYTHON_BINARY $PORTAL_HOME/scripts/add_clinical_attribute_metadata_headers.py -f $LYMPHOMA_SUPER_COHORT_DATA_HOME/data_clinical*
         if [ $? -gt 0 ] ; then
             LYMPHOMA_SUPER_COHORT_ADD_HEADER_FAIL=1
             echo "Something went wrong while adding metadata headers for LYMPHOMASUPERCOHORT."

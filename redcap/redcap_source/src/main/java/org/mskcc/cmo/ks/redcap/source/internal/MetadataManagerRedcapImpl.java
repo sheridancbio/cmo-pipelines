@@ -35,6 +35,7 @@ package org.mskcc.cmo.ks.redcap.source.internal;
 import java.util.*;
 import org.apache.log4j.Logger;
 import org.mskcc.cmo.ks.redcap.models.RedcapAttributeMetadata;
+import org.mskcc.cmo.ks.redcap.models.OverriddenCancerStudy;
 import org.mskcc.cmo.ks.redcap.models.RedcapToken;
 import org.mskcc.cmo.ks.redcap.source.MetadataManager;
 import org.springframework.batch.core.configuration.annotation.JobScope;
@@ -42,24 +43,24 @@ import org.springframework.beans.factory.annotation.*;
 import org.springframework.context.annotation.*;
 import org.springframework.http.*;
 import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.stereotype.Repository;
 
 /**
  *
- * @author Zachary Heins
+ * @author Zachary Heins, Avery Wang
  *
  * Use Redcap to fetch clinical metadata and data
  *
  */
 
-@Configuration
-@JobScope
+@Repository
 public class MetadataManagerRedcapImpl implements MetadataManager {
 
     @Autowired
     private MetadataCache metadataCache;
 
     @Autowired
-    private RedcapSessionManager redcapSessionManager;
+    private CDDSessionManager cddSessionManager;
 
     private final Logger log = Logger.getLogger(MetadataManagerRedcapImpl.class);
 
@@ -74,6 +75,25 @@ public class MetadataManagerRedcapImpl implements MetadataManager {
 
     private List<RedcapAttributeMetadata> getMetadata() {
         return metadataCache.getMetadata();
+    }
+
+    public boolean checkOverridesExist(String studyId) {
+        List<OverriddenCancerStudy> listOfOverriddenStudies = null;
+        try {
+            listOfOverriddenStudies = Arrays.asList(cddSessionManager.getOverriddenStudies(studyId));
+            for (OverriddenCancerStudy overriddenStudy : listOfOverriddenStudies) {
+                if (overriddenStudy.getName().equals(studyId)) {
+                    return true;
+                }
+            }
+        } catch (Exception e) {
+            log.warn(e.getMessage());
+        }
+        return false;
+    }
+    
+    public void setOverrideStudyId(String studyId) {
+        metadataCache.setOverrideStudyId(studyId);
     }
 
     private Map<String,List<String>> makeHeader(Map<String, RedcapAttributeMetadata> attributeMap) {

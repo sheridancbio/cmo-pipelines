@@ -42,9 +42,11 @@ import org.mskcc.cmo.ks.redcap.models.RedcapAttributeMetadata;
 import org.mskcc.cmo.ks.redcap.models.RedcapProjectAttribute;
 import org.mskcc.cmo.ks.redcap.source.ClinicalDataSource;
 import org.mskcc.cmo.ks.redcap.source.internal.ClinicalDataSourceRedcapImpl;
+import org.mskcc.cmo.ks.redcap.source.internal.CDDSessionManager;
 import org.mskcc.cmo.ks.redcap.source.internal.GoogleSessionManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Scope;
 
 @Configuration
 public class RedcapSourceTestConfiguration {
@@ -69,13 +71,23 @@ public class RedcapSourceTestConfiguration {
     @Bean
     public GoogleSessionManager googleSessionManager() {
         GoogleSessionManager googleSessionManager = Mockito.mock(GoogleSessionManager.class);
-        //configure meta data requests
         RedcapAttributeMetadata[] mockReturnForGetMetadata = makeMockRedcapIdToMetadataList();
         Mockito.when(googleSessionManager.getRedcapMetadata()).thenReturn(mockReturnForGetMetadata);
         return googleSessionManager;
     }
 
     @Bean
+    public CDDSessionManager cddSessionManager() {
+        CDDSessionManager cddSessionManager = Mockito.mock(CDDSessionManager.class);
+        RedcapAttributeMetadata[] mockReturnForGetMetadata = makeMockRedcapIdToMetadataList();
+        RedcapAttributeMetadata[] mockReturnForGetMetadataWithOverrides = makeMockRedcapIdToMetadataListWithOverrides();
+        Mockito.when(cddSessionManager.getRedcapMetadata()).thenReturn(mockReturnForGetMetadata);
+        Mockito.when(cddSessionManager.getRedcapMetadataWithOverrides("overridden_study")).thenReturn(mockReturnForGetMetadataWithOverrides);
+        return cddSessionManager;
+    }
+
+    @Bean
+    @Scope("prototype")
     public MetadataCache metadataCache() {
         return new MetadataCache();
     }
@@ -105,6 +117,11 @@ public class RedcapSourceTestConfiguration {
     @Bean
     public RedcapRepositoryTest redcapRepositoryTest() {
         return new RedcapRepositoryTest();
+    }
+
+    @Bean
+    public MetadataCacheTest metadataCacheTest() {
+        return new MetadataCacheTest();
     }
 
     private RedcapAttributeMetadata[] makeMockRedcapIdToMetadataList() {
@@ -152,6 +169,12 @@ public class RedcapSourceTestConfiguration {
         metadata[5].setDisplayName("Ethnicity");
         metadata[5].setDatatype("STRING");
         metadata[5].setDescriptions("Patient Ethnicity");
+        return metadata;
+    }
+
+    private RedcapAttributeMetadata[] makeMockRedcapIdToMetadataListWithOverrides() {
+        RedcapAttributeMetadata[] metadata = makeMockRedcapIdToMetadataList();
+        metadata[5].setPriority("100");
         return metadata;
     }
 
