@@ -109,6 +109,18 @@ if [ $? -gt 0 ]; then
     echo -e "$EMAIL_BODY" | mail -s "Data fetch failure: datahub" $pipeline_email_list
 fi
 
+# fetch updates from pancan repository
+echo "fetching updates from pancan..."
+PANCAN_FETCH_FAIL=0
+$JAVA_HOME/bin/java $JAVA_PROXY_ARGS -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27183 -Xmx16g -ea -Dspring.profiles.active=dbcp -Djava.io.tmpdir="$tmp" -cp $PORTAL_HOME/lib/triage-cmo-importer.jar org.mskcc.cbio.importer.Admin --fetch-data --data-source pancan_tcga --run-date latest
+if [ $? -gt 0 ]; then
+    echo "pancan fetch failed!"
+    PANCAN_FETCH_FAIL=1
+    EMAIL_BODY="The pancan data fetch failed."
+    echo -e "Sending email $EMAIL_BODY"
+    echo -e "$EMAIL_BODY" | mail -s "Data fetch failure: pancan" $pipeline_email_list
+fi
+
 # import data that requires QC into triage portal
 echo "importing cancer type updates into triage portal database..."
 $JAVA_HOME/bin/java $JAVA_PROXY_ARGS -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27183 -Xmx16g -ea -Dspring.profiles.active=dbcp -Djava.io.tmpdir="$tmp" -cp $PORTAL_HOME/lib/triage-cmo-importer.jar org.mskcc.cbio.importer.Admin --import-types-of-cancer --oncotree-version ${ONCOTREE_VERSION_TO_USE}
@@ -126,7 +138,7 @@ then
 fi
 
 # if the database version is correct and ALL fetches succeed, then import
-if [[ $DB_VERSION_FAIL -eq 0 && $CMO_FETCH_FAIL -eq 0 && $PRIVATE_FETCH_FAIL -eq 0 && $GENIE_FETCH_FAIL -eq 0 && $CMO_IMPACT_FETCH_FAIL -eq 0 && $IMPACT_MERGED_FETCH_FAIL -eq 0 && $CBIO_PORTAL_DATA_FETCH_FAIL -eq 0 && $IMMUNOTHERAPY_FETCH_FAIL -eq 0 && $DATAHUB_FETCH_FAIL -eq 0 ]]
+if [[ $DB_VERSION_FAIL -eq 0 && $CMO_FETCH_FAIL -eq 0 && $PRIVATE_FETCH_FAIL -eq 0 && $GENIE_FETCH_FAIL -eq 0 && $CMO_IMPACT_FETCH_FAIL -eq 0 && $IMPACT_MERGED_FETCH_FAIL -eq 0 && $CBIO_PORTAL_DATA_FETCH_FAIL -eq 0 && $IMMUNOTHERAPY_FETCH_FAIL -eq 0 && $DATAHUB_FETCH_FAIL -eq 0 && $PANCAN_FETCH_FAIL -eq 0 ]]
 then
     echo "importing study data into triage portal database..."
     IMPORT_FAIL=0
