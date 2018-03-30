@@ -14,34 +14,38 @@
 # (11): transcript overrides source [ uniprot | mskcc ]
 
 # Non-zero exit code status indication
-# There are several flags that are checked during the execution of the temporary study import. If any flags are non-zero at the end 
+# There are several flags that are checked during the execution of the temporary study import. If any flags are non-zero at the end
 # of execution then an email is sent out to the email list provided for each non-zero flag and the script exits with a non-zero status.
 # Flags:
-# 	IMPORT_FAIL			if non-zero indicates that the study failed to import under a temporary id
-# 	VALIDATION_FAIL		if non-zero indicates that the temporary study failed validation against the original study
-# 	DELETE_FAIL			if non-zero indicates that the backup study failed to delete 
-# 	RENAME_BACKUP_FAIL	if non-zero indicates that the original study failed to rename to the backup study id 
-# 	RENAME_FAIL 		if non-zero indicates that the temporary study failed to rename to the original study id 
+#     IMPORT_FAIL            if non-zero indicates that the study failed to import under a temporary id
+#     VALIDATION_FAIL        if non-zero indicates that the temporary study failed validation against the original study
+#     DELETE_FAIL            if non-zero indicates that the backup study failed to delete
+#     RENAME_BACKUP_FAIL     if non-zero indicates that the original study failed to rename to the backup study id
+#     RENAME_FAIL            if non-zero indicates that the temporary study failed to rename to the original study id
 
 function usage {
-	echo "import-temp-study.sh"
-	echo -e "\t-i | --study-id                      cancer study identifier"
-	echo -e "\t-t | --temp-study-id                 temp study identifier"
-	echo -e "\t-b | --backup-study-id               backup study identifier"
-	echo -e "\t-p | --portal-name                   portal name"
-	echo -e "\t-s | --study-path                    study path"
-	echo -e "\t-n | --notification-file             notification file"
-	echo -e "\t-d | --tmp-directory                 tmp directory"
-	echo -e "\t-e | --email-list                    email list"
-	echo -e "\t-o | --oncotree-version              oncotree version"
-	echo -e "\t-j | --importer-jar                  importer jar"
-	echo -e "\t-r | --transcript-overrides-source   transcript overrides source"
+    echo "import-temp-study.sh"
+    echo -e "\t-i | --study-id                      cancer study identifier"
+    echo -e "\t-t | --temp-study-id                 temp study identifier"
+    echo -e "\t-b | --backup-study-id               backup study identifier"
+    echo -e "\t-p | --portal-name                   portal name"
+    echo -e "\t-s | --study-path                    study path"
+    echo -e "\t-n | --notification-file             notification file"
+    echo -e "\t-d | --tmp-directory                 tmp directory"
+    echo -e "\t-e | --email-list                    email list"
+    echo -e "\t-o | --oncotree-version              oncotree version"
+    echo -e "\t-j | --importer-jar                  importer jar"
+    echo -e "\t-r | --transcript-overrides-source   transcript overrides source"
+    echo -e "\t-a | --allow-redcap-export           allow redcap export during import (overrides --disable-redcap-export default)"
 }
 
 function sendFailureMessageMskPipelineLogsSlack {
     MESSAGE=$1
     curl -X POST --data-urlencode "payload={\"channel\": \"#msk-pipeline-logs\", \"username\": \"cbioportal_importer\", \"text\": \"MSK temporary study import process failed: $MESSAGE\", \"icon_emoji\": \":tired_face:\"}" https://hooks.slack.com/services/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
 }
+
+# set default value(s)
+DISABLE_REDCAP_EXPORT_TERM="--disable-redcap-export "
 
 echo "Input arguments:"
 for i in "$@"; do
@@ -101,14 +105,19 @@ case $i in
     echo -e "\ttranscript overrides source=$TRANCRIPT_OVERRIDES_SOURCE"
     shift
     ;;
+    -a|--allow-redcap-export)
+    DISABLE_REDCAP_EXPORT_TERM=""
+    echo -e "\tallow redcap export=true"
+    shift
+    ;;
     *)
     ;;
 esac
 done
 
 if [[ -z $CANCER_STUDY_IDENTIFIER || -z $TEMP_CANCER_STUDY_IDENTIFIER || -z $BACKUP_CANCER_STUDY_IDENTIFIER || -z $PORTAL_NAME || -z $STUDY_PATH || -z $NOTIFICATION_FILE || -z $TMP_DIRECTORY || -z $EMAIL_LIST || -z $IMPORTER_JAR || -z $TRANCRIPT_OVERRIDES_SOURCE ]]; then
-	usage
-	exit 1
+    usage
+    exit 1
 fi
 
 JAVA_PROXY_ARGS="-Dhttp.proxyHost=jxi2.mskcc.org -Dhttp.proxyPort=8080 -Dhttp.nonProxyHosts=draco.mskcc.org|pidvudb1.mskcc.org|phcrdbd2.mskcc.org|dashi-dev.cbio.mskcc.org|pipelines.cbioportal.mskcc.org|localhost"
@@ -119,7 +128,7 @@ JAVA_IMPORTER_ARGS="$JAVA_PROXY_ARGS $JAVA_DEBUG_ARGS -ea -Dspring.profiles.acti
 now=$(date "+%Y-%m-%d-%H-%M-%S")
 VALIDATION_NOTIFICATION_FILENAME=$(mktemp $TMP_DIRECTORY/validation_$CANCER_STUDY_IDENTIFIER.$now.XXXXXX)
 if [ -f $VALIDATION_NOTIFICATION_FILENAME ]; then
-	rm $VALIDATION_NOTIFICATION_FILENAME
+    rm $VALIDATION_NOTIFICATION_FILENAME
 fi
 touch $VALIDATION_NOTIFICATION_FILENAME
 
@@ -131,67 +140,70 @@ RENAME_BACKUP_FAIL=0
 RENAME_FAIL=0
 GROUPS_FAIL=0
 
+echo "disable redcap export term = $DISABLE_REDCAP_EXPORT_TERM"
+# resolve oncotree term
 ONCOTREE_VERSION_TERM="--oncotree-version ${ONCOTREE_VERSION_TO_USE}"
 if [[ -z ${ONCOTREE_VERSION_TO_USE} ]] ; then
-	ONCOTREE_VERSION_TERM=""
+    ONCOTREE_VERSION_TERM=""
 fi
+
 # import study using temp id
 echo "Importing study '$CANCER_STUDY_IDENTIFIER' as temporary study '$TEMP_CANCER_STUDY_IDENTIFIER'"
-$JAVA_HOME/bin/java $JAVA_IMPORTER_ARGS -Xmx64g -cp $IMPORTER_JAR org.mskcc.cbio.importer.Admin --update-study-data --portal "$PORTAL_NAME" --notification-file "$NOTIFICATION_FILE" --temporary-id "$TEMP_CANCER_STUDY_IDENTIFIER" ${ONCOTREE_VERSION_TERM} --transcript-overrides-source "$TRANCRIPT_OVERRIDES_SOURCE"
+$JAVA_HOME/bin/java $JAVA_IMPORTER_ARGS -Xmx64g -cp $IMPORTER_JAR org.mskcc.cbio.importer.Admin --update-study-data --portal "$PORTAL_NAME" --notification-file "$NOTIFICATION_FILE" --temporary-id "$TEMP_CANCER_STUDY_IDENTIFIER" ${ONCOTREE_VERSION_TERM} --transcript-overrides-source "$TRANCRIPT_OVERRIDES_SOURCE" "$DISABLE_REDCAP_EXPORT_TERM"
 # we don't have to check the exit status here because if num_studies_updated != 1 we consider the import to have failed (we check num_studies_updated next)
 
 # check number of studies updated before continuing
-if [ -f "$TMP_DIRECTORY/num_studies_updated.txt" ]; then 
-	num_studies_updated=`cat $TMP_DIRECTORY/num_studies_updated.txt`
+if [ -f "$TMP_DIRECTORY/num_studies_updated.txt" ]; then
+    num_studies_updated=`cat $TMP_DIRECTORY/num_studies_updated.txt`
 else
-	num_studies_updated=0
+    num_studies_updated=0
 fi
 
 if [ "$num_studies_updated" -ne 1 ]; then
-	echo "Failed to import study '$CANCER_STUDY_IDENTIFIER'"	
-	IMPORT_FAIL=1
+    echo "Failed to import study '$CANCER_STUDY_IDENTIFIER'"
+    IMPORT_FAIL=1
 else
-	# validate
-	echo "Validating import..."
-	$JAVA_HOME/bin/java $JAVA_IMPORTER_ARGS -Xmx64g -cp $IMPORTER_JAR org.mskcc.cbio.importer.Admin --validate-temp-study --temp-study-id $TEMP_CANCER_STUDY_IDENTIFIER --original-study-id $CANCER_STUDY_IDENTIFIER --notification-file "$VALIDATION_NOTIFICATION_FILENAME"
-	if [ $? -gt 0 ]; then
-		echo "Failed to validate - deleting temp study '$TEMP_CANCER_STUDY_IDENTIFIER'"
-		$JAVA_HOME/bin/java $JAVA_IMPORTER_ARGS -Xmx64g -cp $IMPORTER_JAR org.mskcc.cbio.importer.Admin --delete-cancer-study --cancer-study-ids $TEMP_CANCER_STUDY_IDENTIFIER
-		VALIDATION_FAIL=1
-	else
-		echo "Successful validation - renaming '$CANCER_STUDY_IDENTIFIER' and temp study '$TEMP_CANCER_STUDY_IDENTIFIER'"
-		$JAVA_HOME/bin/java $JAVA_IMPORTER_ARGS -Xmx64g -cp $IMPORTER_JAR org.mskcc.cbio.importer.Admin --delete-cancer-study --cancer-study-ids $BACKUP_CANCER_STUDY_IDENTIFIER
-		if [ $? -gt 0 ]; then
-			echo "Failed to delete backup study '$BACKUP_CANCER_STUDY_IDENTIFIER'!"
-			DELETE_FAIL=1
-		else
-			echo "Renaming '$CANCER_STUDY_IDENTIFIER' to '$BACKUP_CANCER_STUDY_IDENTIFIER'"
-			$JAVA_HOME/bin/java $JAVA_IMPORTER_ARGS -Xmx64g -cp $IMPORTER_JAR org.mskcc.cbio.importer.Admin --rename-cancer-study --new-study-id $BACKUP_CANCER_STUDY_IDENTIFIER --original-study-id $CANCER_STUDY_IDENTIFIER
-			if [ $? -gt 0 ]; then
-				echo "Failed to rename existing '$CANCER_STUDY_IDENTIFIER' to backup study '$BACKUP_CANCER_STUDY_IDENTIFIER'!"
-				RENAME_BACKUP_FAIL=1
-			else
-				echo "Updating groups of study '$BACKUP_CANCER_STUDY_IDENTIFIER' to KSBACKUP"
-				$JAVA_HOME/bin/java $JAVA_IMPORTER_ARGS -Xmx64g -cp $IMPORTER_JAR org.mskcc.cbio.importer.Admin --update-groups --cancer-study-ids $BACKUP_CANCER_STUDY_IDENTIFIER --groups "KSBACKUP"
-				if [ $? -gt 0 ]; then
-					echo "Failed to change groups for backup study '$BACKUP_CANCER_STUDY_IDENTIFIER!"
-					GROUPS_FAIL=1
-				fi
-				echo "Renaming temporary study '$TEMP_CANCER_STUDY_IDENTIFIER' to '$CANCER_STUDY_IDENTIFIER'"
-				$JAVA_HOME/bin/java $JAVA_IMPORTER_ARGS -Xmx64g -cp $IMPORTER_JAR org.mskcc.cbio.importer.Admin --rename-cancer-study --new-study-id $CANCER_STUDY_IDENTIFIER --original-study-id $TEMP_CANCER_STUDY_IDENTIFIER
-				if [ $? -gt 0 ]; then
-					echo "Failed to rename temporary study '$TEMP_CANCER_STUDY_IDENTIFIER' to '$CANCER_STUDY_IDENTIFIER!"
-					RENAME_FAIL=1
-				else
-					# only consume samples if study is mskimpact
-					if [ $CANCER_STUDY_IDENTIFIER == "mskimpact" ]; then 
-						echo "Consuming mskimpact samples from cvr"
-						$JAVA_HOME/bin/java $JAVA_PROXY_ARGS $JAVA_DEBUG_ARGS -jar $PORTAL_HOME/lib/cvr_fetcher.jar -c $MSK_IMPACT_DATA_HOME/cvr_data.json
-					fi
-				fi
-			fi
-		fi
-	fi
+    # validate
+    echo "Validating import..."
+    $JAVA_HOME/bin/java $JAVA_IMPORTER_ARGS -Xmx64g -cp $IMPORTER_JAR org.mskcc.cbio.importer.Admin --validate-temp-study --temp-study-id $TEMP_CANCER_STUDY_IDENTIFIER --original-study-id $CANCER_STUDY_IDENTIFIER --notification-file "$VALIDATION_NOTIFICATION_FILENAME"
+    if [ $? -gt 0 ]; then
+        echo "Failed to validate - deleting temp study '$TEMP_CANCER_STUDY_IDENTIFIER'"
+        $JAVA_HOME/bin/java $JAVA_IMPORTER_ARGS -Xmx64g -cp $IMPORTER_JAR org.mskcc.cbio.importer.Admin --delete-cancer-study --cancer-study-ids $TEMP_CANCER_STUDY_IDENTIFIER
+        VALIDATION_FAIL=1
+    else
+        echo "Successful validation - renaming '$CANCER_STUDY_IDENTIFIER' and temp study '$TEMP_CANCER_STUDY_IDENTIFIER'"
+        $JAVA_HOME/bin/java $JAVA_IMPORTER_ARGS -Xmx64g -cp $IMPORTER_JAR org.mskcc.cbio.importer.Admin --delete-cancer-study --cancer-study-ids $BACKUP_CANCER_STUDY_IDENTIFIER
+        if [ $? -gt 0 ]; then
+            echo "Failed to delete backup study '$BACKUP_CANCER_STUDY_IDENTIFIER'!"
+            DELETE_FAIL=1
+        else
+            echo "Renaming '$CANCER_STUDY_IDENTIFIER' to '$BACKUP_CANCER_STUDY_IDENTIFIER'"
+            $JAVA_HOME/bin/java $JAVA_IMPORTER_ARGS -Xmx64g -cp $IMPORTER_JAR org.mskcc.cbio.importer.Admin --rename-cancer-study --new-study-id $BACKUP_CANCER_STUDY_IDENTIFIER --original-study-id $CANCER_STUDY_IDENTIFIER
+            if [ $? -gt 0 ]; then
+                echo "Failed to rename existing '$CANCER_STUDY_IDENTIFIER' to backup study '$BACKUP_CANCER_STUDY_IDENTIFIER'!"
+                RENAME_BACKUP_FAIL=1
+            else
+                echo "Updating groups of study '$BACKUP_CANCER_STUDY_IDENTIFIER' to KSBACKUP"
+                $JAVA_HOME/bin/java $JAVA_IMPORTER_ARGS -Xmx64g -cp $IMPORTER_JAR org.mskcc.cbio.importer.Admin --update-groups --cancer-study-ids $BACKUP_CANCER_STUDY_IDENTIFIER --groups "KSBACKUP"
+                if [ $? -gt 0 ]; then
+                    echo "Failed to change groups for backup study '$BACKUP_CANCER_STUDY_IDENTIFIER!"
+                    GROUPS_FAIL=1
+                fi
+                echo "Renaming temporary study '$TEMP_CANCER_STUDY_IDENTIFIER' to '$CANCER_STUDY_IDENTIFIER'"
+                $JAVA_HOME/bin/java $JAVA_IMPORTER_ARGS -Xmx64g -cp $IMPORTER_JAR org.mskcc.cbio.importer.Admin --rename-cancer-study --new-study-id $CANCER_STUDY_IDENTIFIER --original-study-id $TEMP_CANCER_STUDY_IDENTIFIER
+                if [ $? -gt 0 ]; then
+                    echo "Failed to rename temporary study '$TEMP_CANCER_STUDY_IDENTIFIER' to '$CANCER_STUDY_IDENTIFIER!"
+                    RENAME_FAIL=1
+                else
+                    # only consume samples if study is mskimpact
+                    if [ $CANCER_STUDY_IDENTIFIER == "mskimpact" ]; then
+                        echo "Consuming mskimpact samples from cvr"
+                        $JAVA_HOME/bin/java $JAVA_PROXY_ARGS $JAVA_DEBUG_ARGS -jar $PORTAL_HOME/lib/cvr_fetcher.jar -c $MSK_IMPACT_DATA_HOME/cvr_data.json
+                    fi
+                fi
+            fi
+        fi
+    fi
 fi
 
 ### FAILURE EMAIL ###
@@ -199,52 +211,52 @@ fi
 EMAIL_BODY="The $CANCER_STUDY_IDENTIFIER study failed import. The original study will remain on the portal."
 # send email if import fails
 if [ $IMPORT_FAIL -gt 0 ]; then
-	echo -e "Sending email $EMAIL_BODY"	
-	echo -e "$EMAIL_BODY" | mail -s "$CANCER_STUDY_IDENTIFIER Update Failure: Import" $EMAIL_LIST
-	sendFailureMessageMskPipelineLogsSlack "$CANCER_STUDY_IDENTIFIER import as temp study"
+    echo -e "Sending email $EMAIL_BODY"
+    echo -e "$EMAIL_BODY" | mail -s "$CANCER_STUDY_IDENTIFIER Update Failure: Import" $EMAIL_LIST
+    sendFailureMessageMskPipelineLogsSlack "$CANCER_STUDY_IDENTIFIER import as temp study"
 fi
 
 # send email if validation fails
 if [ $VALIDATION_FAIL -gt 0 ]; then
-	if [ $(wc -l < $VALIDATION_NOTIFICATION_FILENAME) -eq 0 ]; then
-		EMAIL_BODY="The $CANCER_STUDY_IDENTIFIER study failed to pass the validation step in import process for some unknown reason. No data was saved to validation notification file $VALIDATION_NOTIFICATION_FILENAME. The original study will remain on the portal."
-	else
-		EMAIL_BODY=`cat $VALIDATION_NOTIFICATION_FILENAME`
-	fi
-	echo -e "Sending email $EMAIL_BODY"
-	echo -e "$EMAIL_BODY" | mail -s "$CANCER_STUDY_IDENTIFIER Update Failure: Validation" $EMAIL_LIST
-	sendFailureMessageMskPipelineLogsSlack "$CANCER_STUDY_IDENTIFIER temp study validation"	
+    if [ $(wc -l < $VALIDATION_NOTIFICATION_FILENAME) -eq 0 ]; then
+        EMAIL_BODY="The $CANCER_STUDY_IDENTIFIER study failed to pass the validation step in import process for some unknown reason. No data was saved to validation notification file $VALIDATION_NOTIFICATION_FILENAME. The original study will remain on the portal."
+    else
+        EMAIL_BODY=`cat $VALIDATION_NOTIFICATION_FILENAME`
+    fi
+    echo -e "Sending email $EMAIL_BODY"
+    echo -e "$EMAIL_BODY" | mail -s "$CANCER_STUDY_IDENTIFIER Update Failure: Validation" $EMAIL_LIST
+    sendFailureMessageMskPipelineLogsSlack "$CANCER_STUDY_IDENTIFIER temp study validation"
 fi
 
 EMAIL_BODY="The $BACKUP_CANCER_STUDY_IDENTIFIER study failed to delete. $CANCER_STUDY_IDENTIFIER study did not finish updating."
 if [ $DELETE_FAIL -gt 0 ]; then
-	echo -e "Sending email $EMAIL_BODY"
-	echo -e "$EMAIL_BODY" | mail -s "$CANCER_STUDY_IDENTIFIER Update Failure: Deletion" $EMAIL_LIST
-	sendFailureMessageMskPipelineLogsSlack "$BACKUP_CANCER_STUDY_IDENTIFIER deletion"
+    echo -e "Sending email $EMAIL_BODY"
+    echo -e "$EMAIL_BODY" | mail -s "$CANCER_STUDY_IDENTIFIER Update Failure: Deletion" $EMAIL_LIST
+    sendFailureMessageMskPipelineLogsSlack "$BACKUP_CANCER_STUDY_IDENTIFIER deletion"
 fi
 
 EMAIL_BODY="Failed to backup $CANCER_STUDY_IDENTIFIER to $BACKUP_CANCER_STUDY_IDENTIFIER via renaming. $CANCER_STUDY_IDENTIFIER study did not finish updating."
 if [ $RENAME_BACKUP_FAIL -gt 0 ]; then
-	echo -e "Sending email $EMAIL_BODY"
-	echo -e "$EMAIL_BODY" | mail -s "$CANCER_STUDY_IDENTIFIER Update Failure: Renaming backup" $EMAIL_LIST
-	sendFailureMessageMskPipelineLogsSlack "$CANCER_STUDY_IDENTIFIER rename to $BACKUP_CANCER_STUDY_IDENTIFIER"
+    echo -e "Sending email $EMAIL_BODY"
+    echo -e "$EMAIL_BODY" | mail -s "$CANCER_STUDY_IDENTIFIER Update Failure: Renaming backup" $EMAIL_LIST
+    sendFailureMessageMskPipelineLogsSlack "$CANCER_STUDY_IDENTIFIER rename to $BACKUP_CANCER_STUDY_IDENTIFIER"
 fi
 
 EMAIL_BODY="Failed to rename temp study $TEMP_CANCER_STUDY_IDENTIFIER to $CANCER_STUDY_IDENTIFIER. $CANCER_STUDY_IDENTIFIER study did not finish updating."
 if [ $RENAME_FAIL -gt 0 ]; then
-	echo -e "Sending email $EMAIL_BODY"
-	echo -e "$EMAIL_BODY" | mail -s "$CANCER_STUDY_IDENTIFIER Update Failure: CRITICAL!! Renaming" $EMAIL_LIST
-	sendFailureMessageMskPipelineLogsSlack "CRITICAL FAILURE: $TEMP_CANCER_STUDY_IDENTIFIER rename to $CANCER_STUDY_IDENTIFIER" 
+    echo -e "Sending email $EMAIL_BODY"
+    echo -e "$EMAIL_BODY" | mail -s "$CANCER_STUDY_IDENTIFIER Update Failure: CRITICAL!! Renaming" $EMAIL_LIST
+    sendFailureMessageMskPipelineLogsSlack "CRITICAL FAILURE: $TEMP_CANCER_STUDY_IDENTIFIER rename to $CANCER_STUDY_IDENTIFIER"
 fi
 
 EMAIL_BODY="Failed to update groups for backup study $BACKUP_CANCER_STUDY_IDENTIFIER."
 if [ $GROUPS_FAIL -gt 0 ]; then
-	echo -e "Sending email $EMAIL_BODY"
-	echo -e "$EMAIL_BODY" | mail -s "$CANCER_STUDY_IDENTIFIER Update Failure: Groups update" $EMAIL_LIST
-	sendFailureMessageMskPipelineLogsSlack "$CANCER_STUDY_IDENTIFIER groups update"
+    echo -e "Sending email $EMAIL_BODY"
+    echo -e "$EMAIL_BODY" | mail -s "$CANCER_STUDY_IDENTIFIER Update Failure: Groups update" $EMAIL_LIST
+    sendFailureMessageMskPipelineLogsSlack "$CANCER_STUDY_IDENTIFIER groups update"
 fi
 
-# send notification file 
+# send notification file
 # this contains the error or success message from import
 # we only want to send the email on import failure
 # or if everything succeeds
@@ -254,8 +266,8 @@ fi
 
 # determine if we need to exit with error code
 if [[ $IMPORT_FAIL -ne 0 || $VALIDATION_FAIL -ne 0 || $DELETE_FAIL -ne 0 || $RENAME_BACKUP_FAIL -ne 0 || $RENAME_FAIL -ne 0 || $GROUPS_FAIL -ne 0 ]]; then
-	echo "Update failed for study '$CANCER_STUDY_IDENTIFIER"
-	exit 1
+    echo "Update failed for study '$CANCER_STUDY_IDENTIFIER"
+    exit 1
 else
-	echo "Update successful for study '$CANCER_STUDY_IDENTIFIER'"
+    echo "Update successful for study '$CANCER_STUDY_IDENTIFIER'"
 fi
