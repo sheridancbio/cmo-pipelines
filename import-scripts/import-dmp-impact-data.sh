@@ -268,6 +268,31 @@ if [ -z $JAVA_HOME ] | [ -z $HG_BINARY ] | [ -z $PORTAL_HOME ] | [ -z $MSK_IMPAC
     exit 2
 fi
 
+# refresh cdd and oncotree cache - by default this script will attempt to
+# refresh the CDD and ONCOTREE cache but we should check both exit codes
+# independently because of the various dependencies we have for both services
+CDD_RECACHE_FAIL=0; ONCOTREE_RECACHE_FAIL=0
+bash $PORTAL_HOME/scripts/refresh-cdd-oncotree-cache.sh --cdd-only
+if [ $? -gt 0 ]; then
+    message="Failed to refresh CDD cache!"
+    echo $message
+    echo -e "$message" | mail -s "CDD cache failed to refresh" $email_list
+    sendFailureMessageMskPipelineLogsSlack "$message"
+    CDD_RECACHE_FAIL=1
+fi
+bash $PORTAL_HOME/scripts/refresh-cdd-oncotree-cache.sh --oncotree-only
+if [ $? -gt 0 ]; then
+    message="Failed to refresh ONCOTREE cache!"
+    echo $message
+    echo -e "$message" | mail -s "ONCOTREE cache failed to refresh" $email_list
+    sendFailureMessageMskPipelineLogsSlack "$message"
+    ONCOTREE_RECACHE_FAIL=1
+fi
+if [[ $CDD_RECACHE_FAIL -ne 0 || $ONCOTREE_RECACHE_FAIL -ne 0]] ; then
+    echo "Oncotree and/or CDD recache failed! Exiting..."
+    exit 2
+fi
+
 now=$(date "+%Y-%m-%d-%H-%M-%S")
 mskimpact_notification_file=$(mktemp $JAVA_TMPDIR/mskimpact-portal-update-notification.$now.XXXXXX)
 mskheme_notification_file=$(mktemp $JAVA_TMPDIR/mskheme-portal-update-notification.$now.XXXXXX)
