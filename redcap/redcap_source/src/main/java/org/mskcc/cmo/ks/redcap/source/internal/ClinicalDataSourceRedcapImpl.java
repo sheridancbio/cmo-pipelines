@@ -39,6 +39,8 @@ import org.apache.log4j.Logger;
 import org.mskcc.cmo.ks.redcap.models.RedcapAttributeMetadata;
 import org.mskcc.cmo.ks.redcap.models.RedcapProjectAttribute;
 import org.mskcc.cmo.ks.redcap.source.ClinicalDataSource;
+import org.mskcc.cmo.ks.redcap.source.MetadataManager;
+import org.mskcc.cmo.ks.redcap.source.internal.MetadataCache;
 import org.springframework.beans.factory.annotation.*;
 import org.springframework.stereotype.Repository;
 
@@ -52,13 +54,13 @@ import org.springframework.stereotype.Repository;
 @Repository
 public class ClinicalDataSourceRedcapImpl implements ClinicalDataSource {
 
-    //TODO: The design of this class should migrate so that it becomes unaware of redcap_id fields and the mapping issues. Migrate such lower level logic downwards.
-
-    @Autowired
-    private RedcapSessionManager redcapSessionManager; //TODO: eliminate this dependency
+    //TODO: The design of this class should migrate so that it becomes unaware of redcap token handling. Migrate such lower level logic downwards.
 
     @Autowired
     private MetadataCache metadataCache;
+
+    @Autowired
+    private MetadataManager metadataManager;
 
     @Autowired
     private RedcapRepository redcapRepository;
@@ -78,17 +80,17 @@ public class ClinicalDataSourceRedcapImpl implements ClinicalDataSource {
 
     @Override
     public boolean projectExists(String projectTitle) {
-        return redcapSessionManager.getTokenByProjectTitle(projectTitle) != null;
+        return redcapRepository.getTokenByProjectTitle(projectTitle) != null;
     }
 
     @Override
     public boolean redcapDataTypeIsTimeline(String projectTitle) {
-        return redcapSessionManager.redcapDataTypeIsTimeline(projectTitle);
+        return redcapRepository.redcapDataTypeIsTimeline(projectTitle);
     }
 
     @Override
     public List<Map<String, String>> exportRawDataForProjectTitle(String projectTitle) {
-        String projectToken = redcapSessionManager.getTokenByProjectTitle(projectTitle);
+        String projectToken = redcapRepository.getTokenByProjectTitle(projectTitle);
         List<Map<String, String>> data = redcapRepository.getRedcapDataForProject(projectToken);
         if (redcapDataTypeIsTimeline(projectTitle)) {
             if (clinicalTimelineTokens != null) {
@@ -104,13 +106,13 @@ public class ClinicalDataSourceRedcapImpl implements ClinicalDataSource {
 
     @Override
     public boolean projectsExistForStableId(String stableId) {
-        return !redcapSessionManager.getClinicalTokenMapByStableId(stableId).isEmpty() ||
-                !redcapSessionManager.getTimelineTokenMapByStableId(stableId).isEmpty();
+        return !redcapRepository.getClinicalTokenMapByStableId(stableId).isEmpty() ||
+                !redcapRepository.getTimelineTokenMapByStableId(stableId).isEmpty();
     }
 
     @Override
     public List<String> getProjectHeader(String projectTitle) {
-        String projectToken = redcapSessionManager.getTokenByProjectTitle(projectTitle);
+        String projectToken = redcapRepository.getTokenByProjectTitle(projectTitle);
         return getNormalizedColumnHeaders(projectToken);
     }
 
@@ -152,16 +154,18 @@ public class ClinicalDataSourceRedcapImpl implements ClinicalDataSource {
     @Override
     public String getNextClinicalProjectTitle(String stableId) {
         checkTokensByStableId(stableId);
-        List<String> keys = new ArrayList(clinicalDataTokens.keySet());
-        nextClinicalId = keys.get(0);
+        Iterator<String> keySetIterator = clinicalDataTokens.keySet().iterator();
+        nextClinicalId = null; // blank out in case of exception on following line
+        nextClinicalId = keySetIterator.next();
         return nextClinicalId;
     }
 
     @Override
     public String getNextTimelineProjectTitle(String stableId) {
         checkTokensByStableId(stableId);
-        List<String> keys = new ArrayList(clinicalTimelineTokens.keySet());
-        nextTimelineId = keys.get(0);
+        Iterator<String> keySetIterator = clinicalTimelineTokens.keySet().iterator();
+        nextTimelineId = null;
+        nextTimelineId = keySetIterator.next();
         return nextTimelineId;
     }
 
@@ -178,8 +182,8 @@ public class ClinicalDataSourceRedcapImpl implements ClinicalDataSource {
     }
 
     @Override
-    public void importClinicalDataFile(String projectTitle, String filename, boolean overwriteProjectData) throws Exception {
-        String projectToken = redcapSessionManager.getTokenByProjectTitle(projectTitle);
+    public void importClinicalDataFile(String projectTitle, String filename) throws Exception {
+        String projectToken = redcapRepository.getTokenByProjectTitle(projectTitle);
         if (projectToken == null) {
             log.error("Project not found in redcap clinicalDataTokens or clincalTimelineTokens: " + projectTitle);
             return;
@@ -195,71 +199,17 @@ public class ClinicalDataSourceRedcapImpl implements ClinicalDataSource {
                 log.error("Error: file " + filename + " was empty ... aborting attempt to import data");
                 throw new Exception("Error: file " + filename + " was empty ... aborting attempt to import data");
             }
-            if (!dataFileHeadersEqualRedcapProjectHeaders(dataFileContentsTSV, projectToken)) {
-                log.error("Error: file " + filename + " has differing headers in redcap ... aborting attempt to import data");
-                throw new Exception("Error: file " + filename + " has differing headers in redcap ... aborting attempt to import data");
+            if (!metadataManager.allHeadersAreValidClinicalAttributes(Arrays.asList(dataFileContentsTSV.get(0).split("\t",-1)))) {
+                log.error("Error: file " + filename + " has headers that are not defined in the Clinical Data Dictionary ... aborting attempt to import data");
+                throw new Exception("Error: file " + filename + " has headers that are not defined in Clinical Data Dictionary ... aborting attempt to import data");
             }
-            replaceExternalHeadersWithRedcapIds(dataFileContentsTSV);
-            addRecordIdColumnIfMissingInFileAndPresentInProject(dataFileContentsTSV, projectToken);
-            List<String> dataFileContentsCSV = convertTSVtoCSV(dataFileContentsTSV, true);
-            String dataForImport = String.join("\n",dataFileContentsCSV.toArray(new String[0])) + "\n";
-            if (dataFileContentsCSV.size() == 1) {
-                log.error("Error: file "+ filename + " contained a single line (presumed to be the header) ... aborting attempt to import data");
-                throw new Exception("Error: file "+ filename + " contained a single line (presumed to be the header) ... aborting attempt to import data");
-            }
-            if (overwriteProjectData) {
-                redcapSessionManager.deleteRedcapProjectData(projectToken);
-            }
-            redcapSessionManager.importClinicalData(projectToken, dataForImport);
-            log.info("import completed, " + Integer.toString(dataFileContentsCSV.size() - 1) + " records imported");
-
+            redcapRepository.importClinicalData(projectToken, dataFileContentsTSV);
         } catch (IOException e) {
             log.error("IOException thrown while attempting to read file " + filename + " : " + e.getMessage());
             throw new IOException("IOException thrown while attempting to read file " + filename + " : " + e.getMessage());
-        }
-    }
-
-    private boolean dataFileHeadersEqualRedcapProjectHeaders(List<String> dataFileContentsTSV, String projectToken) {
-        List<String> normalizedDataFileHeader = Arrays.asList(externalFieldNamesToRedcapFieldIds(dataFileContentsTSV.get(0).split("\t",-1)));
-        List<RedcapProjectAttribute> redcapAttributes = redcapRepository.getAttributesByToken(projectToken);
-        List<String> redcapProjectHeader = new ArrayList<String>();
-        for (int i = 0; i < redcapAttributes.size(); i++) {
-            if (!redcapAttributes.get(i).getFieldName().equals("record_id")) {
-                redcapProjectHeader.add(redcapAttributes.get(i).getFieldName());
-            }
-        }
-        Collections.sort(normalizedDataFileHeader);
-        Collections.sort(redcapProjectHeader);
-        return normalizedDataFileHeader.equals(redcapProjectHeader);
-    }
-
-    private void replaceExternalHeadersWithRedcapIds(List<String> dataFileContentsTSV) {
-        String[] externalHeaderFields = dataFileContentsTSV.get(0).split("\t",-1);
-        String[] redcapHeaderIds = externalFieldNamesToRedcapFieldIds(externalHeaderFields);
-        String newHeaderLine = String.join("\t", redcapHeaderIds);
-        dataFileContentsTSV.set(0, newHeaderLine);
-    }
-
-    private void addRecordIdColumnIfMissingInFileAndPresentInProject(List<String> dataFileContentsTSV, String projectToken) {
-        if (dataFileContentsTSV.get(0).startsWith(RedcapSessionManager.REDCAP_FIELD_NAME_FOR_RECORD_ID)) {
-            return; // RECORD_ID field is already the first field in the file
-        }
-        Integer maximumRecordIdInProject = redcapSessionManager.getMaximumRecordIdInRedcapProjectIfPresent(projectToken);
-        if (maximumRecordIdInProject == null) {
-            return; // record_id field is not present in project
-        }
-        int nextRecordId = maximumRecordIdInProject + 1;
-        boolean headerHandled = false;
-        for (int index = 0; index < dataFileContentsTSV.size(); index++) {
-            if (headerHandled) {
-                String expandedLine = Integer.toString(nextRecordId) + "\t" + dataFileContentsTSV.get(index);
-                dataFileContentsTSV.set(index, expandedLine);
-                nextRecordId = nextRecordId + 1;
-            } else {
-                String expandedLine = RedcapSessionManager.REDCAP_FIELD_NAME_FOR_RECORD_ID + "\t" + dataFileContentsTSV.get(index);
-                dataFileContentsTSV.set(index, expandedLine);
-                headerHandled = true;
-            }
+        } catch (Exception e) {
+            log.error("Error importing file: " + filename + ", " + e.getMessage());
+            throw new Exception("Error importing file: " + filename + ", " + e.getMessage());
         }
     }
 
@@ -267,7 +217,7 @@ public class ClinicalDataSourceRedcapImpl implements ClinicalDataSource {
         List<RedcapProjectAttribute> attributes = redcapRepository.getAttributesByToken(projectToken);
         Map<RedcapProjectAttribute, RedcapAttributeMetadata> attributeMap = new LinkedHashMap<>();
         for (RedcapProjectAttribute attribute : attributes) {
-            attributeMap.put(attribute, metadataCache.getMetadataByRedcapId(attribute.getFieldName()));
+            attributeMap.put(attribute, metadataCache.getMetadataByNormalizedColumnHeader(redcapRepository.convertRedcapIdToColumnHeader(attribute.getFieldName())));
         }
         return makeHeader(attributeMap);
     }
@@ -278,7 +228,7 @@ public class ClinicalDataSourceRedcapImpl implements ClinicalDataSource {
         Map<RedcapProjectAttribute, RedcapAttributeMetadata> sampleAttributeMap = new LinkedHashMap<>();
         Map<RedcapProjectAttribute, RedcapAttributeMetadata> patientAttributeMap = new LinkedHashMap<>();
         for (RedcapProjectAttribute attribute : attributes) {
-            RedcapAttributeMetadata meta = metadataCache.getMetadataByRedcapId(attribute.getFieldName());
+            RedcapAttributeMetadata meta = metadataCache.getMetadataByNormalizedColumnHeader(redcapRepository.convertRedcapIdToColumnHeader(attribute.getFieldName()));
             if (attribute.getFieldName().equalsIgnoreCase("PATIENT_ID")) {
                 //PATIENT_ID is both a sample and a patient attribute
                 sampleAttributeMap.put(attribute, meta);
@@ -298,21 +248,9 @@ public class ClinicalDataSourceRedcapImpl implements ClinicalDataSource {
         List<RedcapProjectAttribute> attributes = getAttributes(true);
         Map<RedcapProjectAttribute, RedcapAttributeMetadata> combinedAttributeMap = new LinkedHashMap<>();
         for (RedcapProjectAttribute attribute : attributes) {
-            combinedAttributeMap.put(attribute, metadataCache.getMetadataByRedcapId(attribute.getFieldName()));
+            combinedAttributeMap.put(attribute, metadataCache.getMetadataByNormalizedColumnHeader(redcapRepository.convertRedcapIdToColumnHeader(attribute.getFieldName())));
         }
         combinedHeader = makeHeader(combinedAttributeMap);
-    }
-
-    //change so that redcap ids are just lower cased "externalFieldNames"
-    public String[] externalFieldNamesToRedcapFieldIds(String[] externalFieldNames) {
-        if (externalFieldNames == null) {
-            return new String[0];
-        }
-        String[] redcapFieldIds = new String[externalFieldNames.length];
-        for (int i = 0; i < externalFieldNames.length; i++) {
-            redcapFieldIds[i] =  metadataCache.getMetadataByNormalizedColumnHeader(externalFieldNames[i]).getNormalizedColumnHeader().toLowerCase();
-        }
-        return redcapFieldIds;
     }
 
     private List<RedcapProjectAttribute> getAttributes(boolean timelineData) {
@@ -339,8 +277,8 @@ public class ClinicalDataSourceRedcapImpl implements ClinicalDataSource {
 
     private void checkTokensByStableId(String stableId) {
         if (!tokensHaveBeenSelected()) {
-            clinicalTimelineTokens = redcapSessionManager.getTimelineTokenMapByStableId(stableId);
-            clinicalDataTokens = redcapSessionManager.getClinicalTokenMapByStableId(stableId);
+            clinicalTimelineTokens = redcapRepository.getTimelineTokenMapByStableId(stableId);
+            clinicalDataTokens = redcapRepository.getClinicalTokenMapByStableId(stableId);
         }
     }
 
@@ -414,30 +352,6 @@ public class ClinicalDataSourceRedcapImpl implements ClinicalDataSource {
             }
         }
         return lineList;
-    }
-
-    private List<String> convertTSVtoCSV(List<String> tsvLines, boolean dropDuplicatedKeys) {
-        HashSet<String> seen = new HashSet<String>();
-        LinkedList<String> csvLines = new LinkedList<String>();
-        for (String tsvLine : tsvLines) {
-            String[] tsvFields = tsvLine.split("\t",-1);
-            String key = tsvFields[0].trim();
-            if (dropDuplicatedKeys && seen.contains(key)) {
-                continue;
-            }
-            seen.add(key);
-            String[] csvFields = new String[tsvFields.length];
-            for (int i = 0; i < tsvFields.length; i++) {
-                String tsvField = tsvFields[i];
-                String csvField = tsvField;
-                if (tsvField.indexOf(",") != -1) {
-                    csvField = StringEscapeUtils.escapeCsv(tsvField);
-                }
-                csvFields[i] = csvField;
-            }
-            csvLines.add(String.join(",", csvFields));
-        }
-        return csvLines;
     }
 
     public static void main(String[] args) {}

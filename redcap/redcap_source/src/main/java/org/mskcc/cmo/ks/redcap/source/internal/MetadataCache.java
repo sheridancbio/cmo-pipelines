@@ -57,9 +57,6 @@ public class MetadataCache {
     @Autowired
     private CDDSessionManager cddSessionManager;
 
-    @Autowired
-    private GoogleSessionManager googleSessionManager;
-
     private RedcapAttributeMetadata[] metadataArray = null;
     // mapping of normalized column header name to "RedcapProjectAttribute" object
     // where normalized column header is all caps and no spaces (i.e SAMPLE_ID : RedcapProjectAttribute(sample_id))
@@ -74,26 +71,13 @@ public class MetadataCache {
             String errorString = "Error : Attempting to set override studyId when metadata cache is already initialized.";
             log.warn(errorString);
             throw new RuntimeException(errorString);
-        } else { 
+        } else {
             overrideStudyId = studyId;
         }
     }
 
     public String getOverrideStudyId() {
         return overrideStudyId;
-    }
-
-    // when we want to get metadata from map, have to uppercase redcapId to match key
-    public RedcapAttributeMetadata getMetadataByRedcapId(String redcapId) {
-        ensureThatCacheIsInitialized();
-        RedcapAttributeMetadata redcapAttributeMetadata = normalizedColumnHeaderToMetadata.get(redcapId.toUpperCase());
-        if (redcapAttributeMetadata != null) {
-            return redcapAttributeMetadata;
-        } else {
-            String errorString = "Error : No RedcapAttributeMetadata found associated with redcap id: " + redcapId;
-            log.warn(errorString);
-            throw new RuntimeException(errorString);
-        }
     }
 
     public RedcapAttributeMetadata getMetadataByNormalizedColumnHeader(String normalizedColumnHeader) {
@@ -142,13 +126,13 @@ public class MetadataCache {
     private void addToNormalizedColumnHeaderMap(RedcapAttributeMetadata metadataElement) {
         String normalizedColumnHeader = metadataElement.getNormalizedColumnHeader();
         if (normalizedColumnHeader == null) {
-            String errorString = "Error : missing value in NORMALIZED_COLUMN_HEADER in google worksheet";
+            String errorString = "Error : no defined clinical attribute in Clinical Data Dictionary";
             log.warn(errorString);
             throw new RuntimeException(errorString);
         }
         if (normalizedColumnHeaderToMetadata.put(normalizedColumnHeader, metadataElement) != null) {
             log.warn("overwrote normalizedColumnHeader '" + normalizedColumnHeader +
-                    "' with new value in normalizedColumnHeaderToMetadata map (normalizedColumnHeader duplicated in google worksheet)");
+                    "' with new value in normalizedColumnHeaderToMetadata map (normalizedColumnHeader duplicated in Clinical Data Dictionary ---- SOMETHING WEIRD HAPPENED ---- should not be possible)");
         }
     }
 }

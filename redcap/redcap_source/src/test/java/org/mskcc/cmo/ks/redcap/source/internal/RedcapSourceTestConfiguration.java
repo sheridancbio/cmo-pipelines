@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2018 Memorial Sloan-Kettering Cancer Center.
+ * Copyright (c) 2017 - 2018 Memorial Sloan-Kettering Cancer Center.
  *
  * This library is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS
@@ -36,14 +36,17 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.*;
 import java.util.*;
-import org.mockito.Matchers;
+import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
+import org.mockito.stubbing.Answer;
+import org.mockito.invocation.InvocationOnMock;
 import org.mskcc.cmo.ks.redcap.models.RedcapAttributeMetadata;
 import org.mskcc.cmo.ks.redcap.models.RedcapProjectAttribute;
 import org.mskcc.cmo.ks.redcap.source.ClinicalDataSource;
 import org.mskcc.cmo.ks.redcap.source.internal.ClinicalDataSourceRedcapImpl;
+import org.mskcc.cmo.ks.redcap.source.MetadataManager;
+import org.mskcc.cmo.ks.redcap.source.internal.MetadataManagerRedcapImpl;
 import org.mskcc.cmo.ks.redcap.source.internal.CDDSessionManager;
-import org.mskcc.cmo.ks.redcap.source.internal.GoogleSessionManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Scope;
@@ -57,6 +60,19 @@ public class RedcapSourceTestConfiguration {
     public static final String SIMPLE_MIXED_TYPE_CLINICAL_PROJECT_TOKEN = "MixedClinicalProjectToken";
     public static final String SIMPLE_MIXED_TYPE_CLINICAL_PROJECT_INSTRUMENT_NAME = "my_first_instrument";
     public static final String SIMPLE_MIXED_TYPE_CLINICAL_STABLE_ID = "MixedClinicalProjectStableId";
+    public static final String RECORD_ID_NOT_AS_PRIMARY_KEY_PROJECT_TOKEN = "RecordIdNotAsPrimaryKeyProjectToken"; 
+    public static final String RECORD_ID_AS_PRIMARY_KEY_PROJECT_TOKEN = "RecordIdAsPrimaryKeyProjectToken";
+    public static final String RECORD_ID_NOT_PRESENT_PROJECT_TOKEN = "RecordIdNotPresentProjectToken"; 
+    public static Set<String> recordsPassedToRedcapSessionManagerForDeletion = new HashSet<>();    
+    public static String recordsPassedToRedcapSessionManagerForImport; 
+
+    public String getRecordsPassedToRedcapSessionManagerForUpload() {
+        return recordsPassedToRedcapSessionManagerForImport;
+    }
+    
+    public Set<String> getRecordsPassedToRedcapSessionManagerForDeletion() {
+        return recordsPassedToRedcapSessionManagerForDeletion;
+    }
 
     @Bean
     public ClinicalDataSource clinicalDataSource() {
@@ -69,11 +85,8 @@ public class RedcapSourceTestConfiguration {
     }
 
     @Bean
-    public GoogleSessionManager googleSessionManager() {
-        GoogleSessionManager googleSessionManager = Mockito.mock(GoogleSessionManager.class);
-        RedcapAttributeMetadata[] mockReturnForGetMetadata = makeMockRedcapIdToMetadataList();
-        Mockito.when(googleSessionManager.getRedcapMetadata()).thenReturn(mockReturnForGetMetadata);
-        return googleSessionManager;
+    public MetadataManager metadataManager() {
+        return new MetadataManagerRedcapImpl();
     }
 
     @Bean
@@ -95,6 +108,24 @@ public class RedcapSourceTestConfiguration {
     @Bean
     public RedcapSessionManager redcapSessionManager() {
         RedcapSessionManager redcapSessionManager = Mockito.mock(RedcapSessionManager.class);
+        Answer<Void> redcapSessionManagerDeleteProjectDataAnswer = new Answer<Void>() {
+            public Void answer(InvocationOnMock deleteRedcapProjectDataInvocation) {
+                String projectToken = deleteRedcapProjectDataInvocation.getArgument(0);
+                Set<String> recordPrimaryKeySetForDeletion = deleteRedcapProjectDataInvocation.getArgument(1);
+                recordsPassedToRedcapSessionManagerForDeletion.clear();
+                recordsPassedToRedcapSessionManagerForDeletion.addAll(recordPrimaryKeySetForDeletion);
+                return null;
+            }
+        };   
+        Answer<Void> redcapSessionManagerImportProjectDataAnswer = new Answer<Void>() {
+            public Void answer(InvocationOnMock importRedcapProjectDataInvocation) {
+                String projectToken = (String)importRedcapProjectDataInvocation.getArguments()[0];
+                String formattedRecordsToImport = (String)importRedcapProjectDataInvocation.getArguments()[1];
+                recordsPassedToRedcapSessionManagerForImport = null;
+                recordsPassedToRedcapSessionManagerForImport = formattedRecordsToImport;
+                return null;
+            }
+        }; 
         //configure token requests
         Mockito.when(redcapSessionManager.getTokenByProjectTitle(ONE_DIGIT_PROJECT_TITLE)).thenReturn(ONE_DIGIT_PROJECT_TOKEN);
         Mockito.when(redcapSessionManager.getTokenByProjectTitle(SIMPLE_MIXED_TYPE_CLINICAL_PROJECT_TITLE)).thenReturn(SIMPLE_MIXED_TYPE_CLINICAL_PROJECT_TOKEN);
@@ -105,12 +136,27 @@ public class RedcapSourceTestConfiguration {
         //configure meta data requests
         RedcapAttributeMetadata[] mockReturnForGetMetadata = makeMockRedcapIdToMetadataList();
         JsonNode[] mockReturnForGetData = makeMockReturnForGetData();
+        JsonNode[] mockReturnForGetDataWithRecordIdAsPrimaryKey = makeMockReturnForGetDataWithRecordIdAsPrimaryKey();
+        JsonNode[] mockReturnForGetDataWithRecordIdNotPresent = makeMockReturnForGetDataWithRecordIdNotPresent();
         //configure data requests
-        Mockito.when(redcapSessionManager.getRedcapDataForProjectByToken(Matchers.eq(ONE_DIGIT_PROJECT_TOKEN))).thenReturn(mockReturnForGetData);
+        Mockito.when(redcapSessionManager.getRedcapDataForProjectByToken(ArgumentMatchers.eq(ONE_DIGIT_PROJECT_TOKEN))).thenReturn(mockReturnForGetData); 
+        // mocked projects for testing data import:
+        Mockito.when(redcapSessionManager.getRedcapDataForProjectByToken(ArgumentMatchers.eq(RECORD_ID_AS_PRIMARY_KEY_PROJECT_TOKEN))).thenReturn(mockReturnForGetDataWithRecordIdAsPrimaryKey);
+        Mockito.when(redcapSessionManager.getRedcapDataForProjectByToken(ArgumentMatchers.eq(RECORD_ID_NOT_PRESENT_PROJECT_TOKEN))).thenReturn(mockReturnForGetDataWithRecordIdNotPresent);
+        // mock requests for project metadata (i.e field_names) - possible combinations
         RedcapProjectAttribute[] mockReturnForGetAttributesData = makeMockReturnForGetAttributesData();
+        RedcapProjectAttribute[] mockReturnForGetAttributesDataWithRecordIdAsPrimaryKey = makeMockReturnForGetAttributesDataWithRecordIdAsPrimaryKey();
+        RedcapProjectAttribute[] mockReturnForGetAttributesDataWithRecordIdNotAsPrimaryKey = makeMockReturnForGetAttributesDataWithRecordIdNotAsPrimaryKey();
         //Mockito.when(redcapSessionManager.getRedcapAttributeByToken(SIMPLE_MIXED_TYPE_CLINICAL_PROJECT_TOKEN)).thenReturn(mockReturnForGetAttributesData);
-        Mockito.when(redcapSessionManager.getRedcapAttributeByToken(Matchers.any(String.class))).thenReturn(mockReturnForGetAttributesData);
-        Mockito.when(redcapSessionManager.getRedcapInstrumentNameByToken(SIMPLE_MIXED_TYPE_CLINICAL_PROJECT_TOKEN)).thenReturn(SIMPLE_MIXED_TYPE_CLINICAL_PROJECT_INSTRUMENT_NAME);
+        Mockito.when(redcapSessionManager.getRedcapAttributeByToken(ArgumentMatchers.any(String.class))).thenReturn(mockReturnForGetAttributesData);
+        Mockito.when(redcapSessionManager.getRedcapAttributeByToken(ArgumentMatchers.eq(RECORD_ID_AS_PRIMARY_KEY_PROJECT_TOKEN))).thenReturn(mockReturnForGetAttributesDataWithRecordIdAsPrimaryKey);
+        Mockito.when(redcapSessionManager.getRedcapAttributeByToken(ArgumentMatchers.eq(RECORD_ID_NOT_AS_PRIMARY_KEY_PROJECT_TOKEN))).thenReturn(mockReturnForGetAttributesDataWithRecordIdNotAsPrimaryKey);
+        Mockito.when(redcapSessionManager.getRedcapAttributeByToken(ArgumentMatchers.eq(RECORD_ID_NOT_PRESENT_PROJECT_TOKEN))).thenReturn(mockReturnForGetAttributesData);
+        //Mockito.when(redcapSessionManager.getRedcapInstrumentNameByToken(SIMPLE_MIXED_TYPE_CLINICAL_PROJECT_TOKEN)).thenReturn(SIMPLE_MIXED_TYPE_CLINICAL_PROJECT_INSTRUMENT_NAME);
+        Mockito.doAnswer(redcapSessionManagerDeleteProjectDataAnswer).when(redcapSessionManager).deleteRedcapProjectData(ArgumentMatchers.eq(RECORD_ID_AS_PRIMARY_KEY_PROJECT_TOKEN), ArgumentMatchers.anySet());
+        Mockito.doAnswer(redcapSessionManagerDeleteProjectDataAnswer).when(redcapSessionManager).deleteRedcapProjectData(ArgumentMatchers.eq(RECORD_ID_NOT_PRESENT_PROJECT_TOKEN), ArgumentMatchers.anySet());
+        Mockito.doAnswer(redcapSessionManagerImportProjectDataAnswer).when(redcapSessionManager).importClinicalData(ArgumentMatchers.eq(RECORD_ID_AS_PRIMARY_KEY_PROJECT_TOKEN), ArgumentMatchers.any(String.class));
+        Mockito.doAnswer(redcapSessionManagerImportProjectDataAnswer).when(redcapSessionManager).importClinicalData(ArgumentMatchers.eq(RECORD_ID_NOT_PRESENT_PROJECT_TOKEN), ArgumentMatchers.any(String.class));
         return redcapSessionManager;
     }
 
@@ -122,6 +168,11 @@ public class RedcapSourceTestConfiguration {
     @Bean
     public MetadataCacheTest metadataCacheTest() {
         return new MetadataCacheTest();
+    }
+
+
+    private void storeRecordPrimaryKeySetForDeletion(Set<String> recordPrimaryKeySetForDeletion) {
+        recordsPassedToRedcapSessionManagerForDeletion.addAll(recordPrimaryKeySetForDeletion);
     }
 
     private RedcapAttributeMetadata[] makeMockRedcapIdToMetadataList() {
@@ -178,17 +229,12 @@ public class RedcapSourceTestConfiguration {
         return metadata;
     }
 
-    private JsonNode[] makeMockReturnForGetData() {
-        String mockReturnJsonString =
-                "[" +
-                    "{\"patient_id\":\"P-0000004\",\"crdb_consent_date_days\":\"14484\",\"parta_consented_12_245\":\"YES\"}," +
-                    "{\"patient_id\":\"P-0000012\",\"crdb_consent_date_days\":\"21192\",\"parta_consented_12_245\":\"YES\"}," +
-                    "{\"patient_id\":\"P-9999999\",\"crdb_consent_date_days\":\"99999\",\"parta_consented_12_245\":\"\"}" +
-                "]";
+
+    private JsonNode[] createJsonNodeArrayFromString(String mockJsonString) {
         ObjectMapper mapper = new ObjectMapper();
         List<JsonNode> jsonNodeList = new ArrayList<JsonNode>();
         try {
-            Iterator<JsonNode> nodeIterator = mapper.readTree(mockReturnJsonString).elements();
+            Iterator<JsonNode> nodeIterator = mapper.readTree(mockJsonString).elements();
             while (nodeIterator.hasNext()) {
                 jsonNodeList.add(nodeIterator.next());
             }
@@ -197,6 +243,37 @@ public class RedcapSourceTestConfiguration {
             throw new RuntimeException(e);
         }
     }
+        
+    private JsonNode[] makeMockReturnForGetData() {
+        String mockReturnJsonString =
+                "[" +
+                    "{\"patient_id\":\"P-0000004\",\"crdb_consent_date_days\":\"14484\",\"parta_consented_12_245\":\"YES\"}," +
+                    "{\"patient_id\":\"P-0000012\",\"crdb_consent_date_days\":\"21192\",\"parta_consented_12_245\":\"YES\"}," +
+                    "{\"patient_id\":\"P-9999999\",\"crdb_consent_date_days\":\"99999\",\"parta_consented_12_245\":\"\"}" +
+                "]";
+        return createJsonNodeArrayFromString(mockReturnJsonString);
+    }
+
+    private JsonNode[] makeMockReturnForGetDataWithRecordIdNotPresent() {
+        String mockReturnJsonString = 
+                "[" +
+                    "{\"patient_id\":\"P-0000001\",\"sample_id\":\"P-0000001-T01\",\"necrosis\":\"YES\",\"ethnicity\":\"Asian\"}," +
+                    "{\"patient_id\":\"P-0000002\",\"sample_id\":\"P-0000002-T02\",\"necrosis\":\"NO\",\"ethnicity\":\"Caucasian\"}," +
+                    "{\"patient_id\":\"P-0000003\",\"sample_id\":\"P-0000003-T03\",\"necrosis\":\"YES\",\"ethnicity\":\"Caucasian\"}" +
+                "]";
+        return createJsonNodeArrayFromString(mockReturnJsonString);
+    }
+
+    private JsonNode[] makeMockReturnForGetDataWithRecordIdAsPrimaryKey() {
+        String mockReturnJsonString = 
+                "[" +
+                    "{\"record_id\":\"1\",\"patient_id\":\"P-0000001\",\"sample_id\":\"P-0000001-T01\",\"necrosis\":\"YES\",\"ethnicity\":\"Asian\"}," +
+                    "{\"record_id\":\"2\",\"patient_id\":\"P-0000002\",\"sample_id\":\"P-0000002-T02\",\"necrosis\":\"NO\",\"ethnicity\":\"Caucasian\"}," +
+                    "{\"record_id\":\"3\",\"patient_id\":\"P-0000003\",\"sample_id\":\"P-0000003-T03\",\"necrosis\":\"YES\",\"ethnicity\":\"Caucasian\"}" +
+                "]";
+        return createJsonNodeArrayFromString(mockReturnJsonString);
+    }
+
 
     private RedcapProjectAttribute[] makeMockReturnForGetAttributesData() {
         RedcapProjectAttribute[] attributeArray = new RedcapProjectAttribute[5];
@@ -221,6 +298,24 @@ public class RedcapSourceTestConfiguration {
         myFirstInstrumentCompleteAttribute.setFormName("my_first_instrument");
         attributeArray[4] = myFirstInstrumentCompleteAttribute;
         return attributeArray;
+    }
+
+    private RedcapProjectAttribute[] makeMockReturnForGetAttributesDataWithRecordIdAsPrimaryKey() {
+        List<RedcapProjectAttribute> attributeList = new ArrayList<RedcapProjectAttribute>(Arrays.asList(makeMockReturnForGetAttributesData()));
+        RedcapProjectAttribute recordIdAttribute = new RedcapProjectAttribute();
+        recordIdAttribute.setFieldName("record_id");
+        recordIdAttribute.setFormName("my_first_instrument");
+        attributeList.add(0, recordIdAttribute);
+        return attributeList.toArray(new RedcapProjectAttribute[attributeList.size()]);
+    }
+
+    private RedcapProjectAttribute[] makeMockReturnForGetAttributesDataWithRecordIdNotAsPrimaryKey() {
+        List<RedcapProjectAttribute> attributeList = new ArrayList<RedcapProjectAttribute>(Arrays.asList(makeMockReturnForGetAttributesData()));
+        RedcapProjectAttribute recordIdAttribute = new RedcapProjectAttribute();
+        recordIdAttribute.setFieldName("record_id");
+        recordIdAttribute.setFormName("my_first_instrument");
+        attributeList.add(recordIdAttribute);
+        return attributeList.toArray(new RedcapProjectAttribute[attributeList.size()]);
     }
 
     private Map<String, String> makeMockClinicalTokenMap() {

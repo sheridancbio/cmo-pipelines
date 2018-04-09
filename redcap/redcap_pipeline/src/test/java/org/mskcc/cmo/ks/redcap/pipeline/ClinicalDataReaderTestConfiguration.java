@@ -45,7 +45,6 @@ import org.mskcc.cmo.ks.redcap.pipeline.util.RedcapUtils;
 import org.mskcc.cmo.ks.redcap.source.ClinicalDataSource;
 import org.mskcc.cmo.ks.redcap.source.internal.ClinicalDataSourceRedcapImpl;
 import org.mskcc.cmo.ks.redcap.source.internal.CDDSessionManager;
-import org.mskcc.cmo.ks.redcap.source.internal.GoogleSessionManager;
 import org.mskcc.cmo.ks.redcap.source.internal.MetadataCache;
 import org.mskcc.cmo.ks.redcap.source.internal.MetadataManagerRedcapImpl;
 import org.mskcc.cmo.ks.redcap.source.internal.RedcapRepository;
@@ -95,15 +94,6 @@ public class ClinicalDataReaderTestConfiguration {
     }
 
     @Bean
-    public GoogleSessionManager googleSessionManager() {
-        GoogleSessionManager googleSessionManager = Mockito.mock(GoogleSessionManager.class);
-        //configure meta data requests
-        RedcapAttributeMetadata[] mockReturnForGetMetadata = makeMockMetadata();
-        Mockito.when(googleSessionManager.getRedcapMetadata()).thenReturn(mockReturnForGetMetadata);
-        return googleSessionManager;
-    }
-
-    @Bean
     public MetadataCache metadataCache() {
         return new MetadataCache();
     }
@@ -139,8 +129,6 @@ public class ClinicalDataReaderTestConfiguration {
         //configure redcap data requests
         Mockito.when(mockRedcapSessionManager.getRedcapAttributeByToken(ArgumentMatchers.eq(MSKIMPACT_GBM_SAMPLE_CLINICAL_PROJECT_TOKEN))).thenReturn(makeMockGbmSampleAttributesData());
         Mockito.when(mockRedcapSessionManager.getRedcapAttributeByToken(ArgumentMatchers.eq(MSKIMPACT_GBM_PATIENT_CLINICAL_PROJECT_TOKEN))).thenReturn(makeMockGbmPatientAttributesData());
-        Mockito.when(mockRedcapSessionManager.getRedcapInstrumentNameByToken(ArgumentMatchers.eq(MSKIMPACT_GBM_SAMPLE_CLINICAL_PROJECT_TOKEN))).thenReturn(MSKIMPACT_GBM_SAMPLE_CLINICAL_PROJECT_INSTRUMENT_NAME);
-        Mockito.when(mockRedcapSessionManager.getRedcapInstrumentNameByToken(ArgumentMatchers.eq(MSKIMPACT_GBM_PATIENT_CLINICAL_PROJECT_TOKEN))).thenReturn(MSKIMPACT_GBM_PATIENT_CLINICAL_PROJECT_INSTRUMENT_NAME);
         Mockito.when(mockRedcapSessionManager.redcapDataTypeIsTimeline(ArgumentMatchers.eq(MSKIMPACT_GBM_SAMPLE_CLINICAL_PROJECT_TITLE))).thenReturn(false);
         Mockito.when(mockRedcapSessionManager.redcapDataTypeIsTimeline(ArgumentMatchers.eq(MSKIMPACT_GBM_PATIENT_CLINICAL_PROJECT_TITLE))).thenReturn(false);
         Mockito.when(mockRedcapSessionManager.getRedcapDataForProjectByToken(ArgumentMatchers.eq(MSKIMPACT_GBM_SAMPLE_CLINICAL_PROJECT_TOKEN))).thenReturn(makeMockGbmSampleData());
