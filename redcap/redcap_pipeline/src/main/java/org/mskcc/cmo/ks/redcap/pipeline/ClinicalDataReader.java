@@ -70,7 +70,7 @@ public class ClinicalDataReader implements ItemStreamReader<Map<String, String>>
 
     private Map<String, List<String>> fullSampleHeader = new HashMap<>();
     private Map<String, List<String>> fullPatientHeader = new HashMap<>();
-    private List<Map<String, String>> clinicalRecords = new ArrayList();
+    private List<Map<String, String>> clinicalRecords = new ArrayList<>();
     private Map<String, Map<String, String>> compiledClinicalSampleRecords = new LinkedHashMap<>();
     private Map<String, Map<String, String>> compiledClinicalPatientRecords = new LinkedHashMap<>();
 
@@ -132,7 +132,7 @@ public class ClinicalDataReader implements ItemStreamReader<Map<String, String>>
      * @return
      */
     private List<Map<String,String>> mergePatientSampleClinicalRecords() {
-        List<Map<String,String>> mergedClinicalRecords = new ArrayList();
+        List<Map<String,String>> mergedClinicalRecords = new ArrayList<>();
         for (Map<String, String> record : compiledClinicalSampleRecords.values()) {
             Map<String, String> patientData = compiledClinicalPatientRecords.getOrDefault(record.get("PATIENT_ID"), new HashMap<>());
             record.putAll(patientData);

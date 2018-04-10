@@ -14,7 +14,6 @@
   <properties>
     <maven.compiler.source>1.8</maven.compiler.source>
     <maven.compiler.target>1.8</maven.compiler.target>
-    <spring.version>4.3.14.RELEASE</spring.version>
   </properties>
   <dependencies>
     <dependency>
@@ -63,7 +62,7 @@
         <configuration>
           <source>1.8</source>
           <target>1.8</target>
-          <compilerArgument>-Xlint:deprecation</compilerArgument>
+          <compilerArgument>-Xlint:deprecation,unchecked</compilerArgument>
         </configuration>
       </plugin>
     </plugins>

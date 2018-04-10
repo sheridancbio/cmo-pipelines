@@ -70,7 +70,7 @@ public class RawClinicalDataWriter implements ItemStreamWriter<String> {
     public void open(ExecutionContext ec) throws ItemStreamException {
         if (writeRawClinicalData) {
             File stagingFile = new File(directory, OUTPUT_FILENAME_PREFIX + projectTitle + ".txt");
-            PassThroughLineAggregator aggr = new PassThroughLineAggregator();
+            PassThroughLineAggregator<String> aggr = new PassThroughLineAggregator<>();
             flatFileItemWriter.setLineAggregator(aggr);
             flatFileItemWriter.setResource( new FileSystemResource(stagingFile));
             flatFileItemWriter.setHeaderCallback(new FlatFileHeaderCallback() {

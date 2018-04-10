@@ -44,7 +44,7 @@ public class RawClinicalDataProcessor implements ItemProcessor<Map<String, Strin
 
     @Override
     public String process(Map<String, String> i) throws Exception {
-        List<String> record = new ArrayList();
+        List<String> record = new ArrayList<>();
 
         // get the sample and patient ids first before processing the other columns
         if (fullHeader.contains("SAMPLE_ID")) {

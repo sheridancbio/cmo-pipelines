@@ -62,7 +62,7 @@ public class TimelineReader implements ItemStreamReader<Map<String, String>> {
     private final Logger log = Logger.getLogger(ClinicalDataReader.class);
 
     public List<Map<String, String>> timelineRecords = new ArrayList<>();
-    private List<String> timelineHeader = new ArrayList();
+    private List<String> timelineHeader = new ArrayList<>();
 
     @Override
     public void open(ExecutionContext ec) throws ItemStreamException {

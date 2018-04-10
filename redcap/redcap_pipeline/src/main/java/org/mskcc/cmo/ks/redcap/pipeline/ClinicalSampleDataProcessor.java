@@ -48,7 +48,7 @@ public class ClinicalSampleDataProcessor implements ItemProcessor<Map<String, St
     @Override
     public ClinicalDataComposite process(Map<String, String> i) throws Exception {
         ClinicalDataComposite composite = new ClinicalDataComposite(i);
-        List<String> record = new ArrayList();
+        List<String> record = new ArrayList<>();
         List<String> header = total_header.get("header");
 
         // get the sample and patient ids first before processing the other columns

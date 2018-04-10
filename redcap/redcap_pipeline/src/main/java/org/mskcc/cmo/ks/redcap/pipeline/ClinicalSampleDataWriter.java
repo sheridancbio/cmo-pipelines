@@ -71,7 +71,7 @@ public class ClinicalSampleDataWriter implements ItemStreamWriter<ClinicalDataCo
     public void open(ExecutionContext ec) throws ItemStreamException {
         this.stagingFile  = new File(directory, OUTPUT_FILENAME);
         if (writeClinicalSample) {
-            PassThroughLineAggregator aggr = new PassThroughLineAggregator();
+            PassThroughLineAggregator<String> aggr = new PassThroughLineAggregator<>();
             flatFileItemWriter.setLineAggregator(aggr);
             flatFileItemWriter.setResource(new FileSystemResource(stagingFile));
             flatFileItemWriter.setHeaderCallback(new FlatFileHeaderCallback() {

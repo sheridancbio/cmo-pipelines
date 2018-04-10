@@ -173,9 +173,11 @@ public class BatchConfiguration {
 
     @Bean
     @StepScope
-    public ItemProcessor clinicalDataProcessor() {
-        CompositeItemProcessor processor = new CompositeItemProcessor();
-        List<ItemProcessor> delegates = new ArrayList<>();
+    @SuppressWarnings("unchecked")
+    public CompositeItemProcessor<Map<String, String>, ClinicalDataComposite> clinicalDataProcessor() {
+        CompositeItemProcessor<Map<String, String>, ClinicalDataComposite> processor = new CompositeItemProcessor<>();
+        //TODO combine clinical data processors into a single class in order to avoid the need for a mixed type list
+        List delegates = new ArrayList();
         delegates.add(sampleProcessor());
         delegates.add(patientProcessor());
         processor.setDelegates(delegates);
@@ -190,9 +192,11 @@ public class BatchConfiguration {
 
     @Bean
     @StepScope
+    @SuppressWarnings("unchecked")
     public CompositeItemWriter<ClinicalDataComposite> clinicalDataWriter() {
-        CompositeItemWriter writer = new CompositeItemWriter();
-        List<ItemWriter> delegates = new ArrayList<>();
+        CompositeItemWriter<ClinicalDataComposite> writer = new CompositeItemWriter<>();
+        //TODO combine clinical data writers into a single class in order to avoid the need for a mixed type list
+        List delegates = new ArrayList();
         delegates.add(sampleWriter());
         delegates.add(patientWriter());
         writer.setDelegates(delegates);
