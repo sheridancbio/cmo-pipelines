@@ -7,10 +7,21 @@ if [[ -d "$tmp" && "$tmp" != "/" ]]; then
     rm -rf "$tmp"/*
 fi
 email_list="cbioportal-cmo-importer@cbio.mskcc.org"
+pipeline_email_list="cbioportal-pipelines@cbio.mskcc.org"
 now=$(date "+%Y-%m-%d-%H-%M-%S")
 JAVA_PROXY_ARGS="-Dhttp.proxyHost=jxi2.mskcc.org -Dhttp.proxyPort=8080"
 msk_automation_notification_file=$(mktemp $tmp/msk-automation-portal-update-notification.$now.XXXXXX)
 ONCOTREE_VERSION_TO_USE=oncotree_candidate_release
+
+# refresh cdd and oncotree cache
+CDD_ONCOTREE_RECACHE_FAIL=0
+bash $PORTAL_HOME/scripts/refresh-cdd-oncotree-cache.sh
+if [ $? -gt 0 ]; then
+    CDD_ONCOTREE_RECACHE_FAIL=1
+    message="Failed to refresh CDD and/or ONCOTREE cache during TRIAGE import!"
+    echo $message
+    echo -e "$message" | mail -s "CDD and/or ONCOTREE cache failed to refresh" $pipeline_email_list
+fi
 
 # fetch updates in CMO repository
 echo "fetching updates from bic-mskcc..."
@@ -33,7 +44,7 @@ if [ $? -gt 0 ]; then
     DB_VERSION_FAIL=1
 fi
 
-if [[ $DB_VERSION_FAIL -eq 0 && $CMO_FETCH_FAIL -eq 0 ]]; then
+if [[ $DB_VERSION_FAIL -eq 0 && $CMO_FETCH_FAIL -eq 0 && $CDD_ONCOTREE_RECACHE_FAIL -eq 0 ]]; then
     # import vetted studies into MSK portal
     echo "importing cancer type updates into msk portal database..."
     $JAVA_HOME/bin/java $JAVA_PROXY_ARGS -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27184 -Xmx16g -ea -Dspring.profiles.active=dbcp -Djava.io.tmpdir="$tmp" -cp $PORTAL_HOME/lib/msk-cmo-importer.jar org.mskcc.cbio.importer.Admin --import-types-of-cancer --oncotree-version ${ONCOTREE_VERSION_TO_USE}

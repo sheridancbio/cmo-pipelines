@@ -16,6 +16,17 @@ JAVA_PROXY_ARGS="-Dhttp.proxyHost=jxi2.mskcc.org -Dhttp.proxyPort=8080"
 public_portal_notification_file=$(mktemp $tmp/public-portal-update-notification.$now.XXXXXX)
 ONCOTREE_VERSION_TO_USE=oncotree_latest_stable
 
+
+# refresh cdd and oncotree cache
+CDD_ONCOTREE_RECACHE_FAIL=0
+bash $PORTAL_HOME/scripts/refresh-cdd-oncotree-cache.sh
+if [ $? -gt 0 ]; then
+    CDD_ONCOTREE_RECACHE_FAIL=1
+    message="Failed to refresh CDD and/or ONCOTREE cache during TRIAGE import!"
+    echo $message
+    echo -e "$message" | mail -s "CDD and/or ONCOTREE cache failed to refresh" $email_list
+fi
+
 DB_VERSION_FAIL=0
 # check database version before importing anything
 echo "Checking if database version is compatible"
@@ -72,7 +83,7 @@ if [ $? -gt 0 ]; then
     echo -e "$EMAIL_BODY" | mail -s "Data fetch failure: datahub" $pipeline_email_list
 fi
 
-if [[ $DB_VERSION_FAIL -eq 0 && $PRIVATE_FETCH_FAIL -eq 0 && $CMO_IMPACT_FETCH_FAIL -eq 0 && $CBIO_PORTAL_DATA_FETCH_FAIL -eq 0 && $DATAHUB_FETCH_FAIL -eq 0 ]]; then
+if [[ $DB_VERSION_FAIL -eq 0 && $PRIVATE_FETCH_FAIL -eq 0 && $CMO_IMPACT_FETCH_FAIL -eq 0 && $CBIO_PORTAL_DATA_FETCH_FAIL -eq 0 && $DATAHUB_FETCH_FAIL -eq 0 && $CDD_ONCOTREE_RECACHE_FAIL -eq 0 ]]; then
     # import public studies into public portal
     echo "importing cancer type updates into public portal database..."
     $JAVA_HOME/bin/java $JAVA_PROXY_ARGS -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27185 -Xmx16g -ea -Dspring.profiles.active=dbcp -Djava.io.tmpdir="$tmp" -cp $PORTAL_HOME/lib/public-importer.jar org.mskcc.cbio.importer.Admin --import-types-of-cancer --oncotree-version ${ONCOTREE_VERSION_TO_USE}
