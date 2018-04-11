@@ -53,7 +53,7 @@ public class TimelineProcessor implements ItemProcessor<Map<String, String>, Str
 
     @Override
     public String process(Map<String, String> i) throws Exception {
-        List<String> record = new ArrayList();
+        List<String> record = new ArrayList<>();
 
         for (String column : standardTimelineDataFields) {
             if (timelineHeader.contains(column)) {

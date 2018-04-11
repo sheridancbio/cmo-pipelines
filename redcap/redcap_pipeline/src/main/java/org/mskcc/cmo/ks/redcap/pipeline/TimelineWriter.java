@@ -84,7 +84,7 @@ public class TimelineWriter  implements ItemStreamWriter<String> {
             this.stagingFile = new File(directory, OUTPUT_FILENAME_PREFIX + ".txt");
         }
         if (writeTimelineData) {
-            PassThroughLineAggregator aggr = new PassThroughLineAggregator();
+            PassThroughLineAggregator<String> aggr = new PassThroughLineAggregator<>();
             flatFileItemWriter.setLineAggregator(aggr);
             flatFileItemWriter.setResource(new FileSystemResource(stagingFile));
             flatFileItemWriter.setHeaderCallback(new FlatFileHeaderCallback() {
@@ -117,7 +117,7 @@ public class TimelineWriter  implements ItemStreamWriter<String> {
     }
 
     private String getHeaderLine(List<String> metaData) {
-        List<String> header = new ArrayList();
+        List<String> header = new ArrayList<>();
         for (String column : standardTimelineDataFields) {
             if (metaData.contains(column)) {
                 header.add(column);

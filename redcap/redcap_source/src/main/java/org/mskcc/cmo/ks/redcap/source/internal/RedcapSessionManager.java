@@ -257,7 +257,7 @@ public class RedcapSessionManager {
     }
 
     public void deleteRedcapProjectData(String token, Set<String> recordPrimaryKeySetForDeletion) {
-        log.info("deleting out of date records ... (" + recordPrimaryKeySetForDeletion.size() + " records)");
+        log.info("requesting deletion of " + recordPrimaryKeySetForDeletion.size() + " records.");
         RestTemplate restTemplate = new RestTemplate();
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
@@ -278,7 +278,22 @@ public class RedcapSessionManager {
             log.warn("RedCap delete record API call failed. HTTP status code = " + Integer.toString(responseEntity.getStatusCode().value()));
             throw new RuntimeException("RedCap delete record API call failed. HTTP status code");
         }
-        log.info("Return from call to Delete Recap Record API: " + responseEntity.getBody());
+        int deletedRecordCount = attemptToParseCountString(responseEntity.getBody());
+        if (deletedRecordCount == recordPrimaryKeySetForDeletion.size()) {
+            log.info(Integer.toString(deletedRecordCount) + " records were deleted.");
+        } else {
+            log.warn("unexpected return from call to REDCap Delete Record API (number of deleted records): " + responseEntity.getBody());
+        }
+    }
+
+    public int attemptToParseCountString(String string) {
+        int count = -1;
+        try {
+            count = Integer.parseUnsignedInt(string);
+        } catch (NumberFormatException e) {
+            log.warn("unable to parse expected count string : " + string);
+        }
+        return count;
     }
 
     public void importClinicalData(String token, String dataForImport) {
@@ -293,10 +308,10 @@ public class RedcapSessionManager {
         HttpEntity<LinkedMultiValueMap<String, String>> importRecordRequestEntity = getRequestEntity(importRecordUriVariables);
         ResponseEntity<String> importRecordResponseEntity = restTemplate.exchange(getRedcapApiURI(), HttpMethod.POST, importRecordRequestEntity, String.class);
         HttpStatus responseStatus = importRecordResponseEntity.getStatusCode();
-        if (!responseStatus.is2xxSuccessful() && !responseStatus.is3xxRedirection()) {
-            log.warn("RedCap import record API call failed. HTTP status code = " + Integer.toString(importRecordResponseEntity.getStatusCode().value()));
-            System.out.println("\n\n\nRedCap import record API call failed. HTTP status code = " + Integer.toString(importRecordResponseEntity.getStatusCode().value()));
-            throw new RuntimeException("RedCap import record API call failed. HTTP status code");
+        if (!responseStatus.is2xxSuccessful()) {
+            String message = "RedCap import record API call failed. HTTP status code = " + Integer.toString(importRecordResponseEntity.getStatusCode().value());
+            log.warn(message);
+            throw new RuntimeException(message);
         }
         log.info("Return from call to Import Recap Record API: " + importRecordResponseEntity.getBody());
     }

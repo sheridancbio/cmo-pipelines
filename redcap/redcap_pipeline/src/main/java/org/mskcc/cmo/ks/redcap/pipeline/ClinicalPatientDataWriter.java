@@ -58,7 +58,7 @@ public class ClinicalPatientDataWriter implements ItemStreamWriter<ClinicalDataC
 
     @Value("#{stepExecutionContext['patientHeader']}")
     private Map<String, List<String>> header;
-    private Set<String> writtenPatientSet = new HashSet();
+    private Set<String> writtenPatientSet = new HashSet<>();
     private static final String OUTPUT_FILENAME = "data_clinical_patient.txt";
     private File stagingFile;
     private FlatFileItemWriter<String> flatFileItemWriter = new FlatFileItemWriter<String>();
@@ -69,7 +69,7 @@ public class ClinicalPatientDataWriter implements ItemStreamWriter<ClinicalDataC
     public void open(ExecutionContext ec) throws ItemStreamException {
         this.stagingFile = new File(directory, OUTPUT_FILENAME);
         if (writeClinicalPatient) {
-            PassThroughLineAggregator aggr = new PassThroughLineAggregator();
+            PassThroughLineAggregator<String> aggr = new PassThroughLineAggregator<>();
             flatFileItemWriter.setLineAggregator(aggr);
             flatFileItemWriter.setResource(new FileSystemResource(stagingFile));
             flatFileItemWriter.setHeaderCallback(new FlatFileHeaderCallback() {

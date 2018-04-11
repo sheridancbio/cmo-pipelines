@@ -48,8 +48,6 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 public class RedcapRepositoryTest {
 
     @Autowired
-    private RedcapSessionManager redcapSessionManager;
-    @Autowired
     private RedcapRepository redcapRepository;
     @Autowired
     private RedcapSourceTestConfiguration redcapSourceTestConfiguration;
