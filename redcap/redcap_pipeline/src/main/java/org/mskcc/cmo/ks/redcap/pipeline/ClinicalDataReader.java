@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 - 2017 Memorial Sloan-Kettering Cancer Center.
+ * Copyright (c) 2016 - 2018 Memorial Sloan-Kettering Cancer Center.
  *
  * This library is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS
@@ -182,13 +182,14 @@ public class ClinicalDataReader implements ItemStreamReader<Map<String, String>>
     }
 
     private void updateClinicalData(Map<String, String> record,
-                                    String primaryKey,
+                                    String recordNameField,
                                     Map<String, List<String>> fullHeader,
                                     Map<String, Map<String, String>> compiledClinicalRecords) {
-        if (!record.containsKey(primaryKey)) {
-            return; // when processing a patient-only record, there is no SAMPLE_ID ; don't try to register attribtes when the primary key is missing
+        if (!record.containsKey(recordNameField)) {
+            return; // there may be no recordName field when processing a patient-only record, an autonumbered record_id field is used inside redcap to allow multiple records for the same patient -- for example, in timeline projects ; don't try to register attributes for these records
         }
-        Map<String, String> existingData = compiledClinicalRecords.getOrDefault(record.get(primaryKey), new HashMap<>());
+        String recordName = record.get(recordNameField);
+        Map<String, String> existingData = compiledClinicalRecords.getOrDefault(recordName, new HashMap<>());
         List<String> clinicalHeader = fullHeader.get("header");
         for (String attribute : clinicalHeader) {
             if (!record.containsKey(attribute)) {
@@ -199,19 +200,19 @@ public class ClinicalDataReader implements ItemStreamReader<Map<String, String>>
             try {
                 replacementValue = redcapUtils.getReplacementValueForAttribute(existingValue, record.get(attribute));
             } catch (ConflictingAttributeValuesException e) {
-                logWarningOverConflictingValues(existingValue, record, attribute, primaryKey);
+                logWarningOverConflictingValues(existingValue, record, attribute, recordNameField);
             }
             if (replacementValue == null) {
                 continue;
             }
             existingData.put(attribute, replacementValue);
         }
-        compiledClinicalRecords.put(record.get(primaryKey), existingData);
+        compiledClinicalRecords.put(recordName, existingData);
     }
 
-    private void logWarningOverConflictingValues(String existingValue, Map<String, String> record, String attribute, String primaryKey) {
+    private void logWarningOverConflictingValues(String existingValue, Map<String, String> record, String attribute, String recordNameField) {
         StringBuilder warningMessage = new StringBuilder("Clinical attribute " + attribute);
-        warningMessage.append(" for record with " + primaryKey + ":" + record.get(primaryKey));
+        warningMessage.append(" for record with " + recordNameField + ":" + record.get(recordNameField));
         warningMessage.append(" was previously seen with value '" + existingValue + "'");
         warningMessage.append(" but another conflicting value has been encountered : '" + record.get(attribute) + "'");
         warningMessage.append(" - ignoring this subsequent value.");
