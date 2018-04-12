@@ -118,10 +118,10 @@ PROFILE_MERGE_PATTERNS = [CNA_META_PATTERN,
     EXPRESSION_META_PATTERN,
     METHYLATION27_META_PATTERN,
     METHYLATION450_META_PATTERN,
-    RPPA_META_PATTERN, 
-    METHYLATION_GB_HMEPIC_META_PATTERN, 
+    RPPA_META_PATTERN,
+    METHYLATION_GB_HMEPIC_META_PATTERN,
     METHYLATION_PROMOTERS_HMEPIC_META_PATTERN,
-    METHYLATION_GB_WGBS_META_PATTERN,    
+    METHYLATION_GB_WGBS_META_PATTERN,
     METHYLATION_PROMOTERS_WGBS_META_PATTERN,
     RNASEQ_EXPRESSION_META_PATTERN]
 
@@ -274,7 +274,7 @@ def merge_files(data_filenames, file_type, reference_set, keep_match, output_dir
                             replicated_patient_id_row_count += 1
                             merge_rows(previous_record, data, new_header, patient_id)
                         else:
-                            patient_id_to_row_index[patient_id] = len(rows) 
+                            patient_id_to_row_index[patient_id] = len(rows)
                             rows.append(normal_row(data, new_header))
                     else:
                         rows.append(normal_row(data, new_header))
@@ -343,7 +343,7 @@ def data_okay_to_add(is_clinical_or_timeline_file, file_header, reference_set, d
             # matches anyway then return False
             if not found:
                 return False
-            # if at least one sample is not in reference set and keep match is false 
+            # if at least one sample is not in reference set and keep match is false
             # then we want to return true so that data for this patient isn't filtered out
             for sample_id in PATIENT_SAMPLE_MAP[patient_id]:
                 if not sample_id in reference_set:
@@ -460,7 +460,7 @@ def process_header(data_filenames, reference_set, keep_match, merge_style):
 
 def merge_rows(previous_row_list, current_row_dict, header, patient_id):
     """
-        Merges non-empty values from current_row_dict into previous_row_list, 
+        Merges non-empty values from current_row_dict into previous_row_list,
         overwriting any values that conflict.
     """
     for index, attribute in enumerate(header):
@@ -608,22 +608,22 @@ def get_patient_ids(sublist):
 def generate_patient_sample_mapping(file_types, sublist, excluded_samples_list):
 
     # init reference list as empty or to either sublist or excluded_sample_list depending on which is being used
-    reference_list = []
+    reference_set = set()
     keep_match = True
     if len(sublist) > 0:
-        reference_list = sublist[:]
+        reference_set = set(sublist[:])
     elif len(excluded_samples_list) > 0:
-        reference_list = excluded_samples_list[:]
+        reference_set = set(excluded_samples_list[:])
         keep_match = False
 
     # load patient sample mapping from data_clinical.txt or data_clinical_sample.txt files
     for file_type in [CLINICAL_META_PATTERN, CLINICAL_SAMPLE_META_PATTERN]:
         if file_type in file_types.keys() and len(file_types[META_FILE_MAP[file_type][0]]) > 0:
-            load_patient_sample_mapping(file_types[META_FILE_MAP[file_type][0]], reference_list, keep_match)
+            load_patient_sample_mapping(file_types[META_FILE_MAP[file_type][0]], reference_set, keep_match)
     if PATIENT_SAMPLE_MAP == {}:
         print >> ERROR_FILE, 'ERROR! generate_patient_sample_mapping(),  Did not load any patient sample mapping from clinical files'
         sys.exit(2)
-    return set(reference_list),keep_match
+    return reference_set,keep_match
 
 
 def load_patient_sample_mapping(data_filenames, reference_set, keep_match):
@@ -644,19 +644,29 @@ def load_patient_sample_mapping(data_filenames, reference_set, keep_match):
             # otherwise only update patient sample map if (1) we want to keep matches and a sample was found in reference list
             # or (2) we do not want to keep matches and sample was not found in reference list
             if len(reference_set) == 0:
-                update_patient_sample_map(data['PATIENT_ID'], data['SAMPLE_ID'])
+                update_patient_sample_map(data['PATIENT_ID'], data['SAMPLE_ID'], reference_set, "")
             else:
-                update_map = (keep_match == (data['SAMPLE_ID'] in reference_set))
+                case_id_col = 'SAMPLE_ID'
+                if data['PATIENT_ID'] != data['SAMPLE_ID'] and data['PATIENT_ID'] in reference_set:
+                    case_id_col = 'PATIENT_ID'
+                update_map = (keep_match == (data[case_id_col] in reference_set))
                 if update_map:
-                    update_patient_sample_map(data['PATIENT_ID'], data['SAMPLE_ID'])
+                    update_patient_sample_map(data['PATIENT_ID'], data['SAMPLE_ID'], reference_set, case_id_col)
         data_file.close()
     print >> OUTPUT_FILE, 'Finished loading patient - sample mapping!\n'
+    return reference_set
 
-def update_patient_sample_map(patient_id, sample_id):
+def update_patient_sample_map(patient_id, sample_id, reference_set, case_id_col):
     """ Updates PATIENT_SAMPLE_MAP. """
     mapped_patient_samples = PATIENT_SAMPLE_MAP.get(patient_id, set())
     mapped_patient_samples.add(sample_id)
     PATIENT_SAMPLE_MAP[patient_id] = mapped_patient_samples
+    if case_id_col == 'PATIENT_ID' and len(reference_set) > 0:
+        # add sample to reference set since we're subsetting or excluding by patient ids
+        # this is to make sure the genomic data files get subsetted appropriately
+        # since they are exclusively sample-based data files
+        reference_set.add(sample_id)
+    return reference_set
 
 def is_clinical_or_timeline(filename):
     """

@@ -22,6 +22,7 @@ export MSKIMPACT_REDCAP_BACKUP=$REDCAP_BACKUP_DATA_HOME/mskimpact
 export HEMEPACT_REDCAP_BACKUP=$REDCAP_BACKUP_DATA_HOME/hemepact
 export RAINDANCE_REDCAP_BACKUP=$REDCAP_BACKUP_DATA_HOME/raindance
 export ARCHER_REDCAP_BACKUP=$REDCAP_BACKUP_DATA_HOME/archer
+export MSKIMPACT_PED_DATA_HOME=$PORTAL_DATA_HOME/msk-impact/mskimpact_ped
 # CMO_DATA_HOME looks unused
 #export CMO_DATA_HOME=/data/cbio-portal-data/bic-mskcc
 export JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk.x86_64
