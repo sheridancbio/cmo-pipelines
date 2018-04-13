@@ -18,7 +18,7 @@ import time
 from collections import defaultdict
 
 oncotree_versions = ("oncotree_candidate_release", "oncotree_latest_stable")
-oncotree_base_uri = "http://oncotree.mskcc.org/oncotree/api/tumorTypes?flat=true&version=%s"
+oncotree_base_uri = "http://oncotree.mskcc.org/api/tumorTypes?version=%s"
 crosswalk_base_uri = "http://data.mskcc.org/ontologies/api/concept/crosswalk?vocabularyId=ONCOTREE&conceptId=%s"
 
 oncotree_codes = set([])
@@ -35,8 +35,8 @@ for oncotree_version in oncotree_versions:
         print >> sys.stderr, "ERROR: %d status code getting oncotree codes with URI '%s'" % (response.status_code, oncotree_uri)
         sys.exit(1)
     
-    if "data" in response.json() and len(response.json()["data"]) > 0:
-        for oncotree_item in response.json()["data"]:
+    if response.json():
+        for oncotree_item in response.json():
             crosswalk_uri = "" 
             crosswalk_response_code = None 
             oncotree_code = oncotree_item["code"]

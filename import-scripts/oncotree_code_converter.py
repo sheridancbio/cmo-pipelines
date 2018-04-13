@@ -10,7 +10,7 @@ import sys
 import urllib2
 
 # globals
-DEFAULT_ONCOTREE_BASE_URL = 'http://oncotree.mskcc.org/oncotree/'
+DEFAULT_ONCOTREE_BASE_URL = 'http://oncotree.mskcc.org/'
 DEFAULT_ONCOTREE_VERSION = 'oncotree_latest_stable'
 DEFAULT_FORCE_CANCER_TYPE_FROM_ONCOTREE = False
 CANCER_TYPE = 'CANCER_TYPE'
@@ -25,7 +25,7 @@ samples_that_have_undefined_oncotree_codes = []
 def extract_oncotree_code_mappings_from_oncotree_json(oncotree_json):
     oncotree_code_to_info = {}
     oncotree_response = json.loads(oncotree_json)
-    for node in oncotree_response['data']:
+    for node in oncotree_response:
         if not node['code']:
             sys.stderr.write('Encountered oncotree node without oncotree code : ' + node + '\n')
             continue
@@ -33,7 +33,7 @@ def extract_oncotree_code_mappings_from_oncotree_json(oncotree_json):
         main_type = node['mainType']
         cancer_type = unicode('NA')
         if main_type:
-            cancer_type = unicode(main_type['name'])
+            cancer_type = unicode(main_type)
         cancer_type_detailed = unicode(node['name'])
         if not cancer_type_detailed:
             cancer_type_detailed = unicode('NA')
@@ -151,10 +151,10 @@ def construct_oncotree_url(oncotree_base_url, oncotree_version):
         sys.exit(3)
     oncotree_version_response = json.load(oncotree_versions_raw_response)
     found_versions = []
-    for version in oncotree_version_response['data']:
+    for version in oncotree_version_response:
         if version['api_identifier'] == oncotree_version:
             #version exists
-            return oncotree_api_base_url + 'tumorTypes?version=' + oncotree_version + '&flat=true&deprecated=false'
+            return oncotree_api_base_url + 'tumorTypes?version=' + oncotree_version
         else:
             found_versions.append(version['api_identifier'] + ' (' + version['description'] + ')')
     sys.stderr.write('ERROR: oncotree version ' + oncotree_version + ' was not found in the list of available versions:')
