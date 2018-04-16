@@ -17,7 +17,7 @@ IMPACT_SAMPLE_PATTERN = re.compile('P-\d*-T\d\d-IM\d*')
 def filter_samples_by_clinical_attributes(clinical_filename, impact_data_only):
 	""" Filters samples by clinical attribute and values. """
 	header = get_file_header(clinical_filename)
-	data_file = open(clinical_filename)	
+	data_file = open(clinical_filename)
 	data_reader = [line for line in data_file.readlines() if not line.startswith('#')][1:] # read every line except metadata headers and then skip file header
 
 	for line in data_reader:
@@ -26,8 +26,11 @@ def filter_samples_by_clinical_attributes(clinical_filename, impact_data_only):
 			continue
 		if impact_data_only and not is_impact_sample(data['SAMPLE_ID'].strip()):
 			continue
-		FILTERED_SAMPLE_IDS.add(data['SAMPLE_ID'].strip())
-		pid = '-'.join(data['SAMPLE_ID'].strip().split('-')[0:2])
+		if 'SAMPLE_ID' in header:
+			FILTERED_SAMPLE_IDS.add(data['SAMPLE_ID'].strip())
+			pid = '-'.join(data['SAMPLE_ID'].strip().split('-')[0:2])
+		else:
+			pid = data['PATIENT_ID']
 		FILTERED_PATIENT_IDS.add(pid)
 	data_file.close()
 
@@ -52,7 +55,7 @@ def update_data_with_sequencing_date(study_id, clinical_filename):
 	output_data = ['\t'.join(header)]
 	for line in data_reader:
 		data = dict(zip(header, map(str.strip, line.split('\t'))))
-		if not data['SAMPLE_ID'].strip() in FILTERED_SAMPLE_IDS:			
+		if not data['SAMPLE_ID'].strip() in FILTERED_SAMPLE_IDS:
 			continue
 		# update data with supplemental sample clinical data and format data as string for output file
 		data.update(SUPPLEMENTAL_SAMPLE_CLINICAL_DATA.get(data['SAMPLE_ID'].strip(), {}))
@@ -112,7 +115,7 @@ def filter_samples_by_sequencing_date(clinical_supp_filename, sequencing_date_li
 	data_file.close()
 
 def filter_patient_clinical_data(clin_patient_file, study_id):
-	""" Filters patient clinical data file by ids in FILTERED_PATIENT_IDS. """	
+	""" Filters patient clinical data file by ids in FILTERED_PATIENT_IDS. """
 	header = get_file_header(clin_patient_file)
 	data_file = open(clin_patient_file, 'rU')
 	data_reader = [line for line in data_file.readlines() if not line.startswith('#')][1:]
@@ -134,7 +137,13 @@ def filter_patient_clinical_data(clin_patient_file, study_id):
 def generate_sample_subset_file(subset_filename):
 	""" Writes subset of sample ids to output directory. """
 	output_file = open(subset_filename, 'w')
-	output_file.write('\n'.join(list(FILTERED_SAMPLE_IDS)))
+	if len(FILTERED_SAMPLE_IDS) == 0 and len(FILTERED_PATIENT_IDS) > 0:
+		output_file.write('\n'.join(list(FILTERED_PATIENT_IDS)))
+	elif len(FILTERED_SAMPLE_IDS) > 0:
+		output_file.write('\n'.join(list(FILTERED_SAMPLE_IDS)))
+	else:
+		print >> ERROR_FILE, 'ERROR: Could not subset data by filter criteria! Exiting...'
+		sys.exit(2)
 	output_file.close()
 	print >> OUTPUT_FILE, 'Subset file written to: ' + subset_filename
 
@@ -163,7 +172,7 @@ def get_file_header(filename):
 def is_valid_clin_header(clinical_filename, is_seq_date):
 	""" Determines whether one of the sequencing date columns is in supplemental clinical file. """
 	header = get_file_header(clinical_filename)
-	# if seq date filter then only SEQ_DATE or SeqDate need to be in file header, 
+	# if seq date filter then only SEQ_DATE or SeqDate need to be in file header,
 	# otherwise we want to make sure all filtering criteria columns are in header
 	if is_seq_date:
 		for seq_date_col in ['SEQ_DATE', 'SeqDate']:
@@ -182,7 +191,7 @@ def parse_filter_criteria(filter_criteria):
 	if attr_name == 'SEQ_DATE':
 		if len(attr_values) > 1:
 			print >> ERROR_FILE, "Only ONE sequencing date can be provided for filtering."
-			exit(2)
+			sys.exit(2)
 		if not is_valid_sequencing_date(attr_values[0]):
 			print >> ERROR_FILE, 'Sequencing date must be in YYYY/MM/DD format'
 			sys.exit(2)
@@ -252,7 +261,7 @@ def main():
 	# parse the filtering criteria
 	parse_filter_criteria(filter_criteria)
 	if 'SEQ_DATE' in FILTERING_CRITERIA.keys():
-		# if no supp file provided then check clin file for 
+		# if no supp file provided then check clin file for
 		if not clin_supp_file and is_valid_clin_header(clin_file, True):
 			filter_samples_by_sequencing_date(clin_file, FILTERING_CRITERIA['SEQ_DATE'], anonymize_date, impact_data_only)
 		elif clin_supp_file and is_valid_clin_header(clin_supp_file, True):
@@ -263,7 +272,7 @@ def main():
 				print >> ERROR_FILE, 'Clinical supp file must contain either `SEQ_DATE` or `SeqDate` in header!'
 			else:
 				print >> ERROR_FILE, 'Clinical file must contain either `SEQ_DATE` or `SeqDate` in header!'
-			exit(2)		
+			sys.exit(2)
 	else:
 		if not clin_supp_file and is_valid_clin_header(clin_file, False):
 			filter_samples_by_clinical_attributes(clin_file, impact_data_only)

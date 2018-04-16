@@ -306,6 +306,7 @@ miamicancerinstitute_notification_file=$(mktemp $JAVA_TMPDIR/miamicancerinstitut
 hartfordhealthcare_notification_file=$(mktemp $JAVA_TMPDIR/hartfordhealthcare-portal-update-notification.$now.XXXXXX)
 lymphoma_super_cohort_notification_file=$(mktemp $JAVA_TMPDIR/lymphoma-super-cohort-portal-update-notification.$now.XXXXXX)
 sclc_mskimpact_notification_file=$(mktemp $JAVA_TMPDIR/sclc-mskimpact-portal-update-notification.$now.XXXXXX)
+mskimpact_ped_notification_file=$(mktemp $JAVA_TMPDIR/mskimpact-ped-update-notification.$now.XXXXXX)
 
 # fetch clinical data mercurial
 echo "fetching updates from msk-impact repository..."
@@ -346,16 +347,11 @@ MSK_QUEENS_SUBSET_FAIL=0
 MSK_LEHIGH_SUBSET_FAIL=0
 MSK_MCI_SUBSET_FAIL=0
 MSK_HARTFORD_SUBSET_FAIL=0
+MSKIMPACT_PED_SUBSET_FAIL=0
 SCLC_MSKIMPACT_SUBSET_FAIL=0
 LYMPHOMA_SUPER_COHORT_SUBSET_FAIL=0
 
 MIXEDPACT_ADD_HEADER_FAIL=0
-MSK_KINGS_ADD_HEADER_FAIL=0
-MSK_QUEENS_ADD_HEADER_FAIL=0
-MSK_LEHIGH_ADD_HEADER_FAIL=0
-MSK_MCI_ADD_HEADER_FAIL=0
-MSK_HARTFORD_ADD_HEADER_FAIL=0
-SCLC_MSKIMPACT_ADD_HEADER_FAIL=0
 LYMPHOMA_SUPER_COHORT_ADD_HEADER_FAIL=0
 
 IMPORT_FAIL_MIXEDPACT=0
@@ -364,6 +360,7 @@ IMPORT_FAIL_LEHIGH=0
 IMPORT_FAIL_QUEENS=0
 IMPORT_FAIL_MCI=0
 IMPORT_FAIL_HARTFORD=0
+IMPORT_FAIL_MSKIMPACT_PED=0
 IMPORT_FAIL_SCLC_MSKIMPACT=0
 IMPORT_FAIL_LYMPHOMA=0
 GENERATE_MASTERLIST_FAIL=0
@@ -1053,7 +1050,7 @@ fi
 ## Subset MIXEDPACT on INSTITUTE for institute specific impact studies
 
 # subset the mixedpact study for Queens Cancer Center, Lehigh Valley, Kings County Cancer Center, Miami Cancer Institute, and Hartford Health Care
-bash $PORTAL_HOME/scripts/subset-impact-data.sh -i=msk_kingscounty -o=$MSK_KINGS_DATA_HOME -m=$MSK_MIXEDPACT_DATA_HOME -f="INSTITUTE=Kings County Cancer Center" -s=$JAVA_TMPDIR/kings_subset.txt -c=data_clinical_sample.txt
+bash $PORTAL_HOME/scripts/subset-impact-data.sh -i=msk_kingscounty -o=$MSK_KINGS_DATA_HOME -d=$MSK_MIXEDPACT_DATA_HOME -f="INSTITUTE=Kings County Cancer Center" -s=$JAVA_TMPDIR/kings_subset.txt -c=$MSK_MIXEDPACT_DATA_HOME/data_clinical_sample.txt
 if [ $? -gt 0 ] ; then
     echo "MSK Kings County subset failed! Study will not be updated in the portal."
     sendFailureMessageMskPipelineLogsSlack "KINGSCOUNTY subset"
@@ -1061,15 +1058,9 @@ if [ $? -gt 0 ] ; then
 else
     echo "MSK Kings County subset successful!"
     addCancerTypeCaseLists $MSK_KINGS_DATA_HOME "msk_kingscounty" "data_clinical_sample.txt" "data_clinical_patient.txt"
-    # add metadata headers before importing
-    $PYTHON_BINARY $PORTAL_HOME/scripts/add_clinical_attribute_metadata_headers.py -f $MSK_KINGS_DATA_HOME/data_clinical*
-    if [ $? -gt 0 ] ; then
-        MSK_KINGS_ADD_HEADER_FAIL=1
-        echo "Something went wrong while adding metadata headers for KINGSCOUNTY."
-    fi
 fi
 
-bash $PORTAL_HOME/scripts/subset-impact-data.sh -i=msk_lehighvalley -o=$MSK_LEHIGH_DATA_HOME -m=$MSK_MIXEDPACT_DATA_HOME -f="INSTITUTE=Lehigh Valley Health Network" -s=$JAVA_TMPDIR/lehigh_subset.txt -c=data_clinical_sample.txt
+bash $PORTAL_HOME/scripts/subset-impact-data.sh -i=msk_lehighvalley -o=$MSK_LEHIGH_DATA_HOME -d=$MSK_MIXEDPACT_DATA_HOME -f="INSTITUTE=Lehigh Valley Health Network" -s=$JAVA_TMPDIR/lehigh_subset.txt -c=$MSK_MIXEDPACT_DATA_HOME/data_clinical_sample.txt
 if [ $? -gt 0 ] ; then
     echo "MSK Lehigh Valley subset failed! Study will not be updated in the portal."
     sendFailureMessageMskPipelineLogsSlack "LEHIGHVALLEY subset"
@@ -1077,15 +1068,9 @@ if [ $? -gt 0 ] ; then
 else
     echo "MSK Lehigh Valley subset successful!"
     addCancerTypeCaseLists $MSK_LEHIGH_DATA_HOME "msk_lehighvalley" "data_clinical_sample.txt" "data_clinical_patient.txt"
-    # add metadata headers before importing
-    $PYTHON_BINARY $PORTAL_HOME/scripts/add_clinical_attribute_metadata_headers.py -f $MSK_LEHIGH_DATA_HOME/data_clinical*
-    if [ $? -gt 0 ] ; then
-        MSK_LEHIGH_ADD_HEADER_FAIL=1
-        echo "Something went wrong while adding metadata headers for LEHIGHVALLEY."
-    fi
 fi
 
-bash $PORTAL_HOME/scripts/subset-impact-data.sh -i=msk_queenscancercenter -o=$MSK_QUEENS_DATA_HOME -m=$MSK_MIXEDPACT_DATA_HOME -f="INSTITUTE=Queens Cancer Center,Queens Hospital Cancer Center" -s=$JAVA_TMPDIR/queens_subset.txt -c=data_clinical_sample.txt
+bash $PORTAL_HOME/scripts/subset-impact-data.sh -i=msk_queenscancercenter -o=$MSK_QUEENS_DATA_HOME -d=$MSK_MIXEDPACT_DATA_HOME -f="INSTITUTE=Queens Cancer Center,Queens Hospital Cancer Center" -s=$JAVA_TMPDIR/queens_subset.txt -c=$MSK_MIXEDPACT_DATA_HOME/data_clinical_sample.txt
 if [ $? -gt 0 ] ; then
     echo "MSK Queens Cancer Center subset failed! Study will not be updated in the portal."
     sendFailureMessageMskPipelineLogsSlack "QUEENSCANCERCENTER subset"
@@ -1093,15 +1078,9 @@ if [ $? -gt 0 ] ; then
 else
     echo "MSK Queens Cancer Center subset successful!"
     addCancerTypeCaseLists $MSK_QUEENS_DATA_HOME "msk_queenscancercenter" "data_clinical_sample.txt" "data_clinical_patient.txt"
-    # add metadata headers before importing
-    $PYTHON_BINARY $PORTAL_HOME/scripts/add_clinical_attribute_metadata_headers.py -f $MSK_QUEENS_DATA_HOME/data_clinical*
-    if [ $? -gt 0 ] ; then
-        MSK_QUEENS_ADD_HEADER_FAIL=1
-        echo "Something went wrong while adding metadata headers for QUEENSCANCERCENTER."
-    fi
 fi
 
-bash $PORTAL_HOME/scripts/subset-impact-data.sh -i=msk_miamicancerinstitute -o=$MSK_MCI_DATA_HOME -m=$MSK_MIXEDPACT_DATA_HOME -f="INSTITUTE=Miami Cancer Institute" -s=$JAVA_TMPDIR/mci_subset.txt -c=data_clinical_sample.txt
+bash $PORTAL_HOME/scripts/subset-impact-data.sh -i=msk_miamicancerinstitute -o=$MSK_MCI_DATA_HOME -d=$MSK_MIXEDPACT_DATA_HOME -f="INSTITUTE=Miami Cancer Institute" -s=$JAVA_TMPDIR/mci_subset.txt -c=$MSK_MIXEDPACT_DATA_HOME/data_clinical_sample.txt
 if [ $? -gt 0 ] ; then
     echo "MSK Miami Cancer Institute subset failed! Study will not be updated in the portal."
     sendFailureMessageMskPipelineLogsSlack "MIAMICANCERINSTITUTE subset"
@@ -1109,15 +1088,9 @@ if [ $? -gt 0 ] ; then
 else
     echo "MSK Miami Cancer Institute subset successful!"
     addCancerTypeCaseLists $MSK_MCI_DATA_HOME "msk_miamicancerinstitute" "data_clinical_sample.txt" "data_clinical_patient.txt"
-    # add metadata headers before importing
-    $PYTHON_BINARY $PORTAL_HOME/scripts/add_clinical_attribute_metadata_headers.py -f $MSK_MCI_DATA_HOME/data_clinical*
-    if [ $? -gt 0 ] ; then
-        MSK_MCI_ADD_HEADER_FAIL=1
-        echo "Something went wrong while adding metadata headers for MIAMICANCERINSTITUTE."
-    fi
 fi
 
-bash $PORTAL_HOME/scripts/subset-impact-data.sh -i=msk_hartfordhealthcare -o=$MSK_HARTFORD_DATA_HOME -m=$MSK_MIXEDPACT_DATA_HOME -f="INSTITUTE=Hartford Healthcare" -s=$JAVA_TMPDIR/hartford_subset.txt -c=data_clinical_sample.txt
+bash $PORTAL_HOME/scripts/subset-impact-data.sh -i=msk_hartfordhealthcare -o=$MSK_HARTFORD_DATA_HOME -d=$MSK_MIXEDPACT_DATA_HOME -f="INSTITUTE=Hartford Healthcare" -s=$JAVA_TMPDIR/hartford_subset.txt -c=$MSK_MIXEDPACT_DATA_HOME/data_clinical_sample.txt
 if [ $? -gt 0 ] ; then
     echo "MSK Hartford Healthcare subset failed! Study will not be updated in the portal."
     sendFailureMessageMskPipelineLogsSlack "HARTFORDHEALTHCARE subset"
@@ -1125,18 +1098,12 @@ if [ $? -gt 0 ] ; then
 else
     echo "MSK Hartford Healthcare subset successful!"
     addCancerTypeCaseLists $MSK_HARTFORD_DATA_HOME "msk_hartfordhealthcare" "data_clinical_sample.txt" "data_clinical_patient.txt"
-    # add metadata headers before importing
-    $PYTHON_BINARY $PORTAL_HOME/scripts/add_clinical_attribute_metadata_headers.py -f $MSK_HARTFORD_DATA_HOME/data_clinical*
-    if [ $? -gt 0 ] ; then
-        MSK_HARTFORD_ADD_HEADER_FAIL=1
-        echo "Something went wrong while adding metadata headers for HARTFORDHEALTHCARE."
-    fi
 fi
 
-# set 'RESTART_AFTER_MSK_AFFILIATE_IMPORT' flag to 1 if Kings County, Lehigh Valley, Queens Cancer Center, Miami Cancer Institute, or Lymphoma super cohort succesfully update
+# set 'RESTART_AFTER_MSK_AFFILIATE_IMPORT' flag to 1 if Kings County, Lehigh Valley, Queens Cancer Center, Miami Cancer Institute, MSKIMPACT Ped, or Lymphoma super cohort succesfully update
 RESTART_AFTER_MSK_AFFILIATE_IMPORT=0
-# update msk_kingscounty in portal only if subset was successful and metadata headers were added
-if [ $MSK_KINGS_SUBSET_FAIL -eq 0 ] && [ $MSK_KINGS_ADD_HEADER_FAIL -eq 0 ] ; then
+# update msk_kingscounty in portal only if subset was successful
+if [ $MSK_KINGS_SUBSET_FAIL -eq 0 ] ; then
     echo "Importing msk_kingscounty study..."
     echo $(date)
     bash $PORTAL_HOME/scripts/import-temp-study.sh --study-id="msk_kingscounty" --temp-study-id="temporary_msk_kingscounty" --backup-study-id="yesterday_msk_kingscounty" --portal-name="msk-kingscounty-portal" --study-path="$MSK_KINGS_DATA_HOME" --notification-file="$kingscounty_notification_file" --tmp-directory="$JAVA_TMPDIR" --email-list="$email_list" --oncotree-version="${ONCOTREE_VERSION_TO_USE}" --importer-jar="$PORTAL_HOME/lib/msk-dmp-importer.jar" --transcript-overrides-source="mskcc"
@@ -1160,8 +1127,8 @@ else
     cd $MSK_KINGS_DATA_HOME ; find . -name "*.orig" -delete ; $HG_BINARY add * ; $HG_BINARY commit -m "Latest KINGSCOUNTY dataset"
 fi
 
-# update msk_lehighvalley in portal only if subset was successful and metadata headers were added
-if [ $MSK_LEHIGH_SUBSET_FAIL -eq 0 ] && [ $MSK_LEHIGH_ADD_HEADER_FAIL -eq 0 ] ; then
+# update msk_lehighvalley in portal only if subset was successful
+if [ $MSK_LEHIGH_SUBSET_FAIL -eq 0 ] ; then
     echo "Importing msk_lehighvalley study..."
     echo $(date)
     bash $PORTAL_HOME/scripts/import-temp-study.sh --study-id="msk_lehighvalley" --temp-study-id="temporary_msk_lehighvalley" --backup-study-id="yesterday_msk_lehighvalley" --portal-name="msk-lehighvalley-portal" --study-path="$MSK_LEHIGH_DATA_HOME" --notification-file="$lehighvalley_notification_file" --tmp-directory="$JAVA_TMPDIR" --email-list="$email_list" --oncotree-version="${ONCOTREE_VERSION_TO_USE}" --importer-jar="$PORTAL_HOME/lib/msk-dmp-importer.jar" --transcript-overrides-source="mskcc"
@@ -1185,8 +1152,8 @@ else
     cd $MSK_LEHIGH_DATA_HOME ; find . -name "*.orig" -delete ; $HG_BINARY add * ; $HG_BINARY commit -m "Latest LEHIGHVALLEY dataset"
 fi
 
-# update msk_queenscancercenter in portal only if subset was successful and metadata headers were added
-if [ $MSK_QUEENS_SUBSET_FAIL -eq 0 ] && [ $MSK_QUEENS_ADD_HEADER_FAIL -eq 0 ] ; then
+# update msk_queenscancercenter in portal only if subset was successful
+if [ $MSK_QUEENS_SUBSET_FAIL -eq 0 ] ; then
     echo "Importing msk_queenscancercenter study..."
     echo $(date)
     bash $PORTAL_HOME/scripts/import-temp-study.sh --study-id="msk_queenscancercenter" --temp-study-id="temporary_msk_queenscancercenter" --backup-study-id="yesterday_msk_queenscancercenter" --portal-name="msk-queenscancercenter-portal" --study-path="$MSK_QUEENS_DATA_HOME" --notification-file="$queenscancercenter_notification_file" --tmp-directory="$JAVA_TMPDIR" --email-list="$email_list" --oncotree-version="${ONCOTREE_VERSION_TO_USE}" --importer-jar="$PORTAL_HOME/lib/msk-dmp-importer.jar" --transcript-overrides-source="mskcc"
@@ -1210,8 +1177,8 @@ else
     cd $MSK_QUEENS_DATA_HOME ; find . -name "*.orig" -delete ; $HG_BINARY add * ; $HG_BINARY commit -m "Latest QUEENSCANCERCENTER dataset"
 fi
 
-# update msk_miamicancerinstitute in portal only if subset was successful and metadata headers were added
-if [ $MSK_MCI_SUBSET_FAIL -eq 0 ] && [ $MSK_MCI_ADD_HEADER_FAIL -eq 0 ] ; then
+# update msk_miamicancerinstitute in portal only if subset was successful
+if [ $MSK_MCI_SUBSET_FAIL -eq 0 ] ; then
     echo "Importing msk_miamicancerinstitute study..."
     echo $(date)
     bash $PORTAL_HOME/scripts/import-temp-study.sh --study-id="msk_miamicancerinstitute" --temp-study-id="temporary_msk_miamicancerinstitute" --backup-study-id="yesterday_msk_miamicancerinstitute" --portal-name="msk-mci-portal" --study-path="$MSK_MCI_DATA_HOME" --notification-file="$miamicancerinstitute_notification_file" --tmp-directory="$JAVA_TMPDIR" --email-list="$email_list" --oncotree-version="${ONCOTREE_VERSION_TO_USE}" --importer-jar="$PORTAL_HOME/lib/msk-dmp-importer.jar" --transcript-overrides-source="mskcc"
@@ -1235,8 +1202,8 @@ else
     cd $MSK_MCI_DATA_HOME ; find . -name "*.orig" -delete ; $HG_BINARY add * ; $HG_BINARY commit -m "Latest MIAMICANCERINSTITUTE dataset"
 fi
 
-# update msk_hartfordhealthcare in portal only if subset was successful and metadata headers were added
-if [ $MSK_HARTFORD_SUBSET_FAIL -eq 0 ] && [ $MSK_HARTFORD_ADD_HEADER_FAIL -eq 0 ] ; then
+# update msk_hartfordhealthcare in portal only if subset was successful
+if [ $MSK_HARTFORD_SUBSET_FAIL -eq 0 ] ; then
     echo "Importing msk_hartfordhealthcare study..."
     echo $(date)
     bash $PORTAL_HOME/scripts/import-temp-study.sh --study-id="msk_hartfordhealthcare" --temp-study-id="temporary_msk_hartfordhealthcare" --backup-study-id="yesterday_msk_hartfordhealthcare" --portal-name="msk-hartford-portal" --study-path="$MSK_HARTFORD_DATA_HOME" --notification-file="$hartfordhealthcare_notification_file" --tmp-directory="$JAVA_TMPDIR" --email-list="$email_list" --oncotree-version="${ONCOTREE_VERSION_TO_USE}" --importer-jar="$PORTAL_HOME/lib/msk-dmp-importer.jar" --transcript-overrides-source="mskcc"
@@ -1259,13 +1226,50 @@ else
     echo "Committing HARTFORDHEALTHCARE data"
     cd $MSK_HARTFORD_DATA_HOME ; find . -name "*.orig" -delete ; $HG_BINARY add * ; $HG_BINARY commit -m "Latest HARTFORDHEALTHCARE dataset"
 fi
-
 ## END Subset MIXEDPACT on INSTITUTE
+#-------------------------------------------------------------------------------------------------------------------------------------
+# Subset MSKIMPACT on PED_IND for MSKIMPACT_PED cohort
+
+bash $PORTAL_HOME/scripts/subset-impact-data.sh -i=mskimpact_ped -o=$MSKIMPACT_PED_DATA_HOME -d=$MSK_IMPACT_DATA_HOME -f="PED_IND=Yes" -s=$tmp/mskimpact_ped_subset.txt -c=$MSK_IMPACT_DATA_HOME/data_clinical_patient.txt
+if [ $? -gt 0 ]; then
+    echo "MSKIMPACT_PED subset failed! Study will not be updated in the portal."
+    sendFailureMessageMskPipelineLogsSlack "MSKIMPACT_PED subset"
+    MSKIMPACT_PED_SUBSET_FAIL=1
+else
+    echo "MSKIMPACT_PED subset successful!"
+    addCancerTypeCaseLists $MSKIMPACT_PED_DATA_HOME "mskimpact_ped" "data_clinical_sample.txt" "data_clinical_patient.txt"
+fi
+
+# update mskimpact_ped in portal only if subset was successful
+if [ $MSKIMPACT_PED_SUBSET_FAIL -eq 0 ]; then
+    echo "Importing mskimpact_ped study..."
+    echo $(date)
+    bash $PORTAL_HOME/scripts/import-temp-study.sh --study-id="mskimpact_ped" --temp-study-id="temporary_mskimpact_ped" --backup-study-id="yesterday_mskimpact_ped" --portal-name="msk-ped-portal" --study-path="$MSKIMPACT_PED_DATA_HOME" --notification-file="$mskimpact_ped_notification_file" --tmp-directory="$tmp" --email-list="$email_list" --oncotree-version="${ONCOTREE_VERSION_TO_USE}" --importer-jar="$PORTAL_HOME/lib/msk-dmp-importer.jar" --transcript-overrides-source="mskcc"
+    if [ $? -gt 0 ]; then
+        IMPORT_FAIL_MSKIMPACT_PED=1
+        sendFailureMessageMskPipelineLogsSlack "MSKIMPACT_PED import"
+    else
+        RESTART_AFTER_MSK_AFFILIATE_IMPORT=1
+        sendSuccessMessageMskPipelineLogsSlack "MSKIMPACT_PED"
+    fi
+else
+    echo "Something went wrong with subsetting clinical studies for MSKIMPACT_PED."
+    IMPORT_FAIL_MSKIMPACT_PED=1
+fi
+# commit or revert changes for MSKIMPACT_PED
+if [ $IMPORT_FAIL_MSKIMPACT_PED -gt 0 ] ; then
+    echo "MSKIMPACT_PED subset and/or updates failed! Reverting data to last commit."
+    cd $MSKIMPACT_PED_DATA_HOME ; $HG_BINARY update -C ; find . -name "*.orig" -delete
+else
+    echo "Committing MSKIMPACT_PED data"
+    cd $MSKIMPACT_PED_DATA_HOME ; find . -name "*.orig" -delete ; $HG_BINARY add * ; $HG_BINARY commit -m "Latest MSKIMPACT_PED dataset"
+fi
+## END Subset MSKIMPACT on PED_IND for MSKIMPACT_PED cohort
 #-------------------------------------------------------------------------------------------------------------------------------------
 # Subset MSKIMPACT on ONCOTREE_CODE for SCLC cohort
 
 RESTART_AFTER_SCLC_IMPORT=0
-bash $PORTAL_HOME/scripts/subset-impact-data.sh -i=sclc_mskimpact_2017 -o=$MSK_SCLC_DATA_HOME -m=$MSK_IMPACT_DATA_HOME -f="ONCOTREE_CODE=SCLC" -s=$JAVA_TMPDIR/sclc_subset.txt -c=data_clinical_sample.txt
+bash $PORTAL_HOME/scripts/subset-impact-data.sh -i=sclc_mskimpact_2017 -o=$MSK_SCLC_DATA_HOME -d=$MSK_IMPACT_DATA_HOME -f="ONCOTREE_CODE=SCLC" -s=$JAVA_TMPDIR/sclc_subset.txt -c=$MSK_IMPACT_DATA_HOME/data_clinical_sample.txt
 if [ $? -gt 0 ] ; then
     echo "MSKIMPACT SCLC subset failed! Study will not be updated in the portal."
     sendFailureMessageMskPipelineLogsSlack "SCLCMSKIMPACT subset"
@@ -1273,16 +1277,10 @@ if [ $? -gt 0 ] ; then
 else
     echo "MSKIMPACT SCLC subset successful!"
     addCancerTypeCaseLists $MSK_SCLC_DATA_HOME "sclc_mskimpact_2017" "data_clinical_sample.txt" "data_clinical_patient.txt"
-    # add metadata headers before importing
-    $PYTHON_BINARY $PORTAL_HOME/scripts/add_clinical_attribute_metadata_headers.py -s sclc_mskimpact_2017 -f $MSK_SCLC_DATA_HOME/data_clinical*
-    if [ $? -gt 0 ] ; then
-        SCLC_MSKIMPACT_ADD_HEADER_FAIL=1
-        echo "Something went wrong while adding metadata headers for MSKIMPACT SCLC."
-    fi
 fi
 
 # update sclc_mskimpact_2017 in portal only if subset was successful and metadata headers were added
-if [ $SCLC_MSKIMPACT_SUBSET_FAIL -eq 0 ] && [ $SCLC_MSKIMPACT_ADD_HEADER_FAIL -eq 0 ] ; then
+if [ $SCLC_MSKIMPACT_SUBSET_FAIL -eq 0 ] ; then
     echo "Importing sclc_mskimpact_2017 study..."
     echo $(date)
     bash $PORTAL_HOME/scripts/import-temp-study.sh --study-id="sclc_mskimpact_2017" --temp-study-id="temporary_sclc_mskimpact_2017" --backup-study-id="yesterday_sclc_mskimpact_2017" --portal-name="msk-sclc-portal" --study-path="$MSK_SCLC_DATA_HOME" --notification-file="$sclc_mskimpact_notification_file" --tmp-directory="$JAVA_TMPDIR" --email-list="$email_list" --oncotree-version="${ONCOTREE_VERSION_TO_USE}" --importer-jar="$PORTAL_HOME/lib/msk-dmp-importer.jar" --transcript-overrides-source="mskcc"
@@ -1516,10 +1514,22 @@ if [ $MSK_HARTFORD_SUBSET_FAIL -gt 0 ] ; then
     echo -e "$EMAIL_BODY" |  mail -s "HARTFORDHEALTHCARE Subset Failure: Study will not be updated." $email_list
 fi
 
+EMAIL_BODY="Failed to subset MSKIMPACT_PED data. Subset study will not be updated."
+if [ $MSKIMPACT_PED_SUBSET_FAIL -gt 0 ]; then
+    echo -e "Sending email $EMAIL_BODY"
+    echo -e "$EMAIL_BODY" | mail -s "MSKIMPACT_PED Subset Failure: Study will not be updated." $email_list
+fi
+
 EMAIL_BODY="Failed to subset MSKIMPACT SCLC data. Subset study will not be updated."
 if [ $SCLC_MSKIMPACT_SUBSET_FAIL -gt 0 ] ; then
     echo -e "Sending email $EMAIL_BODY"
     echo -e "$EMAIL_BODY" | mail -s "SCLCMSKIMPACT Subset Failure: Study will not be updated." $email_list
+fi
+
+EMAIL_BODY="Failed to subset LYMPHOMASUPERCOHORT data. Subset study will not be updated."
+if [ $LYMPHOMA_SUPER_COHORT_SUBSET_FAIL -gt 0 ] ; then
+    echo -e "Sending email $EMAIL_BODY"
+    echo -e "$EMAIL_BODY" | mail -s "LYMPHOMASUPERCOHORT Subset Failure: Study will not be updated." $email_list
 fi
 
 echo "Fetching and importing of clinical datasets complete!"
