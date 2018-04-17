@@ -288,7 +288,7 @@ if [ $? -gt 0 ]; then
     sendFailureMessageMskPipelineLogsSlack "$message"
     ONCOTREE_RECACHE_FAIL=1
 fi
-if [[ $CDD_RECACHE_FAIL -ne 0 || $ONCOTREE_RECACHE_FAIL -ne 0]] ; then
+if [[ $CDD_RECACHE_FAIL -ne 0 || $ONCOTREE_RECACHE_FAIL -ne 0 ]] ; then
     echo "Oncotree and/or CDD recache failed! Exiting..."
     exit 2
 fi
