@@ -1230,7 +1230,7 @@ fi
 #-------------------------------------------------------------------------------------------------------------------------------------
 # Subset MSKIMPACT on PED_IND for MSKIMPACT_PED cohort
 
-bash $PORTAL_HOME/scripts/subset-impact-data.sh -i=mskimpact_ped -o=$MSKIMPACT_PED_DATA_HOME -d=$MSK_IMPACT_DATA_HOME -f="PED_IND=Yes" -s=$tmp/mskimpact_ped_subset.txt -c=$MSK_IMPACT_DATA_HOME/data_clinical_patient.txt
+bash $PORTAL_HOME/scripts/subset-impact-data.sh -i=mskimpact_ped -o=$MSKIMPACT_PED_DATA_HOME -d=$MSK_IMPACT_DATA_HOME -f="PED_IND=Yes" -s=$JAVA_TMPDIR/mskimpact_ped_subset.txt -c=$MSK_IMPACT_DATA_HOME/data_clinical_patient.txt
 if [ $? -gt 0 ]; then
     echo "MSKIMPACT_PED subset failed! Study will not be updated in the portal."
     sendFailureMessageMskPipelineLogsSlack "MSKIMPACT_PED subset"
@@ -1244,7 +1244,7 @@ fi
 if [ $MSKIMPACT_PED_SUBSET_FAIL -eq 0 ]; then
     echo "Importing mskimpact_ped study..."
     echo $(date)
-    bash $PORTAL_HOME/scripts/import-temp-study.sh --study-id="mskimpact_ped" --temp-study-id="temporary_mskimpact_ped" --backup-study-id="yesterday_mskimpact_ped" --portal-name="msk-ped-portal" --study-path="$MSKIMPACT_PED_DATA_HOME" --notification-file="$mskimpact_ped_notification_file" --tmp-directory="$tmp" --email-list="$email_list" --oncotree-version="${ONCOTREE_VERSION_TO_USE}" --importer-jar="$PORTAL_HOME/lib/msk-dmp-importer.jar" --transcript-overrides-source="mskcc"
+    bash $PORTAL_HOME/scripts/import-temp-study.sh --study-id="mskimpact_ped" --temp-study-id="temporary_mskimpact_ped" --backup-study-id="yesterday_mskimpact_ped" --portal-name="msk-ped-portal" --study-path="$MSKIMPACT_PED_DATA_HOME" --notification-file="$mskimpact_ped_notification_file" --tmp-directory="$JAVA_TMPDIR" --email-list="$email_list" --oncotree-version="${ONCOTREE_VERSION_TO_USE}" --importer-jar="$PORTAL_HOME/lib/msk-dmp-importer.jar" --transcript-overrides-source="mskcc"
     if [ $? -gt 0 ]; then
         IMPORT_FAIL_MSKIMPACT_PED=1
         sendFailureMessageMskPipelineLogsSlack "MSKIMPACT_PED import"
