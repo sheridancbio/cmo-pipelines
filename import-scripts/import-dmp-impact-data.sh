@@ -365,6 +365,8 @@ IMPORT_FAIL_SCLC_MSKIMPACT=0
 IMPORT_FAIL_LYMPHOMA=0
 GENERATE_MASTERLIST_FAIL=0
 
+MERCURIAL_PUSH_FAILURE=0
+
 # export data_clinical and data_clinical_supp_date for each project from redcap (starting point)
 # if export fails:
 # don't re-import into redcap (would wipe out days worth of data)
@@ -1440,8 +1442,19 @@ fi
 echo "Pushing DMP-IMPACT updates back to msk-impact repository..."
 echo $(date)
 cd $MSK_IMPACT_DATA_HOME ; $HG_BINARY push
+if [ $? -gt 0 ] ; then
+    MERCURIAL_PUSH_FAILURE=1
+    sendFailureMessageMskPipelineLogsSlack "HG PUSH :fire: - address ASAP!"
+fi
 
 ### FAILURE EMAIL ###
+
+EMAIL_BODY="Failed to push outgoing changes to Mercurial - address ASAP!"
+# send email if failed to push outgoing changes to mercurial
+if [ $MERCURIAL_PUSH_FAILURE -gt 0 ] ; then
+    echo -e "Sending email $EMAIL_BODY"
+    echo -e "$EMAIL_BODY" | mail -s "[URGENT] HG PUSH FAILURE" $email_list
+fi
 
 EMAIL_BODY="The MSKIMPACT database version is incompatible. Imports will be skipped until database is updated."
 # send email if db version isn't compatible
