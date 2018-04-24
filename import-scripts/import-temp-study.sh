@@ -140,7 +140,6 @@ RENAME_BACKUP_FAIL=0
 RENAME_FAIL=0
 GROUPS_FAIL=0
 
-echo "disable redcap export term = $DISABLE_REDCAP_EXPORT_TERM"
 # resolve oncotree term
 ONCOTREE_VERSION_TERM="--oncotree-version ${ONCOTREE_VERSION_TO_USE}"
 if [[ -z ${ONCOTREE_VERSION_TO_USE} ]] ; then
@@ -149,7 +148,7 @@ fi
 
 # import study using temp id
 echo "Importing study '$CANCER_STUDY_IDENTIFIER' as temporary study '$TEMP_CANCER_STUDY_IDENTIFIER'"
-$JAVA_HOME/bin/java $JAVA_IMPORTER_ARGS -Xmx64g -cp $IMPORTER_JAR org.mskcc.cbio.importer.Admin --update-study-data --portal "$PORTAL_NAME" --notification-file "$NOTIFICATION_FILE" --temporary-id "$TEMP_CANCER_STUDY_IDENTIFIER" ${ONCOTREE_VERSION_TERM} --transcript-overrides-source "$TRANCRIPT_OVERRIDES_SOURCE" "$DISABLE_REDCAP_EXPORT_TERM"
+$JAVA_HOME/bin/java $JAVA_IMPORTER_ARGS -Xmx64g -cp $IMPORTER_JAR org.mskcc.cbio.importer.Admin --update-study-data --portal "$PORTAL_NAME" --notification-file "$NOTIFICATION_FILE" --temporary-id "$TEMP_CANCER_STUDY_IDENTIFIER" ${ONCOTREE_VERSION_TERM} --transcript-overrides-source "$TRANCRIPT_OVERRIDES_SOURCE" $DISABLE_REDCAP_EXPORT_TERM
 # we don't have to check the exit status here because if num_studies_updated != 1 we consider the import to have failed (we check num_studies_updated next)
 
 # check number of studies updated before continuing
