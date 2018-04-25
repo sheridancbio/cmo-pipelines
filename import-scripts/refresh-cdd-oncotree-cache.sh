@@ -48,7 +48,7 @@ fi
 function sendFailureMessageSlackEmail {
     MESSAGE_BODY=$1
     SUBJECT_MESSAGE=$2
-    curl -X POST --data-urlencode "payload={\"channel\": \"#msk-pipeline-logs\", \"username\": \"cbioportal_importer\", \"text\": \"[TEST]MSK cBio pipelines recache process status: $MESSAGE_BODY\", \"icon_emoji\": \":fire:\"}" https://hooks.slack.com/services/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
+    curl --fail -X POST --data-urlencode "payload={\"channel\": \"#msk-pipeline-logs\", \"username\": \"cbioportal_importer\", \"text\": \"[TEST]MSK cBio pipelines recache process status: $MESSAGE_BODY\", \"icon_emoji\": \":fire:\"}" https://hooks.slack.com/services/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
     echo -e "$MESSAGE_BODY" | mail -s "$SUBJECT_MESSAGE" $EMAIL_LIST
 }
 
@@ -56,7 +56,7 @@ function sendFailureMessageSlackEmail {
 function sendSuccessMessageSlackEmail {
     MESSAGE_BODY=$1
     SUBJECT_MESSAGE=$2
-    curl -X POST --data-urlencode "payload={\"channel\": \"#msk-pipeline-logs\", \"username\": \"cbioportal_importer\", \"text\": \"[TEST]MSK cBio pipelines recache process status: $MESSAGE_BODY\", \"icon_emoji\": \":arrows_counterclockwise:\"}" https://hooks.slack.com/services/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
+    curl --fail -X POST --data-urlencode "payload={\"channel\": \"#msk-pipeline-logs\", \"username\": \"cbioportal_importer\", \"text\": \"[TEST]MSK cBio pipelines recache process status: $MESSAGE_BODY\", \"icon_emoji\": \":arrows_counterclockwise:\"}" https://hooks.slack.com/services/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
     echo -e "$MESSAGE_BODY" | mail -s "$SUBJECT_MESSAGE" $EMAIL_LIST
 }
 
@@ -165,8 +165,8 @@ function refreshCddCache {
 function refreshOncotreeCache {
     # attempt to recache ONCOTREE
     ENDPOINT="refreshCache"
-    ONCOTREE_SERVER1="http://dashi.cbio.mskcc.org:8280/oncotree/api"
-    ONCOTREE_SERVER2="http://dashi2.cbio.mskcc.org:8280/oncotree/api"
+    ONCOTREE_SERVER1="http://dashi.cbio.mskcc.org:8280/api"
+    ONCOTREE_SERVER2="http://dashi2.cbio.mskcc.org:8280/api"
     ONCOTREE_SERVER_LIST=($ONCOTREE_SERVER1 $ONCOTREE_SERVER2)
     refreshCache "ONCOTREE" $MAX_ATTEMPTS $ENDPOINT ${ONCOTREE_SERVER_LIST[@]}; return_value=$?
     if [ $return_value -gt 0 ] ; then
