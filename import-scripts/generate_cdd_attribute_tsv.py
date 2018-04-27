@@ -247,7 +247,11 @@ def main():
         sys.exit(2)
 
     username, password = get_github_credentials(credentials_file)
-    urifile = requests.get(GITHUB_URI_MAPPINGS_FILE_URL, auth = (username, password), headers = HEADERS)
+    try:
+        urifile = requests.get(GITHUB_URI_MAPPINGS_FILE_URL, auth = (username, password), headers = HEADERS)
+    except requests.exceptions.SSLError:
+        print >> sys.stderr, "OpenSSL version is outdated -- try running 'pip install 'requests[security]' or updating openssl version."
+        sys.exit(2)
     if urifile.status_code != 200:
         print >> sys.stderr, "Error while retrieving existing URI mappings with returned status code: " + urifile.status_code + "... aborting"
         sys.exit(2)
