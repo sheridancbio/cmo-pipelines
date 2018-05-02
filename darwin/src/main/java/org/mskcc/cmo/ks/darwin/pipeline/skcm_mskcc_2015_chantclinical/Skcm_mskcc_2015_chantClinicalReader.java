@@ -91,6 +91,9 @@ public class Skcm_mskcc_2015_chantClinicalReader implements ItemStreamReader<Skc
 
         // getting records from db view and merge data by sample id
         this.melanomaClinicalRecords = getMelanomaClinicalRecords();
+        if (melanomaClinicalRecords == null || melanomaClinicalRecords.isEmpty()) {
+            throw new ItemStreamException("Error fetching records from Darwin Melanoma Clinical Views");
+        }
     }
 
     @Override
