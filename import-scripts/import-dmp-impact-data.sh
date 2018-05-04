@@ -5,7 +5,7 @@ JAVA_DEBUG_ARGS="-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,addres
 JAVA_TMPDIR="$PORTAL_HOME/tmp/import-cron-dmp-msk"
 JAVA_IMPORTER_ARGS="$JAVA_PROXY_ARGS $JAVA_DEBUG_ARGS -ea -Dspring.profiles.active=dbcp -Djava.io.tmpdir=$JAVA_TMPDIR -Dhttp.nonProxyHosts=draco.mskcc.org|pidvudb1.mskcc.org|phcrdbd2.mskcc.org|dashi-dev.cbio.mskcc.org|pipelines.cbioportal.mskcc.org|localhost"
 ONCOTREE_VERSION_TO_USE=oncotree_candidate_release
-PERFORM_CRDB_FETCH=0  # if zero, no CRDB fetch or import to redcap will occur
+PERFORM_CRDB_FETCH=1  # if zero, no CRDB fetch or import to redcap will occur
 
 ## FUNCTIONS
 
