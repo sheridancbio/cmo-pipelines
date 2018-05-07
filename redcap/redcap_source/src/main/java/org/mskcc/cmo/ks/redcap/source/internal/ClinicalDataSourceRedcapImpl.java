@@ -281,66 +281,6 @@ public class ClinicalDataSourceRedcapImpl implements ClinicalDataSource {
         }
     }
 
-    /**
-     * Generates list of patient attributes from full header from redcap.
-     * @param fullHeader
-     * @return
-     */
-    @Override
-    public Map<String, List<String>> getFullPatientHeader(Map<String, List<String>> fullHeader) {
-        List<String> displayNames = new ArrayList<>();
-        List<String> descriptions = new ArrayList<>();
-        List<String> datatypes = new ArrayList<>();
-        List<String> priorities = new ArrayList<>();
-        List<String> header = new ArrayList<>();
-
-        for (int i=0; i<fullHeader.get("header").size(); i++) {
-            if (fullHeader.get("attribute_types").get(i).equals("PATIENT")) {
-                displayNames.add(fullHeader.get("display_names").get(i));
-                descriptions.add(fullHeader.get("descriptions").get(i));
-                datatypes.add(fullHeader.get("datatypes").get(i));
-                priorities.add(fullHeader.get("priorities").get(i));
-                header.add(fullHeader.get("header").get(i));
-            }
-        }
-        fullPatientHeader.put("display_names", displayNames);
-        fullPatientHeader.put("descriptions", descriptions);
-        fullPatientHeader.put("datatypes", datatypes);
-        fullPatientHeader.put("priorities", priorities);
-        fullPatientHeader.put("header", header);
-        return fullPatientHeader;
-    }
-
-    /**
-     * Generates list of sample attributes from full header from redcap.
-     * @param fullHeader
-     * @return
-     */
-    @Override
-    public Map<String, List<String>> getFullSampleHeader(Map<String, List<String>> fullHeader) {
-        List<String> displayNames = new ArrayList<>();
-        List<String> descriptions = new ArrayList<>();
-        List<String> datatypes = new ArrayList<>();
-        List<String> priorities = new ArrayList<>();
-        List<String> header = new ArrayList<>();
-
-        for (int i=0; i<fullHeader.get("header").size(); i++) {
-            if (fullHeader.get("attribute_types").get(i).equals("SAMPLE")) {
-                displayNames.add(fullHeader.get("display_names").get(i));
-                descriptions.add(fullHeader.get("descriptions").get(i));
-                datatypes.add(fullHeader.get("datatypes").get(i));
-                priorities.add(fullHeader.get("priorities").get(i));
-                header.add(fullHeader.get("header").get(i));
-            }
-        }
-        fullSampleHeader.put("display_names", displayNames);
-        fullSampleHeader.put("descriptions", descriptions);
-        fullSampleHeader.put("datatypes", datatypes);
-        fullSampleHeader.put("priorities", priorities);
-        fullSampleHeader.put("header", header);
-        return fullSampleHeader;
-    }
-
     private List<String> readClinicalFile(File file) throws IOException {
         LinkedList<String> lineList = new LinkedList<>();
         BufferedReader bufferedReader = new BufferedReader(new FileReader(file));

@@ -68,6 +68,9 @@ public class ClinicalDataReader implements ItemStreamReader<Map<String, String>>
     @Value("#{jobParameters[stableId]}")
     private String stableId;
 
+    @Value("#{jobParameters[maskRedcapProjects]}")
+    private String maskRedcapProjects;
+
     private Map<String, List<String>> fullSampleHeader = new HashMap<>();
     private Map<String, List<String>> fullPatientHeader = new HashMap<>();
     private List<Map<String, String>> clinicalRecords = new ArrayList<>();
