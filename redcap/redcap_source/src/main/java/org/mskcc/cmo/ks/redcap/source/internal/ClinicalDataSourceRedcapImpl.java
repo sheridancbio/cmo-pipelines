@@ -181,6 +181,16 @@ public class ClinicalDataSourceRedcapImpl implements ClinicalDataSource {
     }
 
     @Override
+    public ListIterator<String> getClinicalProjectTitleIterator(String stableId) {
+        return redcapRepository.getClinicalProjectTitleIterator(stableId);
+    }
+
+    @Override
+    public ListIterator<String> getTimelineProjectTitleIterator(String stableId) {
+        return redcapRepository.getTimelineProjectTitleIterator(stableId);
+    }
+
+    @Override
     public void importClinicalDataFile(String projectTitle, String filename, boolean keepExistingProjectData) throws Exception {
         String projectToken = redcapRepository.getTokenByProjectTitle(projectTitle);
         if (projectToken == null) {

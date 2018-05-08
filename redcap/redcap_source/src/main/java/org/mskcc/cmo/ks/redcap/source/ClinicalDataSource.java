@@ -57,4 +57,6 @@ public interface ClinicalDataSource {
     String getNextTimelineProjectTitle(String stableId);
     boolean hasMoreTimelineData(String stableId);
     boolean hasMoreClinicalData(String stableId);
+    ListIterator<String> getClinicalProjectTitleIterator(String stableId);
+    ListIterator<String> getTimelineProjectTitleIterator(String stableId);
 }

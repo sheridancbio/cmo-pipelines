@@ -153,13 +153,13 @@ public class RedcapPipeline {
 
     private static Set<String> getProjectTitlesForStableId(String stableId) {
         Set<String> projectTitleSet = new HashSet<>();
-        while (clinicalDataSource.hasMoreClinicalData(stableId)) {
-            projectTitleSet.add(clinicalDataSource.getNextClinicalProjectTitle(stableId));
-            clinicalDataSource.getClinicalData(stableId); // This is an unfortunate overhead : we actually do not need the data but this is the only way to advance to the next project
+        ListIterator<String> clinicalProjectIterator = clinicalDataSource.getClinicalProjectTitleIterator(stableId);
+        while (clinicalProjectIterator.hasNext()) {
+            projectTitleSet.add(clinicalProjectIterator.next());
         }
-        while (clinicalDataSource.hasMoreTimelineData(stableId)) {
-            projectTitleSet.add(clinicalDataSource.getNextTimelineProjectTitle(stableId));
-            clinicalDataSource.getTimelineData(stableId); // This is an unfortunate overhead : we actually do not need the data but this is the only way to advance to the next project
+        ListIterator<String> timelineProjectIterator = clinicalDataSource.getTimelineProjectTitleIterator(stableId);
+        while (timelineProjectIterator.hasNext()) {
+            projectTitleSet.add(timelineProjectIterator.next());
         }
         return projectTitleSet;
     }
@@ -343,7 +343,9 @@ public class RedcapPipeline {
                 errorMessageBuilder.append("Duplicated project name given in argument to --" + OPTION_MASK_REDCAP_PROJECTS + " : '" + trimmedProjectName + "'\n");
                 continue;
             }
-            maskProjectArgument.add(trimmedProjectName);
+            if (trimmedProjectName.length() > 0) {
+                maskProjectArgument.add(trimmedProjectName);
+            }
         }
         String stableId = commandLine.getOptionValue(OPTION_STABLE_ID);
         projectSetForStableId = getProjectTitlesForStableId(stableId);

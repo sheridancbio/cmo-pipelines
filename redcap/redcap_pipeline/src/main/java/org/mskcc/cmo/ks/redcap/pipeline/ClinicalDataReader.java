@@ -76,12 +76,27 @@ public class ClinicalDataReader implements ItemStreamReader<Map<String, String>>
     private List<Map<String, String>> clinicalRecords = new ArrayList<>();
     private Map<String, Map<String, String>> compiledClinicalSampleRecords = new LinkedHashMap<>();
     private Map<String, Map<String, String>> compiledClinicalPatientRecords = new LinkedHashMap<>();
+    private Set<String> maskRedcapProjectSet = new HashSet<>();
 
     private final Logger log = Logger.getLogger(ClinicalDataReader.class);
 
     @Override
     public void open(ExecutionContext ec) throws ItemStreamException {
-        String projectTitle = (redcapProjectTitle == null) ? clinicalDataSource.getNextClinicalProjectTitle(stableId) : redcapProjectTitle;
+        parseMaskRedcapProjectSet();
+        String projectTitle = redcapProjectTitle;
+        while (projectTitle == null && clinicalDataSource.hasMoreClinicalData(stableId)) {
+            String nextProjectTitle = clinicalDataSource.getNextClinicalProjectTitle(stableId);
+            if (maskRedcapProjectSet.contains(projectTitle)) {
+                clinicalDataSource.getClinicalData(stableId); // currently, we must get the data in order to move past this project
+                continue;
+            } else {
+                projectTitle = nextProjectTitle;
+            }
+        }
+        if (projectTitle == null) {
+            ec.put("writeRawClinicalData", false);
+            return; // short circuit when all remaining clinical projects have been masked
+        }
         if (rawData && clinicalDataSource.redcapDataTypeIsTimeline(projectTitle)) {
             ec.put("writeRawClinicalData", false);
             return; // short circuit when only exporting a timeline file in rawData mode
@@ -95,18 +110,11 @@ public class ClinicalDataReader implements ItemStreamReader<Map<String, String>>
             // get clinical data for current clinical data source
             clinicalRecords = clinicalDataSource.exportRawDataForProjectTitle(projectTitle);
         } else {
-            log.info("Getting sample header for project: " + projectTitle);
-            this.fullSampleHeader = metadataManager.getFullHeader(clinicalDataSource.getSampleHeader(stableId));
-            log.info("Getting patient header for project: " + projectTitle);
-            this.fullPatientHeader = metadataManager.getFullHeader(clinicalDataSource.getPatientHeader(stableId));
-            // get clinical and sample data for current clinical data source
-            for (Map<String, String> record : clinicalDataSource.getClinicalData(stableId)) {
-                updateClinicalData(record);
-            }
-            // merge remaining clinical data sources if in merge mode and more clinical data exists
-            if (clinicalDataSource.hasMoreClinicalData(stableId)) {
-                mergeClinicalDataSources();
-            }
+            resetFullHeaders(fullSampleHeader);
+            resetFullHeaders(fullPatientHeader);
+            compiledClinicalSampleRecords.clear();
+            compiledClinicalPatientRecords.clear();
+            mergeClinicalDataSources();
             // associate patient data with their samples so that patient data for each sample is the same
             this.clinicalRecords = mergePatientSampleClinicalRecords();
             // if sample header size is <= 2 then skip writing the sample clinical data file
@@ -130,6 +138,25 @@ public class ClinicalDataReader implements ItemStreamReader<Map<String, String>>
         ec.put("projectTitle", projectTitle);
     }
 
+    private void parseMaskRedcapProjectSet() {
+        maskRedcapProjectSet.clear();
+        String[] projectNameArgument = maskRedcapProjects.split(",");
+        for (String projectName : projectNameArgument) {
+            String trimmedProjectName = projectName.trim();
+            if (trimmedProjectName.length() > 0) {
+                maskRedcapProjectSet.add(trimmedProjectName);
+            }
+        }
+    }
+
+    private void resetFullHeaders(Map<String, List<String>> fullHeaders) {
+        fullHeaders.clear();
+        String[] headerLineKeys = { "display_names", "descriptions", "datatypes", "priorities", "header" };
+        for (String key : headerLineKeys) {
+            fullHeaders.put(key, new ArrayList<String>());
+        }
+    }
+
     /**
      * Associates patient data with each sample it's associated with.
      * @return
@@ -147,6 +174,10 @@ public class ClinicalDataReader implements ItemStreamReader<Map<String, String>>
     private void mergeClinicalDataSources() {
         while (clinicalDataSource.hasMoreClinicalData(stableId)) {
             String projectTitle = clinicalDataSource.getNextClinicalProjectTitle(stableId);
+            if (maskRedcapProjectSet.contains(projectTitle)) {
+                clinicalDataSource.getClinicalData(stableId); // currently, we must get the data in order to move past this project
+                continue; // skip masked projects
+            }
 
             // get sample header for project and merge into global sample header list
             log.info("Merging sample header for project: " + projectTitle);
