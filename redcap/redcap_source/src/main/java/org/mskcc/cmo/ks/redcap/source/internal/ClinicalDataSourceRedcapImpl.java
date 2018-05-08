@@ -34,7 +34,6 @@ package org.mskcc.cmo.ks.redcap.source.internal;
 
 import java.io.*;
 import java.util.*;
-import org.apache.commons.text.StringEscapeUtils;
 import org.apache.log4j.Logger;
 import org.mskcc.cmo.ks.redcap.models.RedcapAttributeMetadata;
 import org.mskcc.cmo.ks.redcap.models.RedcapProjectAttribute;
@@ -182,7 +181,7 @@ public class ClinicalDataSourceRedcapImpl implements ClinicalDataSource {
     }
 
     @Override
-    public void importClinicalDataFile(String projectTitle, String filename) throws Exception {
+    public void importClinicalDataFile(String projectTitle, String filename, boolean keepExistingProjectData) throws Exception {
         String projectToken = redcapRepository.getTokenByProjectTitle(projectTitle);
         if (projectToken == null) {
             log.error("Project not found in redcap clinicalDataTokens or clincalTimelineTokens: " + projectTitle);
@@ -203,7 +202,7 @@ public class ClinicalDataSourceRedcapImpl implements ClinicalDataSource {
                 log.error("Error: file " + filename + " has headers that are not defined in the Clinical Data Dictionary ... aborting attempt to import data");
                 throw new Exception("Error: file " + filename + " has headers that are not defined in Clinical Data Dictionary ... aborting attempt to import data");
             }
-            redcapRepository.importClinicalData(projectToken, dataFileContentsTSV);
+            redcapRepository.importClinicalData(projectToken, dataFileContentsTSV, keepExistingProjectData);
         } catch (IOException e) {
             log.error("IOException thrown while attempting to read file " + filename + " : " + e.getMessage());
             throw new IOException("IOException thrown while attempting to read file " + filename + " : " + e.getMessage());
