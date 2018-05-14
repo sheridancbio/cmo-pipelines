@@ -37,6 +37,7 @@ import org.apache.log4j.Logger;
 import org.mskcc.cmo.ks.redcap.source.ClinicalDataSource;
 import org.mskcc.cmo.ks.redcap.source.MetadataManager;
 import org.mskcc.cmo.ks.redcap.pipeline.util.ConflictingAttributeValuesException;
+import org.mskcc.cmo.ks.redcap.pipeline.util.JobParameterUtils;
 import org.mskcc.cmo.ks.redcap.pipeline.util.RedcapUtils;
 import org.springframework.batch.item.ExecutionContext;
 import org.springframework.batch.item.ItemStreamException;
@@ -54,6 +55,9 @@ public class ClinicalDataReader implements ItemStreamReader<Map<String, String>>
     private ClinicalDataSource clinicalDataSource;
 
     @Autowired
+    private JobParameterUtils jobParameterUtils;
+
+    @Autowired
     private MetadataManager metadataManager;
 
     @Autowired
@@ -67,9 +71,6 @@ public class ClinicalDataReader implements ItemStreamReader<Map<String, String>>
 
     @Value("#{jobParameters[stableId]}")
     private String stableId;
-
-    @Value("#{jobParameters[maskRedcapProjects]}")
-    private String maskRedcapProjects;
 
     private Map<String, List<String>> fullSampleHeader = new HashMap<>();
     private Map<String, List<String>> fullPatientHeader = new HashMap<>();
@@ -140,8 +141,7 @@ public class ClinicalDataReader implements ItemStreamReader<Map<String, String>>
 
     private void parseMaskRedcapProjectSet() {
         maskRedcapProjectSet.clear();
-        String[] projectNameArgument = maskRedcapProjects.split(",");
-        for (String projectName : projectNameArgument) {
+        for (String projectName : jobParameterUtils.getListOfMaskedProjects()) {
             String trimmedProjectName = projectName.trim();
             if (trimmedProjectName.length() > 0) {
                 maskRedcapProjectSet.add(trimmedProjectName);

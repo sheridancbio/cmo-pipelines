@@ -35,6 +35,7 @@ package org.mskcc.cmo.ks.redcap.pipeline;
 import java.util.*;
 import org.apache.log4j.Logger;
 import org.mskcc.cmo.ks.redcap.source.*;
+import org.mskcc.cmo.ks.redcap.pipeline.util.JobParameterUtils;
 import org.springframework.batch.item.ExecutionContext;
 import org.springframework.batch.item.ItemStreamException;
 import org.springframework.batch.item.ItemStreamReader;
@@ -50,6 +51,9 @@ public class TimelineReader implements ItemStreamReader<Map<String, String>> {
     @Autowired
     public ClinicalDataSource clinicalDataSource;
 
+    @Autowired
+    public JobParameterUtils jobParameterUtils;
+
     @Value("#{jobParameters[rawData]}")
     private Boolean rawData;
 
@@ -59,10 +63,7 @@ public class TimelineReader implements ItemStreamReader<Map<String, String>> {
     @Value("#{jobParameters[stableId]}")
     public String stableId;
 
-    @Value("#{jobParameters[maskRedcapProjects]}")
-    private String maskRedcapProjects;
-
-    private final Logger log = Logger.getLogger(ClinicalDataReader.class);
+    private final Logger log = Logger.getLogger(TimelineReader.class);
 
     public List<Map<String, String>> timelineRecords = new ArrayList<>();
     private List<String> timelineHeader = new ArrayList<>();
@@ -108,8 +109,7 @@ public class TimelineReader implements ItemStreamReader<Map<String, String>> {
 
     private void parseMaskRedcapProjectSet() {
         maskRedcapProjectSet.clear();
-        String[] projectNameArgument = maskRedcapProjects.split(",");
-        for (String projectName : projectNameArgument) {
+        for (String projectName : jobParameterUtils.getListOfMaskedProjects()) {
             String trimmedProjectName = projectName.trim();
             if (trimmedProjectName.length() > 0) {
                 maskRedcapProjectSet.add(trimmedProjectName);
