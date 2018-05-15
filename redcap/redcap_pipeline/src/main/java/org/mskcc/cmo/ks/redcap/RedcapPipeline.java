@@ -41,6 +41,7 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.log4j.Logger;
 import org.mskcc.cmo.ks.redcap.pipeline.BatchConfiguration;
+import org.mskcc.cmo.ks.redcap.pipeline.util.JobParameterUtils;
 import org.mskcc.cmo.ks.redcap.source.ClinicalDataSource;
 import org.mskcc.cmo.ks.redcap.source.MetadataManager;
 import org.springframework.batch.core.*;
@@ -60,6 +61,7 @@ public class RedcapPipeline {
 
     private static ClinicalDataSource clinicalDataSource;
     private static MetadataManager metadataManager;
+    private static JobParameterUtils jobParameterUtils;
 
     private static Set<String> maskProjectArgument = new HashSet<String>();
     private static Set<String> projectSetForStableId = new HashSet<String>();
@@ -193,7 +195,8 @@ public class RedcapPipeline {
             }
             builder.addString(OPTION_DIRECTORY, commandLine.getOptionValue(OPTION_DIRECTORY));
             builder.addString("rawData", String.valueOf(commandLine.hasOption(OPTION_RAW_DATA)));
-            builder.addString("maskRedcapProjects", String.join(",", maskProjectArgument));
+            List<String> listOfMaskedProjects = new ArrayList<>(maskProjectArgument);
+            jobParameterUtils.setListOfMaskedProjects(listOfMaskedProjects);
             if (commandLine.hasOption(OPTION_RAW_DATA)) {
                 redcapJob = ctx.getBean(BatchConfiguration.REDCAP_RAW_EXPORT_JOB, Job.class);
             } else {
@@ -378,6 +381,7 @@ public class RedcapPipeline {
         // get necessary beans from context
         clinicalDataSource = ctx.getBean(ClinicalDataSource.class);
         metadataManager = ctx.getBean(MetadataManager.class);
+        jobParameterUtils = ctx.getBean(JobParameterUtils.class);
         exitIfMaskProjectsAreNotFound(commandLine);
         if (executionMode == CHECK_MODE) {
             checkIfProjectOrStableIdExistsAndExit(commandLine);
