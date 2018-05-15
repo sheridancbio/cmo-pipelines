@@ -50,6 +50,7 @@ import org.mskcc.cmo.ks.redcap.source.internal.MetadataManagerRedcapImpl;
 import org.mskcc.cmo.ks.redcap.source.internal.RedcapRepository;
 import org.mskcc.cmo.ks.redcap.source.internal.RedcapSessionManager;
 import org.mskcc.cmo.ks.redcap.source.MetadataManager;
+import org.mskcc.cmo.ks.redcap.util.ValueNormalizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -78,6 +79,7 @@ public class ClinicalDataReaderTestConfiguration {
         Properties properties = new Properties();
         properties.setProperty("rawData", "false");
         properties.setProperty("stableId", REDCAP_STABLE_ID);
+        properties.setProperty("maskRedcapProjects", "");
         return properties;
      }
 
@@ -118,6 +120,11 @@ public class ClinicalDataReaderTestConfiguration {
     @Bean
     public RedcapUtils redcapUtils() {
         return new RedcapUtils();
+    }
+
+    @Bean
+    public ValueNormalizer valueNormalizer() {
+        return new ValueNormalizer();
     }
 
     private void configureMockRedcapSessionManager(RedcapSessionManager mockRedcapSessionManager) {
