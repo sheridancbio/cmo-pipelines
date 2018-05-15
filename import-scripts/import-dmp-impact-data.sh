@@ -318,6 +318,9 @@ fi
 
 # -----------------------------------------------------------------------------------------------------------
 
+# default darwin demographics row count is 2 to allow minimum records written to be 1 in fetched Darwin demographics results (allows 10% drop)
+DEFAULT_DARWIN_DEMOGRAPHICS_ROW_COUNT=2
+
 DB_VERSION_FAIL=0
 IMPORT_STATUS_IMPACT=0
 IMPORT_STATUS_HEME=0
@@ -450,7 +453,12 @@ fi
 # fetch Darwin data
 echo "fetching Darwin impact data"
 echo $(date)
-$JAVA_HOME/bin/java -jar $PORTAL_HOME/lib/darwin_fetcher.jar -d $MSK_IMPACT_DATA_HOME -s mskimpact
+# if darwin demographics row count less than or equal to default row count then set it to default value
+MSKIMPACT_DARWIN_DEMOGRAPHICS_RECORD_COUNT=$(wc -l < $MSKIMPACT_REDCAP_BACKUP/data_clinical_mskimpact_data_clinical_darwin_demographics.txt)
+if [ $MSKIMPACT_DARWIN_DEMOGRAPHICS_RECORD_COUNT -le $DEFAULT_DARWIN_DEMOGRAPHICS_ROW_COUNT ] ; then
+    MSKIMPACT_DARWIN_DEMOGRAPHICS_RECORD_COUNT=$DEFAULT_DARWIN_DEMOGRAPHICS_ROW_COUNT
+fi
+$JAVA_HOME/bin/java -jar $PORTAL_HOME/lib/darwin_fetcher.jar -d $MSK_IMPACT_DATA_HOME -s mskimpact -c $MSKIMPACT_DARWIN_DEMOGRAPHICS_RECORD_COUNT
 if [ $? -gt 0 ] ; then
     cd $MSK_IMPACT_DATA_HOME ; $HG_BINARY update -C ; find . -name "*.orig" -delete
     sendFailureMessageMskPipelineLogsSlack "MSKIMPACT DARWIN Fetch"
@@ -506,7 +514,12 @@ fi
 
 echo "fetching Darwin heme data"
 echo $(date)
-$JAVA_HOME/bin/java -jar $PORTAL_HOME/lib/darwin_fetcher.jar -d $MSK_HEMEPACT_DATA_HOME -s mskimpact_heme
+# if darwin demographics row count less than or equal to default row count then set it to default value
+HEMEPACT_DARWIN_DEMOGRAPHICS_RECORD_COUNT=$(wc -l < $HEMEPACT_REDCAP_BACKUP/data_clinical_hemepact_data_clinical_supp_darwin_demographics.txt)
+if [ $HEMEPACT_DARWIN_DEMOGRAPHICS_RECORD_COUNT -le $DEFAULT_DARWIN_DEMOGRAPHICS_ROW_COUNT ] ; then
+    HEMEPACT_DARWIN_DEMOGRAPHICS_RECORD_COUNT=$DEFAULT_DARWIN_DEMOGRAPHICS_ROW_COUNT
+fi
+$JAVA_HOME/bin/java -jar $PORTAL_HOME/lib/darwin_fetcher.jar -d $MSK_HEMEPACT_DATA_HOME -s mskimpact_heme -c $HEMEPACT_DARWIN_DEMOGRAPHICS_RECORD_COUNT
 if [ $? -gt 0 ] ; then
     cd $MSK_IMPACT_DATA_HOME ; $HG_BINARY update -C ; find . -name "*.orig" -delete
     sendFailureMessageMskPipelineLogsSlack "HEMEPACT DARWIN Fetch"
@@ -538,7 +551,12 @@ fi
 
 echo "fetching Darwin raindance data"
 echo $(date)
-$JAVA_HOME/bin/java -jar $PORTAL_HOME/lib/darwin_fetcher.jar -d $MSK_RAINDANCE_DATA_HOME -s mskraindance
+# if darwin demographics row count less than or equal to default row count then set it to default value
+RAINDANCE_DARWIN_DEMOGRAPHICS_RECORD_COUNT=$(wc -l < $RAINDANCE_REDCAP_BACKUP/data_clinical_mskraindance_data_clinical_supp_darwin_demographics.txt)
+if [ $RAINDANCE_DARWIN_DEMOGRAPHICS_RECORD_COUNT -le $DEFAULT_DARWIN_DEMOGRAPHICS_ROW_COUNT ] ; then
+    RAINDANCE_DARWIN_DEMOGRAPHICS_RECORD_COUNT=$DEFAULT_DARWIN_DEMOGRAPHICS_ROW_COUNT
+fi
+$JAVA_HOME/bin/java -jar $PORTAL_HOME/lib/darwin_fetcher.jar -d $MSK_RAINDANCE_DATA_HOME -s mskraindance -c $RAINDANCE_DARWIN_DEMOGRAPHICS_RECORD_COUNT
 if [ $? -gt 0 ] ; then
     cd $MSK_IMPACT_DATA_HOME ; $HG_BINARY update -C ; find . -name "*.orig" -delete
     sendFailureMessageMskPipelineLogsSlack "RAINDANCE DARWIN Fetch"
@@ -572,7 +590,12 @@ fi
 
 echo "fetching Darwin archer data"
 echo $(date)
-$JAVA_HOME/bin/java -jar $PORTAL_HOME/lib/darwin_fetcher.jar -d $MSK_ARCHER_DATA_HOME -s mskarcher
+# if darwin demographics row count less than or equal to default row count then set it to default value
+ARCHER_DARWIN_DEMOGRAPHICS_RECORD_COUNT=$(wc -l < $ARCHER_REDCAP_BACKUP/data_clinical_mskarcher_data_clinical_supp_darwin_demographics.txt)
+if [ $ARCHER_DARWIN_DEMOGRAPHICS_RECORD_COUNT -le $DEFAULT_DARWIN_DEMOGRAPHICS_ROW_COUNT ] ; then
+    ARCHER_DARWIN_DEMOGRAPHICS_RECORD_COUNT=$DEFAULT_DARWIN_DEMOGRAPHICS_ROW_COUNT
+fi
+$JAVA_HOME/bin/java -jar $PORTAL_HOME/lib/darwin_fetcher.jar -d $MSK_ARCHER_DATA_HOME -s mskarcher -c $ARCHER_DARWIN_DEMOGRAPHICS_RECORD_COUNT
 if [ $? -gt 0 ] ; then
     cd $MSK_IMPACT_DATA_HOME ; $HG_BINARY update -C ; find . -name "*.orig" -delete
     sendFailureMessageMskPipelineLogsSlack "ARCHER DARWIN Fetch"

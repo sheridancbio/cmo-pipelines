@@ -2,5 +2,7 @@
 *.pyc
 **/src/main/resources/application.properties
 **/src/main/resources/log4j.properties
+**/src/main/resources/application-pancan.properties
 **/src/main/resources/logback.xml
+import-scripts/clinicalfile_utils.pyc
 target
