@@ -870,7 +870,7 @@ remove_raw_clinical_timeline_data_files $MSK_ARCHER_DATA_HOME
 
 echo "exporting impact data from redcap"
 if [ $IMPORT_STATUS_IMPACT -eq 0 ] ; then
-    export_stable_id_from_redcap mskimpact $MSK_IMPACT_DATA_HOME mskimpact_data_clinical_ddp_demographics,mskimpact_timeline_radiation_ddp
+    export_stable_id_from_redcap mskimpact $MSK_IMPACT_DATA_HOME mskimpact_data_clinical_ddp_demographics,mskimpact_timeline_radiation_ddp,mskimpact_timeline_chemotherapy_ddp,mskimpact_timeline_surgery_ddp
     if [ $? -gt 0 ] ; then
         IMPORT_STATUS_IMPACT=1
         cd $MSK_IMPACT_DATA_HOME ; $HG_BINARY update -C ; find . -name "*.orig" -delete
@@ -1042,7 +1042,7 @@ fi
 # temporarily move mskimpact clinical/timeline files (without ped specific data) out of mskimpact directory
 # export mskimpact (with ped specific data and without caisis) into mskimpact directory for subsetting
 rsync -a $MSK_IMPACT_DATA_HOME/* $MSK_DMP_TMPDIR/mskimpact_ped
-export_stable_id_from_redcap mskimpact $MSK_DMP_TMPDIR/mskimpact_ped mskimpact_clinical_caisis,mskimpact_timeline_surgery_caisis,mskimpact_timeline_status_caisis,mskimpact_timeline_treatment_caisis,mskimpact_timeline_imaging_caisis,mskimpact_timeline_specimen_caisis
+export_stable_id_from_redcap mskimpact $MSK_DMP_TMPDIR/mskimpact_ped mskimpact_clinical_caisis,mskimpact_timeline_surgery_caisis,mskimpact_timeline_status_caisis,mskimpact_timeline_treatment_caisis,mskimpact_timeline_imaging_caisis,mskimpact_timeline_specimen_caisis,mskimpact_timeline_chemotherapy_ddp,mskimpact_timeline_surgery_ddp
 if [ $? -gt 0 ] ; then
     echo "MSKIMPACT redcap export for MSKIMPACT_PED failed! Study will not be updated in the portal"
     sendFailureMessageMskPipelineLogsSlack "MSKIMPACT_PED redcap export"
