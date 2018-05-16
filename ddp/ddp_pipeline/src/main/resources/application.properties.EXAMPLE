@@ -1,10 +1,6 @@
 spring.batch.job.enabled=false
 chunk=500
 
-# DDP Credentials
-ddp.username=
-ddp.password=
-
 # DDP Endpoints
 ddp.base_url=https://ddp.mskcc.org/api/v1/
 ddp.cohorts.endpoint=cohorts/
