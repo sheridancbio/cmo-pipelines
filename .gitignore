@@ -1,6 +1,7 @@
 .DS_Store
 *.pyc
 **/src/main/resources/application.properties
+**/src/main/resources/application-secure.properties
 **/src/main/resources/log4j.properties
 **/src/main/resources/application-pancan.properties
 **/src/main/resources/logback.xml

@@ -35,8 +35,9 @@ package org.mskcc.cmo.ks.ddp.source.util;
 import org.mskcc.cmo.ks.ddp.source.model.AuthenticationToken;
 
 import java.util.*;
-import org.springframework.beans.factory.annotation.Value;
 import org.apache.log4j.Logger;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.PropertySource;
 import org.springframework.http.*;
 import org.springframework.stereotype.Repository;
 import org.springframework.web.client.RestTemplate;
@@ -46,6 +47,7 @@ import org.springframework.web.client.RestTemplate;
  * @author ochoaa
  */
 @Repository
+@PropertySource("classpath:application-secure.properties")
 public class AuthenticationUtil {
 
     @Value("${ddp.base_url}")
