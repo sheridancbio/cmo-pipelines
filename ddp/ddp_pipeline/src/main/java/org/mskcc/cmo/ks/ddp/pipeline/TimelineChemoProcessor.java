@@ -57,14 +57,13 @@ public class TimelineChemoProcessor implements ItemProcessor<DDPCompositeRecord,
     public List<String> process(DDPCompositeRecord compositeRecord) throws Exception {
         // we can't generate chemo timeline records without a reference date or if patient
         // hasn't had any chemo procedures - return null
-        String firstTumorDiagnosisDate = DDPUtils.getFirstTumorDiagnosisDate(compositeRecord.getPatientDiagnosis());
-        if (Strings.isNullOrEmpty(firstTumorDiagnosisDate) ||
+        if (Strings.isNullOrEmpty(compositeRecord.getPatientBirthDate()) ||
                 compositeRecord.getChemoProcedures()== null ||
                 compositeRecord.getChemoProcedures().isEmpty()) {
             return null;
         }
         // convert chemo procedures into timeline records
-        List<TimelineChemoRecord> timelineChemoRecords = convertTimelineChemoRecords(compositeRecord.getDmpPatientId(), firstTumorDiagnosisDate, compositeRecord.getChemoProcedures());
+        List<TimelineChemoRecord> timelineChemoRecords = convertTimelineChemoRecords(compositeRecord.getDmpPatientId(), compositeRecord.getPatientBirthDate(), compositeRecord.getChemoProcedures());
         if (timelineChemoRecords ==  null || timelineChemoRecords.isEmpty()) {
             LOG.error("Failed to convert any chemo procedures into timeline records for patient: " + compositeRecord.getDmpPatientId());
             return null;
@@ -87,16 +86,16 @@ public class TimelineChemoProcessor implements ItemProcessor<DDPCompositeRecord,
      * Converts chemo procedures into timeline chemo records.
      *
      * @param dmpPatientId
-     * @param firstTumorDiagnosisDate
+     * @param referenceDate - the date of birth
      * @param chemoProcedures
      * @return
      */
-    private List<TimelineChemoRecord> convertTimelineChemoRecords(String dmpPatientId, String firstTumorDiagnosisDate, List<Chemotherapy> chemoProcedures) {
+    private List<TimelineChemoRecord> convertTimelineChemoRecords(String dmpPatientId, String referenceDate, List<Chemotherapy> chemoProcedures) {
         List<TimelineChemoRecord> timelineChemoRecords = new ArrayList<>();
         for (Chemotherapy procedure : chemoProcedures) {
             TimelineChemoRecord record;
             try {
-                record = new TimelineChemoRecord(dmpPatientId, firstTumorDiagnosisDate, procedure);
+                record = new TimelineChemoRecord(dmpPatientId, referenceDate, procedure);
             }
             catch (ParseException e) {
                 LOG.error("Error converting chemo procedure into timeline chemo record: " +
