@@ -50,32 +50,33 @@ import org.springframework.context.annotation.*;
  */
 
 public class CVRUtilities {
-
+    // pipeline filenames
     public static final String CVR_FILE = "cvr_data.json";
-    public final String MUTATION_FILE = "data_mutations_extended.txt";
-    public final String UNFILTERED_MUTATION_FILE = "data_mutations_unfiltered.txt";
+    public static final String MUTATION_FILE = "data_mutations_extended.txt";
+    public static final String UNFILTERED_MUTATION_FILE = "data_mutations_unfiltered.txt";
     public static final String DEFAULT_CLINICAL_FILE = "data_clinical.txt";
-    public final String SEQ_DATE_CLINICAL_FILE = "cvr/seq_date.txt";
-    public final String DARWIN_AGE_FILE = "darwin/darwin_age.txt";
-    public final String CORRESPONDING_ID_FILE = "linked_mskimpact_cases.txt";
-    public final String CNA_FILE = "data_CNA.txt";
-    public final String SEG_FILE = "_data_cna_hg19.seg";
-    public final String FUSION_FILE = "data_fusions.txt";
-    public final String SV_FILE = "data_SV.txt";
-    public final String GENE_PANEL_FILE = "data_gene_matrix.txt";
-    public final String CNA_HEADER_HUGO_SYMBOL = "Hugo_Symbol";
+    public static final String SEQ_DATE_CLINICAL_FILE = "cvr/seq_date.txt";
+    public static final String DARWIN_AGE_FILE = "darwin/darwin_age.txt";
+    public static final String CORRESPONDING_ID_FILE = "linked_mskimpact_cases.txt";
+    public static final String CNA_FILE = "data_CNA.txt";
+    public static final String SEG_FILE = "_data_cna_hg19.seg";
+    public static final String FUSION_FILE = "data_fusions.txt";
+    public static final String SV_FILE = "data_SV.txt";
+    public static final String GENE_PANEL_FILE = "data_gene_matrix.txt";
     public static final String GML_FILE = "cvr_gml_data.json";
-    public final String GENE_PANEL = "gene_panels/impact468_gene_panel.txt";
-    public final String IS_NEW = "NEWRECORD";
+    public static final String GENE_PANEL = "gene_panels/impact468_gene_panel.txt";
+    public static final String ZERO_VARIANT_WHITELIST_FILE = "cvr/zero_variant_whitelist.txt";
+
+    // pipeline globals
+    public static final String CNA_HEADER_HUGO_SYMBOL = "Hugo_Symbol";
     public static final Integer DEFAULT_MAX_NUM_SAMPLES_TO_REMOVE = -1;
     public static final SimpleDateFormat CVR_DATE_FORMAT = new SimpleDateFormat("EEE, dd MMM yyyy kk:mm:ss zzz");
 
-    private final String CENTER_MSKCC = "MSKCC";
-    private final String DEFAULT_BUILD_NUMBER = "37";
-    private final String DEFAULT_STRAND = "+";
-    private final String VALIDATION_STATUS_UNKNOWN = "Unknown";
-    private final String DEFAULT_IMPACT_SEQUENCER = "MSK-IMPACT";
-
+    private static final String CENTER_MSKCC = "MSKCC";
+    private static final String DEFAULT_BUILD_NUMBER = "37";
+    private static final String DEFAULT_STRAND = "+";
+    private static final String VALIDATION_STATUS_UNKNOWN = "Unknown";
+    private static final String DEFAULT_IMPACT_SEQUENCER = "MSK-IMPACT";
 
     Logger log = Logger.getLogger(CVRUtilities.class);
     private String genesStableId;
@@ -83,21 +84,18 @@ public class CVRUtilities {
     private String genesCancerStudyId;
     private List<String> geneSymbols;
 
-    private List<String> variationList = new ArrayList();
-    @Autowired
-    private void createVariationList() {
-        // the order in which these are added is important!
-        List<String> list = new ArrayList();
-        list.add("INS");
-        list.add("SNP");
-        list.add("DNP");
-        list.add("TNP");
-        list.add("ONP");
-        this.variationList = list;
+    private List<String> variationList = Arrays.asList(new String[] {
+        "INS", "SNP", "DNP", "TNP", "ONP"});
+
+    public static Map<String, List<String>> DATATYPES_TO_SKIP_BY_STUDY = datatypesToSkipByStudy();
+    private static Map<String, List<String>> datatypesToSkipByStudy() {
+        Map<String, List<String>> map = new HashMap<>();
+        map.put("mskarcher", Arrays.asList(new String[]{"mutations", "cna", "seg"}));
+        map.put("raindance", Arrays.asList(new String[]{"cna", "seg", "sv-fusions"}));
+        return map;
     }
 
-    public CVRUtilities() {
-    }
+    public CVRUtilities() {}
 
     public CVRData readJson(File cvrFile) throws IOException {
         ObjectMapper mapper = new ObjectMapper();
@@ -371,6 +369,24 @@ public class CVRUtilities {
             }
         }
         return "UNK";
+    }
+
+    public String getVariantAsHgvs(MutationRecord record) {
+        String variant = record.getCHROMOSOME() + ":g." + record.getSTART_POSITION();
+        if (record.getVARIANT_TYPE().equalsIgnoreCase("INS") || record.getVARIANT_TYPE().equalsIgnoreCase("DEL")) {
+            variant += "_" + record.getEND_POSITION();
+            // want to capture INDEL details, so modify variant string with both if applicable
+            if (!StringUtils.isEmpty(record.getTUMOR_SEQ_ALLELE2()) && !record.getTUMOR_SEQ_ALLELE2().equals("-")) {
+                variant += "ins" + record.getTUMOR_SEQ_ALLELE2();
+            }
+            if (!StringUtils.isEmpty(record.getREFERENCE_ALLELE()) && !record.getREFERENCE_ALLELE().equals("-")) {
+                variant += "del" + record.getREFERENCE_ALLELE();
+            }
+        }
+        else {
+            variant += record.getREFERENCE_ALLELE() + ">" + record.getTUMOR_SEQ_ALLELE2();
+        }
+        return variant;
     }
 
     /**

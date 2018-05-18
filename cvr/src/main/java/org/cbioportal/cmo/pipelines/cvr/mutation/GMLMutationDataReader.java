@@ -60,7 +60,7 @@ public class GMLMutationDataReader implements ItemStreamReader<AnnotatedRecord> 
 
     @Autowired
     public CvrSampleListUtil cvrSampleListUtil;
-    
+
     @Value("#{jobParameters[forceAnnotation]}")
     private boolean forceAnnotation;
 
@@ -72,9 +72,10 @@ public class GMLMutationDataReader implements ItemStreamReader<AnnotatedRecord> 
 
     private List<AnnotatedRecord> mutationRecords = new ArrayList();
     private Map<String, List<AnnotatedRecord>> mutationMap = new HashMap<>();
-
     private File mutationFile;
     private Set<String> additionalPropertyKeys = new LinkedHashSet<>();
+    private Set<String> header = new LinkedHashSet<>();
+    private Set<String> germlineSamples = new HashSet<>();
 
     Logger log = Logger.getLogger(GMLMutationDataReader.class);
 
@@ -82,45 +83,58 @@ public class GMLMutationDataReader implements ItemStreamReader<AnnotatedRecord> 
     public void open(ExecutionContext ec) throws ItemStreamException {
         GMLData gmlData = new GMLData();
         // load gml cvr data from cvr_gml_data.json file
-        File cvrGmlFile =  new File(stagingDirectory, cvrUtilities.GML_FILE);
+        File cvrGmlFile =  new File(stagingDirectory, CVRUtilities.GML_FILE);
         try {
             gmlData = cvrUtilities.readGMLJson(cvrGmlFile);
-        } catch (IOException ex) {
+        } catch (IOException e) {
             log.error("Error reading file: " + cvrGmlFile);
-            ex.printStackTrace();
+            throw new ItemStreamException(e);
         }
-        this.mutationFile = new File(stagingDirectory, cvrUtilities.MUTATION_FILE);
+        // load mutation records from gml cvr data
+        loadMutationRecordsFromJson(gmlData);
 
-        Set<String> header = new LinkedHashSet<>();
-        Set<String> germlineSamples = new HashSet<>();
+        // load mutation records from existing maf
+        this.mutationFile = new File(stagingDirectory, CVRUtilities.MUTATION_FILE);
+        if (!mutationFile.exists()) {
+            log.info("File does not exist - skipping data loading from mutation file: " + mutationFile.getName());
+        }
+        else {
+            try {
+                loadExistingMutationRecords();
+                // add comment lines to execution context
+                ec.put("commentLines", cvrUtilities.processFileComments(mutationFile));
+            }
+            catch (Exception e) {
+                log.error("Error loading data from mutation file: " + mutationFile.getName());
+                throw new ItemStreamException(e);
+            }
+        }
+        // add header and filename to write to for writer
+        ec.put("mutationHeader", new ArrayList(header));
+        ec.put("mafFilename", CVRUtilities.MUTATION_FILE);
+    }
+
+    private void loadMutationRecordsFromJson(GMLData gmlData) {
         int snpsToAnnotateCount = 0;
         int annotatedSnpsCount = 0;
         // this loop is just to get the snpsToAnnotateCount
         for (GMLResult result : gmlData.getResults()) {
             String patientId = result.getMetaData().getDmpPatientId();
             List<String> samples = cvrSampleListUtil.getGmlPatientSampleMap().get(patientId);
-            List<GMLSnp> snps = result.getSnpIndelGml();
+            List<GMLSnp> snps = result.getAllSignedoutGmlSnps();
             if (samples != null && snps != null) {
                 for (GMLSnp snp : snps) {
-                    if (snp.getClinicalSignedOut().equals("0")) {
-                        continue;
-                    }
-                    for (String sampleId : samples) {
-                        snpsToAnnotateCount++;
-                    }
+                    snpsToAnnotateCount += samples.size();
                 }
             }
         }
-        log.info(String.valueOf(snpsToAnnotateCount) + " records to annotate");
+        log.info(String.valueOf(snpsToAnnotateCount) + " germline records to annotate");
         for (GMLResult result : gmlData.getResults()) {
             String patientId = result.getMetaData().getDmpPatientId();
             List<String> samples = cvrSampleListUtil.getGmlPatientSampleMap().get(patientId);
-            List<GMLSnp> snps = result.getSnpIndelGml();
-            if (samples != null && snps != null) {
+            List<GMLSnp> snps = result.getAllSignedoutGmlSnps();
+            if (samples != null && !snps.isEmpty()) {
                 for (GMLSnp snp : snps) {
-                    if (snp.getClinicalSignedOut().equals("0")) {
-                        continue;
-                    }
                     for (String sampleId : samples) {
                         annotatedSnpsCount++;
                         if (annotatedSnpsCount % 500 == 0) {
@@ -132,10 +146,10 @@ public class GMLMutationDataReader implements ItemStreamReader<AnnotatedRecord> 
                             annotatedRecord = annotator.annotateRecord(record, false, "mskcc", true);
                         }
                         catch (HttpServerErrorException e) {
-                            log.warn("Failed to annotate a record from json! Sample: " + sampleId + " Variant: " + record.getCHROMOSOME() + ":" + record.getSTART_POSITION() + record.getREFERENCE_ALLELE() + ">" + record.getTUMOR_SEQ_ALLELE2());
+                            log.warn("Failed to annotate a record from json! Sample: " + sampleId + " Variant: " + cvrUtilities.getVariantAsHgvs(record));
                             annotatedRecord = cvrUtilities.buildCVRAnnotatedRecord(record);
                         } catch (GenomeNexusAnnotationFailureException e) {
-                            log.warn("Failed to annotate a record from json! Sample: " + sampleId + " Variant: " + record.getCHROMOSOME() + ":" + record.getSTART_POSITION() + record.getREFERENCE_ALLELE() + ">" + record.getTUMOR_SEQ_ALLELE2() + " : " + e.getMessage());
+                            log.warn("Failed to annotate a record from json! Sample: " + sampleId + " Variant: " + cvrUtilities.getVariantAsHgvs(record) + " : " + e.getMessage());
                             annotatedRecord = cvrUtilities.buildCVRAnnotatedRecord(record);
                         }
                         mutationRecords.add(annotatedRecord);
@@ -147,59 +161,50 @@ public class GMLMutationDataReader implements ItemStreamReader<AnnotatedRecord> 
                 }
             }
         }
-
-        // load data from mutation file
-        if (!mutationFile.exists()) {
-            log.info("File does not exist - skipping data loading from mutation file: " + mutationFile.getName());
-        }
-        else {
-            log.info("Loading mutation data from: " + mutationFile.getName());
-            final DelimitedLineTokenizer tokenizer = new DelimitedLineTokenizer(DelimitedLineTokenizer.DELIMITER_TAB);
-            DefaultLineMapper<MutationRecord> mapper = new DefaultLineMapper<>();
-            mapper.setLineTokenizer(tokenizer);
-            mapper.setFieldSetMapper(new CVRMutationFieldSetMapper());
-
-            FlatFileItemReader<MutationRecord> reader = new FlatFileItemReader<>();
-            reader.setResource(new FileSystemResource(mutationFile));
-            reader.setLineMapper(mapper);
-            reader.setLinesToSkip(1);
-            reader.setSkippedLinesCallback(new LineCallbackHandler() {
-                @Override
-                public void handleLine(String line) {
-                    tokenizer.setNames(line.split("\t"));
-                }
-            });
-            reader.open(ec);
-            try {
-                MutationRecord to_add;
-                while ((to_add = reader.read()) != null && to_add.getTUMOR_SAMPLE_BARCODE() != null) {
-                    AnnotatedRecord to_add_annotated;
-                    try {
-                        to_add_annotated = annotator.annotateRecord(to_add, false, "mskcc", forceAnnotation);
-                    } catch (HttpServerErrorException e) {
-                        log.warn("Failed to annotate a record from existing file! Sample: " + to_add.getTUMOR_SAMPLE_BARCODE() + " Variant: " + to_add.getCHROMOSOME() + ":" + to_add.getSTART_POSITION() + to_add.getREFERENCE_ALLELE() + ">" + to_add.getTUMOR_SEQ_ALLELE2());
-                        to_add_annotated = cvrUtilities.buildCVRAnnotatedRecord(to_add);
-                    } catch (GenomeNexusAnnotationFailureException e) {
-                        log.warn("Failed to annotate a record from existing file! Sample: " + to_add.getTUMOR_SAMPLE_BARCODE() + " Variant: " + to_add.getCHROMOSOME() + ":" + to_add.getSTART_POSITION() + to_add.getREFERENCE_ALLELE() + ">" + to_add.getTUMOR_SEQ_ALLELE2() + " : " + e.getMessage());
-                        to_add_annotated = cvrUtilities.buildCVRAnnotatedRecord(to_add);
-                    }
-                    if (!cvrUtilities.isDuplicateRecord(to_add, mutationMap.get(to_add.getTUMOR_SAMPLE_BARCODE())) && !(germlineSamples.contains(to_add.getTUMOR_SAMPLE_BARCODE()) && to_add.getMUTATION_STATUS().equals("GERMLINE"))) {
-                        mutationRecords.add(to_add_annotated);
-                        header.addAll(to_add_annotated.getHeaderWithAdditionalFields());
-                        additionalPropertyKeys.addAll(to_add_annotated.getAdditionalProperties().keySet());
-                        mutationMap.getOrDefault(to_add_annotated.getTUMOR_SAMPLE_BARCODE(), new ArrayList()).add(to_add_annotated);
-                    }
-                }
-                ec.put("commentLines", cvrUtilities.processFileComments(mutationFile));
-            } catch (Exception e) {
-                log.error("Error loading data from mutation file: " + mutationFile.getName());
-                throw new ItemStreamException(e);
-            }
-            reader.close();
-        }
-        ec.put("mutation_header", new ArrayList(header));
     }
 
+    private void loadExistingMutationRecords() throws Exception {
+        log.info("Loading mutation data from: " + mutationFile.getName());
+        DelimitedLineTokenizer tokenizer = new DelimitedLineTokenizer(DelimitedLineTokenizer.DELIMITER_TAB);
+        DefaultLineMapper<MutationRecord> mapper = new DefaultLineMapper<>();
+        mapper.setLineTokenizer(tokenizer);
+        mapper.setFieldSetMapper(new CVRMutationFieldSetMapper());
+
+        FlatFileItemReader<MutationRecord> reader = new FlatFileItemReader<>();
+        reader.setResource(new FileSystemResource(mutationFile));
+        reader.setLineMapper(mapper);
+        reader.setLinesToSkip(1);
+        reader.setSkippedLinesCallback(new LineCallbackHandler() {
+            @Override
+            public void handleLine(String line) {
+                tokenizer.setNames(line.split("\t"));
+            }
+        });
+        reader.open(new ExecutionContext());
+        MutationRecord to_add;
+        while ((to_add = reader.read()) != null && to_add.getTUMOR_SAMPLE_BARCODE() != null) {
+            // skip if record already seen or if current record is a germline sample and record is a GERMLINE variant
+            if (cvrUtilities.isDuplicateRecord(to_add, mutationMap.get(to_add.getTUMOR_SAMPLE_BARCODE())) ||
+                    (germlineSamples.contains(to_add.getTUMOR_SAMPLE_BARCODE()) && to_add.getMUTATION_STATUS().equals("GERMLINE"))) {
+                continue;
+            }
+            AnnotatedRecord to_add_annotated;
+            try {
+                to_add_annotated = annotator.annotateRecord(to_add, false, "mskcc", forceAnnotation);
+            } catch (HttpServerErrorException e) {
+                log.warn("Failed to annotate a record from existing file! Sample: " + to_add.getTUMOR_SAMPLE_BARCODE() + " Variant: " + cvrUtilities.getVariantAsHgvs(to_add));
+                to_add_annotated = cvrUtilities.buildCVRAnnotatedRecord(to_add);
+            } catch (GenomeNexusAnnotationFailureException e) {
+                log.warn("Failed to annotate a record from existing file! Sample: " + to_add.getTUMOR_SAMPLE_BARCODE() + " Variant: " + cvrUtilities.getVariantAsHgvs(to_add) + " : " + e.getMessage());
+                to_add_annotated = cvrUtilities.buildCVRAnnotatedRecord(to_add);
+            }
+            mutationRecords.add(to_add_annotated);
+            header.addAll(to_add_annotated.getHeaderWithAdditionalFields());
+            additionalPropertyKeys.addAll(to_add_annotated.getAdditionalProperties().keySet());
+            mutationMap.getOrDefault(to_add_annotated.getTUMOR_SAMPLE_BARCODE(), new ArrayList()).add(to_add_annotated);
+        }
+        reader.close();
+    }
     @Override
     public void update(ExecutionContext ec) throws ItemStreamException {
     }

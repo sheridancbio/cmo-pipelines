@@ -55,8 +55,11 @@ public class CVRMutationDataWriter implements ItemStreamWriter<String> {
     @Value("#{stepExecutionContext['commentLines']}")
     private List<String> commentLines;
 
-    @Value("#{stepExecutionContext['mutation_header']}")
+    @Value("#{stepExecutionContext['mutationHeader']}")
     private List<String> header;
+
+    @Value("#{stepExecutionContext['mafFilename']}")
+    private String mafFilename;
 
     @Autowired
     public CVRUtilities cvrUtilities;
@@ -69,7 +72,7 @@ public class CVRMutationDataWriter implements ItemStreamWriter<String> {
     // Set up the writer and print the json from CVR to a file
     @Override
     public void open(ExecutionContext ec) throws ItemStreamException {
-        File stagingFile = new File(stagingDirectory, cvrUtilities.MUTATION_FILE);
+        File stagingFile = new File(stagingDirectory, mafFilename);
         PassThroughLineAggregator aggr = new PassThroughLineAggregator();
         flatFileItemWriter.setLineAggregator(aggr);
         flatFileItemWriter.setHeaderCallback(new FlatFileHeaderCallback() {

@@ -573,9 +573,6 @@ if [ $IMPORT_STATUS_RAINDANCE -eq 0 ] ; then
         IMPORT_STATUS_RAINDANCE=1
     else
         FETCH_CVR_RAINDANCE_FAIL=0
-        # raindance does not provide copy number or fusions data.
-        echo "removing unused files"
-        cd $MSK_RAINDANCE_DATA_HOME ; rm -f data_CNA.txt data_fusions.txt data_SV.txt mskraindance_data_cna_hg19.seg
         cd $MSK_RAINDANCE_DATA_HOME ; $HG_BINARY commit -m "Latest Raindance dataset"
     fi
 fi
@@ -627,9 +624,7 @@ if [ $IMPORT_STATUS_ARCHER -eq 0 ] ; then
         IMPORT_STATUS_ARCHER=1
     else
         FETCH_CVR_ARCHER_FAIL=0
-        # mskarcher does not provide copy number, mutations, or seg data, renaming gene matrix file until we get the mskarcher gene panel imported
-        echo "Removing unused files"
-        cd $MSK_ARCHER_DATA_HOME ; rm -f data_CNA.txt data_mutations_* mskarcher_data_cna_hg19.seg
+        # renaming gene matrix file until we get the mskarcher gene panel imported
         cd $MSK_ARCHER_DATA_HOME ; mv data_gene_matrix.txt ignore_data_gene_matrix.txt
         cd $MSK_ARCHER_DATA_HOME ; $HG_BINARY commit -m "Latest archer dataset"
     fi

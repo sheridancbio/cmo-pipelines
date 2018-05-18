@@ -38,6 +38,7 @@ import org.cbioportal.cmo.pipelines.cvr.model.CVRRequeueRecord;
 
 import java.util.*;
 import org.apache.log4j.Logger;
+import org.cbioportal.cmo.pipelines.cvr.CVRUtilities;
 import org.springframework.batch.core.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -148,31 +149,48 @@ public class CvrRequeueListener implements StepExecutionListener {
 
         // build email body text for samples that have zero variants and are not whitelisted
         if (zeroVariantSamples != null && zeroVariantSamples.size() > 0) {
-            log.warn(zeroVariantSamples.size() + " samples from have zero variants and are not whitelisted");
-            body.append("\nSamples that have zero variants and are not whitelisted:\n");
-            int count = 1;
+            Set<String> zeroVariantSamplesToReport = new HashSet<>(); // sample ids that get reported in email
+            Set<String> unreportedZeroVariantSamples = new HashSet<>(); // sample ids that the white list file is updated with
+            log.warn(zeroVariantSamples.size() + " samples have zero variants and are not whitelisted");
             for (String sampleId : zeroVariantSamples) {
-                if (count <= 30) {
-                    body.append("\n\t");
-                    body.append(sampleId);
-                    Integer unfilteredCount = unfilteredSampleSnpCounts.get(sampleId);
-                    if (unfilteredCount == null) {
-                        unfilteredCount = new Integer(0);
-                    }
-                    body.append(" (unfiltered snp count: ");
-                    body.append(unfilteredCount.toString());
-                    body.append(")");
-                } else {
-                    break;
+                Integer unfilteredCount = unfilteredSampleSnpCounts.getOrDefault(sampleId, 0);
+                // if both signed out and non-signed out (unfiltered) variant counts are zero
+                // then safe to update white listed samples file with current sample
+                if (unfilteredCount == 0) {
+                    unreportedZeroVariantSamples.add(sampleId);
                 }
-                count++;
+                else {
+                    zeroVariantSamplesToReport.add(sampleId);
+                }
             }
-            if (zeroVariantSamples.size() > 30) {
-                String additionalSamples = "\n\tplus " + String.valueOf(zeroVariantSamples.size() - 30) + " additional samples";
-                body.append("\n\t...");
-                body.append(additionalSamples);
+            // update cvrSampleListUtil with unreported zero variant samples
+            cvrSampleListUtil.setNewUnreportedSamplesWithZeroVariants(unreportedZeroVariantSamples);
+            if (zeroVariantSamplesToReport.isEmpty()) {
+                log.warn("All samples with zero signed out variants also have zero non-signed out variants - these will be added to " + CVRUtilities.ZERO_VARIANT_WHITELIST_FILE);
             }
-            body.append("\n");
+            else {
+                body.append("\nSamples that have zero variants and are not whitelisted:\n");
+                int count = 1;
+                for (String sampleId : zeroVariantSamplesToReport) {
+                    if (count <= 30) {
+                        body.append("\n\t");
+                        body.append(sampleId);
+                        Integer unfilteredCount = unfilteredSampleSnpCounts.getOrDefault(sampleId, 0);
+                        body.append(" (unfiltered snp count: ");
+                        body.append(unfilteredCount.toString());
+                        body.append(")");
+                    } else {
+                        break;
+                    }
+                    count++;
+                }
+                if (zeroVariantSamplesToReport.size() > 30) {
+                    String additionalSamples = "\n\tplus " + String.valueOf(zeroVariantSamplesToReport.size() - 30) + " additional samples";
+                    body.append("\n\t...");
+                    body.append(additionalSamples);
+                }
+                body.append("\n");
+            }
         }
         else {
             log.info("No samples had zero variants that were not whitelisted");
