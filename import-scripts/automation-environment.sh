@@ -23,6 +23,11 @@ export HEMEPACT_REDCAP_BACKUP=$REDCAP_BACKUP_DATA_HOME/hemepact
 export RAINDANCE_REDCAP_BACKUP=$REDCAP_BACKUP_DATA_HOME/raindance
 export ARCHER_REDCAP_BACKUP=$REDCAP_BACKUP_DATA_HOME/archer
 export MSKIMPACT_PED_DATA_HOME=$PORTAL_DATA_HOME/msk-impact/mskimpact_ped
+export DDP_CREDENTIALS_FILE=$PORTAL_HOME/pipelines-credentials/application-secure.properties
+export PORTAL_GIT_HOME=$PORTAL_HOME/git-repos
+export CMO_PIPELINES_HOME=$PORTAL_GIT_HOME/cmo-pipelines
+export CBIOPORTAL_HOME=$PORTAL_GIT_HOME/cbioportal
+export GENOME_NEXUS_ANNOTATOR_HOME=$PORTAL_GIT_HOME/genome-nexus-annotation-pipeline
 
 # trigger files to communicate between fetch-dmp-data and import-dmp-data
 export MSK_DMP_TMPDIR=$PORTAL_HOME/tmp/import-cron-dmp-msk
