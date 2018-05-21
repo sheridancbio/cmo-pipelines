@@ -325,7 +325,7 @@ public class CVRUtilities {
         String cDNA_Change = snp.getCDNAChange();
         String aminoAcidChange = snp.getAaChange();
         String transcript = snp.getTranscriptId();
-        String comments = snp.getInterpretation().replaceAll("\r\n", " ").replaceAll("\t", " ").replaceAll("\n", " ").replaceAll("\r", " ");
+        String comments = (snp.getInterpretation() != null ? snp.getInterpretation() : "").replaceAll("\r\n", " ").replaceAll("\t", " ").replaceAll("\n", " ").replaceAll("\r", " ");
         Map<String ,String> additionalProperties = new LinkedHashMap<>();
         additionalProperties.put("COMMENTS", comments);
         return new MutationRecord(hugoSymbol, entrezGeneId, center, ncbiBuild, chromosome,
