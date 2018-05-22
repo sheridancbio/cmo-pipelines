@@ -400,21 +400,6 @@ fi
 # -------------------------------- all mskimpact project data fetches -----------------------------------
 # TODO: move other pre-import/data-fetch steps here (i.e exporting raw files from redcap)
 
-if [ $PERFORM_CRDB_FETCH -ne 0 ] ; then
-    # fetch CRDB data
-    echo "fetching CRDB data"
-    echo $(date)
-    $JAVA_HOME/bin/java -jar $PORTAL_HOME/lib/crdb_fetcher.jar -stage $MSK_IMPACT_DATA_HOME
-    # no need for hg update/commit ; CRDB generated files are stored in redcap and not mercurial
-    if [ $? -gt 0 ] ; then
-        sendFailureMessageMskPipelineLogsSlack "MSKIMPACT CRDB Fetch"
-    else
-        FETCH_CRDB_IMPACT_FAIL=0
-    fi
-else
-    FETCH_CRDB_IMPACT_FAIL=0
-fi
-
 # fetch Darwin data
 echo "fetching Darwin impact data"
 echo $(date)
@@ -488,6 +473,21 @@ if [ $FETCH_DARWIN_IMPACT_FAIL -eq 0 ] ; then
         echo "committing DDP data"
         cd $MSK_IMPACT_DATA_HOME ; $HG_BINARY commit -m "Latest MSK-IMPACT Dataset: DDP demographics/timeline"
     fi
+fi
+
+if [ $PERFORM_CRDB_FETCH -ne 0 ] ; then
+    # fetch CRDB data
+    echo "fetching CRDB data"
+    echo $(date)
+    $JAVA_HOME/bin/java -jar $PORTAL_HOME/lib/crdb_fetcher.jar -stage $MSK_IMPACT_DATA_HOME
+    # no need for hg update/commit ; CRDB generated files are stored in redcap and not mercurial
+    if [ $? -gt 0 ] ; then
+        sendFailureMessageMskPipelineLogsSlack "MSKIMPACT CRDB Fetch"
+    else
+        FETCH_CRDB_IMPACT_FAIL=0
+    fi
+else
+    FETCH_CRDB_IMPACT_FAIL=0
 fi
 
 # -------------------------------- all hemepact project data fetches -----------------------------------
