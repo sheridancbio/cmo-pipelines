@@ -32,26 +32,11 @@
 
 package org.mskcc.cmo.ks.ddp.pipeline.util;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.google.common.base.Strings;
-import java.io.*;
-import java.util.*;
-import org.mockito.*;
-import org.mskcc.cmo.ks.ddp.source.composite.DDPCompositeRecord;
-import org.mskcc.cmo.ks.ddp.source.internal.DDPRepository;
-import org.mskcc.cmo.ks.ddp.pipeline.util.DDPUtils;
 import org.mskcc.cmo.ks.ddp.source.internal.DDPSourceTestConfiguration;
-import org.mskcc.cmo.ks.ddp.source.model.*;
-import org.mskcc.cmo.ks.ddp.source.util.AuthenticationUtil;
-import org.mskcc.cmo.ks.ddp.source.util.DDPResponseUtil;
 import org.springframework.context.annotation.*;
 
 @Configuration
 @Import(DDPSourceTestConfiguration.class)
 public class DDPUtilsTestConfiguration {
-
-    @Bean DDPUtils ddpUtils() {
-        return new DDPUtils();
-    }
-
+    // TO-DO: Get rid of DDPUtilsTestConfiguration if not going to be expanded
 }

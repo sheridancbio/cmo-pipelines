@@ -57,14 +57,13 @@ public class TimelineSurgeryProcessor implements ItemProcessor<DDPCompositeRecor
     public List<String> process(DDPCompositeRecord compositeRecord) throws Exception {
         // we can't generate surgery timeline records without a reference date or if patient
         // hasn't had any surgery procedures - return null
-        String firstTumorDiagnosisDate = DDPUtils.getFirstTumorDiagnosisDate(compositeRecord.getPatientDiagnosis());
-        if (Strings.isNullOrEmpty(firstTumorDiagnosisDate) ||
+        if (Strings.isNullOrEmpty(compositeRecord.getPatientBirthDate()) ||
                 compositeRecord.getSurgicalProcedures()== null ||
                 compositeRecord.getSurgicalProcedures().isEmpty()) {
             return null;
         }
         // convert surgery procedures into timeline records
-        List<TimelineSurgeryRecord> timelineSurgeryRecords = convertTimelineSurgeryRecords(compositeRecord.getDmpPatientId(), firstTumorDiagnosisDate, compositeRecord.getSurgicalProcedures());
+        List<TimelineSurgeryRecord> timelineSurgeryRecords = convertTimelineSurgeryRecords(compositeRecord.getDmpPatientId(), compositeRecord.getPatientBirthDate(), compositeRecord.getSurgicalProcedures());
         if (timelineSurgeryRecords ==  null || timelineSurgeryRecords.isEmpty()) {
             LOG.error("Failed to convert any surgical procedures into timeline records for patient: " + compositeRecord.getDmpPatientId());
             return null;
@@ -86,16 +85,16 @@ public class TimelineSurgeryProcessor implements ItemProcessor<DDPCompositeRecor
      * Converts surgery procedures into timeline surgery records.
      *
      * @param dmpPatientId
-     * @param firstTumorDiagnosisDate
+     * @param referenceDate - the date of birth
      * @param surgicalProcedures
      * @return
      */
-    private List<TimelineSurgeryRecord> convertTimelineSurgeryRecords(String dmpPatientId, String firstTumorDiagnosisDate, List<Surgery> surgicalProcedures) {
+    private List<TimelineSurgeryRecord> convertTimelineSurgeryRecords(String dmpPatientId, String referenceDate, List<Surgery> surgicalProcedures) {
         List<TimelineSurgeryRecord> timelineSurgeryRecords = new ArrayList<>();
         for (Surgery procedure : surgicalProcedures) {
             TimelineSurgeryRecord record;
             try {
-                record = new TimelineSurgeryRecord(dmpPatientId, firstTumorDiagnosisDate, procedure);
+                record = new TimelineSurgeryRecord(dmpPatientId, referenceDate, procedure);
             }
             catch (ParseException e) {
                 LOG.error("Error converting surgical procedure into timeline surgery record: " +

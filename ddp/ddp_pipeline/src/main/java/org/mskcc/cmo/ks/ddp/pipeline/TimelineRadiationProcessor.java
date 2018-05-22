@@ -57,14 +57,13 @@ public class TimelineRadiationProcessor implements ItemProcessor<DDPCompositeRec
     public List<String> process(DDPCompositeRecord compositeRecord) throws Exception {
         // we can't generate radiation timeline records without a reference date or if patient
         // hasn't had any radiation procedures - return null
-        String firstTumorDiagnosisDate = DDPUtils.getFirstTumorDiagnosisDate(compositeRecord.getPatientDiagnosis());
-        if (Strings.isNullOrEmpty(firstTumorDiagnosisDate) ||
+        if (Strings.isNullOrEmpty(compositeRecord.getPatientBirthDate()) ||
                 compositeRecord.getRadiationProcedures() == null ||
                 compositeRecord.getRadiationProcedures().isEmpty()) {
             return null;
         }
         // convert radiation procedures into timeline records
-        List<TimelineRadiationRecord> timelineRadiationRecords = convertTimelineRadiationRecords(compositeRecord.getDmpPatientId(), firstTumorDiagnosisDate, compositeRecord.getRadiationProcedures());
+        List<TimelineRadiationRecord> timelineRadiationRecords = convertTimelineRadiationRecords(compositeRecord.getDmpPatientId(), compositeRecord.getPatientBirthDate(), compositeRecord.getRadiationProcedures());
         if (timelineRadiationRecords ==  null || timelineRadiationRecords.isEmpty()) {
             LOG.error("Failed to convert any radiation procedures into timeline records for patient: " + compositeRecord.getDmpPatientId());
             return null;
@@ -87,16 +86,16 @@ public class TimelineRadiationProcessor implements ItemProcessor<DDPCompositeRec
      * Converts radiation procedures into timeline radiation records.
      *
      * @param dmpPatientId
-     * @param firstTumorDiagnosisDate
+     * @param referenceDate - the date of birth
      * @param radiationProcedures
      * @return
      */
-    private List<TimelineRadiationRecord> convertTimelineRadiationRecords(String dmpPatientId, String firstTumorDiagnosisDate, List<Radiation> radiationProcedures) {
+    private List<TimelineRadiationRecord> convertTimelineRadiationRecords(String dmpPatientId, String referenceDate, List<Radiation> radiationProcedures) {
         List<TimelineRadiationRecord> timelineRadiationRecords = new ArrayList<>();
         for (Radiation procedure : radiationProcedures) {
             TimelineRadiationRecord record;
             try {
-                record = new TimelineRadiationRecord(dmpPatientId, firstTumorDiagnosisDate, procedure);
+                record = new TimelineRadiationRecord(dmpPatientId, referenceDate, procedure);
             }
             catch (ParseException e) {
                 LOG.error("Error converting radiation procedure into timeline radiation record: " +

@@ -43,8 +43,6 @@ import org.mskcc.cmo.ks.ddp.pipeline.model.ClinicalRecord;
 import org.mskcc.cmo.ks.ddp.source.model.CohortPatient;
 import org.mskcc.cmo.ks.ddp.source.model.PatientDemographics;
 import org.mskcc.cmo.ks.ddp.source.model.PatientDiagnosis;
-import org.mskcc.cmo.ks.ddp.source.internal.DDPSourceTestConfiguration;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -59,11 +57,8 @@ public class DDPUtilsTest {
     @Resource(name="mockCompositePatientRecords")
     private Map<String, DDPCompositeRecord> mockCompositePatientRecords;
 
-    @Autowired
-    private DDPUtils ddpUtils;
-
-    private static long MILLISECONDS_PER_STANDARD_DAY = 24 * 60 * 60 * 1000;
-    private static long MINIMUM_SAFE_MILLISECONDS_TO_MIDNIGHT = 2 * 1000; // two seconds to midnight will require a pause
+    private static final long MILLISECONDS_PER_STANDARD_DAY = 24 * 60 * 60 * 1000;
+    private static final long MINIMUM_SAFE_MILLISECONDS_TO_MIDNIGHT = 2 * 1000; // two seconds to midnight will require a pause
 
     @Test
     public void testMockCompositePatientRecordsInitialization() {
@@ -71,6 +66,8 @@ public class DDPUtilsTest {
             Assert.fail("mockCompositePatientRecords not initialized properly!");
         }
     }
+    // TO-DO: Add unit tests using DDPUtils logic for mocked composite patient records
+    // ex: OS_MONTHS, OS_STATUS, START/STOP_DATES for timeline events, etc.
 
     /* Tests for resolvePatientCurrentAge()
      * if PatientBirthDate is null or empty -- anonymize PatientAge. Cases : 0, 17, 18, 89, 90, 91
@@ -186,8 +183,7 @@ public class DDPUtilsTest {
         resolvePatientSexAndAssert("m", "F", "Male");
         resolvePatientSexAndAssert("MALE", null, "Male");
         resolvePatientSexAndAssert("FEMALE", "male", "Female");
-        // TODO if we were given "NA" as patientDemographics.getGender() we would return "Female" -- is this correct?
-        resolvePatientSexAndAssert("UNRECOGNIZED", "", "Female");
+        resolvePatientSexAndAssert("UNRECOGNIZED", "", "NA");
         resolvePatientSexAndAssert("", "F", "Female");
         resolvePatientSexAndAssert(null, "Male", "Male");
     }
@@ -327,14 +323,14 @@ public class DDPUtilsTest {
 
     @Test(expected = NullPointerException.class)
     public void resolveTimelineEventDateInDaysNullPointerExceptionTest() throws Exception {
-        Assert.assertEquals(null, ddpUtils.resolveTimelineEventDateInDays(null, null));
+        Assert.assertEquals(null, DDPUtils.resolveTimelineEventDateInDays(null, null));
     }
 
     @Test
     public void resolveTimelineEventDateInDaysTest() throws ParseException {
-        Assert.assertEquals("60", ddpUtils.resolveTimelineEventDateInDays("2018-02-19", "2018-04-20"));
+        Assert.assertEquals("60", DDPUtils.resolveTimelineEventDateInDays("2018-02-19", "2018-04-20"));
         // we probably would not get data like this
-        Assert.assertEquals("-60", ddpUtils.resolveTimelineEventDateInDays("2018-04-20", "2018-02-19"));
+        Assert.assertEquals("-60", DDPUtils.resolveTimelineEventDateInDays("2018-04-20", "2018-02-19"));
     }
 
     /* Tests for constructRecord()
@@ -344,12 +340,12 @@ public class DDPUtilsTest {
 
     @Test(expected = NoSuchMethodException.class)
     public void constructRecordNoSuchMethodExceptionTest() throws Exception {
-        ddpUtils.constructRecord(new Object());
+        DDPUtils.constructRecord(new Object());
     }
 
     @Test(expected = NullPointerException.class)
     public void constructRecordNullPointerExceptionTest() throws Exception {
-        ddpUtils.constructRecord(new ClinicalRecord());
+        DDPUtils.constructRecord(new ClinicalRecord());
     } 
 
     @Test
@@ -364,7 +360,7 @@ public class DDPUtilsTest {
         clinicalRecord.setCHEMOTHERAPY("  MY_CHEMOTHERAPY  "); // it does a trim too
         clinicalRecord.setSURGERY("MY_SURGERY");
         String expectedValue = "MY_PT_ID\t20\tFemale\tLIVING\t3.123\tMY_RADIATION_THERAPY\tMY_CHEMOTHERAPY\tMY_SURGERY";
-        String returnedValue = ddpUtils.constructRecord(clinicalRecord);
+        String returnedValue = DDPUtils.constructRecord(clinicalRecord);
         Assert.assertEquals(expectedValue, returnedValue);
     }
 
@@ -380,7 +376,7 @@ public class DDPUtilsTest {
         testCohortPatient.setAGE(cohortAge);
         testPatient.setPatientDemographics(testDemographics);
         testPatient.setCohortPatient(testCohortPatient);
-        String returnedValue = ddpUtils.resolvePatientCurrentAge(testPatient);
+        String returnedValue = DDPUtils.resolvePatientCurrentAge(testPatient);
         Assert.assertEquals(expectedValue, returnedValue);
     }
 
@@ -406,7 +402,7 @@ public class DDPUtilsTest {
         testCohortPatient.setPTSEX(sex);
         testPatient.setPatientDemographics(testDemographics);
         testPatient.setCohortPatient(testCohortPatient);
-        String returnedValue = ddpUtils.resolvePatientSex(testPatient);
+        String returnedValue = DDPUtils.resolvePatientSex(testPatient);
         Assert.assertEquals(expectedValue, returnedValue);
     }
 
@@ -423,7 +419,7 @@ public class DDPUtilsTest {
             testCohortPatient.setPTVITALSTATUS(vitalStatus);
             testPatient.setCohortPatient(testCohortPatient);
         }
-        String returnedValue = ddpUtils.resolveOsStatus(testPatient);
+        String returnedValue = DDPUtils.resolveOsStatus(testPatient);
         Assert.assertEquals(expectedValue, returnedValue);
     }
 
@@ -436,7 +432,7 @@ public class DDPUtilsTest {
         PatientDiagnosis patientDiagnosis = new PatientDiagnosis();
         patientDiagnosis.setTumorDiagnosisDate(firstDiagnosisDate);
         testPatient.setPatientDiagnosis(Collections.singletonList(patientDiagnosis));
-        String returnedValue = ddpUtils.resolveOsMonths(osStatus, testPatient);
+        String returnedValue = DDPUtils.resolveOsMonths(osStatus, testPatient);
         Assert.assertEquals(expectedValue, returnedValue);
     }
 
@@ -450,14 +446,14 @@ public class DDPUtilsTest {
         testCohortPatient.setAGE(cohortAge);
         testPatient.setPatientDemographics(testDemographics);
         testPatient.setCohortPatient(testCohortPatient);
-        String returnedValue = ddpUtils.resolvePatientAgeAtDiagnosis(testPatient);
+        String returnedValue = DDPUtils.resolvePatientAgeAtDiagnosis(testPatient);
         Assert.assertEquals(expectedValue, returnedValue);
     }
 
     private void getFirstTumorDiagnosisDateAndAssert(List<String> tumorDiagnosisDates, String expectedValue) throws ParseException {
         String returnedValue;
         if (tumorDiagnosisDates == null) {
-            returnedValue = ddpUtils.getFirstTumorDiagnosisDate(null);
+            returnedValue = DDPUtils.getFirstTumorDiagnosisDate(null);
         } else {
             List<PatientDiagnosis> patientDiagnoses = new ArrayList<>();
             for (String tumorDiagnosisDate : tumorDiagnosisDates) {
@@ -465,7 +461,7 @@ public class DDPUtilsTest {
                 patientDiagnosis.setTumorDiagnosisDate(tumorDiagnosisDate);
                 patientDiagnoses.add(patientDiagnosis);
             }
-            returnedValue = ddpUtils.getFirstTumorDiagnosisDate(patientDiagnoses);
+            returnedValue = DDPUtils.getFirstTumorDiagnosisDate(patientDiagnoses);
         }
         Assert.assertEquals(expectedValue, returnedValue);
     }
