@@ -30,6 +30,8 @@ export CMO_PIPELINES_HOME=$PORTAL_GIT_HOME/cmo-pipelines
 export PIPELINES_HOME=$PORTAL_GIT_HOME/pipelines
 export CBIOPORTAL_HOME=$PORTAL_GIT_HOME/cbioportal
 export GENOME_NEXUS_ANNOTATOR_HOME=$PORTAL_GIT_HOME/genome-nexus-annotation-pipeline
+export ONCO_HOME=$PORTAL_GIT_HOME/oncotree
+export CDD_HOME=$PORTAL_GIT_HOME/clinical-data-dictionary
 
 # trigger files to communicate between fetch-dmp-data and import-dmp-data
 export MSK_DMP_TMPDIR=$PORTAL_HOME/tmp/import-cron-dmp-msk
