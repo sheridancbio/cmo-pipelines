@@ -125,9 +125,6 @@ mskimpact_ped_notification_file=$(mktemp $MSK_DMP_TMPDIR/mskimpact-ped-update-no
 
 # -----------------------------------------------------------------------------------------------------------
 
-# default darwin demographics row count is 2 to allow minimum records written to be 1 in fetched Darwin demographics results (allows 10% drop)
-DEFAULT_DARWIN_DEMOGRAPHICS_ROW_COUNT=2
-
 DB_VERSION_FAIL=0
 
 # Imports assumed to fail until imported successfully
