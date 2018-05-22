@@ -38,13 +38,14 @@ import org.cbioportal.cmo.pipelines.cvr.consume.*;
 import org.cbioportal.cmo.pipelines.cvr.fusion.*;
 import org.cbioportal.cmo.pipelines.cvr.genepanel.*;
 import org.cbioportal.cmo.pipelines.cvr.linkedimpactcase.*;
-import org.cbioportal.cmo.pipelines.cvr.masterlist.CvrMasterListTasklet;
+import org.cbioportal.cmo.pipelines.cvr.samplelist.CvrSampleListsTasklet;
 import org.cbioportal.cmo.pipelines.cvr.model.*;
 import org.cbioportal.cmo.pipelines.cvr.mutation.*;
 import org.cbioportal.cmo.pipelines.cvr.requeue.*;
 import org.cbioportal.cmo.pipelines.cvr.seg.*;
 import org.cbioportal.cmo.pipelines.cvr.sv.*;
 import org.cbioportal.cmo.pipelines.cvr.variants.*;
+import org.cbioportal.cmo.pipelines.cvr.whitelist.ZeroVariantWhitelistTasklet;
 import org.cbioportal.cmo.pipelines.util.CVRUtils;
 import org.cbioportal.models.*;
 
@@ -83,7 +84,7 @@ public class BatchConfiguration {
     @Value("${chunk}")
     private int chunkInterval;
     
-    private Logger log = Logger.getLogger(BatchConfiguration.class);
+    private final Logger log = Logger.getLogger(BatchConfiguration.class);
     
     @Bean CVRUtils cvrUtils() {
         return new CVRUtils();
@@ -97,7 +98,7 @@ public class BatchConfiguration {
     @Bean
     public Job gmlJob() {
         return jobBuilderFactory.get(GML_JOB)
-                .start(cvrMasterListStep())
+                .start(cvrSampleListsStep())
                 .next(gmlJsonStep())
                 .next(gmlClinicalStep())
                 .next(gmlMutationStep())
@@ -107,14 +108,8 @@ public class BatchConfiguration {
     @Bean
     public Job jsonJob() {
         return jobBuilderFactory.get(JSON_JOB)
-                .start(cvrMasterListStep())
-                .next(clinicalStep())
-                .next(mutationStep())
-                .next(unfilteredMutationStep())
-                .next(cnaStep())
-                .next(svStep())
-                .next(fusionStep())
-                .build();
+                .start(cvrJsonJobFlow())
+                .build().build();
     }
 
     @Bean
@@ -123,27 +118,54 @@ public class BatchConfiguration {
                 .start(cvrResponseStep())
                 .next(checkCvrReponse())
                     .on("RUN")
-                    .to(cvrMasterListStep())
-                    .next(cvrJobFlow())
+                    .to(cvrJobFlow())
                 .from(checkCvrReponse())
                     .on("STOP").end()
                 .build().build();
     }
-    
+
+    @Bean
+    public Job gmlJsonJob() {
+        return jobBuilderFactory.get(GML_JSON_JOB)
+                .start(cvrSampleListsStep())
+                .next(gmlMutationStep())
+                .next(gmlClinicalStep())
+                .build();
+    }
+
+    @Bean
+    public Job consumeSamplesJob() {
+        return jobBuilderFactory.get(CONSUME_SAMPLES_JOB)
+                .start(consumeSampleStep())
+                .build();
+    }
+
+    @Bean
+    public Flow cvrJsonJobFlow() {
+        return new FlowBuilder<Flow>("cvrJsonJobFlow")
+                .start(cvrSampleListsStep())
+                .next(clinicalStep())
+                .next(mutationsStepFlow())
+                .next(cnaStepFlow())
+                .next(svFusionsStepFlow())
+                .next(genePanelStep())
+                .build();
+    }
+
     @Bean 
     public Flow cvrJobFlow() {
         return new FlowBuilder<Flow>("cvrJobFlow")
-                .start(cvrJsonStep())
+                .start(cvrSampleListsStep())
+                .next(cvrJsonStep())
                 .next(linkedMskimpactCaseFlow())
                 .next(clinicalStep())
-                .next(mutationStep())
-                .next(unfilteredMutationStep())
-                .next(cnaStep())
-                .next(svStep())
-                .next(fusionStep())
-                .next(segStep())
+                .next(mutationsStepFlow())
+                .next(cnaStepFlow())
+                .next(svFusionsStepFlow())
+                .next(segmentStepFlow())
                 .next(genePanelStep())
                 .next(cvrRequeueStep())
+                .next(zeroVariantWhitelistFlow())
                 .build();
     }
     
@@ -155,18 +177,65 @@ public class BatchConfiguration {
     }
 
     @Bean
-    public Job gmlJsonJob() {
-        return jobBuilderFactory.get(GML_JSON_JOB)
-                .start(cvrMasterListStep())
-                .next(gmlMutationStep())
-                .next(gmlClinicalStep())
+    public Flow mutationsStepFlow() {
+        return new FlowBuilder<Flow>("mutationsStepFlow")
+                .start(decideStepExecutionByDatatypeForStudyId("mutations"))
+                    .on("RUN")
+                        .to(mutationStep())
+                        .next(unfilteredMutationStep())
+                .from(decideStepExecutionByDatatypeForStudyId("mutations"))
+                    .on("SKIP")
+                        .end()
                 .build();
     }
 
     @Bean
-    public Job consumeSamplesJob() {
-        return jobBuilderFactory.get(CONSUME_SAMPLES_JOB)
-                .start(consumeSampleStep())
+    public Flow cnaStepFlow() {
+        return new FlowBuilder<Flow>("cnaStepFlow")
+                .start(decideStepExecutionByDatatypeForStudyId("cna"))
+                    .on("RUN")
+                        .to(cnaStep())
+                .from(decideStepExecutionByDatatypeForStudyId("cna"))
+                    .on("SKIP")
+                        .end()
+                .build();
+    }
+
+    @Bean
+    public Flow svFusionsStepFlow() {
+        return new FlowBuilder<Flow>("svFusionsStepFlow")
+                .start(decideStepExecutionByDatatypeForStudyId("sv-fusions"))
+                    .on("RUN")
+                        .to(svStep())
+                        .next(fusionStep())
+                .from(decideStepExecutionByDatatypeForStudyId("sv-fusions"))
+                    .on("SKIP")
+                        .end()
+                .build();
+    }
+
+    @Bean
+    public Flow segmentStepFlow() {
+        return new FlowBuilder<Flow>("segmentStepFlow")
+                .start(decideStepExecutionByDatatypeForStudyId("seg"))
+                    .on("RUN")
+                        .to(segStep())
+                .from(decideStepExecutionByDatatypeForStudyId("seg"))
+                    .on("SKIP")
+                        .end()
+                .build();
+    }
+
+    @Bean
+    public Flow zeroVariantWhitelistFlow() {
+        // use datatype = mutations since whitelist is for mutations data
+        return new FlowBuilder<Flow>("zeroVariantWhitelistFlow")
+                .start(decideStepExecutionByDatatypeForStudyId("mutations"))
+                    .on("RUN")
+                        .to(zeroVariantWhitelistStep())
+                .from(decideStepExecutionByDatatypeForStudyId("mutations"))
+                    .on("SKIP")
+                        .end()
                 .build();
     }
 
@@ -185,8 +254,8 @@ public class BatchConfiguration {
         return stepBuilderFactory.get("gmlMutationStep")
                 .<AnnotatedRecord, String> chunk(chunkInterval)
                 .reader(gmlMutationReader())
-                .processor(gmlMutationProcessor())
-                .writer(gmlMutationDataWriter())
+                .processor(mutationDataProcessor())
+                .writer(mutationDataWriter())
                 .build();
     }
 
@@ -247,7 +316,7 @@ public class BatchConfiguration {
                 .<AnnotatedRecord, String> chunk(chunkInterval)
                 .reader(unfilteredMutationDataReader())
                 .processor(mutationDataProcessor())
-                .writer(unfilteredMutationDataWriter())
+                .writer(mutationDataWriter())
                 .build();
     }
 
@@ -317,9 +386,23 @@ public class BatchConfiguration {
     }
 
     @Bean
-    public Step cvrMasterListStep() {
-        return stepBuilderFactory.get("cvrMasterListStep")
-                .tasklet(cvrMasterListTasklet())
+    public Step cvrSampleListsStep() {
+        return stepBuilderFactory.get("cvrSampleListsStep")
+                .tasklet(cvrSampleListsTasklet())
+                .build();
+    }
+
+    @Bean
+    public Step cvrResponseStep() {
+        return stepBuilderFactory.get("cvrResponseStep")
+                .tasklet(cvrResponseTasklet())
+                .build();
+    }
+
+    @Bean
+    public Step zeroVariantWhitelistStep() {
+        return stepBuilderFactory.get("zeroVariantWhitelistStep")
+                .tasklet(zeroVariantWhitelistTasklet())
                 .build();
     }
 
@@ -346,18 +429,6 @@ public class BatchConfiguration {
     @StepScope
     public ItemStreamReader<AnnotatedRecord> gmlMutationReader() {
         return new GMLMutationDataReader();
-    }
-
-    @Bean
-    @StepScope
-    public CVRMutationDataProcessor gmlMutationProcessor() {
-        return new CVRMutationDataProcessor();
-    }
-
-    @Bean
-    @StepScope
-    public CVRMutationDataWriter gmlMutationDataWriter() {
-        return new CVRMutationDataWriter();
     }
 
     @Bean
@@ -458,12 +529,6 @@ public class BatchConfiguration {
     @StepScope
     public ItemStreamReader<AnnotatedRecord> unfilteredMutationDataReader() {
         return new CVRUnfilteredMutationDataReader();
-    }
-
-    @Bean
-    @StepScope
-    public CVRUnfilteredMutationDataWriter unfilteredMutationDataWriter() {
-        return new CVRUnfilteredMutationDataWriter();
     }
 
     // Reader to read json file generated by step1
@@ -628,8 +693,8 @@ public class BatchConfiguration {
     
     @Bean
     @StepScope
-    public Tasklet cvrMasterListTasklet() {
-        return new CvrMasterListTasklet();
+    public Tasklet cvrSampleListsTasklet() {
+        return new CvrSampleListsTasklet();
     }
     
     @Bean
@@ -677,16 +742,15 @@ public class BatchConfiguration {
     }
     
     @Bean
-    public Step cvrResponseStep() {
-        return stepBuilderFactory.get("cvrResponseStep")
-                .tasklet(cvrResponseTasklet())
-                .build();
-    }
-    
-    @Bean
     @StepScope
     public Tasklet cvrResponseTasklet() {
         return new CvrResponseTasklet();
+    }
+
+    @Bean
+    @StepScope
+    public Tasklet zeroVariantWhitelistTasklet() {
+        return new ZeroVariantWhitelistTasklet();
     }
 
     @Bean
@@ -702,6 +766,29 @@ public class BatchConfiguration {
                 else {
                     log.warn("No new samples to process for study " + studyId + " - exiting gracefully...");
                     return new FlowExecutionStatus("STOP");
+                }
+            }
+        };
+    }
+
+    /**
+     * Decides whether step(s) for given datatype should execute for current study.
+     * @param datatype
+     * @return
+     */
+    @Bean
+    public JobExecutionDecider decideStepExecutionByDatatypeForStudyId(String datatype) {
+        return new JobExecutionDecider() {
+            @Override
+            public FlowExecutionStatus decide(JobExecution je, StepExecution se) {
+                String studyId = je.getJobParameters().getString("studyId");
+                if (!CVRUtilities.DATATYPES_TO_SKIP_BY_STUDY.containsKey(studyId) ||
+                        !CVRUtilities.DATATYPES_TO_SKIP_BY_STUDY.get(studyId).contains(datatype)) {
+                    return new FlowExecutionStatus("RUN");
+                }
+                else {
+                    log.info("Skipping processing of datatype '" + datatype + "' for study '" + studyId + "'...");
+                    return new FlowExecutionStatus("SKIP");
                 }
             }
         };

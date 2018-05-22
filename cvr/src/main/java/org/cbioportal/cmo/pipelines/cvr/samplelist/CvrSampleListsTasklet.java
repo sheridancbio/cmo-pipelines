@@ -3,14 +3,16 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.cbioportal.cmo.pipelines.cvr.masterlist;
+package org.cbioportal.cmo.pipelines.cvr.samplelist;
 
 import org.cbioportal.cmo.pipelines.cvr.CvrSampleListUtil;
 import org.cbioportal.cmo.pipelines.cvr.model.CVRMasterList;
 
 import org.apache.log4j.Logger;
+import java.io.*;
 import java.util.*;
 import javax.annotation.Resource;
+import org.cbioportal.cmo.pipelines.cvr.CVRUtilities;
 import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.batch.core.step.tasklet.Tasklet;
@@ -25,7 +27,7 @@ import org.springframework.web.client.RestTemplate;
  *
  * @author ochoaa
  */
-public class CvrMasterListTasklet implements Tasklet {
+public class CvrSampleListsTasklet implements Tasklet {
 
     @Autowired
     public CvrSampleListUtil cvrSampleListUtil;
@@ -41,17 +43,21 @@ public class CvrMasterListTasklet implements Tasklet {
     
     @Value("#{jobParameters[studyId]}")
     private String studyId;
-    
+
+    @Value("#{jobParameters[stagingDirectory]}")
+    private String stagingDirectory;
+
     @Value("#{jobParameters[maxNumSamplesToRemove]}")
     private Integer maxNumSamplesToRemove;
     
     @Resource(name="masterListTokensMap")
     private Map<String, String> masterListTokensMap;
 
-    Logger log = Logger.getLogger(CvrMasterListTasklet.class);
+    Logger log = Logger.getLogger(CvrSampleListsTasklet.class);
     
     @Override
     public RepeatStatus execute(StepContribution sc, ChunkContext cc) throws Exception {
+        // load master list from CVR
         log.info("Loading master list from CVR for study: " + studyId);
         Set<String> dmpMasterList = new HashSet<>();
         try {
@@ -67,9 +73,43 @@ public class CvrMasterListTasklet implements Tasklet {
             log.warn("Error occurred while retrieving master list for " + studyId + " - the default master list will be set to samples already in portal.\n" 
                     + e.getLocalizedMessage());
         }
+        // load whited listed samples with zero variants
+        Set<String> whitedListedSamplesWithZeroVariants = new HashSet<>();
+        try {
+            whitedListedSamplesWithZeroVariants = loadWhitelistedSamplesWithZeroVariants();
+        }
+        catch (Exception e) {
+            log.warn("Error loading whitelisted samples with zero variants from: " + CVRUtilities.ZERO_VARIANT_WHITELIST_FILE + "\n" + e.getLocalizedMessage());
+        }
+
+        // update cvr sample list util
         cvrSampleListUtil.setDmpMasterList(dmpMasterList);
         cvrSampleListUtil.setMaxNumSamplesToRemove(maxNumSamplesToRemove);
+        cvrSampleListUtil.setWhitelistedSamplesWithZeroVariants(whitedListedSamplesWithZeroVariants);
         return RepeatStatus.FINISHED;
+    }
+
+    private Set<String> loadWhitelistedSamplesWithZeroVariants() throws Exception {
+        Set<String> whitedListedSamplesWithZeroVariants = new HashSet<>();
+        File whitelistedSamplesFile = new File(stagingDirectory, CVRUtilities.ZERO_VARIANT_WHITELIST_FILE);
+        if (!whitelistedSamplesFile.exists()) {
+            log.info("File does not exist - skipping data loading from whitelisted samples file: " + CVRUtilities.ZERO_VARIANT_WHITELIST_FILE);
+        }
+        else {
+            Scanner reader = new Scanner(whitelistedSamplesFile);
+            while (reader.hasNext()) {
+                whitedListedSamplesWithZeroVariants.add(reader.nextLine().trim());
+            }
+            reader.close();
+            // log warning if whitelisted samples file exists but empty or nothing loaded from it
+            if (whitedListedSamplesWithZeroVariants.isEmpty()) {
+                log.warn("White listed file exists but nothing loaded from: " + CVRUtilities.ZERO_VARIANT_WHITELIST_FILE);
+            }
+            else {
+                log.info("Loaded " + whitedListedSamplesWithZeroVariants.size() + " whitelised samples with zero variants from: " + CVRUtilities.ZERO_VARIANT_WHITELIST_FILE);
+            }
+        }
+        return whitedListedSamplesWithZeroVariants;
     }
 
     private Set<String> generateDmpMasterList() {

@@ -46,7 +46,7 @@ import org.springframework.beans.factory.annotation.Value;
  */
 public class CVRMutationDataProcessor implements ItemProcessor<AnnotatedRecord, String> {
     
-    @Value("#{stepExecutionContext['mutation_header']}")
+    @Value("#{stepExecutionContext['mutationHeader']}")
     private List<String> header;
 
     @Autowired

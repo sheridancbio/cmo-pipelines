@@ -139,4 +139,14 @@ public class GMLResult {
         this.additionalProperties.put(name, value);
         return this;
     }
+
+    public List<GMLSnp> getAllSignedoutGmlSnps() {
+        List<GMLSnp> signedoutSnps = new ArrayList<>();
+        for (GMLSnp snp : snpIndelGml) {
+            if (snp.getClinicalSignedOut().equals("1")) {
+                signedoutSnps.add(snp);
+            }
+        }
+        return signedoutSnps;
+    }
 }

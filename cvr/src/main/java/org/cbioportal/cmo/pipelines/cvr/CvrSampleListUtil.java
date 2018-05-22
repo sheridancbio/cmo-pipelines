@@ -36,7 +36,6 @@ import org.apache.log4j.Logger;
 import java.util.*;
 import org.cbioportal.cmo.pipelines.cvr.model.CvrResponse;
 import org.springframework.context.annotation.*;
-import org.springframework.beans.factory.annotation.Value;
 
 /**
  *
@@ -44,9 +43,6 @@ import org.springframework.beans.factory.annotation.Value;
  */
 @Configuration
 public class CvrSampleListUtil {
-
-    @Value("#{'${whitelisted_samples:}'.split(',')}")
-    public List<String> whitelistedSamples;
 
     private CvrResponse cvrResponse;
     private Set<String> dmpMasterList = new HashSet<>();
@@ -60,8 +56,11 @@ public class CvrSampleListUtil {
     private Set<String> samplesRemovedList = new HashSet<>();
     private Set<String> samplesInvalidPatientIdList = new HashSet<>();
     private Map<String, String> sampleListStats = new HashMap<>();
-    private Set<String> zeroVariantSamples = new HashSet<>();
+    private Map<String, Integer> signedoutSampleSnpCounts = new HashMap<>();
     private Map<String, Integer> unfilteredSampleSnpCounts = new HashMap<>();
+    private Set<String> whitelistedSamplesWithZeroVariants = new HashSet<>();
+    private Set<String> nonWhitelistedZeroVariantSamples = new HashSet<>();
+    private Set<String> newUnreportedSamplesWithZeroVariants = new HashSet<>();
 
     Logger log = Logger.getLogger(CvrSampleListUtil.class);
 
@@ -317,27 +316,92 @@ public class CvrSampleListUtil {
     }
 
     /**
-     * @param sampleId the sampleId to add
+     * @return the whitelistedSamplesWithZeroVariants
      */
-    public void addZeroVariantSample(String sampleId) {
-        this.zeroVariantSamples.add(sampleId);
+    public Set<String> getWhitelistedSamplesWithZeroVariants() {
+        return whitelistedSamplesWithZeroVariants;
     }
 
     /**
-     * @return the non whitelisted sample ids of samples that have zero variants
+     * @param whitelistedSamplesWithZeroVariants the whitelistedSamplesWithZeroVariants to set
+     */
+    public void setWhitelistedSamplesWithZeroVariants(Set<String> whitelistedSamplesWithZeroVariants) {
+        this.whitelistedSamplesWithZeroVariants = whitelistedSamplesWithZeroVariants;
+    }
+
+    /**
+     * Initialize list of non-whitelisted samples with zero signed out variants.
+     */
+    private void initNonWhitelistedZeroVariantSamples() {
+        for (String sampleId : getPortalSamples()) {
+            if (signedoutSampleSnpCounts.getOrDefault(sampleId, 0) == 0) {
+                this.nonWhitelistedZeroVariantSamples.add(sampleId);
+            }
+        }
+        this.nonWhitelistedZeroVariantSamples.removeAll(getWhitelistedSamplesWithZeroVariants());
+    }
+
+    /**
+     * @return the non whitelisted sample ids of samples that have zero signed out variants
      */
     public Set<String> getNonWhitelistedZeroVariantSamples() {
-        Set<String> tmpzeroVariantSamples = new HashSet<>(zeroVariantSamples);
-        tmpzeroVariantSamples.removeAll(whitelistedSamples);
-        return tmpzeroVariantSamples;
+        if (nonWhitelistedZeroVariantSamples.isEmpty()) {
+            initNonWhitelistedZeroVariantSamples();
+        }
+        return nonWhitelistedZeroVariantSamples;
+    }
+
+    /**
+     * @return the signedoutSampleSnpCounts
+     */
+    public Map<String, Integer> getSignedoutSampleSnpCounts() {
+        return signedoutSampleSnpCounts;
+    }
+
+    public void updateSignedoutSampleSnpCounts(String sampleId, Integer count) {
+        Integer currentCount = signedoutSampleSnpCounts.getOrDefault(sampleId, 0);
+        this.signedoutSampleSnpCounts.put(sampleId, currentCount + count);
+    }
+
+    /**
+     * @param signedoutSampleSnpCounts the signedoutSampleSnpCounts to set
+     */
+    public void setSignedoutSampleSnpCounts(Map<String, Integer> signedoutSampleSnpCounts) {
+        this.signedoutSampleSnpCounts = signedoutSampleSnpCounts;
     }
 
     /**
      * @param sampleId the sampleId to add
      * @param count the number of unfiltered snps for that sample
      */
-    public void addUnfilteredSampleSnpCount(String sampleId, Integer count) {
-        this.unfilteredSampleSnpCounts.put(sampleId, count);
+    public void updateUnfilteredSampleSnpCount(String sampleId, Integer count) {
+        Integer currentCount = unfilteredSampleSnpCounts.getOrDefault(sampleId, 0);
+        this.unfilteredSampleSnpCounts.put(sampleId, currentCount + count);
+    }
+
+    /**
+     * Updates list of samples with both signedout and non-signedout variant counts of zero.
+     * This list is used to update the whitelisted samples list file.
+     * @return
+     */
+    public void updateNewUnreportedSamplesWithZeroVariants(String sampleId) {
+        this.newUnreportedSamplesWithZeroVariants.add(sampleId);
+    }
+
+    /**
+     * Returns list of samples with signedout and non-signedout variant counts of zero.
+     * This list is used to update the whitelisted samples list.
+     * @return
+     */
+    public Set<String> getNewUnreportedSamplesWithZeroVariants() {
+        return newUnreportedSamplesWithZeroVariants;
+    }
+
+    /**
+     * @param newUnreportedSamplesWithZeroVariants the newUnreportedSamplesWithZeroVariants to set
+     */
+    public void setNewUnreportedSamplesWithZeroVariants(Set<String> newUnreportedSamplesWithZeroVariants) {
+        this.newUnreportedSamplesWithZeroVariants = newUnreportedSamplesWithZeroVariants;
     }
 
     /**

@@ -325,4 +325,23 @@ public class CVRMergedResult {
     public void setAdditionalProperty(String name, Object value) {
         this.additionalProperties.put(name, value);
     }
+
+    public List<CVRSnp> getAllCvrSnps() {
+        List<CVRSnp> allSnps = new ArrayList<>();
+        allSnps.addAll(snpIndelExonic);
+        allSnps.addAll(snpIndelExonicNp);
+        allSnps.addAll(snpIndelSilent);
+        allSnps.addAll(snpIndelSilentNp);
+        return allSnps;
+    }
+
+    public List<CVRSnp> getAllSignedoutCvrSnps() {
+        List<CVRSnp> signedoutSnps = new ArrayList<>();
+        for (CVRSnp snp : getAllCvrSnps()) {
+            if (snp.getClinicalSignedOut().equals("1")) {
+                signedoutSnps.add(snp);
+            }
+        }
+        return signedoutSnps;
+    }
 }
