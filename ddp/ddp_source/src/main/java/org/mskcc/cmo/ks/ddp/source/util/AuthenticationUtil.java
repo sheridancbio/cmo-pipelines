@@ -32,6 +32,7 @@
 
 package org.mskcc.cmo.ks.ddp.source.util;
 
+import org.mskcc.cmo.ks.ddp.source.exception.InvalidAuthenticationException;
 import org.mskcc.cmo.ks.ddp.source.model.AuthenticationToken;
 
 import java.util.*;
@@ -41,6 +42,7 @@ import org.springframework.context.annotation.PropertySource;
 import org.springframework.http.*;
 import org.springframework.stereotype.Repository;
 import org.springframework.web.client.RestTemplate;
+import java.lang.Thread;
 
 /**
  *
@@ -75,10 +77,30 @@ public class AuthenticationUtil {
 
     /**
      * @return the authenticationToken
+     * attempts max 3 times to generate  an authentication token
+     * failure throws an InvalidAuthenticationException that is handled differently
      */
     public String getAuthenticationToken() {
         if (authenticationToken == null || authenticationToken.isEmpty()) {
-            fillAuthToken();
+            for (int count = 0; count < 3; count++) { 
+                try {
+                    fillAuthToken();
+                    break;
+                } catch (Exception e) {
+                    // exception thrown from authentication endpoint which does not map to AuthenticationToken.class
+                    // sleep 1.5 minutes (in case DDP is temporarily down) before trying again
+                    LOG.warn("Failed to generate authentication token... trying again in a minute");
+                    try {
+                        Thread.sleep(90000);
+                    } catch (InterruptedException interruptException) {
+                        LOG.warn("InterruptedException thrown");
+                        Thread.currentThread().interrupt();
+                    }
+                }
+            }
+        }
+        if (authenticationToken == null || authenticationToken.isEmpty()) {
+            throw new InvalidAuthenticationException("Failed to generate authentication token (multiple tries attempted)");
         }
         return authenticationToken;
     }
@@ -108,7 +130,6 @@ public class AuthenticationUtil {
         headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
         Map<String, String> credentials = getUserCredentials();
         HttpEntity<Map<String, String>> requestEntity = new HttpEntity<>(credentials, headers);
-
         RestTemplate restTemplate = new RestTemplate();
         ResponseEntity<AuthenticationToken> response = restTemplate.exchange(url, HttpMethod.POST, requestEntity, AuthenticationToken.class);
         if (response != null) {

@@ -35,6 +35,7 @@ package org.mskcc.cmo.ks.ddp.pipeline;
 import org.mskcc.cmo.ks.ddp.source.composite.DDPCompositeRecord;
 import org.mskcc.cmo.ks.ddp.pipeline.util.DDPPatientListUtil;
 import org.mskcc.cmo.ks.ddp.source.DDPDataSource;
+import org.mskcc.cmo.ks.ddp.source.exception.InvalidAuthenticationException;
 
 import com.google.common.base.Strings;
 import org.apache.log4j.Logger;
@@ -73,6 +74,8 @@ public class DDPCompositeProcessor implements ItemProcessor<DDPCompositeRecord, 
         // are null because an exception will be thrown in that case too (by the repository)
         try {
             compositeRecord.setPatientDemographics(ddpDataSource.getPatientDemographics(compositeRecord.getDmpPatientId()));
+        } catch (InvalidAuthenticationException e) {
+            throw new RuntimeException(e.getMessage());
         } catch (Exception e) {
             // demographics is necessary to calculate/resolve clinical fields so save
             // dmp patient id and return null so that writer skips this record
