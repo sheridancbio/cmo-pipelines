@@ -1,7 +1,9 @@
 #!/bin/bash
-export PORTAL_DATA_HOME=/data/portal-cron/cbio-portal-data
 export PORTAL_HOME=/data/portal-cron
+export PORTAL_DATA_HOME=$PORTAL_HOME/cbio-portal-data
+export PORTAL_GIT_HOME=$PORTAL_HOME/git-repos
 export PORTAL_CONFIG_HOME=$PORTAL_DATA_HOME/portal-configuration
+export PIPELINES_CONFIG_HOME=$PORTAL_GIT_HOME/pipelines-configuration
 export MSK_IMPACT_DATA_HOME=$PORTAL_DATA_HOME/msk-impact/msk-impact
 export MSK_RAINDANCE_DATA_HOME=$PORTAL_DATA_HOME/msk-impact/raindance
 export MSK_HEMEPACT_DATA_HOME=$PORTAL_DATA_HOME/msk-impact/hemepact
@@ -24,8 +26,8 @@ export RAINDANCE_REDCAP_BACKUP=$REDCAP_BACKUP_DATA_HOME/raindance
 export ARCHER_REDCAP_BACKUP=$REDCAP_BACKUP_DATA_HOME/archer
 export MSKIMPACT_PED_DATA_HOME=$PORTAL_DATA_HOME/msk-impact/mskimpact_ped
 export DDP_CREDENTIALS_FILE=$PORTAL_HOME/pipelines-credentials/application-secure.properties
-export PORTAL_GIT_HOME=$PORTAL_HOME/git-repos
 export CMO_PIPELINES_HOME=$PORTAL_GIT_HOME/cmo-pipelines
+export PIPELINES_HOME=$PORTAL_GIT_HOME/pipelines
 export CBIOPORTAL_HOME=$PORTAL_GIT_HOME/cbioportal
 export GENOME_NEXUS_ANNOTATOR_HOME=$PORTAL_GIT_HOME/genome-nexus-annotation-pipeline
 
@@ -51,5 +53,6 @@ export JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk.x86_64
 export JAVA_SSL_ARGS="-Djavax.net.ssl.trustStore=$PORTAL_CONFIG_HOME/properties/redcap-pipeline/cacerts_java1.8_plus_pipelines"
 export JAVA_PROXY_ARGS="-Dhttp.proxyHost=jxi2.mskcc.org -Dhttp.proxyPort=8080"
 export PYTHON_BINARY=/data/tools/python2.7/bin/python
+export MAVEN_BINARY=/data/portal-cron/bin/mvn
 export HG_BINARY=/usr/bin/hg
 export PATH=/home/grossb/local/bin/:$PATH:/usr/bin/:/bin/
