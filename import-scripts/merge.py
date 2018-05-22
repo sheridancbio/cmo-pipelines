@@ -166,7 +166,7 @@ def merge_studies(file_types, reference_set, keep_match, output_directory, study
     for file_type, files in file_types.items():
         if len(files) > 0:
             if file_type in META_FILE_MAP:
-                if not merge_clinical and 'clinical' in file_type:
+                if not merge_clinical and ('clinical' in file_type or 'timeline' in file_type):
                     continue
 
                 # make sure there are data files in list so that empty files aren't generated
