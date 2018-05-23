@@ -328,10 +328,10 @@ public class CVRMergedResult {
 
     public List<CVRSnp> getAllCvrSnps() {
         List<CVRSnp> allSnps = new ArrayList<>();
-        allSnps.addAll(snpIndelExonic);
-        allSnps.addAll(snpIndelExonicNp);
-        allSnps.addAll(snpIndelSilent);
-        allSnps.addAll(snpIndelSilentNp);
+        allSnps.addAll(getSnpIndelExonic());
+        allSnps.addAll(getSnpIndelExonicNp());
+        allSnps.addAll(getSnpIndelSilent());
+        allSnps.addAll(getSnpIndelSilentNp());
         return allSnps;
     }
 
