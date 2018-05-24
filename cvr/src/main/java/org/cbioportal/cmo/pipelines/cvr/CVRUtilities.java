@@ -91,7 +91,7 @@ public class CVRUtilities {
     private static Map<String, List<String>> datatypesToSkipByStudy() {
         Map<String, List<String>> map = new HashMap<>();
         map.put("mskarcher", Arrays.asList(new String[]{"mutations", "cna", "seg"}));
-        map.put("raindance", Arrays.asList(new String[]{"cna", "seg", "sv-fusions"}));
+        map.put("mskraindance", Arrays.asList(new String[]{"cna", "seg", "sv-fusions"}));
         return map;
     }
 
