@@ -179,11 +179,11 @@ public class BatchConfiguration {
     @Bean
     public Flow mutationsStepFlow() {
         return new FlowBuilder<Flow>("mutationsStepFlow")
-                .start(decideStepExecutionByDatatypeForStudyId("mutations"))
+                .start(mutationsStepExecutionDecider())
                     .on("RUN")
                         .to(mutationStep())
                         .next(unfilteredMutationStep())
-                .from(decideStepExecutionByDatatypeForStudyId("mutations"))
+                .from(mutationsStepExecutionDecider())
                     .on("SKIP")
                         .end()
                 .build();
@@ -192,10 +192,10 @@ public class BatchConfiguration {
     @Bean
     public Flow cnaStepFlow() {
         return new FlowBuilder<Flow>("cnaStepFlow")
-                .start(decideStepExecutionByDatatypeForStudyId("cna"))
+                .start(cnaStepExecutionDecider())
                     .on("RUN")
                         .to(cnaStep())
-                .from(decideStepExecutionByDatatypeForStudyId("cna"))
+                .from(cnaStepExecutionDecider())
                     .on("SKIP")
                         .end()
                 .build();
@@ -204,11 +204,11 @@ public class BatchConfiguration {
     @Bean
     public Flow svFusionsStepFlow() {
         return new FlowBuilder<Flow>("svFusionsStepFlow")
-                .start(decideStepExecutionByDatatypeForStudyId("sv-fusions"))
+                .start(svFusionsStepExecutionDecider())
                     .on("RUN")
                         .to(svStep())
                         .next(fusionStep())
-                .from(decideStepExecutionByDatatypeForStudyId("sv-fusions"))
+                .from(svFusionsStepExecutionDecider())
                     .on("SKIP")
                         .end()
                 .build();
@@ -217,10 +217,10 @@ public class BatchConfiguration {
     @Bean
     public Flow segmentStepFlow() {
         return new FlowBuilder<Flow>("segmentStepFlow")
-                .start(decideStepExecutionByDatatypeForStudyId("seg"))
+                .start(segStepExecutionDecider())
                     .on("RUN")
                         .to(segStep())
-                .from(decideStepExecutionByDatatypeForStudyId("seg"))
+                .from(segStepExecutionDecider())
                     .on("SKIP")
                         .end()
                 .build();
@@ -230,10 +230,10 @@ public class BatchConfiguration {
     public Flow zeroVariantWhitelistFlow() {
         // use datatype = mutations since whitelist is for mutations data
         return new FlowBuilder<Flow>("zeroVariantWhitelistFlow")
-                .start(decideStepExecutionByDatatypeForStudyId("mutations"))
+                .start(mutationsStepExecutionDecider())
                     .on("RUN")
                         .to(zeroVariantWhitelistStep())
-                .from(decideStepExecutionByDatatypeForStudyId("mutations"))
+                .from(mutationsStepExecutionDecider())
                     .on("SKIP")
                         .end()
                 .build();
@@ -776,7 +776,6 @@ public class BatchConfiguration {
      * @param datatype
      * @return
      */
-    @Bean
     public JobExecutionDecider decideStepExecutionByDatatypeForStudyId(String datatype) {
         return new JobExecutionDecider() {
             @Override
@@ -787,10 +786,29 @@ public class BatchConfiguration {
                     return new FlowExecutionStatus("RUN");
                 }
                 else {
-                    log.info("Skipping processing of datatype '" + datatype + "' for study '" + studyId + "'...");
                     return new FlowExecutionStatus("SKIP");
                 }
             }
         };
+    }
+
+    @Bean
+    public JobExecutionDecider mutationsStepExecutionDecider() {
+        return decideStepExecutionByDatatypeForStudyId("mutations");
+    }
+
+    @Bean
+    public JobExecutionDecider cnaStepExecutionDecider() {
+        return decideStepExecutionByDatatypeForStudyId("cna");
+    }
+
+    @Bean
+    public JobExecutionDecider svFusionsStepExecutionDecider() {
+        return decideStepExecutionByDatatypeForStudyId("sv-fusions");
+    }
+
+    @Bean
+    public JobExecutionDecider segStepExecutionDecider() {
+        return decideStepExecutionByDatatypeForStudyId("seg");
     }
 }
