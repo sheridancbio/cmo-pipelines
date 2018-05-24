@@ -248,7 +248,7 @@ else
         echo "Not importing mskraindance - something went wrong with a fetch"
     fi
 fi
-if [ $IMPORT_FAIL_RAIDANCE -gt 0 ] ; then
+if [ $IMPORT_FAIL_RAINDANCE -gt 0 ] ; then
     sendFailureMessageMskPipelineLogsSlack "RAINDANCE import"
 else
     sendSuccessMessageMskPipelineLogsSlack "RAINDANCE"
