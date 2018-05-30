@@ -1034,16 +1034,19 @@ fi
 #--------------------------------------------------------------
 
 # Subset MSKIMPACT on PED_IND for MSKIMPACT_PED cohort
-# temporarily move mskimpact clinical/timeline files (without ped specific data) out of mskimpact directory
-# export mskimpact (with ped specific data and without caisis) into mskimpact directory for subsetting
-rsync -a $MSK_IMPACT_DATA_HOME/* $MSK_DMP_TMPDIR/mskimpact_ped
-export_stable_id_from_redcap mskimpact $MSK_DMP_TMPDIR/mskimpact_ped mskimpact_clinical_caisis,mskimpact_timeline_surgery_caisis,mskimpact_timeline_status_caisis,mskimpact_timeline_treatment_caisis,mskimpact_timeline_imaging_caisis,mskimpact_timeline_specimen_caisis,mskimpact_timeline_chemotherapy_ddp,mskimpact_timeline_surgery_ddp
+# rsync mskimpact data to tmp ped data home and overwrite clinical/timeline data with redcap
+# export of mskimpact (with ped specific data and without caisis) into tmp ped data home directory for subsetting
+# NOTE: the importer uses the java_tmp_dir/study_identifier for writing temp meta and data files so we should use a different
+# tmp directory for subsetting purposes to prevent any conflicts and allow easier debugging of any issues that arise
+MSKIMPACT_PED_TMP_DIR=$MSK_DMP_TMPDIR/mskimpact_ped_tmp
+rsync -a $MSK_IMPACT_DATA_HOME/* $MSKIMPACT_PED_TMP_DIR
+export_stable_id_from_redcap mskimpact $MSKIMPACT_PED_TMP_DIR mskimpact_clinical_caisis,mskimpact_timeline_surgery_caisis,mskimpact_timeline_status_caisis,mskimpact_timeline_treatment_caisis,mskimpact_timeline_imaging_caisis,mskimpact_timeline_specimen_caisis,mskimpact_timeline_chemotherapy_ddp,mskimpact_timeline_surgery_ddp
 if [ $? -gt 0 ] ; then
     echo "MSKIMPACT redcap export for MSKIMPACT_PED failed! Study will not be updated in the portal"
     sendFailureMessageMskPipelineLogsSlack "MSKIMPACT_PED redcap export"
     MSKIMPACT_PED_SUBSET_FAIL=1
 else 
-    bash $PORTAL_HOME/scripts/subset-impact-data.sh -i=mskimpact_ped -o=$MSKIMPACT_PED_DATA_HOME -d=$MSK_DMP_TMPDIR/mskimpact_ped -f="PED_IND=Yes" -s=$MSK_DMP_TMPDIR/mskimpact_ped_subset.txt -c=$MSK_DMP_TMPDIR/mskimpact_ped/data_clinical_patient.txt
+    bash $PORTAL_HOME/scripts/subset-impact-data.sh -i=mskimpact_ped -o=$MSKIMPACT_PED_DATA_HOME -d=$MSKIMPACT_PED_TMP_DIR -f="PED_IND=Yes" -s=$MSK_DMP_TMPDIR/mskimpact_ped_subset.txt -c=$MSKIMPACT_PED_TMP_DIR/data_clinical_patient.txt
     if [ $? -gt 0 ] ; then
         echo "MSKIMPACT_PED subset failed! Study will not be updated in the portal."
         sendFailureMessageMskPipelineLogsSlack "MSKIMPACT_PED subset"
@@ -1052,7 +1055,6 @@ else
         echo "MSKIMPACT_PED subset successful!"
         addCancerTypeCaseLists $MSKIMPACT_PED_DATA_HOME "mskimpact_ped" "data_clinical_sample.txt" "data_clinical_patient.txt"
         touch $MSKIMPACT_PED_IMPORT_TRIGGER
-        rm -rf $MSK_DMP_TMPDIR/mskimpact_ped/*
     fi
 fi
 
