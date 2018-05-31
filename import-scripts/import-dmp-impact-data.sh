@@ -583,7 +583,7 @@ else
 fi
 
 # check updated data back into mercurial
-echo "Pushing DMP-IMPACT updates back to msk-impact repository..."
+echo "Pushing DMP-IMPACT updates back to dmp repository..."
 echo $(date)
 cd $MSK_IMPACT_DATA_HOME ; $HG_BINARY push
 if [ $? -gt 0 ] ; then

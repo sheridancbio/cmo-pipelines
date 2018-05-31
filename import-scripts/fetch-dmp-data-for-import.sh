@@ -325,8 +325,8 @@ if [[ $CDD_RECACHE_FAIL -ne 0 || $ONCOTREE_RECACHE_FAIL -ne 0 ]] ; then
 fi
 
 # fetch clinical data mercurial
-echo "fetching updates from msk-impact repository..."
-$JAVA_HOME/bin/java $JAVA_IMPORTER_ARGS -cp $PORTAL_HOME/lib/msk-dmp-importer.jar org.mskcc.cbio.importer.Admin --fetch-data --data-source dmp-clinical-data-mercurial --run-date latest
+echo "fetching updates from dmp repository..."
+$JAVA_HOME/bin/java $JAVA_IMPORTER_ARGS -cp $PORTAL_HOME/lib/msk-dmp-importer.jar org.mskcc.cbio.importer.Admin --fetch-data --data-source dmp --run-date latest
 if [ $? -gt 0 ] ; then
     sendFailureMessageMskPipelineLogsSlack "Fetch Msk-impact from Mercurial Failure"
     exit 2
@@ -708,7 +708,7 @@ echo "Starting import into redcap"
 if [ $PERFORM_CRDB_FETCH -ne 0 ] && [ $FETCH_CRDB_IMPACT_FAIL -eq 0 ] ; then
     import_crdb_to_redcap
     if [ $? -gt 0 ] ; then
-        #NOTE: we have decided to allow import of msk-impact project to proceed even when CRDB data has been lost from redcap (not setting IMPORT_STATUS_IMPACT)
+        #NOTE: we have decided to allow import of mskimpact project to proceed even when CRDB data has been lost from redcap (not setting IMPORT_STATUS_IMPACT)
         sendFailureMessageMskPipelineLogsSlack "Mskimpact CRDB Redcap Import - Recovery Of Redcap Project Needed!"
     fi
 fi

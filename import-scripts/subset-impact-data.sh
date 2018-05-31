@@ -61,7 +61,7 @@ MERGE_SCRIPT_FAILURE=0
 ADD_METADATA_HEADERS_FAILURE=0
 
 if [ $STUDY_ID == "genie" ]; then
-    # in the case of genie data, the input data directory must be the msk-impact data home, where we expect to see darwin_naaccr.txt
+    # in the case of genie data, the input data directory must be the mskimpact data home, where we expect to see darwin_naaccr.txt
     # copy the darwin genie files to the output directory with different filenames
     cp $INPUT_DIRECTORY/darwin/darwin_naaccr.txt $OUTPUT_DIRECTORY/data_clinical_supp_patient.txt
     cut -f1,2 $CLINICAL_FILENAME | grep -v "^#" > $OUTPUT_DIRECTORY/data_clinical_supp_sample.txt
