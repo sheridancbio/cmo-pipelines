@@ -39,11 +39,17 @@ import java.util.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.stereotype.Service;
+
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.CompletableFuture;
 /**
  *
  * @author ochoaa
  */
 @Repository
+@Service
 public class DDPDataSourceImpl implements DDPDataSource {
 
     @Autowired
@@ -72,8 +78,10 @@ public class DDPDataSourceImpl implements DDPDataSource {
     }
 
     @Override
-    public PatientIdentifiers getPatientIdentifiers(String patientId) throws Exception {
-        return ddpRepository.getPatientIdentifiers(patientId);
+    @Async("testExecutor")
+    public CompletableFuture<PatientIdentifiers> getPatientIdentifiers(String patientId) throws Exception {
+        System.out.println("looking up pid for " + patientId);
+        return CompletableFuture.completedFuture(ddpRepository.getPatientIdentifiers(patientId));
     }
 
     @Override

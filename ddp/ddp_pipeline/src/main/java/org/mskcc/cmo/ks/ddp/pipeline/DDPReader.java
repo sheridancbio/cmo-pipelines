@@ -46,6 +46,8 @@ import org.apache.log4j.Logger;
 import org.springframework.batch.item.*;
 import org.springframework.beans.factory.annotation.*;
 
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.CompletableFuture;
 /**
  *
  * @author ochoaa
@@ -137,33 +139,27 @@ public class DDPReader implements ItemStreamReader<DDPCompositeRecord> {
     private List<DDPCompositeRecord> getDDPCompositeRecordsByCohortId(Integer cohortId) throws Exception {
         List<CohortPatient> records = ddpDataSource.getPatientRecordsByCohortId(cohortId);
         LOG.info("Fetched " + records.size()+  " active patients for cohort: " + cohortName);
-
+        
         List<DDPCompositeRecord> compositeRecords = new ArrayList<>();
+        Collection<CompletableFuture<PatientIdentifiers>> futures = new ArrayList<CompletableFuture<PatientIdentifiers>>();
         int count = 0;
+
         for (CohortPatient record : records) {
-            PatientIdentifiers pids;
             try {
-                pids = ddpDataSource.getPatientIdentifiers(record.getPID().toString());
+                futures.add(ddpDataSource.getPatientIdentifiers(record.getPID().toString()));
             } catch (Exception e) {
-                LOG.error("Failed to resolve dmp id's for record '" + record.getPID() + "' -- skipping");
-                ddpPatientListUtil.addPatientsMissingDMPId(record.getPID());
                 continue;
             }
-            if (pids != null && !Strings.isNullOrEmpty(pids.getDmpPatientId())) {
-                compositeRecords.add(new DDPCompositeRecord(pids.getDmpPatientId(), pids.getDmpSampleIds(), record));
-            } else {
-                LOG.error("Failed to resolve dmp id's for record '" + record.getPID() + "' -- skipping");
-                ddpPatientListUtil.addPatientsMissingDMPId(record.getPID());
-            }
-            count++;
-            if (testMode && count >= TEST_MODE_PATIENT_THRESHOLD) {
-                break;
-            }
         }
-        // filter composite records to return if excluded patient id list is not empty
-        if (!excludedPatientIds.isEmpty()) {
-            return filterCompositeRecords(compositeRecords);
+        for(CompletableFuture<PatientIdentifiers> patientIdentifier : futures) {
+            patientIdentifier.get();
         }
+        
+        System.out.println("DONE PROCESSING");
+        for(CompletableFuture<PatientIdentifiers> patientIdentifier : futures) {
+            System.out.println("DMPPatientId is " + patientIdentifier.get().getDmpPatientId());
+        } 
+        System.exit(0);
         return compositeRecords;
     }
 

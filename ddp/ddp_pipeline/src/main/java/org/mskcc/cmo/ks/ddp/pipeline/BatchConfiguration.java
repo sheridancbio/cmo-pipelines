@@ -45,7 +45,10 @@ import org.springframework.batch.item.support.CompositeItemWriter;
 import org.springframework.beans.factory.annotation.*;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.*;
+import org.springframework.scheduling.annotation.EnableAsync;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
+import java.util.concurrent.Executor;
 /**
  *
  * @author ochoaa
@@ -53,7 +56,17 @@ import org.springframework.context.annotation.*;
 @Configuration
 @EnableBatchProcessing
 @ComponentScan(basePackages = "org.mskcc.cmo.ks.ddp.source")
+@EnableAsync
 public class BatchConfiguration {
+
+    @Bean(name = "testExecutor")
+    public Executor asyncExecutor() {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        executor.setCorePoolSize(300);
+        executor.setMaxPoolSize(325);
+        executor.initialize();
+        return executor;
+    }
 
     public static final String DDP_COHORT_JOB = "ddpCohortJob";
     @Autowired
