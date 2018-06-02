@@ -178,7 +178,7 @@ def generate_impact_date_added_data(hgrepo):
 	changesets = subprocess.check_output(['hg','identify', '--cwd', hgrepo, '--num'])
 	print >> OUTPUT_FILE, 'Extracting date added information from ' + changesets.strip() + ' changesets'	
 	
-	# get logs for msk-impact repo
+	# get logs for dmp repo
 	log = subprocess.check_output(['hg','log', '--cwd', hgrepo])
 	log_lines = [l for l in log.split('\n') if 'changeset:' in l or 'date:' in l]
 

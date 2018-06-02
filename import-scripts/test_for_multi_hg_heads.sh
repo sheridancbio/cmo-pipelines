@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # the first entry (.) in the following list represents the root repository (cbio-portal-data); other entries are first level subdirectories of it
-HG_SUB_REPO_LIST=". bic-mouse bic-mskcc brlo_tcga gdac_provisional_tcga genie grail immunotherapy impact levine_mskcc msk-impact pancan_tcga portal-configuration private rudin_mskcc solit_mskcc ucec_tcga yale_brain_tumor dm"
+HG_SUB_REPO_LIST=". bic-mouse bic-mskcc brlo_tcga gdac_provisional_tcga genie grail immunotherapy impact levine_mskcc dmp pancan_tcga portal-configuration private rudin_mskcc solit_mskcc ucec_tcga yale_brain_tumor dm"
 HG_ERROR_CODE=1
 NO_HEAD_FOUND_CODE=255
 
