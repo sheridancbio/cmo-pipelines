@@ -1088,7 +1088,7 @@ fi
 
 # **************************************** ORDER OF SUBSET
 # now subset sample files with lymphoma cases from mskimpact and hemepact
-LYMPHOMA_FILTER_CRITERIA="CANCER_TYPE=Blastic Plasmacytoid Dendritic Cell Neoplasm,Histiocytosis,Hodgkin Lymphoma,Leukemia,Mastocytosis,Mature B-Cell Neoplasms,Mature T and NK Neoplasms,Myelodysplastic Syndromes,Myelodysplastic/Myeloproliferative Neoplasms,Myeloproliferative Neoplasms,Non-Hodgkin Lymphoma"
+LYMPHOMA_FILTER_CRITERIA="CANCER_TYPE=Blastic Plasmacytoid Dendritic Cell Neoplasm,Histiocytosis,Hodgkin Lymphoma,Leukemia,Mastocytosis,Mature B-Cell Neoplasms,Mature T and NK Neoplasms,Myelodysplastic Syndromes,Myelodysplastic/Myeloproliferative Neoplasms,Myeloproliferative Neoplasms,Non-Hodgkin Lymphoma;ONCOTREE_CODE=DLBCL,BCL,SLL,TNKL,MALTL,MBCL,FL,SEZS"
 $PYTHON_BINARY $PORTAL_HOME/scripts/generate-clinical-subset.py --study-id="lymphoma_super_cohort_fmi_msk" --clinical-file="$MSK_IMPACT_DATA_HOME/data_clinical_sample.txt" --filter-criteria="$LYMPHOMA_FILTER_CRITERIA" --subset-filename="$MSK_DMP_TMPDIR/mskimpact_lymphoma_subset.txt"
 if [ $? -gt 0 ] ; then
     echo "ERROR! Failed to generate subset of lymphoma samples from MSK-IMPACT. Skipping merge and update of lymphoma super cohort!"
