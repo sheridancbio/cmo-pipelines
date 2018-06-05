@@ -49,6 +49,7 @@ import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.batch.integration.async.*;
 
+import java.util.concurrent.Future;
 import java.util.concurrent.Executor;
 /**
  *
@@ -60,29 +61,20 @@ import java.util.concurrent.Executor;
 @EnableAsync
 public class BatchConfiguration {
 
-   // @Bean(name = "testExecutor")
-   // public Executor asyncExecutor() {
-   //     ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-   //     executor.setCorePoolSize(300);
-   //     executor.setMaxPoolSize(325);
-   //     executor.initialize();
-   //     return executor;
-   // }
-
-    @Bean(name = "testExecutor")
+    @Bean(name = "threadPoolTaskExecutor")
     @StepScope
-    public ThreadPoolTaskExecutor anotherExecutor() {
-        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-        executor.setCorePoolSize(300);
-        executor.setMaxPoolSize(350);
-        executor.initialize();
-        return executor;
+    public ThreadPoolTaskExecutor threadPoolTaskExecutor() {
+        ThreadPoolTaskExecutor threadPoolTaskExecutor = new ThreadPoolTaskExecutor();
+        threadPoolTaskExecutor.setCorePoolSize(300);
+        threadPoolTaskExecutor.setMaxPoolSize(350);
+        threadPoolTaskExecutor.initialize();
+        return threadPoolTaskExecutor;
     }
 
     @Bean
     @StepScope
-    public AsyncItemProcessor asyncItemProcessor(DDPCompositeProcessor ddpCompositeProcessor, ThreadPoolTaskExecutor threadPoolTaskExecutor) {
-        AsyncItemProcessor asyncItemProcessor = new AsyncItemProcessor();
+    public ItemProcessor asyncItemProcessor(DDPCompositeProcessor ddpCompositeProcessor, ThreadPoolTaskExecutor threadPoolTaskExecutor) {
+        AsyncItemProcessor<DDPCompositeRecord, CompositeResult> asyncItemProcessor = new AsyncItemProcessor<DDPCompositeRecord, CompositeResult>();
         asyncItemProcessor.setTaskExecutor(threadPoolTaskExecutor);
         asyncItemProcessor.setDelegate(ddpCompositeProcessor);
         return asyncItemProcessor;
@@ -121,7 +113,7 @@ public class BatchConfiguration {
         return stepBuilderFactory.get("ddpStep")
                 .<DDPCompositeRecord, CompositeResult> chunk(chunkInterval)
                 .reader(ddpReader())
-                .processor(asyncItemProcessor(ddpCompositeProcessor(), anotherExecutor()))
+                .processor(asyncItemProcessor(ddpCompositeProcessor(), threadPoolTaskExecutor()))
                 .writer(asyncItemWriter(ddpCompositeWriter()))
                 .build();
     }

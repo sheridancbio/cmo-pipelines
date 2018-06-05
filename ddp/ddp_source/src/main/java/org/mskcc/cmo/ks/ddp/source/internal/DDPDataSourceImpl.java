@@ -68,34 +68,38 @@ public class DDPDataSourceImpl implements DDPDataSource {
     public static void main(String[] args) throws Exception {}
 
     @Override
-    public PatientDemographics getPatientDemographics(String patientId) throws Exception {
-        return ddpRepository.getPatientDemographics(patientId);
+    @Async("testExecutor")
+    public CompletableFuture<PatientDemographics> getPatientDemographics(String patientId) throws Exception {
+        return CompletableFuture.completedFuture(ddpRepository.getPatientDemographics(patientId));
     }
 
     @Override
-    public List<PatientDiagnosis> getPatientDiagnoses(String patientId) throws Exception {
-        return ddpRepository.getPatientDiagnoses(patientId);
+    @Async("testExecutor")
+    public CompletableFuture<List<PatientDiagnosis>> getPatientDiagnoses(String patientId) throws Exception {
+        return CompletableFuture.completedFuture(ddpRepository.getPatientDiagnoses(patientId));
     }
 
     @Override
     @Async("testExecutor")
     public CompletableFuture<PatientIdentifiers> getPatientIdentifiers(String patientId) throws Exception {
-        System.out.println("looking up pid for " + patientId);
         return CompletableFuture.completedFuture(ddpRepository.getPatientIdentifiers(patientId));
     }
 
     @Override
-    public List<Radiation> getPatientRadiationProcedures(String patientId) {
-        return ddpRepository.getPatientRadiationProcedures(patientId);
+    @Async("testExecutor")
+    public CompletableFuture<List<Radiation>> getPatientRadiationProcedures(String patientId) {
+        return CompletableFuture.completedFuture(ddpRepository.getPatientRadiationProcedures(patientId));
     }
 
     @Override
-    public List<Chemotherapy> getPatientChemoProcedures(String patientId) {
-        return ddpRepository.getPatientChemoProcedures(patientId);
+    @Async("testExecutor")
+    public CompletableFuture<List<Chemotherapy>> getPatientChemoProcedures(String patientId) {
+        return CompletableFuture.completedFuture(ddpRepository.getPatientChemoProcedures(patientId));
     }
 
     @Override
-    public List<Surgery> getPatientSurgicalProcedures(String patientId) {
-        return ddpRepository.getPatientSurgicalProcedures(patientId);
+    @Async("testExecutor")
+    public CompletableFuture<List<Surgery>> getPatientSurgicalProcedures(String patientId) {
+        return CompletableFuture.completedFuture(ddpRepository.getPatientSurgicalProcedures(patientId));
     }
 }

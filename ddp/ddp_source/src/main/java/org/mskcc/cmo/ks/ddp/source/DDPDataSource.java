@@ -44,10 +44,10 @@ import java.util.concurrent.CompletableFuture;
 public interface DDPDataSource {
     List<Cohort> getAuthorizedCohorts() throws Exception;
     List<CohortPatient> getPatientRecordsByCohortId(Integer cohortId) throws Exception;
-    PatientDemographics getPatientDemographics(String patientId) throws Exception;
-    List<PatientDiagnosis> getPatientDiagnoses(String patientId) throws Exception;
+    CompletableFuture<PatientDemographics> getPatientDemographics(String patientId) throws Exception;
+    CompletableFuture<List<PatientDiagnosis>> getPatientDiagnoses(String patientId) throws Exception;
     CompletableFuture<PatientIdentifiers> getPatientIdentifiers(String patientId) throws Exception;
-    List<Radiation> getPatientRadiationProcedures(String patientId);
-    List<Chemotherapy> getPatientChemoProcedures(String patientId);
-    List<Surgery> getPatientSurgicalProcedures(String patientId);
+    CompletableFuture<List<Radiation>> getPatientRadiationProcedures(String patientId);
+    CompletableFuture<List<Chemotherapy>> getPatientChemoProcedures(String patientId);
+    CompletableFuture<List<Surgery>> getPatientSurgicalProcedures(String patientId);
 }

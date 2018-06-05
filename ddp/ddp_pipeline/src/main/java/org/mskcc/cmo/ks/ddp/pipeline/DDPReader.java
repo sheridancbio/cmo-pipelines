@@ -145,14 +145,15 @@ public class DDPReader implements ItemStreamReader<DDPCompositeRecord> {
         LOG.info("Fetched " + records.size()+  " active patients for cohort: " + cohortName);
         
         List<DDPCompositeRecord> compositeRecords = new ArrayList<>();
-        Map<String, CompletableFuture<PatientIdentifiers>> futures = new HashMap<String, CompletableFuture<PatientIdentifiers>>();
+        Map<String, CompletableFuture<PatientIdentifiers>> futurePatientIdentifiers = new HashMap<String, CompletableFuture<PatientIdentifiers>>();
         Map<String, CohortPatient> cohortPatientRecords = new HashMap<String, CohortPatient>();
         int count = 0;
 
         for (CohortPatient record : records) {
             try {
                 cohortPatientRecords.put(record.getPID().toString(), record);
-                futures.put(record.getPID().toString(), ddpDataSource.getPatientIdentifiers(record.getPID().toString()));
+                // getPatientIdentifiers() is an Async function meaning the loop does not depend on request being completed
+                futurePatientIdentifiers.put(record.getPID().toString(), ddpDataSource.getPatientIdentifiers(record.getPID().toString()));
             } catch (Exception e) {
                 LOG.error("Failed to resolve dmp id's for record'" + record.getPID() + "' -- skipping");
                 System.out.println(e.getMessage());
@@ -161,13 +162,14 @@ public class DDPReader implements ItemStreamReader<DDPCompositeRecord> {
             }
         }
 
-        for(String patientIdentifier : futures.keySet()) {
-            futures.get(patientIdentifier).get();
+        // ensures composite records will not be created until all requests for Patient Identifiers are completed
+        for(String patientIdentifier : futurePatientIdentifiers.keySet()) {
+            futurePatientIdentifiers.get(patientIdentifier).get();
         }
 
         LOG.info("creating composite Records");
-        for(String  patientIdentifier : futures.keySet()) {
-            PatientIdentifiers pids = futures.get(patientIdentifier).get();
+        for(String  patientIdentifier : futurePatientIdentifiers.keySet()) {
+            PatientIdentifiers pids = futurePatientIdentifiers.get(patientIdentifier).get();
             if (pids != null && !Strings.isNullOrEmpty(pids.getDmpPatientId())) {
                 compositeRecords.add(new DDPCompositeRecord(pids.getDmpPatientId(), pids.getDmpSampleIds(), cohortPatientRecords.get(patientIdentifier)));
             } else {
