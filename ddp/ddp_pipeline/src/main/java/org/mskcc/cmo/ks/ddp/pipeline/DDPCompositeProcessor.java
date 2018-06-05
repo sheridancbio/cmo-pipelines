@@ -70,6 +70,7 @@ public class DDPCompositeProcessor implements ItemProcessor<DDPCompositeRecord, 
 
     @Override
     public CompositeResult process(DDPCompositeRecord compositeRecord) throws Exception {
+        LOG.info("Processing " + compositeRecord.getDmpPatientId());
         // we don't have to check if ddpDataSource.getPatientDemographics or ddpDataSource.getPatientDiagnoses
         // are null because an exception will be thrown in that case too (by the repository)
         try {

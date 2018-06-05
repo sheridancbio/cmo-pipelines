@@ -47,6 +47,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.*;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+import org.springframework.batch.integration.async.*;
 
 import java.util.concurrent.Executor;
 /**
@@ -59,13 +60,40 @@ import java.util.concurrent.Executor;
 @EnableAsync
 public class BatchConfiguration {
 
+   // @Bean(name = "testExecutor")
+   // public Executor asyncExecutor() {
+   //     ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+   //     executor.setCorePoolSize(300);
+   //     executor.setMaxPoolSize(325);
+   //     executor.initialize();
+   //     return executor;
+   // }
+
     @Bean(name = "testExecutor")
-    public Executor asyncExecutor() {
+    @StepScope
+    public ThreadPoolTaskExecutor anotherExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
         executor.setCorePoolSize(300);
-        executor.setMaxPoolSize(325);
+        executor.setMaxPoolSize(350);
         executor.initialize();
         return executor;
+    }
+
+    @Bean
+    @StepScope
+    public AsyncItemProcessor asyncItemProcessor(DDPCompositeProcessor ddpCompositeProcessor, ThreadPoolTaskExecutor threadPoolTaskExecutor) {
+        AsyncItemProcessor asyncItemProcessor = new AsyncItemProcessor();
+        asyncItemProcessor.setTaskExecutor(threadPoolTaskExecutor);
+        asyncItemProcessor.setDelegate(ddpCompositeProcessor);
+        return asyncItemProcessor;
+    }
+
+    @Bean 
+    @StepScope
+    AsyncItemWriter asyncItemWriter(CompositeItemWriter compositeItemWriter) {
+        AsyncItemWriter asyncItemWriter = new AsyncItemWriter();
+        asyncItemWriter.setDelegate(compositeItemWriter);
+        return asyncItemWriter;
     }
 
     public static final String DDP_COHORT_JOB = "ddpCohortJob";
@@ -93,8 +121,8 @@ public class BatchConfiguration {
         return stepBuilderFactory.get("ddpStep")
                 .<DDPCompositeRecord, CompositeResult> chunk(chunkInterval)
                 .reader(ddpReader())
-                .processor(ddpCompositeProcessor())
-                .writer(ddpCompositeWriter())
+                .processor(asyncItemProcessor(ddpCompositeProcessor(), anotherExecutor()))
+                .writer(asyncItemWriter(ddpCompositeWriter()))
                 .build();
     }
 

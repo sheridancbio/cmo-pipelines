@@ -33,6 +33,7 @@
 package org.mskcc.cmo.ks.ddp.pipeline;
 
 import org.mskcc.cmo.ks.ddp.source.DDPDataSource;
+import org.mskcc.cmo.ks.ddp.source.util.AuthenticationUtil;
 import org.mskcc.cmo.ks.ddp.source.composite.DDPCompositeRecord;
 import org.mskcc.cmo.ks.ddp.source.model.CohortPatient;
 import org.mskcc.cmo.ks.ddp.source.model.PatientIdentifiers;
@@ -74,6 +75,9 @@ public class DDPReader implements ItemStreamReader<DDPCompositeRecord> {
 
     @Autowired
     private DDPPatientListUtil ddpPatientListUtil;
+
+    @Autowired
+    private AuthenticationUtil authenticationUtil;
 
     private List<DDPCompositeRecord> ddpCompositeRecordList;
     private Set<String> excludedPatientIds = new HashSet<>();
@@ -141,25 +145,47 @@ public class DDPReader implements ItemStreamReader<DDPCompositeRecord> {
         LOG.info("Fetched " + records.size()+  " active patients for cohort: " + cohortName);
         
         List<DDPCompositeRecord> compositeRecords = new ArrayList<>();
-        Collection<CompletableFuture<PatientIdentifiers>> futures = new ArrayList<CompletableFuture<PatientIdentifiers>>();
+        Map<String, CompletableFuture<PatientIdentifiers>> futures = new HashMap<String, CompletableFuture<PatientIdentifiers>>();
+        Map<String, CohortPatient> cohortPatientRecords = new HashMap<String, CohortPatient>();
         int count = 0;
 
         for (CohortPatient record : records) {
             try {
-                futures.add(ddpDataSource.getPatientIdentifiers(record.getPID().toString()));
+                cohortPatientRecords.put(record.getPID().toString(), record);
+                futures.put(record.getPID().toString(), ddpDataSource.getPatientIdentifiers(record.getPID().toString()));
             } catch (Exception e) {
+                LOG.error("Failed to resolve dmp id's for record'" + record.getPID() + "' -- skipping");
+                System.out.println(e.getMessage());
+                ddpPatientListUtil.addPatientsMissingDMPId(record.getPID());
                 continue;
             }
         }
-        for(CompletableFuture<PatientIdentifiers> patientIdentifier : futures) {
-            patientIdentifier.get();
+
+        for(String patientIdentifier : futures.keySet()) {
+            futures.get(patientIdentifier).get();
         }
-        
-        System.out.println("DONE PROCESSING");
-        for(CompletableFuture<PatientIdentifiers> patientIdentifier : futures) {
-            System.out.println("DMPPatientId is " + patientIdentifier.get().getDmpPatientId());
-        } 
-        System.exit(0);
+
+        LOG.info("creating composite Records");
+        for(String  patientIdentifier : futures.keySet()) {
+            PatientIdentifiers pids = futures.get(patientIdentifier).get();
+            if (pids != null && !Strings.isNullOrEmpty(pids.getDmpPatientId())) {
+                compositeRecords.add(new DDPCompositeRecord(pids.getDmpPatientId(), pids.getDmpSampleIds(), cohortPatientRecords.get(patientIdentifier)));
+            } else {
+                LOG.error("Failed to resolve dmp id's for record '" + patientIdentifier + "' -- skipping");
+                ddpPatientListUtil.addPatientsMissingDMPId(Integer.parseInt(patientIdentifier));
+            }
+            count++;
+            if (testMode && count >= TEST_MODE_PATIENT_THRESHOLD) {
+                break;
+            }
+        }
+        //for(CompletableFuture<PatientIdentifiers> patientIdentifier : futures) {
+        //    System.out.println("DMPPatientId is " + patientIdentifier.get().getDmpPatientId());
+        //} 
+        // filter composite records to return if excluded patient id list is not empty
+        if (!excludedPatientIds.isEmpty()) {
+            return filterCompositeRecords(compositeRecords);
+        }
         return compositeRecords;
     }
 
@@ -169,6 +195,7 @@ public class DDPReader implements ItemStreamReader<DDPCompositeRecord> {
      * @return
      */
     private List<DDPCompositeRecord> getCompositeRecordsByPatientIds() throws Exception {
+        String testToken = authenticationUtil.getAuthenticationToken();
         Set<String> patientIds = new HashSet<>();
         try {
             patientIds = loadPatientIdsFromFile(subsetFilename);
@@ -176,6 +203,8 @@ public class DDPReader implements ItemStreamReader<DDPCompositeRecord> {
             throw new ItemStreamException("Error loading patient ids from: " + subsetFilename, e);
         }
         List<DDPCompositeRecord> records = getDDPCompositeRecordsByPatientIds(patientIds);
+        System.out.println("Moving on to the processor");
+        
         return records;
     }
 
