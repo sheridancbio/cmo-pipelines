@@ -437,9 +437,18 @@ if [ $IMPORT_STATUS_IMPACT -eq 0 ] ; then
             sendFailureMessageMskPipelineLogsSlack "MSKIMPACT empty allele count sanity check"
             IMPORT_STATUS_IMPACT=1
         else
-            FETCH_CVR_IMPACT_FAIL=0
-            echo "committing cvr data"
-            cd $MSK_IMPACT_DATA_HOME ; $HG_BINARY commit -m "Latest MSK-IMPACT Dataset: CVR"
+            # check for PHI
+            $PYTHON_BINARY $PORTAL_HOME/scripts/phi-scanner.py -a $PIPELINES_CONFIG_HOME/properties/fetch-cvr/phi-scanner-attributes.txt -j $MSK_IMPACT_DATA_HOME/cvr_data.json
+            if [ $? -gt 0 ] ; then
+                echo "PHI attributes found in $MSK_IMPACT_DATA_HOME/cvr_data.json! MSK-IMPACT will not be imported!"
+                cd $MSK_IMPACT_DATA_HOME ; $HG_BINARY update -C ; find . -name "*.orig" -delete
+                sendFailureMessageMskPipelineLogsSlack "MSKIMPACT PHI attributes scan failed on $MSK_IMPACT_DATA_HOME/cvr_data.json"
+                IMPORT_STATUS_IMPACT=1
+            else
+                FETCH_CVR_IMPACT_FAIL=0
+                echo "committing cvr data"
+                cd $MSK_IMPACT_DATA_HOME ; $HG_BINARY commit -m "Latest MSK-IMPACT Dataset: CVR"
+            fi
         fi
     fi
 
@@ -455,8 +464,19 @@ if [ $IMPORT_STATUS_IMPACT -eq 0 ] ; then
         #override the success of the tumor sample cvr fetch with a failed status
         FETCH_CVR_IMPACT_FAIL=1
     else
-        echo "committing CVR germline data"
-        cd $MSK_IMPACT_DATA_HOME ; $HG_BINARY commit -m "Latest MSK-IMPACT Dataset: CVR Germline"
+        # check for PHI
+        $PYTHON_BINARY $PORTAL_HOME/scripts/phi-scanner.py -a $PIPELINES_CONFIG_HOME/properties/fetch-cvr/phi-scanner-attributes.txt -j $MSK_IMPACT_DATA_HOME/cvr_gml_data.json
+        if [ $? -gt 0 ] ; then
+            echo "PHI attributes found in $MSK_IMPACT_DATA_HOME/cvr_gml_data.json! MSK-IMPACT will not be imported!"
+            cd $MSK_IMPACT_DATA_HOME ; $HG_BINARY update -C ; find . -name "*.orig" -delete
+            sendFailureMessageMskPipelineLogsSlack "MSKIMPACT PHI attributes scan failed on $MSK_IMPACT_DATA_HOME/cvr_gml_data.json"
+            IMPORT_STATUS_IMPACT=1
+            #override the success of the tumor sample cvr fetch with a failed status
+            FETCH_CVR_IMPACT_FAIL=1
+        else
+            echo "committing CVR germline data"
+            cd $MSK_IMPACT_DATA_HOME ; $HG_BINARY commit -m "Latest MSK-IMPACT Dataset: CVR Germline"
+        fi
     fi
 fi
 
@@ -521,9 +541,18 @@ if [ $IMPORT_STATUS_HEME -eq 0 ] ; then
         sendFailureMessageMskPipelineLogsSlack "HEMEPACT CVR Fetch"
         IMPORT_STATUS_HEME=1
     else
-        FETCH_CVR_HEME_FAIL=0
-        echo "committing cvr data for heme"
-        cd $MSK_HEMEPACT_DATA_HOME ; $HG_BINARY commit -m "Latest heme dataset"
+        # check for PHI
+        $PYTHON_BINARY $PORTAL_HOME/scripts/phi-scanner.py -a $PIPELINES_CONFIG_HOME/properties/fetch-cvr/phi-scanner-attributes.txt -j $MSK_HEMEPACT_DATA_HOME/cvr_data.json
+        if [ $? -gt 0 ] ; then
+            echo "PHI attributes found in $MSK_HEMEPACT_DATA_HOME/cvr_data.json! HEMEPACT will not be imported!"
+            cd $MSK_HEMEPACT_DATA_HOME; $HG_BINARY update -C ; find . -name "*.orig" -delete
+            sendFailureMessageMskPipelineLogsSlack "HEMEPACT PHI attributes scan failed on $MSK_HEMEPACT_DATA_HOME/cvr_data.json"
+            IMPORT_STATUS_HEME=1
+        else
+            FETCH_CVR_HEME_FAIL=0
+            echo "committing cvr data for heme"
+            cd $MSK_HEMEPACT_DATA_HOME ; $HG_BINARY commit -m "Latest heme dataset"
+        fi
     fi
 fi
 
@@ -572,8 +601,17 @@ if [ $IMPORT_STATUS_RAINDANCE -eq 0 ] ; then
         sendFailureMessageMskPipelineLogsSlack "RAINDANCE CVR Fetch"
         IMPORT_STATUS_RAINDANCE=1
     else
-        FETCH_CVR_RAINDANCE_FAIL=0
-        cd $MSK_RAINDANCE_DATA_HOME ; $HG_BINARY commit -m "Latest Raindance dataset"
+        # check for PHI
+        $PYTHON_BINARY $PORTAL_HOME/scripts/phi-scanner.py -a $PIPELINES_CONFIG_HOME/properties/fetch-cvr/phi-scanner-attributes.txt -j $MSK_RAINDANCE_DATA_HOME/cvr_data.json
+        if [ $? -gt 0 ] ; then
+            echo "PHI attributes found in $MSK_RAINDANCE_DATA_HOME/cvr_data.json! RAINDANCE will not be imported!"
+            cd $MSK_RAINDANCE_DATA_HOME; $HG_BINARY update -C ; find . -name "*.orig" -delete
+            sendFailureMessageMskPipelineLogsSlack "RAINDANCE PHI attributes scan failed on $MSK_RAINDANCE_DATA_HOME/cvr_data.json"
+            IMPORT_STATUS_RAINDANCE=1
+        else
+            FETCH_CVR_RAINDANCE_FAIL=0
+            cd $MSK_RAINDANCE_DATA_HOME ; $HG_BINARY commit -m "Latest Raindance dataset"
+        fi
     fi
 fi
 
@@ -623,10 +661,19 @@ if [ $IMPORT_STATUS_ARCHER -eq 0 ] ; then
         sendFailureMessageMskPipelineLogsSlack "ARCHER CVR Fetch"
         IMPORT_STATUS_ARCHER=1
     else
-        FETCH_CVR_ARCHER_FAIL=0
-        # renaming gene matrix file until we get the mskarcher gene panel imported
-        cd $MSK_ARCHER_DATA_HOME ; mv data_gene_matrix.txt ignore_data_gene_matrix.txt
-        cd $MSK_ARCHER_DATA_HOME ; $HG_BINARY commit -m "Latest archer dataset"
+        # check for PHI
+        $PYTHON_BINARY $PORTAL_HOME/scripts/phi-scanner.py -a $PIPELINES_CONFIG_HOME/properties/fetch-cvr/phi-scanner-attributes.txt -j $MSK_ARCHER_DATA_HOME/cvr_data.json
+        if [ $? -gt 0 ] ; then
+            echo "PHI attributes found in $MSK_ARCHER_DATA_HOME/cvr_data.json! ARCHER will not be imported!"
+            cd $MSK_ARCHER_DATA_HOME; $HG_BINARY update -C ; find . -name "*.orig" -delete
+            sendFailureMessageMskPipelineLogsSlack "ARCHER PHI attributes scan failed on $MSK_ARCHER_DATA_HOME/cvr_data.json"
+            IMPORT_STATUS_ARCHER=1
+        else
+            FETCH_CVR_ARCHER_FAIL=0
+            # renaming gene matrix file until we get the mskarcher gene panel imported
+            cd $MSK_ARCHER_DATA_HOME ; mv data_gene_matrix.txt ignore_data_gene_matrix.txt
+            cd $MSK_ARCHER_DATA_HOME ; $HG_BINARY commit -m "Latest archer dataset"
+        fi
     fi
 fi
 
