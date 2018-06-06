@@ -142,6 +142,7 @@ IMPORT_FAIL_MSKIMPACT_PED=1
 IMPORT_FAIL_SCLC_MSKIMPACT=1
 IMPORT_FAIL_LYMPHOMA=1
 GENERATE_MASTERLIST_FAIL=0
+MERCURIAL_PUSH_FAIL=0
 
 # -------------------------------------------------------------
 # check database version before importing anything
@@ -587,7 +588,7 @@ echo "Pushing DMP-IMPACT updates back to dmp repository..."
 echo $(date)
 cd $MSK_IMPACT_DATA_HOME ; $HG_BINARY push
 if [ $? -gt 0 ] ; then
-    MERCURIAL_PUSH_FAILURE=1
+    MERCURIAL_PUSH_FAIL=1
     sendFailureMessageMskPipelineLogsSlack "HG PUSH :fire: - address ASAP!"
 fi
 
@@ -595,7 +596,7 @@ fi
 
 EMAIL_BODY="Failed to push outgoing changes to Mercurial - address ASAP!"
 # send email if failed to push outgoing changes to mercurial
-if [ $MERCURIAL_PUSH_FAILURE -gt 0 ] ; then
+if [ $MERCURIAL_PUSH_FAIL -gt 0 ] ; then
     echo -e "Sending email $EMAIL_BODY"
     echo -e "$EMAIL_BODY" | mail -s "[URGENT] HG PUSH FAILURE" $email_list
 fi
