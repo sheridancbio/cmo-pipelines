@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Memorial Sloan-Kettering Cancer Center.
+ * Copyright (c) 2016-2018 Memorial Sloan-Kettering Cancer Center.
  *
  * This library is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS
@@ -82,36 +82,13 @@ public class CRDBDatasetReader implements ItemStreamReader<CRDBDataset> {
         CRDBDataset qCRDBD = alias(CRDBDataset.class, crdbDatasetView);
         List<CRDBDataset> crdbDatasetResults = crdbQueryFactory.selectDistinct(
                 Projections.constructor(CRDBDataset.class, $(qCRDBD.getDMP_ID()),
-                    $(qCRDBD.getCONSENT_DATE_DAYS()), $(qCRDBD.getPRIM_DISEASE_12245()),
-                    $(qCRDBD.getINITIAL_SX_DAYS()), $(qCRDBD.getINITIAL_DX_DAYS()),
-                    $(qCRDBD.getFIRST_METASTASIS_DAYS()), $(qCRDBD.getINIT_DX_STATUS_ID()),
-                    $(qCRDBD.getINIT_DX_STATUS()), $(qCRDBD.getINIT_DX_STATUS_DAYS()),
-                    $(qCRDBD.getINIT_DX_STAGING_DSCRP()), $(qCRDBD.getINIT_DX_STAGE()),
-                    $(qCRDBD.getINIT_DX_STAGE_DSCRP()), $(qCRDBD.getINIT_DX_GRADE()),
-                    $(qCRDBD.getINIT_DX_GRADE_DSCRP()), $(qCRDBD.getINIT_DX_T_STAGE()),
-                    $(qCRDBD.getINIT_DX_T_STAGE_DSCRP()), $(qCRDBD.getINIT_DX_N_STAGE()),
-                    $(qCRDBD.getINIT_DX_N_STAGE_DSCRP()), $(qCRDBD.getINIT_DX_M_STAGE()),
-                    $(qCRDBD.getINIT_DX_M_STAGE_DSCRP()), $(qCRDBD.getINIT_DX_HIST()),
-                    $(qCRDBD.getINIT_DX_SUB_HIST()), $(qCRDBD.getINIT_DX_SUB_SUB_HIST()),
-                    $(qCRDBD.getINIT_DX_SUB_SUB_SUB_HIST()), $(qCRDBD.getINIT_DX_SITE()),
-                    $(qCRDBD.getINIT_DX_SUB_SITE()), $(qCRDBD.getINIT_DX_SUB_SUB_SITE()),
-                    $(qCRDBD.getENROLL_DX_STATUS_ID()), $(qCRDBD.getENROLL_DX_STATUS()),
-                    $(qCRDBD.getENROLL_DX_STATUS_DAYS()), $(qCRDBD.getENROLL_DX_STAGING_DSCRP()),
-                    $(qCRDBD.getENROLL_DX_STAGE()), $(qCRDBD.getENROLL_DX_STAGE_DSCRP()),
-                    $(qCRDBD.getENROLL_DX_GRADE()), $(qCRDBD.getENROLL_DX_GRADE_DSCRP()),
-                    $(qCRDBD.getENROLL_DX_T_STAGE()), $(qCRDBD.getENROLL_DX_T_STAGE_DSCRP()),
-                    $(qCRDBD.getENROLL_DX_N_STAGE()), $(qCRDBD.getENROLL_DX_N_STAGE_DSCRP()),
-                    $(qCRDBD.getENROLL_DX_M_STAGE()), $(qCRDBD.getENROLL_DX_M_STAGE_DSCRP()),
-                    $(qCRDBD.getENROLL_DX_HIST()), $(qCRDBD.getENROLL_DX_SUB_HIST()),
-                    $(qCRDBD.getENROLL_DX_SUB_SUB_HIST()), $(qCRDBD.getENROLL_DX_SUB_SUB_SUB_HIST()),
-                    $(qCRDBD.getENROLL_DX_SITE()), $(qCRDBD.getENROLL_DX_SUB_SITE()),
-                    $(qCRDBD.getENROLL_DX_SUB_SUB_SITE()), $(qCRDBD.getSURVIVAL_STATUS()),
+                    $(qCRDBD.getCONSENT_DATE_DAYS()), $(qCRDBD.getSURVIVAL_STATUS()),
                     $(qCRDBD.getTREATMENT_END_DAYS()), $(qCRDBD.getOFF_STUDY_DAYS()),
                     $(qCRDBD.getCOMMENTS())))
                 .from($(qCRDBD))
                 .fetch();
 
-        System.out.println("Imported "+crdbDatasetResults.size()+" records from CRDB Dataset View.");
+        System.out.println("Imported " + crdbDatasetResults.size() + " records from CRDB Dataset View.");
         return crdbDatasetResults;
     }
 
