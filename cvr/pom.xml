@@ -44,9 +44,9 @@
       <version>3.2.2</version>
     </dependency>
     <dependency>
-      <groupId>org.cbioportal.annotator</groupId>
-      <artifactId>annotator</artifactId>
-      <version>1.0.0</version>
+      <groupId>com.github.genome-nexus</groupId>
+      <artifactId>genome-nexus-annotation-pipeline</artifactId>
+      <version>80e6845d1819031127277172ce7c9b27c9953538</version>
     </dependency>
     <dependency>
       <groupId>javax.mail</groupId>
