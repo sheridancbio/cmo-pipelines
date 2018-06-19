@@ -17,6 +17,7 @@
     <module>cvr</module>
     <module>gene</module>
     <module>ddp</module>
+    <module>import-scripts</module>
   </modules>
 
   <!-- inherit defaults from spring boot -->
