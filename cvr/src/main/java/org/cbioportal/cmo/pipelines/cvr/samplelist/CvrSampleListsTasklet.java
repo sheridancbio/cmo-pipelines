@@ -17,6 +17,10 @@ import org.cbioportal.cmo.pipelines.cvr.model.CVRMergedResult;
 import org.cbioportal.cmo.pipelines.cvr.model.GMLData;
 import org.cbioportal.cmo.pipelines.cvr.model.GMLResult;
 import org.cbioportal.cmo.pipelines.cvr.CVRUtilities;
+import org.cbioportal.cmo.pipelines.cvr.model.CVRData;
+import org.cbioportal.cmo.pipelines.cvr.model.CVRMergedResult;
+import org.cbioportal.cmo.pipelines.cvr.model.GMLData;
+import org.cbioportal.cmo.pipelines.cvr.model.GMLResult;
 import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.batch.core.step.tasklet.Tasklet;
@@ -35,16 +39,16 @@ public class CvrSampleListsTasklet implements Tasklet {
 
     @Autowired
     public CvrSampleListUtil cvrSampleListUtil;
-    
+
     @Value("#{jobParameters[sessionId]}")
     private String sessionId;
-    
+
     @Value("${dmp.server_name}")
     private String dmpServerName;
-    
+
     @Value("${dmp.tokens.retrieve_master_list.route}")
     private String dmpRetrieveMasterListRoute;
-    
+
     @Value("#{jobParameters[studyId]}")
     private String studyId;
 
@@ -67,7 +71,7 @@ public class CvrSampleListsTasklet implements Tasklet {
     private Map<String, String> masterListTokensMap;
 
     Logger log = Logger.getLogger(CvrSampleListsTasklet.class);
-    
+
     @Override
     public RepeatStatus execute(StepContribution sc, ChunkContext cc) throws Exception {
         // load master list from CVR
@@ -83,7 +87,7 @@ public class CvrSampleListsTasklet implements Tasklet {
             }
         }
         catch (HttpClientErrorException e) {
-            log.warn("Error occurred while retrieving master list for " + studyId + " - the default master list will be set to samples already in portal.\n" 
+            log.warn("Error occurred while retrieving master list for " + studyId + " - the default master list will be set to samples already in portal.\n"
                     + e.getLocalizedMessage());
         }
         // load whited listed samples with zero variants
@@ -146,7 +150,7 @@ public class CvrSampleListsTasklet implements Tasklet {
         }
         cvrSampleListUtil.setNewDmpSamples(newDmpSamples);
     }
-    
+
     private Set<String> loadWhitelistedSamplesWithZeroVariants() throws Exception {
         Set<String> whitedListedSamplesWithZeroVariants = new HashSet<>();
         File whitelistedSamplesFile = new File(stagingDirectory, CVRUtilities.ZERO_VARIANT_WHITELIST_FILE);
@@ -175,7 +179,7 @@ public class CvrSampleListsTasklet implements Tasklet {
         RestTemplate restTemplate = new RestTemplate();
         HttpEntity<LinkedMultiValueMap<String, Object>> requestEntity = getRequestEntity();
         ResponseEntity<CVRMasterList> responseEntity = restTemplate.exchange(dmpUrl, HttpMethod.GET, requestEntity, CVRMasterList.class);
-        
+
         Set<String> dmpSamples = new HashSet<>();
         for (Map<String, String> samples : responseEntity.getBody().getSamples()) {
             // there is only one pair per Map
@@ -194,5 +198,5 @@ public class CvrSampleListsTasklet implements Tasklet {
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
         return new HttpEntity<Object>(headers);
     }
-    
+
 }

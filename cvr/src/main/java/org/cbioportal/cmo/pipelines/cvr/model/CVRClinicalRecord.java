@@ -63,6 +63,11 @@ public class CVRClinicalRecord {
     private String seqDate;
     private String ageAtSeqReport;
     private String archer;
+    private String cvrTmbCohort;
+    private String cvrTmbCohortPercentile;
+    private String cvrTmbScore;
+    private String cvrTmbTtCohort;
+    private String cvrTmbTtPercentile;
 
     private final String DEFAULT_SAMPLE_CLASS = "Tumor";
 
@@ -90,6 +95,11 @@ public class CVRClinicalRecord {
         this.seqDate = metaData.getDateTumorSequencing();
         this.ageAtSeqReport = "NA";
         this.archer = "NO";
+        this.cvrTmbCohort = (metaData.getTmbCohort() != null) ? String.valueOf(metaData.getTmbCohort()) : "NA";
+        this.cvrTmbCohortPercentile = (metaData.getTmbCohortPercentile()!= null) ? String.valueOf(metaData.getTmbCohortPercentile()) : "NA";
+        this.cvrTmbScore = (metaData.getTmbScore()!= null) ? String.valueOf(metaData.getTmbScore()) : "NA";
+        this.cvrTmbTtCohort = (metaData.getTmbTtCohort()!= null) ? String.valueOf(metaData.getTmbTtCohort()) : "NA";
+        this.cvrTmbTtPercentile = (metaData.getTmbTtPercentile()!= null) ? String.valueOf(metaData.getTmbTtPercentile()) : "NA";
     }
 
     public CVRClinicalRecord(GMLMetaData metaData) {
@@ -306,6 +316,46 @@ public class CVRClinicalRecord {
         this.archer = archer;
     }    
 
+    public String getCVR_TMB_COHORT() {
+        return cvrTmbCohort;
+    }
+
+    public void setCVR_TMB_COHORT(String tmbCohort) {
+        this.cvrTmbCohort = tmbCohort;
+    }
+
+    public String getCVR_TMB_COHORT_PERCENTILE() {
+        return cvrTmbCohortPercentile;
+    }
+
+    public void setCVR_TMB_COHORT_PERCENTILE(String tmbCohortPercentile) {
+        this.cvrTmbCohortPercentile = tmbCohortPercentile;
+    }
+
+    public String getCVR_TMB_SCORE() {
+        return cvrTmbScore;
+    }
+
+    public void setCVR_TMB_SCORE(String tmbScore) {
+        this.cvrTmbScore = tmbScore;
+    }
+
+    public String getCVR_TMB_TT_COHORT() {
+        return cvrTmbTtCohort;
+    }
+
+    public void setCVR_TMB_TT_COHORT(String tmbTtCohort) {
+        this.cvrTmbTtCohort = tmbTtCohort;
+    }
+
+    public String getCVR_TMB_TT_COHORT_PERCENTILE() {
+        return cvrTmbTtPercentile;
+    }
+
+    public void setCVR_TMB_TT_COHORT_PERCENTILE(String tmbTtPercentile) {
+        this.cvrTmbTtPercentile = tmbTtPercentile;
+    }
+
     private String resolveSampleType(Integer isMetastasis) {
         if (isMetastasis != null)
             return isMetastasis == 0 ? "Primary" : "Metastasis";
@@ -337,6 +387,11 @@ public class CVRClinicalRecord {
         fieldNames.add("SOMATIC_STATUS");
         fieldNames.add("AGE_AT_SEQ_REPORT");
         fieldNames.add("ARCHER");
+        fieldNames.add("CVR_TMB_COHORT");
+        fieldNames.add("CVR_TMB_COHORT_PERCENTILE");
+        fieldNames.add("CVR_TMB_SCORE");
+        fieldNames.add("CVR_TMB_TT_COHORT");
+        fieldNames.add("CVR_TMB_TT_COHORT_PERCENTILE");
         return fieldNames;
     }
     
