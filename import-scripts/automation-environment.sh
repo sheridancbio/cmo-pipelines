@@ -57,4 +57,4 @@ export JAVA_PROXY_ARGS="-Dhttp.proxyHost=jxi2.mskcc.org -Dhttp.proxyPort=8080"
 export PYTHON_BINARY=/data/tools/python2.7/bin/python
 export MAVEN_BINARY=/data/portal-cron/bin/mvn
 export HG_BINARY=/usr/bin/hg
-export PATH=/home/grossb/local/bin/:$PATH:/usr/bin/:/bin/
+export PATH=/data/tools/python2.7/bin:/home/grossb/local/bin/:$PATH:/usr/bin/:/bin/
