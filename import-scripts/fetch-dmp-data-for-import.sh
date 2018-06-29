@@ -37,6 +37,7 @@ FETCH_CVR_RAINDANCE_FAIL=1
 FETCH_CVR_ARCHER_FAIL=1
 
 MIXEDPACT_MERGE_FAIL=0
+MSK_SOLID_HEME_MERGE_FAIL=0
 MSK_KINGS_SUBSET_FAIL=0
 MSK_QUEENS_SUBSET_FAIL=0
 MSK_LEHIGH_SUBSET_FAIL=0
@@ -74,7 +75,7 @@ function addCancerTypeCaseLists {
     rm $STUDY_DATA_DIRECTORY/case_lists/*
     $PYTHON_BINARY $PORTAL_HOME/scripts/oncotree_code_converter.py --oncotree-url "http://oncotree.mskcc.org/" --oncotree-version $ONCOTREE_VERSION_TO_USE --clinical-file $FILEPATH_1 --force
     $PYTHON_BINARY $PORTAL_HOME/scripts/create_case_lists_by_cancer_type.py --clinical-file-list="$CLINICAL_FILE_LIST" --output-directory="$STUDY_DATA_DIRECTORY/case_lists" --study-id="$STUDY_ID" --attribute="CANCER_TYPE"
-    if [ "$STUDY_ID" == "mskimpact" ] || [ "$STUDY_ID" == "mixedpact" ] ; then
+    if [ "$STUDY_ID" == "mskimpact" ] || [ "$STUDY_ID" == "mixedpact" ] || [ "$STUDY_ID" == "msk_solid_heme" ] ; then
        $PYTHON_BINARY $PORTAL_HOME/scripts/create_case_lists_by_cancer_type.py --clinical-file-list="$CLINICAL_FILE_LIST" --output-directory="$STUDY_DATA_DIRECTORY/case_lists" --study-id="$STUDY_ID" --attribute="PARTC_CONSENTED_12_245"
     fi
 }
@@ -971,10 +972,11 @@ if [ $IMPORT_STATUS_ARCHER -eq 0 ] ; then
 fi
 
 #--------------------------------------------------------------
-## MSK-IMPACT, HEMEPACT, RAINDANCE, and ARCHER merge
-echo "Beginning merge of MSK-IMPACT, HEMEPACT, RAINDANCE, ARCHER data..."
-echo $(date)
+## Merge studies for MIXEDPACT, MSKSOLIDHEME:
+#   (1) MSK-IMPACT, HEMEPACT, RAINDANCE, and ARCHER (MIXEDPACT)
+#   (1) MSK-IMPACT, HEMEPACT, and ARCHER (MSKSOLIDHEME)
 
+# touch meta_SV.txt files if not already exist
 if [ ! -f $MSK_IMPACT_DATA_HOME/meta_SV.txt ] ; then
     touch $MSK_IMPACT_DATA_HOME/meta_SV.txt
 fi
@@ -987,14 +989,17 @@ if [ ! -f $MSK_ARCHER_DATA_HOME/meta_SV.txt ] ; then
     touch $MSK_ARCHER_DATA_HOME/meta_SV.txt
 fi
 
-# merge data from all directories and check exit code
+echo "Beginning merge of MSK-IMPACT, HEMEPACT, RAINDANCE, ARCHER data for MIXEDPACT..."
+echo $(date)
+
+# MIXEDPACT merge and check exit code
 $PYTHON_BINARY $PORTAL_HOME/scripts/merge.py -d $MSK_MIXEDPACT_DATA_HOME -i mixedpact -m "true" -e $MSK_DMP_TMPDIR/archer_ids.txt $MSK_IMPACT_DATA_HOME $MSK_HEMEPACT_DATA_HOME $MSK_RAINDANCE_DATA_HOME $MSK_ARCHER_DATA_HOME
 if [ $? -gt 0 ] ; then
     echo "MIXEDPACT merge failed! Study will not be updated in the portal."
     sendFailureMessageMskPipelineLogsSlack "MIXEDPACT merge"
     echo $(date)
     MIXEDPACT_MERGE_FAIL=1
-    # we rollback/clean mercurial after the import of mixedpact (if merge or import fails)
+    # we rollback/clean mercurial after the import of MIXEDPACT (if merge or import fails)
 else
     echo "MIXEDPACT merge successful! Creating cancer type case lists..."
     echo $(date)
@@ -1006,6 +1011,30 @@ else
         touch $MSK_MIXEDPACT_IMPORT_TRIGGER
     fi
     addCancerTypeCaseLists $MSK_MIXEDPACT_DATA_HOME "mixedpact" "data_clinical_sample.txt" "data_clinical_patient.txt"
+fi
+
+echo "Beginning merge of MSK-IMPACT, HEMEPACT, RAINDANCE, ARCHER data for MSKSOLIDHEME..."
+echo $(date)
+
+# MSKSOLIDHEME merge and check exit code
+$PYTHON_BINARY $PORTAL_HOME/scripts/merge.py -d $MSK_SOLID_HEME_DATA_HOME -i msk_solid_heme -m "true" -e $MSK_DMP_TMPDIR/archer_ids.txt $MSK_IMPACT_DATA_HOME $MSK_HEMEPACT_DATA_HOME $MSK_ARCHER_DATA_HOME
+if [ $? -gt 0 ] ; then
+    echo "MSKSOLIDHEME merge failed! Study will not be updated in the portal."
+    sendFailureMessageMskPipelineLogsSlack "MSKSOLIDHEME merge"
+    echo $(date)
+    MSK_SOLID_HEME_MERGE_FAIL=1
+    # we rollback/clean mercurial after the import of MSKSOLIDHEME (if merge or import fails)
+else
+    echo "MSKSOLIDHEME merge successful! Creating cancer type case lists..."
+    echo $(date)
+    # add metadata headers and overrides before importing
+    $PYTHON_BINARY $PORTAL_HOME/scripts/add_clinical_attribute_metadata_headers.py -s msk_solid_heme -f $MSK_SOLID_HEME_DATA_HOME/data_clinical*
+    if [ $? -gt 0 ] ; then
+        echo "Error: Adding metadata headers for MSKSOLIDHEME failed! Study will not be updated in portal."
+    else
+        touch $MSK_SOLID_HEME_IMPORT_TRIGGER
+    fi
+    addCancerTypeCaseLists $MSK_SOLID_HEME_DATA_HOME "msk_solid_heme" "data_clinical_sample.txt" "data_clinical_patient.txt"
 fi
 
 # check that meta_SV.txt are actually empty files before deleting from IMPACT, HEME, and ARCHER studies
@@ -1020,6 +1049,7 @@ fi
 if [ $(wc -l < $MSK_ARCHER_DATA_HOME/meta_SV.txt) -eq 0 ] ; then
     rm $MSK_ARCHER_DATA_HOME/meta_SV.txt
 fi
+
 #--------------------------------------------------------------
 ## Subset MIXEDPACT on INSTITUTE for institute specific impact studies
 
@@ -1248,6 +1278,12 @@ EMAIL_BODY="Failed to merge MSK-IMPACT, HEMEPACT, ARCHER, and RAINDANCE data. Me
 if [ $MIXEDPACT_MERGE_FAIL -gt 0 ] ; then
     echo -e "Sending email $EMAIL_BODY"
     echo -e "$EMAIL_BODY" |  mail -s "MIXEDPACT Merge Failure: Study will not be updated." $email_list
+fi
+
+EMAIL_BODY="Failed to merge MSK-IMPACT, HEMEPACT, and ARCHER data. Merged study will not be updated."
+if [ $MSK_SOLID_HEME_MERGE_FAIL -gt 0 ] ; then
+    echo -e "Sending email $EMAIL_BODY"
+    echo -e "$EMAIL_BODY" |  mail -s "MSKSOLIDHEME Merge Failure: Study will not be updated." $email_list
 fi
 
 EMAIL_BODY="Failed to subset Kings County Cancer Center data. Subset study will not be updated."
