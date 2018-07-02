@@ -112,8 +112,9 @@ now=$(date "+%Y-%m-%d-%H-%M-%S")
 mskimpact_notification_file=$(mktemp $MSK_DMP_TMPDIR/mskimpact-portal-update-notification.$now.XXXXXX)
 mskheme_notification_file=$(mktemp $MSK_DMP_TMPDIR/mskheme-portal-update-notification.$now.XXXXXX)
 mskraindance_notification_file=$(mktemp $MSK_DMP_TMPDIR/mskraindance-portal-update-notification.$now.XXXXXX)
-mixedpact_notification_file=$(mktemp $MSK_DMP_TMPDIR/mixedpact-portal-update-notification.$now.XXXXXX)
 mskarcher_notification_file=$(mktemp $MSK_DMP_TMPDIR/mskarcher-portal-update-notification.$now.XXXXXX)
+mixedpact_notification_file=$(mktemp $MSK_DMP_TMPDIR/mixedpact-portal-update-notification.$now.XXXXXX)
+msk_solid_heme_notification_file=$(mktemp $MSK_DMP_TMPDIR/msk-solid-heme-portal-update-notification.$now.XXXXXX)
 kingscounty_notification_file=$(mktemp $MSK_DMP_TMPDIR/kingscounty-portal-update-notification.$now.XXXXXX)
 lehighvalley_notification_file=$(mktemp $MSK_DMP_TMPDIR/lehighvalley-portal-update-notification.$now.XXXXXX)
 queenscancercenter_notification_file=$(mktemp $MSK_DMP_TMPDIR/queenscancercenter-portal-update-notification.$now.XXXXXX)
@@ -134,6 +135,7 @@ IMPORT_FAIL_HEME=1
 IMPORT_FAIL_RAINDANCE=1
 IMPORT_FAIL_ARCHER=1
 IMPORT_FAIL_MIXEDPACT=1
+IMPORT_FAIL_MSKSOLIDHEME=1
 IMPORT_FAIL_KINGS=1
 IMPORT_FAIL_LEHIGH=1
 IMPORT_FAIL_QUEENS=1
@@ -167,12 +169,12 @@ if [ $DB_VERSION_FAIL -eq 0 ] ; then
 fi
 
 # Temp study importer arguments
-# (1): cancer study id [ mskimpact | mskimpact_heme | mskraindance | mskarcher | mixedpact | msk_kingscounty | msk_lehighvalley | msk_queenscancercenter | msk_miamicancerinstitute | msk_hartfordhealthcare | msk_ralphlauren | mskimpact_ped | sclc_mskimpact_2017 | lymphoma_super_cohort_fmi_msk ]
-# (2): temp study id [ temporary_mskimpact | temporary_mskimpact_heme | temporary_mskraindance | temporary_mskarcher | temporary_mixedpact | temporary_msk_kingscounty | temporary_msk_lehighvalley | temporary_msk_queenscancercenter | temporary_msk_miamicancerinstitute | temporary_msk_hartfordhealthcare | temporary_msk_ralphlauren | temporary_mskimpact_ped | temporary_sclc_mskimpact_2017 | temporary_lymphoma_super_cohort_fmi_msk]
-# (3): backup study id [ yesterday_mskimpact | yesterday_mskimpact_heme | yesterday_mskraindance | yesterday_mskarcher | yesterday_mixedpact | yesterday_msk_kingscounty | yesterday_msk_lehighvalley | yesterday_msk_queenscancercenter | yesterday_msk_miamicancerinstitute | yesterday_msk_hartfordhealthcare | yesterday_msk_ralphlauren | yesterday_mskimpact_ped | yesterday_sclc_mskimpact_2017 | yesterday_lymphoma_super_cohort_fmi_msk]
-# (4): portal name [ mskimpact-portal | mskheme-portal | mskraindance-portal | mskarcher-portal | mixedpact-portal |  msk-kingscounty-portal | msk-lehighvalley-portal | msk-queenscancercenter-portal | msk-mci-portal | msk-hartford-portal | msk-ralphlauren-portal | msk-ped-portal | msk-sclc-portal | msk-fmi-lymphoma-portal ]
-# (5): study path [ $MSK_IMPACT_DATA_HOME | $MSK_HEMEPACT_DATA_HOME | $MSK_RAINDANCE_DATA_HOME | $MSK_ARCHER_DATA_HOME | $MSK_MIXEDPACT_DATA_HOME | $MSK_KINGS_DATA_HOME | $MSK_LEHIGH_DATA_HOME | $MSK_QUEENS_DATA_HOME | $MSK_MCI_DATA_HOME | $MSK_HARTFORD_DATA_HOME | $MSK_RALPHLAUREN_DATA_HOME | $MSKIMPACT_PED_DATA_HOME | $MSK_SCLC_DATA_HOME | $LYMPHOMA_SUPER_COHORT_DATA_HOME ]
-# (6): notification file [ $mskimpact_notification_file | $mskheme_notification_file | $mskraindance_notification_file | $mixedpact_notification_file | $kingscounty_notification_file | $lehighvalley_notification_file | $queenscancercenter_notification_file | $miamicancerinstitute_notification_file | $hartfordhealthcare_notification_file | $ralphlauren_notification_file | $mskimpact_ped_notification_file | $sclc_mskimpact_notification_file | $lymphoma_super_cohort_notification_file ]
+# (1): cancer study id [ mskimpact | mskimpact_heme | mskraindance | mskarcher | mixedpact | msk_solid_heme | msk_kingscounty | msk_lehighvalley | msk_queenscancercenter | msk_miamicancerinstitute | msk_hartfordhealthcare | msk_ralphlauren | mskimpact_ped | sclc_mskimpact_2017 | lymphoma_super_cohort_fmi_msk ]
+# (2): temp study id [ temporary_mskimpact | temporary_mskimpact_heme | temporary_mskraindance | temporary_mskarcher | temporary_mixedpact | temporary_msk_solid_heme | temporary_msk_kingscounty | temporary_msk_lehighvalley | temporary_msk_queenscancercenter | temporary_msk_miamicancerinstitute | temporary_msk_hartfordhealthcare | temporary_msk_ralphlauren | temporary_mskimpact_ped | temporary_sclc_mskimpact_2017 | temporary_lymphoma_super_cohort_fmi_msk]
+# (3): backup study id [ yesterday_mskimpact | yesterday_mskimpact_heme | yesterday_mskraindance | yesterday_mskarcher | yesterday_mixedpact | yesterday_msk_solid_heme | yesterday_msk_kingscounty | yesterday_msk_lehighvalley | yesterday_msk_queenscancercenter | yesterday_msk_miamicancerinstitute | yesterday_msk_hartfordhealthcare | yesterday_msk_ralphlauren | yesterday_mskimpact_ped | yesterday_sclc_mskimpact_2017 | yesterday_lymphoma_super_cohort_fmi_msk]
+# (4): portal name [ mskimpact-portal | mskheme-portal | mskraindance-portal | mskarcher-portal | mixedpact-portal | msk-solid-heme-portal |  msk-kingscounty-portal | msk-lehighvalley-portal | msk-queenscancercenter-portal | msk-mci-portal | msk-hartford-portal | msk-ralphlauren-portal | msk-ped-portal | msk-sclc-portal | msk-fmi-lymphoma-portal ]
+# (5): study path [ $MSK_IMPACT_DATA_HOME | $MSK_HEMEPACT_DATA_HOME | $MSK_RAINDANCE_DATA_HOME | $MSK_ARCHER_DATA_HOME | $MSK_MIXEDPACT_DATA_HOME | $MSK_SOLID_HEME_DATA_HOME | $MSK_KINGS_DATA_HOME | $MSK_LEHIGH_DATA_HOME | $MSK_QUEENS_DATA_HOME | $MSK_MCI_DATA_HOME | $MSK_HARTFORD_DATA_HOME | $MSK_RALPHLAUREN_DATA_HOME | $MSKIMPACT_PED_DATA_HOME | $MSK_SCLC_DATA_HOME | $LYMPHOMA_SUPER_COHORT_DATA_HOME ]
+# (6): notification file [ $mskimpact_notification_file | $mskheme_notification_file | $mskraindance_notification_file | $mixedpact_notification_file | $msk_solid_heme_notification_file | $kingscounty_notification_file | $lehighvalley_notification_file | $queenscancercenter_notification_file | $miamicancerinstitute_notification_file | $hartfordhealthcare_notification_file | $ralphlauren_notification_file | $mskimpact_ped_notification_file | $sclc_mskimpact_notification_file | $lymphoma_super_cohort_notification_file ]
 # (7): tmp directory
 # (8): email list
 # (9): oncotree version [ oncotree_candidate_release | oncotree_latest_stable ]
@@ -191,9 +193,9 @@ if [ $DB_VERSION_FAIL -eq 0 ] && [ -f $MSK_IMPACT_IMPORT_TRIGGER ] ; then
     rm $MSK_IMPACT_IMPORT_TRIGGER
 else
     if [ $DB_VERSION_FAIL -gt 0 ] ; then
-        echo "Not importing mskimpact - database version is not compatible"
+        echo "Not importing MSKIMPACT - database version is not compatible"
     else
-        echo "Not importing mskimpact - something went wrong with a fetch"
+        echo "Not importing MSKIMPACT - something went wrong with a fetch"
     fi
 fi
 if [ $IMPORT_FAIL_IMPACT -gt 0 ] ; then
@@ -210,7 +212,7 @@ else
     restartMSKTomcats
 fi
 
-# set 'RESTART_AFTER_DMP_PIPELINES_IMPORT' flag to 1 if RAINDANCE, ARCHER, HEMEPACT, or MIXEDPACT succesfully update
+# set 'RESTART_AFTER_DMP_PIPELINES_IMPORT' flag to 1 if RAINDANCE, ARCHER, HEMEPACT, MIXEDPACT, or MSKSOLIDHEME succesfully update
 RESTART_AFTER_DMP_PIPELINES_IMPORT=0
 
 ## TEMP STUDY IMPORT: MSKIMPACT_HEME
@@ -224,9 +226,9 @@ if [ $DB_VERSION_FAIL -eq 0 ] && [ -f $MSK_HEMEPACT_IMPORT_TRIGGER ] ; then
     rm $MSK_HEMEPACT_IMPORT_TRIGGER 
 else
     if [ $DB_VERSION_FAIL -gt 0 ] ; then
-        echo "Not importing mskimpact_heme - database version is not compatible"
+        echo "Not importing MSKIMPACT_HEME - database version is not compatible"
     else
-        echo "Not importing mskimpact_heme - something went wrong with a fetch"
+        echo "Not importing MSKIMPACT_HEME - something went wrong with a fetch"
     fi
 fi
 if [ $IMPORT_FAIL_HEME -gt 0 ] ; then
@@ -246,9 +248,9 @@ if [ $DB_VERSION_FAIL -eq 0 ] && [ -f $MSK_RAINDANCE_IMPORT_TRIGGER ] ; then
     rm $MSK_RAINDANCE_IMPORT_TRIGGER
 else
     if [ $DB_VERSION_FAIL -gt 0 ] ; then
-        echo "Not importing mskraindance - database version is not compatible"
+        echo "Not importing MSKRAINDANCE - database version is not compatible"
     else
-        echo "Not importing mskraindance - something went wrong with a fetch"
+        echo "Not importing MSKRAINDANCE - something went wrong with a fetch"
     fi
 fi
 if [ $IMPORT_FAIL_RAINDANCE -gt 0 ] ; then
@@ -268,9 +270,9 @@ if [ $DB_VERSION_FAIL -eq 0 ] && [ -f $MSK_ARCHER_IMPORT_TRIGGER ] ; then
     rm $MSK_ARCHER_IMPORT_TRIGGER
 else
     if [ $DB_VERSION_FAIL -gt 0 ] ; then
-        echo "Not importing mskarcher - database version is not compatible"
+        echo "Not importing MSKARCHER - database version is not compatible"
     else
-        echo "Not importing mskarcher - something went wrong with a fetch"
+        echo "Not importing MSKARCHER - something went wrong with a fetch"
     fi
 fi
 if [ $IMPORT_FAIL_ARCHER -gt 0 ] ; then
@@ -279,7 +281,7 @@ else
     sendSuccessMessageMskPipelineLogsSlack "ARCHER"
 fi
 
-# update MIXEDPACT in portal only if merge and case list updates were succesful and metadata headers were added
+# TEMP STUDY IMPORT: MIXEDPACT
 if [ $DB_VERSION_FAIL -eq 0 ] && [ -f $MSK_MIXEDPACT_IMPORT_TRIGGER ] ; then
     echo "Importing MIXEDPACT study..."
     echo $(date)
@@ -291,12 +293,13 @@ if [ $DB_VERSION_FAIL -eq 0 ] && [ -f $MSK_MIXEDPACT_IMPORT_TRIGGER ] ; then
     rm $MSK_MIXEDPACT_IMPORT_TRIGGER 
 else
     if [ $DB_VERSION_FAIL -gt 0 ] ; then
-        echo "Not importing mixedpact - database version is not compatible"
+        echo "Not importing MIXEDPACT - database version is not compatible"
     else
-        echo "Not importing mixedpact - something went wrong with a merging clinical studies"
+        echo "Not importing MIXEDPACT - something went wrong with a merging clinical studies"
     fi
 fi
 
+## TODO: Move commit to fetch-dmp-data-for-import.sh
 # commit or revert changes for MIXEDPACT
 if [ $IMPORT_FAIL_MIXEDPACT -gt 0 ] ; then
     sendFailureMessageMskPipelineLogsSlack "MIXEDPACT import"
@@ -307,7 +310,36 @@ else
     echo "Committing MIXEDPACT data"
     cd $MSK_MIXEDPACT_DATA_HOME ; find . -name "*.orig" -delete ; $HG_BINARY add * ; $HG_BINARY commit -m "Latest MIXEDPACT dataset"
 fi
-## END MSK-IMPACT, HEMEPACT, and RAINDANCE merge
+
+# TEMP STUDY IMPORT: MSKSOLIDHEME
+if [ $DB_VERSION_FAIL -eq 0 ] && [ -f $MSK_SOLID_HEME_IMPORT_TRIGGER ] ; then
+    echo "Importing MSKSOLIDHEME study..."
+    echo $(date)
+    bash $PORTAL_HOME/scripts/import-temp-study.sh --study-id="msk_solid_heme" --temp-study-id="temporary_msk_solid_heme" --backup-study-id="yesterday_msk_solid_heme" --portal-name="msk-solid-heme-portal" --study-path="$MSK_SOLID_HEME_DATA_HOME" --notification-file="$msk_solid_heme_notification_file" --tmp-directory="$MSK_DMP_TMPDIR" --email-list="$email_list" --oncotree-version="${ONCOTREE_VERSION_TO_USE}" --importer-jar="$PORTAL_HOME/lib/msk-dmp-importer.jar" --transcript-overrides-source="mskcc"
+    if [ $? -eq 0 ] ; then
+        RESTART_AFTER_DMP_PIPELINES_IMPORT=1
+        IMPORT_FAIL_MSKSOLIDHEME=0
+    fi
+    rm $MSK_SOLID_HEME_IMPORT_TRIGGER
+else
+    if [ $DB_VERSION_FAIL -gt 0 ] ; then
+        echo "Not importing MSKSOLIDHEME - database version is not compatible"
+    else
+        echo "Not importing MSKSOLIDHEME - something went wrong with a merging clinical studies"
+    fi
+fi
+
+## TODO: Move commit to fetch-dmp-data-for-import.sh
+# commit or revert changes for MSKSOLIDHEME
+if [ $IMPORT_FAIL_MSKSOLIDHEME -gt 0 ] ; then
+    sendFailureMessageMskPipelineLogsSlack "MSKSOLIDHEME import"
+    echo "MSKSOLIDHEME merge and/or updates failed! Reverting data to last commit."
+    cd $MSK_SOLID_HEME_DATA_HOME ; $HG_BINARY update -C ; find . -name "*.orig" -delete
+else
+    sendSuccessMessageMskPipelineLogsSlack "MSKSOLIDHEME"
+    echo "Committing MSKSOLIDHEME data"
+    cd $MSK_SOLID_HEME_DATA_HOME ; find . -name "*.orig" -delete ; $HG_BINARY add * ; $HG_BINARY commit -m "Latest MSKSOLIDHEME dataset"
+fi
 
 ## TOMCAT RESTART
 # Restart will only execute if at least one of these studies succesfully updated.
@@ -315,16 +347,21 @@ fi
 #   MSKRAINDANCE
 #   MSKARCHER
 #   MIXEDPACT
+#   MSKSOLIDHEME
 if [ $RESTART_AFTER_DMP_PIPELINES_IMPORT -eq 0 ] ; then
-    echo "Failed to update HEMEPACT, RAINDANCE, ARCHER, and MIXEDPACT - next tomcat restart will execute after successful updates to MSK affiliate studies..."
+    echo "Failed to update HEMEPACT, RAINDANCE, ARCHER, MIXEDPACT, and MSKSOLIDHEME - next tomcat restart will execute after successful updates to MSK affiliate studies..."
     echo $(date)
 else
     restartMSKTomcats
 fi
 
+## END MSK DMP cohorts imports
+
+#-------------------------------------------------------------------------------------------------------------------------------------
 # set 'RESTART_AFTER_MSK_AFFILIATE_IMPORT' flag to 1 if Kings County, Lehigh Valley, Queens Cancer Center, Miami Cancer Institute, MSKIMPACT Ped, or Lymphoma super cohort succesfully update
 RESTART_AFTER_MSK_AFFILIATE_IMPORT=0
-# update msk_kingscounty in portal only if subset was successful
+
+# TEMP STUDY IMPORT: KINGSCOUNTY
 if [ $DB_VERSION_FAIL -eq 0 ] && [ -f $MSK_KINGS_IMPORT_TRIGGER ] ; then
     echo "Importing msk_kingscounty study..."
     echo $(date)
@@ -342,6 +379,7 @@ else
     fi
 fi
 
+## TODO: Move commit to fetch-dmp-data-for-import.sh
 # commit or revert changes for KINGSCOUNTY
 if [ $IMPORT_FAIL_KINGS -gt 0 ] ; then
     sendFailureMessageMskPipelineLogsSlack "KINGSCOUNTY import"
@@ -353,7 +391,7 @@ else
     cd $MSK_KINGS_DATA_HOME ; find . -name "*.orig" -delete ; $HG_BINARY add * ; $HG_BINARY commit -m "Latest KINGSCOUNTY dataset"
 fi
 
-# update msk_lehighvalley in portal only if subset was successful
+# TEMP STUDY IMPORT: LEHIGHVALLEY
 if [ $DB_VERSION_FAIL -eq 0 ] && [ -f $MSK_LEHIGH_IMPORT_TRIGGER ] ; then
     echo "Importing msk_lehighvalley study..."
     echo $(date)
@@ -371,6 +409,7 @@ else
     fi
 fi
 
+## TODO: Move commit to fetch-dmp-data-for-import.sh
 # commit or revert changes for LEHIGHVALLEY
 if [ $IMPORT_FAIL_LEHIGH -gt 0 ] ; then
     sendFailureMessageMskPipelineLogsSlack "LEHIGHVALLEY import"
@@ -382,7 +421,7 @@ else
     cd $MSK_LEHIGH_DATA_HOME ; find . -name "*.orig" -delete ; $HG_BINARY add * ; $HG_BINARY commit -m "Latest LEHIGHVALLEY dataset"
 fi
 
-# update msk_queenscancercenter in portal only if subset was successful
+# TEMP STUDY IMPORT: QUEENSCANCERCENTER
 if [ $DB_VERSION_FAIL -eq 0 ] && [ -f $MSK_QUEENS_IMPORT_TRIGGER ] ; then
     echo "Importing msk_queenscancercenter study..."
     echo $(date)
@@ -400,6 +439,7 @@ else
     fi
 fi
 
+## TODO: Move commit to fetch-dmp-data-for-import.sh
 # commit or revert changes for QUEENSCANCERCENTER
 if [ $IMPORT_FAIL_QUEENS -gt 0 ] ; then
     sendFailureMessageMskPipelineLogsSlack "QUEENSCANCERCENTER import"
@@ -411,7 +451,7 @@ else
     cd $MSK_QUEENS_DATA_HOME ; find . -name "*.orig" -delete ; $HG_BINARY add * ; $HG_BINARY commit -m "Latest QUEENSCANCERCENTER dataset"
 fi
 
-# update msk_miamicancerinstitute in portal only if subset was successful
+# TEMP STUDY IMPORT: MIAMICANCERINSTITUTE
 if [ $DB_VERSION_FAIL -eq 0 ] && [ -f $MSK_MCI_IMPORT_TRIGGER ] ; then
     echo "Importing msk_miamicancerinstitute study..."
     echo $(date)
@@ -429,6 +469,7 @@ else
     fi
 fi
 
+## TODO: Move commit to fetch-dmp-data-for-import.sh
 # commit or revert changes for MIAMICANCERINSTITUTE
 if [ $IMPORT_FAIL_MCI -gt 0 ] ; then
     sendFailureMessageMskPipelineLogsSlack "MIAMICANCERINSTITUTE import"
@@ -440,7 +481,7 @@ else
     cd $MSK_MCI_DATA_HOME ; find . -name "*.orig" -delete ; $HG_BINARY add * ; $HG_BINARY commit -m "Latest MIAMICANCERINSTITUTE dataset"
 fi
 
-# update msk_hartfordhealthcare in portal only if subset was successful
+# TEMP STUDY IMPORT: HARTFORDHEALTHCARE
 if [ $DB_VERSION_FAIL -eq 0 ] && [ -f $MSK_HARTFORD_IMPORT_TRIGGER ] ; then
     echo "Importing msk_hartfordhealthcare study..."
     echo $(date)
@@ -458,6 +499,7 @@ else
     fi
 fi
 
+## TODO: Move commit to fetch-dmp-data-for-import.sh
 # commit or revert changes for HARTFORDHEALTHCARE
 if [ $IMPORT_FAIL_HARTFORD -gt 0 ] ; then
     sendFailureMessageMskPipelineLogsSlack "HARTFORDHEALTHCARE import"
@@ -469,7 +511,7 @@ else
     cd $MSK_HARTFORD_DATA_HOME ; find . -name "*.orig" -delete ; $HG_BINARY add * ; $HG_BINARY commit -m "Latest HARTFORDHEALTHCARE dataset"
 fi
 
-# update msk_ralphlauren in portal only if subset was successful
+# TEMP STUDY IMPORT: RALPHLAUREN
 if [ $DB_VERSION_FAIL -eq 0 ] && [ -f $MSK_RALPHLAUREN_IMPORT_TRIGGER ] ; then
     echo "Importing msk_ralphlauren study..."
     echo $(date)
@@ -487,6 +529,7 @@ else
     fi
 fi
 
+## TODO: Move commit to fetch-dmp-data-for-import.sh
 # commit or revert changes for RALPHLAUREN
 if [ $IMPORT_FAIL_RALPHLAUREN -gt 0 ] ; then
     sendFailureMessageMskPipelineLogsSlack "RALPHLAUREN import"
@@ -498,9 +541,10 @@ else
     cd $MSK_RALPHLAUREN_DATA_HOME ; find . -name "*.orig" -delete ; $HG_BINARY add * ; $HG_BINARY commit -m "Latest RALPHLAUREN dataset"
 fi
 
-## END Subset MIXEDPACT on INSTITUTE
+## END Institute affiliate imports
+
 #-------------------------------------------------------------------------------------------------------------------------------------
-# update mskimpact_ped in portal only if subset was successful
+# TEMP STUDY IMPORT: MSKIMPACT_PED
 if [ $DB_VERSION_FAIL -eq 0 ] && [ -f $MSKIMPACT_PED_IMPORT_TRIGGER ]; then
     echo "Importing mskimpact_ped study..."
     echo $(date)
@@ -518,6 +562,7 @@ else
     fi
 fi
 
+## TODO: Move commit to fetch-dmp-data-for-import.sh
 # commit or revert changes for MSKIMPACT_PED
 if [ $IMPORT_FAIL_MSKIMPACT_PED -gt 0 ] ; then
     sendFailureMessageMskPipelineLogsSlack "MSKIMPACT_PED import"
@@ -528,10 +573,11 @@ else
     echo "Committing MSKIMPACT_PED data"
     cd $MSKIMPACT_PED_DATA_HOME ; find . -name "*.orig" -delete ; $HG_BINARY add * ; $HG_BINARY commit -m "Latest MSKIMPACT_PED dataset"
 fi
-## END Subset MSKIMPACT on PED_IND for MSKIMPACT_PED cohort
+## END MSKIMPACT_PED import
+
 #-------------------------------------------------------------------------------------------------------------------------------------
 RESTART_AFTER_SCLC_IMPORT=0
-# update sclc_mskimpact_2017 in portal only if subset was successful and metadata headers were added
+# TEMP STUDY IMPORT: SCLCMSKIMPACT
 if [ $DB_VERSION_FAIL -eq 0 ] && [ -f $MSK_SCLC_IMPORT_TRIGGER ] ; then
     echo "Importing sclc_mskimpact_2017 study..."
     echo $(date)
@@ -549,6 +595,7 @@ else
     fi
 fi
 
+## TODO: Move commit to fetch-dmp-data-for-import.sh
 # commit or revert changes for SCLCMSKIMPACT
 if [ $IMPORT_FAIL_SCLC_MSKIMPACT -gt 0 ] ; then
     sendFailureMessageMskPipelineLogsSlack "SCLCMSKIMPACT import"
@@ -559,9 +606,10 @@ else
     echo "Committing SCLCMSKIMPACT data"
     cd $MSK_SCLC_DATA_HOME ; find . -name "*.orig" -delete ; $HG_BINARY add * ; $HG_BINARY commit -m "Latest SCLCMSKIMPACT dataset"
 fi
-# END Subset MSKIMPACT on ONCOTREE_CODE for SCLC cohort
+# END SCLCMSKIMPACT import
+
 #-------------------------------------------------------------------------------------------------------------------------------------
-# attempt to import if merge and subset successful and metadata headers were added
+# TEMP STUDY IMPORT: LYMPHOMASUPERCOHORT
 if [ $DB_VERSION_FAIL -eq 0 ] && [ -f $LYMPHOMA_SUPER_COHORT_IMPORT_TRIGGER ] ; then
     echo "Importing lymphoma 'super' cohort study..."
     echo $(date)
@@ -579,6 +627,7 @@ else
     fi
 fi
 
+## TODO: Move commit to fetch-dmp-data-for-import.sh
 # commit or revert changes for Lymphoma super cohort
 if [ $IMPORT_FAIL_LYMPHOMA -gt 0 ] ; then
     sendFailureMessageMskPipelineLogsSlack "LYMPHOMASUPERCOHORT import"
@@ -615,6 +664,7 @@ else
     restartSchultzTomcats
 fi
 
+## TODO: Move push to fetch-dmp-data-for-import.sh
 # check updated data back into mercurial
 echo "Pushing DMP-IMPACT updates back to dmp repository..."
 echo $(date)
