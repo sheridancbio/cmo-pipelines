@@ -274,6 +274,10 @@ public class MskimpactPatientDemographics {
     }
 
     public String getOS_MONTHS() {
+        if (AGE_AT_TM_DX_DATE_IN_DAYS != null && AGE_AT_TM_DX_DATE_IN_DAYS < 0) {
+            // can't calculate OS_MONTHS properly, return NA
+            return "NA";
+        }
         if (getOS_STATUS().equals("LIVING")) {
             if (AGE_AT_LAST_KNOWN_ALIVE_IN_DAYS != null && AGE_AT_TM_DX_DATE_IN_DAYS != null) {
                 return String.format("%.3f", (AGE_AT_LAST_KNOWN_ALIVE_IN_DAYS - AGE_AT_TM_DX_DATE_IN_DAYS) / 30.4167);
