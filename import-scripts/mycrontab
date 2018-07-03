@@ -27,3 +27,5 @@ MAILTO=cbioportal-pipelines@cbio.mskcc.org
 # CDD cache is scheduled to reset at 12:15, 12:30, and 12:45 - if all fail, by 1pm the cache would be null and the site will return a 503 error.
 # This writes to stderr and relies on the MAILTO (above) to send an email to cbioportal-pipelines@cbio.mskcc.org
 0 13 * * * /data/portal-cron/scripts/monitor-cdd.sh
+# copy needed configuration files for jenkins integration testing to jenkins server
+0 * * * * /data/portal-cron/scripts/rsync_jenkins_test_properties.sh > /dev/null 2>/dev/null
