@@ -16,7 +16,7 @@ pipeline {
                 branch 'master'
             }
             steps {
-                sh 'echo "Running on master branch!"'
+                sh 'echo "Running on master branch! Testing if PR triggers new pipeline run."'
             }
         }
         stage('import-scripts stage') {
