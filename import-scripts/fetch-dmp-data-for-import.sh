@@ -15,6 +15,10 @@ IMPORT_STATUS_HEME=0
 IMPORT_STATUS_RAINDANCE=0
 IMPORT_STATUS_ARCHER=0
 
+# Flags for ARCHER fusions merge failure
+ARCHER_MERGE_IMPACT_FAIL=0
+ARCHER_MERGE_HEME_FAIL=0
+
 # Assume export of supp date from RedCap succeded unless it failed
 EXPORT_SUPP_DATE_IMPACT_FAIL=0
 EXPORT_SUPP_DATE_HEME_FAIL=0
@@ -158,7 +162,7 @@ function import_mskimpact_cvr_to_redcap {
     return $return_value
 }
 
-# Function for importing mskimpact supp date files to redcap 
+# Function for importing mskimpact supp date files to redcap
 function import_mskimpact_supp_date_to_redcap {
     return_value=0
     if ! import_project_to_redcap $MSK_IMPACT_DATA_HOME/data_clinical_mskimpact_supp_date_cbioportal_added.txt mskimpact_supp_date_cbioportal_added ; then return_value=1 ; fi
@@ -169,7 +173,7 @@ function import_mskimpact_supp_date_to_redcap {
 function import_mskimpact_ddp_to_redcap {
     return_value=0
     if ! import_project_to_redcap $MSK_IMPACT_DATA_HOME/data_clinical_ddp.txt mskimpact_data_clinical_ddp_demographics ; then return_value=1 ; fi
-    if ! import_project_to_redcap $MSK_IMPACT_DATA_HOME/data_timeline_ddp_chemotherapy.txt mskimpact_timeline_chemotherapy_ddp; then return_value=1 ; fi 
+    if ! import_project_to_redcap $MSK_IMPACT_DATA_HOME/data_timeline_ddp_chemotherapy.txt mskimpact_timeline_chemotherapy_ddp; then return_value=1 ; fi
     if ! import_project_to_redcap $MSK_IMPACT_DATA_HOME/data_timeline_ddp_radiation.txt mskimpact_timeline_radiation_ddp ; then return_value=1 ; fi
     if ! import_project_to_redcap $MSK_IMPACT_DATA_HOME/data_timeline_ddp_surgery.txt mskimpact_timeline_surgery_ddp ; then return_value=1 ; fi
     return $return_value
@@ -200,7 +204,7 @@ function import_hemepact_supp_date_to_redcap {
 function import_hemepact_ddp_to_redcap {
     return_value=0
     if ! import_project_to_redcap $MSK_HEMEPACT_DATA_HOME/data_clinical_ddp.txt hemepact_data_clinical_ddp_demographics ; then return_value=1 ; fi
-    if ! import_project_to_redcap $MSK_HEMEPACT_DATA_HOME/data_timeline_ddp_chemotherapy.txt hemepact_timeline_chemotherapy_ddp; then return_value=1 ; fi 
+    if ! import_project_to_redcap $MSK_HEMEPACT_DATA_HOME/data_timeline_ddp_chemotherapy.txt hemepact_timeline_chemotherapy_ddp; then return_value=1 ; fi
     if ! import_project_to_redcap $MSK_HEMEPACT_DATA_HOME/data_timeline_ddp_radiation.txt hemepact_timeline_radiation_ddp ; then return_value=1 ; fi
     if ! import_project_to_redcap $MSK_HEMEPACT_DATA_HOME/data_timeline_ddp_surgery.txt hemepact_data_timeline_surgery_ddp ; then return_value=1 ; fi
     return $return_value
@@ -231,7 +235,7 @@ function import_raindance_supp_date_to_redcap {
 function import_raindance_ddp_to_redcap {
     return_value=0
     if ! import_project_to_redcap $MSK_RAINDANCE_DATA_HOME/data_clinical_ddp.txt mskraindance_data_clinical_ddp_demographics ; then return_value=1 ; fi
-    if ! import_project_to_redcap $MSK_RAINDANCE_DATA_HOME/data_timeline_ddp_chemotherapy.txt mskraindance_timeline_chemotherapy_ddp; then return_value=1 ; fi 
+    if ! import_project_to_redcap $MSK_RAINDANCE_DATA_HOME/data_timeline_ddp_chemotherapy.txt mskraindance_timeline_chemotherapy_ddp; then return_value=1 ; fi
     if ! import_project_to_redcap $MSK_RAINDANCE_DATA_HOME/data_timeline_ddp_radiation.txt mskraindance_timeline_radiation_ddp ; then return_value=1 ; fi
     if ! import_project_to_redcap $MSK_RAINDANCE_DATA_HOME/data_timeline_ddp_surgery.txt mskraindance_data_timeline_surgery_ddp ; then return_value=1 ; fi
     return $return_value
@@ -262,7 +266,7 @@ function import_archer_supp_date_to_redcap {
 function import_archer_ddp_to_redcap {
     return_value=0
     if ! import_project_to_redcap $MSK_ARCHER_DATA_HOME/data_clinical_ddp.txt mskarcher_data_clinical_ddp_demographics ; then return_value=1 ; fi
-    if ! import_project_to_redcap $MSK_ARCHER_DATA_HOME/data_timeline_ddp_chemotherapy.txt mskarcher_timeline_chemotherapy_ddp; then return_value=1 ; fi 
+    if ! import_project_to_redcap $MSK_ARCHER_DATA_HOME/data_timeline_ddp_chemotherapy.txt mskarcher_timeline_chemotherapy_ddp; then return_value=1 ; fi
     if ! import_project_to_redcap $MSK_ARCHER_DATA_HOME/data_timeline_ddp_radiation.txt mskarcher_timeline_radiation_ddp ; then return_value=1 ; fi
     if ! import_project_to_redcap $MSK_ARCHER_DATA_HOME/data_timeline_ddp_surgery.txt mskarcher_data_timeline_surgery_ddp ; then return_value=1 ; fi
     return $return_value
@@ -486,7 +490,7 @@ if [ $FETCH_DARWIN_IMPACT_FAIL -eq 0 ] ; then
     awk -F'\t' 'NR==1 { for (i=1; i<=NF; i++) { f[$i] = i } }{ if ($f["PED_IND"] == "Yes") { print $(f["PATIENT_ID"]) } }' $MSK_IMPACT_DATA_HOME/data_clinical_supp_darwin_demographics.txt | sort | uniq > $MSK_DMP_TMPDIR/mskimpact_ped_patient_list.txt
     # For future use: when we want to replace darwin demographics attributes with ddp-fetched attributes instead of just for ped-cohort
     #awk -F'\t' 'NR==1 { for (i=1; i<=NF; i++) { f[$i] = i } }{ if ($f["PATIENT_ID"] != "PATIENT_ID") { print $(f["PATIENT_ID"]) } }' $MSK_IMPACT_DATA_HOME/data_clinical_mskimpact_data_clinical_cvr.txt | sort | uniq > $MSK_DMP_TMPDIR/mskimpact_patient_list.txt
-    $JAVA_HOME/bin/java -jar $PORTAL_HOME/lib/ddp_fetcher.jar -o $MSK_IMPACT_DATA_HOME -s $MSK_DMP_TMPDIR/mskimpact_ped_patient_list.txt 
+    $JAVA_HOME/bin/java -jar $PORTAL_HOME/lib/ddp_fetcher.jar -o $MSK_IMPACT_DATA_HOME -s $MSK_DMP_TMPDIR/mskimpact_ped_patient_list.txt
     if [ $? -gt 0 ] ; then
         cd $MSK_IMPACT_DATA_HOME ; $HG_BINARY update -C ; find . -name "*.orig" -delete
         sendFailureMessageMskPipelineLogsSlack "MSKIMPACT DDP Fetch"
@@ -561,7 +565,7 @@ fi
 # For future use: when we want to replace darwin demographics attributes with ddp-fetched attributes
 #if [ $FETCH_CVR_HEME_FAIL -eq 0 ] ; then
 #    awk -F'\t' 'NR==1 { for (i=1; i<=NF; i++) { f[$i] = i } }{ if ($f["PATIENT_ID"] != "PATIENT_ID") { print $(f["PATIENT_ID"]) } }' $MSK_HEMEPACT_DATA_HOME/data_clinical_hemepact_data_clinical.txt | sort | uniq > $MSK_DMP_TMPDIR/hemepact_patient_list.txt
-#    $JAVA_HOME/bin/java -jar $PORTAL_HOME/lib/ddp_fetcher.jar -o $MSK_HEMEPACT_DATA_HOME -s $MSK_DMP_TMPDIR/hemepact_patient_list.txt 
+#    $JAVA_HOME/bin/java -jar $PORTAL_HOME/lib/ddp_fetcher.jar -o $MSK_HEMEPACT_DATA_HOME -s $MSK_DMP_TMPDIR/hemepact_patient_list.txt
 #    if [ $? -gt 0 ] ; then
 #        cd $MSK_HEMEPACT_DATA_HOME ; $HG_BINARY update -C ; find . -name "*.orig" -delete
 #        sendFailureMessageMskPipelineLogsSlack "HEMEPACT DDP Fetch"
@@ -620,7 +624,7 @@ fi
 # For future use: when we want to replace darwin demographics attributes with ddp-fetched attributes
 #if [ $FETCH_CVR_RAINDANCE_FAIL -eq 0 ] ; then
 #    awk -F'\t' 'NR==1 { for (i=1; i<=NF; i++) { f[$i] = i } }{ if ($f["PATIENT_ID"] != "PATIENT_ID") { print $(f["PATIENT_ID"]) } }' $MSK_RAINDANCE_DATA_HOME/data_clinical_mskraindance_data_clinical.txt | sort | uniq > $MSK_DMP_TMPDIR/mskraindance_patient_list.txt
-#    $JAVA_HOME/bin/java -jar $PORTAL_HOME/lib/ddp_fetcher.jar -o $MSK_RAINDANCE_DATA_HOME -s $MSK_DMP_TMPDIR/mskraindance_patient_list.txt 
+#    $JAVA_HOME/bin/java -jar $PORTAL_HOME/lib/ddp_fetcher.jar -o $MSK_RAINDANCE_DATA_HOME -s $MSK_DMP_TMPDIR/mskraindance_patient_list.txt
 #    if [ $? -gt 0 ] ; then
 #        cd $MSK_RAINDANCE_DATA_HOME ; $HG_BINARY update -C ; find . -name "*.orig" -delete
 #        sendFailureMessageMskPipelineLogsSlack "RAINDANCE DDP Fetch"
@@ -682,7 +686,7 @@ fi
 # For future use: when we want to replace darwin demographics attributes with ddp-fetched attributes
 #if [ $FETCH_CVR_ARCHER_FAIL -eq 0 ] ; then
 #    awk -F'\t' 'NR==1 { for (i=1; i<=NF; i++) { f[$i] = i } }{ if ($f["PATIENT_ID"] != "PATIENT_ID") { print $(f["PATIENT_ID"]) } }' $MSK_ARCHER_DATA_HOME/data_clinical_mskarcher_data_clinical.txt | sort | uniq > $MSK_DMP_TMPDIR/mskarcher_patient_list.txt
-#    $JAVA_HOME/bin/java -jar $PORTAL_HOME/lib/ddp_fetcher.jar -o $MSK_ARCHER_DATA_HOME -s $MSK_DMP_TMPDIR/mskarcher_patient_list.txt 
+#    $JAVA_HOME/bin/java -jar $PORTAL_HOME/lib/ddp_fetcher.jar -o $MSK_ARCHER_DATA_HOME -s $MSK_DMP_TMPDIR/mskarcher_patient_list.txt
 #    if [ $? -gt 0 ] ; then
 #        cd $MSK_ARCHER_DATA_HOME ; $HG_BINARY update -C ; find . -name "*.orig" -delete
 #        sendFailureMessageMskPipelineLogsSlack "ARCHER DDP Fetch"
@@ -732,11 +736,32 @@ if [ $IMPORT_STATUS_ARCHER -eq 0 ] && [ $FETCH_CVR_ARCHER_FAIL -eq 0 ] ; then
 fi
 
 # -------------------------------- Additional processing -----------------------------------
+# we maintain a file with the list of ARCHER samples to exclude from any merges/subsets involving
+# ARCHER data to prevent duplicate fusion events ($MSK_ARCHER_DATA_HOME/cvr/mapped_archer_fusion_samples.txt)
+MAPPED_ARCHER_FUSION_SAMPLES_FILE=$MSK_ARCHER_DATA_HOME/cvr/mapped_archer_fusion_samples.txt
 
+# add linked ARCHER fusions to MSKIMPACT
 if [ $IMPORT_STATUS_IMPACT -eq 0 ] && [ $FETCH_CVR_ARCHER_FAIL -eq 0 ] && [ $FETCH_CVR_IMPACT_FAIL -eq 0 ] ; then
-    # Merge Archer fusion data into the impact cohort
-    $PYTHON_BINARY $PORTAL_HOME/scripts/archer_fusions_merger.py --archer-fusions $MSK_ARCHER_DATA_HOME/data_fusions.txt --linked-mskimpact-cases-filename $MSK_ARCHER_DATA_HOME/linked_mskimpact_cases.txt --msk-fusions $MSK_IMPACT_DATA_HOME/data_fusions.txt --clinical-filename $MSK_IMPACT_DATA_HOME/data_clinical_mskimpact_data_clinical_cvr.txt --archer-samples-filename $MSK_DMP_TMPDIR/archer_ids.txt
-    cd $MSK_IMPACT_DATA_HOME ; find . -name "*.orig" -delete ; $HG_BINARY add * ; $HG_BINARY forget data_clinical* ; $HG_BINARY forget data_timeline* ; $HG_BINARY commit -m "Adding ARCHER fusions to MSKIMPACT"
+    # Merge ARCHER fusion data into the MSKIMPACT cohort
+    $PYTHON_BINARY $PORTAL_HOME/scripts/archer_fusions_merger.py --archer-fusions $MSK_ARCHER_DATA_HOME/data_fusions.txt --linked-cases-filename $MSK_ARCHER_DATA_HOME/cvr/linked_cases.txt --fusions-filename $MSK_IMPACT_DATA_HOME/data_fusions.txt --clinical-filename $MSK_IMPACT_DATA_HOME/data_clinical_mskimpact_data_clinical_cvr.txt --mapped-archer-samples-filename $MAPPED_ARCHER_FUSION_SAMPLES_FILE --study-id "mskimpact"
+    if [ $? -gt 0 ] ; then
+        ARCHER_MERGE_IMPACT_FAIL=1
+        cd $MSK_IMPACT_DATA_HOME; $HG_BINARY update -C ; find . -name "*.orig" -delete
+    else
+        cd $MSK_IMPACT_DATA_HOME ; find . -name "*.orig" -delete ; $HG_BINARY add * ; $HG_BINARY forget data_clinical* ; $HG_BINARY forget data_timeline* ; $HG_BINARY commit -m "Adding ARCHER fusions to MSKIMPACT"
+    fi
+fi
+
+# add linked ARCHER fusions to HEMEPACT
+if [ $IMPORT_STATUS_HEME -eq 0 ] && [ $FETCH_CVR_ARCHER_FAIL -eq 0 ] && [ $FETCH_CVR_HEME_FAIL -eq 0 ] ; then
+    # Merge ARCHER fusion data into the HEMEPACT cohort
+    $PYTHON_BINARY $PORTAL_HOME/scripts/archer_fusions_merger.py --archer-fusions $MSK_ARCHER_DATA_HOME/data_fusions.txt --linked-cases-filename $MSK_ARCHER_DATA_HOME/cvr/linked_cases.txt --fusions-filename $MSK_HEMEPACT_DATA_HOME/data_fusions.txt --clinical-filename $MSK_HEMEPACT_DATA_HOME/data_clinical_hemepact_data_clinical.txt --mapped-archer-samples-filename $MAPPED_ARCHER_FUSION_SAMPLES_FILE --study-id "mskimpact_heme"
+    if [ $? -gt 0 ] ; then
+        ARCHER_MERGE_HEME_FAIL=1
+        cd $MSK_HEMEPACT_DATA_HOME; $HG_BINARY update -C ; find . -name "*.orig" -delete
+    else
+        cd $MSK_HEMEPACT_DATA_HOME ; find . -name "*.orig" -delete ; $HG_BINARY add * ; $HG_BINARY forget data_clinical* ; $HG_BINARY forget data_timeline* ; $HG_BINARY commit -m "Adding ARCHER fusions to HEMEPACT"
+    fi
 fi
 
 # gets index of SAMPLE_ID from file (used in case SAMPLE_ID index changes)
@@ -924,7 +949,7 @@ if [ $IMPORT_STATUS_IMPACT -eq 0 ] ; then
             $PYTHON_BINARY $PORTAL_HOME/scripts/filter_dropped_samples_patients.py -s $MSK_IMPACT_DATA_HOME/data_clinical_sample.txt -p $MSK_IMPACT_DATA_HOME/data_clinical_patient.txt -t $MSK_IMPACT_DATA_HOME/data_timeline.txt -f $MSK_DMP_TMPDIR/sample_masterlist_for_filtering.txt
             if [ $? -ne 0 ] ; then
                 cd $MSK_IMPACT_DATA_HOME ; $HG_BINARY update -C ; find . -name "*.orig" -delete
-            else 
+            else
                 cd $MSK_IMPACT_DATA_HOME ; find . -name "*.orig" -delete ; $HG_BINARY add * ; $HG_BINARY commit -m "Latest MSK-IMPACT Dataset: Clinical and Timeline"
             fi
         fi
@@ -993,7 +1018,7 @@ echo "Beginning merge of MSK-IMPACT, HEMEPACT, RAINDANCE, ARCHER data for MIXEDP
 echo $(date)
 
 # MIXEDPACT merge and check exit code
-$PYTHON_BINARY $PORTAL_HOME/scripts/merge.py -d $MSK_MIXEDPACT_DATA_HOME -i mixedpact -m "true" -e $MSK_DMP_TMPDIR/archer_ids.txt $MSK_IMPACT_DATA_HOME $MSK_HEMEPACT_DATA_HOME $MSK_RAINDANCE_DATA_HOME $MSK_ARCHER_DATA_HOME
+$PYTHON_BINARY $PORTAL_HOME/scripts/merge.py -d $MSK_MIXEDPACT_DATA_HOME -i mixedpact -m "true" -e $MAPPED_ARCHER_FUSION_SAMPLES_FILE $MSK_IMPACT_DATA_HOME $MSK_HEMEPACT_DATA_HOME $MSK_RAINDANCE_DATA_HOME $MSK_ARCHER_DATA_HOME
 if [ $? -gt 0 ] ; then
     echo "MIXEDPACT merge failed! Study will not be updated in the portal."
     sendFailureMessageMskPipelineLogsSlack "MIXEDPACT merge"
@@ -1017,7 +1042,7 @@ echo "Beginning merge of MSK-IMPACT, HEMEPACT, RAINDANCE, ARCHER data for MSKSOL
 echo $(date)
 
 # MSKSOLIDHEME merge and check exit code
-$PYTHON_BINARY $PORTAL_HOME/scripts/merge.py -d $MSK_SOLID_HEME_DATA_HOME -i msk_solid_heme -m "true" -e $MSK_DMP_TMPDIR/archer_ids.txt $MSK_IMPACT_DATA_HOME $MSK_HEMEPACT_DATA_HOME $MSK_ARCHER_DATA_HOME
+$PYTHON_BINARY $PORTAL_HOME/scripts/merge.py -d $MSK_SOLID_HEME_DATA_HOME -i msk_solid_heme -m "true" -e $MAPPED_ARCHER_FUSION_SAMPLES_FILE $MSK_IMPACT_DATA_HOME $MSK_HEMEPACT_DATA_HOME $MSK_ARCHER_DATA_HOME
 if [ $? -gt 0 ] ; then
     echo "MSKSOLIDHEME merge failed! Study will not be updated in the portal."
     sendFailureMessageMskPipelineLogsSlack "MSKSOLIDHEME merge"
@@ -1133,7 +1158,7 @@ if [ $? -gt 0 ] ; then
     echo "MSKIMPACT redcap export for MSKIMPACT_PED failed! Study will not be updated in the portal"
     sendFailureMessageMskPipelineLogsSlack "MSKIMPACT_PED redcap export"
     MSKIMPACT_PED_SUBSET_FAIL=1
-else 
+else
     bash $PORTAL_HOME/scripts/subset-impact-data.sh -i=mskimpact_ped -o=$MSKIMPACT_PED_DATA_HOME -d=$MSKIMPACT_PED_TMP_DIR -f="PED_IND=Yes" -s=$MSK_DMP_TMPDIR/mskimpact_ped_subset.txt -c=$MSKIMPACT_PED_TMP_DIR/data_clinical_patient.txt
     if [ $? -gt 0 ] ; then
         echo "MSKIMPACT_PED subset failed! Study will not be updated in the portal."
@@ -1245,7 +1270,7 @@ if [ $(wc -l < $MSK_HEMEPACT_DATA_HOME/meta_SV.txt) -eq 0 ] ; then
 fi
 #--------------------------------------------------------------
 # Email for failed processes
- 
+
 EMAIL_BODY="The MSKIMPACT study failed fetch. The original study will remain on the portal."
 # send email if fetch fails
 if [ $IMPORT_STATUS_IMPACT -gt 0 ] ; then
@@ -1272,6 +1297,18 @@ EMAIL_BODY="The ARCHER study failed fetch. The original study will remain on the
 if [ $IMPORT_STATUS_ARCHER -gt 0 ] ; then
     echo -e "Sending email $EMAIL_BODY"
     echo -e "$EMAIL_BODY" | mail -s "archer Fetch Failure: Import" $email_list
+fi
+
+EMAIL_BODY="Failed to merge ARCHER fusion events into MSKIMPACT"
+if [ $ARCHER_MERGE_IMPACT_FAIL -gt 0 ] ; then
+    echo -e "Sending email $EMAIL_BODY"
+    echo -e "$EMAIL_BODY" |  mail -s "MSKIMPACT-ARCHER Merge Failure: Study will be updated without new ARCHER fusion events." $email_list
+fi
+
+EMAIL_BODY="Failed to merge ARCHER fusion events into HEMEPACT"
+if [ $ARCHER_MERGE_HEME_FAIL -gt 0 ] ; then
+    echo -e "Sending email $EMAIL_BODY"
+    echo -e "$EMAIL_BODY" |  mail -s "HEMEPACT-ARCHER Merge Failure: Study will be updated without new ARCHER fusion events." $email_list
 fi
 
 EMAIL_BODY="Failed to merge MSK-IMPACT, HEMEPACT, ARCHER, and RAINDANCE data. Merged study will not be updated."

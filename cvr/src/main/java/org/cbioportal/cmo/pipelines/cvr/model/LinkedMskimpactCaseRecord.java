@@ -12,10 +12,12 @@ import java.util.*;
  * @author heinsz
  */
 public class LinkedMskimpactCaseRecord {
-    
+
     private String sampleId;
     private String linkedMskImpactCase;
-    
+
+    public LinkedMskimpactCaseRecord() {}
+
     public LinkedMskimpactCaseRecord(String sampleId, String linkedMskImpactCase) {
         this.sampleId = sampleId;
         this.linkedMskImpactCase = linkedMskImpactCase;
