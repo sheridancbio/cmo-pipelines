@@ -12,6 +12,10 @@ import org.apache.log4j.Logger;
 import java.io.*;
 import java.util.*;
 import javax.annotation.Resource;
+import org.cbioportal.cmo.pipelines.cvr.model.CVRData;
+import org.cbioportal.cmo.pipelines.cvr.model.CVRMergedResult;
+import org.cbioportal.cmo.pipelines.cvr.model.GMLData;
+import org.cbioportal.cmo.pipelines.cvr.model.GMLResult;
 import org.cbioportal.cmo.pipelines.cvr.CVRUtilities;
 import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.scope.context.ChunkContext;
@@ -49,7 +53,16 @@ public class CvrSampleListsTasklet implements Tasklet {
 
     @Value("#{jobParameters[maxNumSamplesToRemove]}")
     private Integer maxNumSamplesToRemove;
-    
+
+    @Value("#{jobParameters[jsonMode]}")
+    private Boolean jsonMode;
+
+    @Value("#{jobParameters[gmlMode]}")
+    private Boolean gmlMode;
+
+    @Autowired
+    public CVRUtilities cvrUtilities;
+
     @Resource(name="masterListTokensMap")
     private Map<String, String> masterListTokensMap;
 
@@ -81,6 +94,15 @@ public class CvrSampleListsTasklet implements Tasklet {
         catch (Exception e) {
             log.warn("Error loading whitelisted samples with zero variants from: " + CVRUtilities.ZERO_VARIANT_WHITELIST_FILE + "\n" + e.getLocalizedMessage());
         }
+        // init new dmp samples (or patients) list if running in json/gmlJson mode
+        if (jsonMode) {
+            if (gmlMode) {
+                initNewDmpGmlPatientsForJsonMode();
+            }
+            else {
+                initNewDmpSamplesForJsonMode();
+            }
+        }
 
         // update cvr sample list util
         cvrSampleListUtil.setDmpMasterList(dmpMasterList);
@@ -89,6 +111,42 @@ public class CvrSampleListsTasklet implements Tasklet {
         return RepeatStatus.FINISHED;
     }
 
+    private void initNewDmpGmlPatientsForJsonMode() {
+        log.info("Loading new DMP GML patient IDs from: " + CVRUtilities.GML_FILE);
+        GMLData gmlData = new GMLData();
+        // load cvr data from cvr_gml_data.json file
+        File cvrGmlFile = new File(stagingDirectory, CVRUtilities.GML_FILE);
+        try {
+            gmlData = cvrUtilities.readGMLJson(cvrGmlFile);
+        } catch (IOException e) {
+            log.error("Error reading file: " + cvrGmlFile.getName());
+            throw new RuntimeException(e);
+        }
+        Set<String> newDmpGmlPatients = new HashSet<>();
+        for (GMLResult result : gmlData.getResults()) {
+            newDmpGmlPatients.add(result.getMetaData().getDmpPatientId());
+        }
+        cvrSampleListUtil.setNewDmpGmlPatients(newDmpGmlPatients);
+    }
+
+    private void initNewDmpSamplesForJsonMode() {
+        log.info("Loading new DMP sample IDs from: " + CVRUtilities.CVR_FILE);
+        CVRData cvrData = new CVRData();
+        // load cvr data from cvr_data.json file
+        File cvrFile = new File(stagingDirectory, CVRUtilities.CVR_FILE);
+        try {
+            cvrData = cvrUtilities.readJson(cvrFile);
+        } catch (IOException e) {
+            log.error("Error reading file: " + cvrFile.getName());
+            throw new RuntimeException(e);
+        }
+        Set<String> newDmpSamples = new HashSet<>();
+        for (CVRMergedResult result : cvrData.getResults()) {
+            newDmpSamples.add(result.getMetaData().getDmpSampleId());
+        }
+        cvrSampleListUtil.setNewDmpSamples(newDmpSamples);
+    }
+    
     private Set<String> loadWhitelistedSamplesWithZeroVariants() throws Exception {
         Set<String> whitedListedSamplesWithZeroVariants = new HashSet<>();
         File whitelistedSamplesFile = new File(stagingDirectory, CVRUtilities.ZERO_VARIANT_WHITELIST_FILE);
@@ -106,7 +164,7 @@ public class CvrSampleListsTasklet implements Tasklet {
                 log.warn("White listed file exists but nothing loaded from: " + CVRUtilities.ZERO_VARIANT_WHITELIST_FILE);
             }
             else {
-                log.info("Loaded " + whitedListedSamplesWithZeroVariants.size() + " whitelised samples with zero variants from: " + CVRUtilities.ZERO_VARIANT_WHITELIST_FILE);
+                log.info("Loaded " + whitedListedSamplesWithZeroVariants.size() + " whitelisted samples with zero variants from: " + CVRUtilities.ZERO_VARIANT_WHITELIST_FILE);
             }
         }
         return whitedListedSamplesWithZeroVariants;

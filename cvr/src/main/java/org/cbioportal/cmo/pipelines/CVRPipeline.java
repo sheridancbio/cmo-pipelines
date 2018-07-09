@@ -101,7 +101,9 @@ public class CVRPipeline {
                 .addString("maxNumSamplesToRemove", String.valueOf(maxNumSamplesToRemove))
                 .addString("forceAnnotation", String.valueOf(forceAnnotation))
                 .addString("clinicalFilename", clinicalFilename)
-                .addString("stopZeroVariantWarnings", String.valueOf(stopZeroVariantWarnings));
+                .addString("stopZeroVariantWarnings", String.valueOf(stopZeroVariantWarnings))
+                .addString("jsonMode", String.valueOf(json))
+                .addString("gmlMode", String.valueOf(gml));
         if (json) {
             if (gml) {
                 jobName = BatchConfiguration.GML_JSON_JOB;
@@ -171,11 +173,6 @@ public class CVRPipeline {
         Options options = CVRPipeline.getOptions(args);
         CommandLineParser parser = new DefaultParser();
         CommandLine commandLine = parser.parse(options, args);
-        if (commandLine.hasOption("j")) {
-            String error_message = "The --json argument is not currently functioning correctly (data_clinical.txt is not propeprly updated with clinical information from cvr_data.json)";
-            log.error(error_message);
-            throw new UnsupportedOperationException(error_message);
-        }
         if (commandLine.hasOption("h") ||
                 ((!commandLine.hasOption("d") || !commandLine.hasOption("i")) && !commandLine.hasOption("c"))) {
             help(options, 0);
