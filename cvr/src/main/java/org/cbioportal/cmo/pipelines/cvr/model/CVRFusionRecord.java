@@ -32,8 +32,10 @@
 
 package org.cbioportal.cmo.pipelines.cvr.model;
 
+import com.mysql.jdbc.StringUtils;
 import java.util.ArrayList;
 import java.util.List;
+import joptsimple.internal.Strings;
 
 /**
  *
@@ -74,6 +76,26 @@ public class CVRFusionRecord {
         }
         this.comments = variant.getAnnotation() + " " + variant.getComments();
         this.comments = this.comments.replaceAll("[\\t\\n\\r]+"," ");
+    }
+
+    public CVRFusionRecord(GMLCnvIntragenicVariant variant, String sampleId) {
+        this.hugoSymbol = variant.getGeneId().trim();
+        this.entrezGeneId = "0";
+        this.center = "MSKCC-DMP";
+        this.tumorSampleBarcode = sampleId;
+        this.fusion = hugoSymbol + "-intragenic";
+
+        // add more details if applicable
+        if (!Strings.isNullOrEmpty(variant.getCnvClassName())) {
+            String fusionDetails = variant.getCnvClassName().trim().replace("INTRAGENIC_", "");
+            this.fusion += " " + fusionDetails.toLowerCase();
+        }
+        this.dnaSupport = "yes";
+        this.rnaSupport = "unknown";
+        this.method = "NA";
+        this.frame = "unknown";
+        // comments do not get imported into db so length of this field won't throw a MysqlDataTruncation exception
+        this.comments = (!StringUtils.isNullOrEmpty(variant.getInterpretation())) ? variant.getInterpretation().replaceAll("[\\t\\n\\r]+"," ") : "";
     }
 
     public String getHugo_Symbol() {

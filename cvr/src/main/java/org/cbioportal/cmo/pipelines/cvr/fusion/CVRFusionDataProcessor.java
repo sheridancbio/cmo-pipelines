@@ -52,7 +52,7 @@ public class CVRFusionDataProcessor implements ItemProcessor<CVRFusionRecord, St
     @Override
     public String process(CVRFusionRecord i) throws Exception {
         List<String> record = new ArrayList<>();
-        for (String field : i.getFieldNames()) {
+        for (String field : CVRFusionRecord.getFieldNames()) {
             record.add(cvrUtils.convertWhitespace(i.getClass().getMethod("get" + field).invoke(i).toString()));
         }
         return StringUtils.join(record, "\t");

@@ -32,22 +32,17 @@
 
 package org.cbioportal.cmo.pipelines.cvr.fusion;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.Writer;
-import java.util.ArrayList;
-import java.util.List;
-import org.apache.commons.lang.StringUtils;
 import org.cbioportal.cmo.pipelines.cvr.CVRUtilities;
 import org.cbioportal.cmo.pipelines.cvr.model.CVRFusionRecord;
-import org.springframework.batch.item.ExecutionContext;
-import org.springframework.batch.item.ItemStreamException;
-import org.springframework.batch.item.ItemStreamWriter;
-import org.springframework.batch.item.file.FlatFileHeaderCallback;
-import org.springframework.batch.item.file.FlatFileItemWriter;
+
+import java.io.*;
+import java.util.*;
+import org.apache.commons.lang.StringUtils;
+
+import org.springframework.batch.item.*;
+import org.springframework.batch.item.file.*;
 import org.springframework.batch.item.file.transform.PassThroughLineAggregator;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.*;
 import org.springframework.core.io.FileSystemResource;
 
 /**
@@ -59,6 +54,9 @@ public class CVRFusionDataWriter implements ItemStreamWriter<String> {
     @Value("#{jobParameters[stagingDirectory]}")
     private String stagingDirectory;
 
+    @Value("#{stepExecutionContext['fusionsFilename']}")
+    private String fusionsFilename;
+
     @Autowired
     public CVRUtilities cvrUtilities;
 
@@ -66,7 +64,7 @@ public class CVRFusionDataWriter implements ItemStreamWriter<String> {
 
     @Override
     public void open(ExecutionContext ec) throws ItemStreamException {
-        File stagingFile = new File(stagingDirectory, cvrUtilities.FUSION_FILE);
+        File stagingFile = new File(stagingDirectory, fusionsFilename);
         PassThroughLineAggregator aggr = new PassThroughLineAggregator();
         flatFileItemWriter.setLineAggregator(aggr);
         flatFileItemWriter.setHeaderCallback(new FlatFileHeaderCallback() {

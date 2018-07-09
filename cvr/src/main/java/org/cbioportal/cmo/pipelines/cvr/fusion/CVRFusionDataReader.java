@@ -64,65 +64,74 @@ public class CVRFusionDataReader implements ItemStreamReader<CVRFusionRecord> {
     private List<CVRFusionRecord> fusionRecords = new ArrayList();
     private Set<String> fusionsSeen = new HashSet();
     
-    Logger log = Logger.getLogger(CVRFusionDataReader.class);
+    private Logger LOG = Logger.getLogger(CVRFusionDataReader.class);
 
     @Override
     public void open(ExecutionContext ec) throws ItemStreamException {
+        // load existing fusions from data file
+        processFusionsFile();
+        // merge existing and new fusion records
+        processJsonFile();
+
+        // set fusion file to write to for writer
+        ec.put("fusionsFilename", CVRUtilities.FUSION_FILE);
+    }
+
+    private void processFusionsFile() {
+        File fusionFile = new File(stagingDirectory, CVRUtilities.FUSION_FILE);
+        if (!fusionFile.exists()) {
+            LOG.info("File does not exist - skipping data loading from fusion file: " + fusionFile.getName());
+            return;
+        }
+        LOG.info("Loading fusion data from: " + fusionFile.getName());
+
+        DelimitedLineTokenizer tokenizer = new DelimitedLineTokenizer(DelimitedLineTokenizer.DELIMITER_TAB);
+        DefaultLineMapper<CVRFusionRecord> mapper = new DefaultLineMapper<>();
+        mapper.setLineTokenizer(tokenizer);
+        mapper.setFieldSetMapper(new CVRFusionFieldSetMapper());
+
+        FlatFileItemReader<CVRFusionRecord> reader = new FlatFileItemReader<>();
+        reader.setResource(new FileSystemResource(fusionFile));
+        reader.setLineMapper(mapper);
+        reader.setLinesToSkip(1);
+        reader.open(new ExecutionContext());
+
+        try {
+            CVRFusionRecord to_add;
+            while ((to_add = reader.read()) != null) {
+                if (!cvrSampleListUtil.getNewDmpSamples().contains(to_add.getTumor_Sample_Barcode()) && to_add.getTumor_Sample_Barcode() != null) {
+                    String fusion = to_add.getHugo_Symbol() + "|" +to_add.getTumor_Sample_Barcode() + "|" + to_add.getFusion();
+                    if (!fusionsSeen.contains(fusion)) {
+                        fusionRecords.add(to_add);
+                        fusionsSeen.add(fusion);
+                    }
+                }
+            }
+        } catch (Exception e){
+            LOG.info("Error loading data from fusion file: " + fusionFile.getName());
+            throw new ItemStreamException(e);
+        }
+        reader.close();
+    }
+
+    private void processJsonFile() {
         CVRData cvrData = new CVRData();
         // load cvr data from cvr_data.json file
         File cvrFile = new File(stagingDirectory, cvrUtilities.CVR_FILE);
         try {
             cvrData = cvrUtilities.readJson(cvrFile);
         } catch (IOException e) {
-            log.error("Error reading file: " + cvrFile.getName());
+            LOG.error("Error reading file: " + cvrFile.getName());
             throw new ItemStreamException(e);
         }
-
-        File fusionFile = new File(stagingDirectory, cvrUtilities.FUSION_FILE);
-        if (!fusionFile.exists()) {
-            log.info("File does not exist - skipping data loading from fusion file: " + fusionFile.getName());
-        }
-        else {
-            log.info("Loading fusion data from: " + fusionFile.getName());
-
-            DelimitedLineTokenizer tokenizer = new DelimitedLineTokenizer(DelimitedLineTokenizer.DELIMITER_TAB);
-            DefaultLineMapper<CVRFusionRecord> mapper = new DefaultLineMapper<>();
-            mapper.setLineTokenizer(tokenizer);
-            mapper.setFieldSetMapper(new CVRFusionFieldSetMapper());
-
-            FlatFileItemReader<CVRFusionRecord> reader = new FlatFileItemReader<>();
-            reader.setResource(new FileSystemResource(fusionFile));
-            reader.setLineMapper(mapper);
-            reader.setLinesToSkip(1);
-            reader.open(ec);
-
-            try {
-                CVRFusionRecord to_add;
-                while ((to_add = reader.read()) != null) {
-                    if (!cvrSampleListUtil.getNewDmpSamples().contains(to_add.getTumor_Sample_Barcode()) && to_add.getTumor_Sample_Barcode() != null) {
-                        String fusion = to_add.getHugo_Symbol() + "|" +to_add.getTumor_Sample_Barcode() + "|" + to_add.getFusion();
-                        if (!fusionsSeen.contains(fusion)) {
-                            fusionRecords.add(to_add);
-                            fusionsSeen.add(fusion);
-                        }
-                    }
-                }
-            } catch (Exception e){
-                log.info("Error loading data from fusion file: " + fusionFile.getName());
-                throw new ItemStreamException(e);
-            }
-            reader.close();
-        }
-
-        // merge existing and new fusion records
         for (CVRMergedResult result : cvrData.getResults()) {
             String sampleId = result.getMetaData().getDmpSampleId();
             List<CVRSvVariant> variants = result.getSvVariants();
             for (CVRSvVariant variant : variants) {
                 // skip records where both gene 1 and gene 2 are null or empty
                 if (Strings.isNullOrEmpty(variant.getSite1_Gene()) && Strings.isNullOrEmpty(variant.getSite2_Gene())) {
-                    log.warn("Skipping fusion record where genes are missing for sample '" + sampleId + "'" + 
-                            (Strings.isNullOrEmpty(variant.getAnnotation()) ? "" :  " - record annotation: " + variant.getAnnotation()));
+                    LOG.warn("Skipping fusion record where genes are missing for sample '" + sampleId + "'" + 
+                            (Strings.isNullOrEmpty(variant.getAnnotation()) ? "" :  " - record annotation: " + variant.getAnnotation().replaceAll("[\\t\\n\\r]+"," ")));
                     continue;
                 }
                 CVRFusionRecord record = null;
@@ -132,7 +141,7 @@ public class CVRFusionDataReader implements ItemStreamReader<CVRFusionRecord> {
                 catch (NullPointerException e) {
                     // log error if both variant gene sites are not null
                     if (variant.getSite1_Gene() != null && variant.getSite2_Gene() != null) {
-                        log.error("Error creating fusion record for sample, gene1-gene2 event: " + sampleId + ", " + variant.getSite1_Gene() + "-" + variant.getSite2_Gene());
+                        LOG.error("Error creating fusion record for sample, gene1-gene2 event: " + sampleId + ", " + variant.getSite1_Gene() + "-" + variant.getSite2_Gene());
                     }
                     continue;
                 }
