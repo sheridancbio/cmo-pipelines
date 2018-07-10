@@ -21,12 +21,13 @@ ARCHER_VALIDATION_FAIL=0
 # Function for alerting slack channel of any failures
 function sendFailureMessageMskPipelineLogsSlack {
     MESSAGE=$1
-    curl -X POST --data-urlencode "payload={\"channel\": \"#msk-pipeline-logs\", \"username\": \"cbioportal_importer\", \"text\": \"REDCap export failed: $MESSAGE\", \"icon_emoji\": \":fire:\"}" https://hooks.slack.com/services/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
+    curl -X POST --data-urlencode "payload={\"channel\": \"#msk-pipeline-logs\", \"username\": \"cbioportal_importer\", \"text\": \"REDCap backup failed: $MESSAGE\", \"icon_emoji\": \":fire:\"}" https://hooks.slack.com/services/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
 }
 
 # Function for alerting slack channel of successful imports
 function sendSuccessMessageMskPipelineLogsSlack {
-    curl -X POST --data-urlencode "payload={\"channel\": \"#msk-pipeline-logs\", \"username\": \"cbioportal_importer\", \"text\": \"REDCap data backup succeeded!\", \"icon_emoji\": \":tada:\"}" https://hooks.slack.com/services/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
+    MESSAGE=$1
+    curl -X POST --data-urlencode "payload={\"channel\": \"#msk-pipeline-logs\", \"username\": \"cbioportal_importer\", \"text\": \"REDCap data backup succeeded! $MESSAGE\", \"icon_emoji\": \":tada:\"}" https://hooks.slack.com/services/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
 }
 
 # Validate exported REDCap data
@@ -62,7 +63,7 @@ if [ $? -gt 0 ]; then
     echo "Failed to export REDCap data snapshot for MSKIMPACT! Aborting any changes made during export..."
     cd $MSKIMPACT_REDCAP_BACKUP; $HG_BINARY update -C; rm *.orig
     MSKIMPACT_REDCAP_EXPORT_FAIL=1
-    sendFailureMessageMskPipelineLogsSlack "MSKIMPACT"
+    sendFailureMessageMskPipelineLogsSlack "MSKIMPACT export"
 else
     validateRedcapExportForStudy $MSKIMPACT_REDCAP_BACKUP
     if [ $? -gt 0 ]; then
@@ -70,6 +71,7 @@ else
         MSKIMPACT_VALIDATION_FAIL=1
         cd $MSKIMPACT_REDCAP_BACKUP; $HG_BINARY update -C; rm *.orig
         MSKIMPACT_REDCAP_EXPORT_FAIL=1
+        sendFailureMessageMskPipelineLogsSlack "MSKIMPACT validation"
     else
         echo "Committing MSKIMPACT REDCap data snapshot"
         cd $MSKIMPACT_REDCAP_BACKUP; $HG_BINARY commit -m "MSKIMPACT REDCap Snapshot"
@@ -82,7 +84,7 @@ if [ $? -gt 0 ]; then
     echo "Failed to export REDCap data snapshot for RAINDANCE! Aborting any changes made during export..."
     cd $RAINDANCE_REDCAP_BACKUP; $HG_BINARY update -C; rm *.orig
     RAINDANCE_REDCAP_EXPORT_FAIL=1
-    sendFailureMessageMskPipelineLogsSlack "RAINDANCE"
+    sendFailureMessageMskPipelineLogsSlack "RAINDANCE export"
 else
     validateRedcapExportForStudy $RAINDANCE_REDCAP_BACKUP
     if [ $? -gt 0 ]; then
@@ -90,6 +92,7 @@ else
         RAINDANCE_VALIDATION_FAIL=1
         cd $RAINDANCE_REDCAP_BACKUP; $HG_BINARY update -C; rm *.orig
         RAINDANCE_REDCAP_EXPORT_FAIL=1
+        sendFailureMessageMskPipelineLogsSlack "RAINDANCE validation"
     else
         echo "Committing RAINDANCE REDCap data snapshot"
         cd $RAINDANCE_REDCAP_BACKUP; $HG_BINARY commit -m "RAINDANCE REDCap Snapshot"
@@ -102,7 +105,7 @@ if [ $? -gt 0 ]; then
     echo "Failed to export REDCap data snapshot for HEMEPACT! Aborting any changes made during export..."
     cd $HEMEPACT_REDCAP_BACKUP; $HG_BINARY update -C; rm *.orig
     HEMEPACT_REDCAP_EXPORT_FAIL=1
-    sendFailureMessageMskPipelineLogsSlack "HEMEPACT"
+    sendFailureMessageMskPipelineLogsSlack "HEMEPACT export"
 else
     validateRedcapExportForStudy $HEMEPACT_REDCAP_BACKUP
     if [ $? -gt 0 ]; then
@@ -110,6 +113,7 @@ else
         HEMEPACT_VALIDATION_FAIL=1
         cd $HEMEPACT_REDCAP_BACKUP; $HG_BINARY update -C; rm *.orig
         HEMEPACT_REDCAP_EXPORT_FAIL=1
+        sendFailureMessageMskPipelineLogsSlack "HEMEPACT validation"
     else
         echo "Committing HEMEPACT REDCap data snapshot"
         cd $HEMEPACT_REDCAP_BACKUP; $HG_BINARY commit -m "HEMEPACT REDCap Snapshot"
@@ -122,7 +126,7 @@ if [ $? -gt 0 ]; then
     echo "Failed to export REDCap data snapshot for ARCHER! Aborting any changes made during export..."
     cd $ARCHER_REDCAP_BACKUP; $HG_BINARY update -C; rm *.orig
     ARCHER_REDCAP_EXPORT_FAIL=1
-    sendFailureMessageMskPipelineLogsSlack "ARCHER"
+    sendFailureMessageMskPipelineLogsSlack "ARCHER export"
 else
     validateRedcapExportForStudy $ARCHER_REDCAP_BACKUP
     if [ $? -gt 0 ]; then
@@ -130,6 +134,7 @@ else
         ARCHER_VALIDATION_FAIL=1
         cd $ARCHER_REDCAP_BACKUP; $HG_BINARY update -C; rm *.orig
         ARCHER_REDCAP_EXPORT_FAIL=1
+        sendFailureMessageMskPipelineLogsSlack "ARCHER validation"
     else
         echo "Committing ARCHER REDCap data snapshot"
         cd $ARCHER_REDCAP_BACKUP; $HG_BINARY commit -m "ARCHER REDCap Snapshot"
@@ -143,7 +148,20 @@ cd $REDCAP_BACKUP_DATA_HOME; $HG_BINARY push
 
 # slack successful backup message
 if [[ $MSKIMPACT_REDCAP_EXPORT_FAIL -eq 0 && $MSKIMPACT_VALIDATION_FAIL -eq 0 && $RAINDANCE_REDCAP_EXPORT_FAIL -eq 0 && $RAINDANCE_VALIDATION_FAIL -eq 0 && $HEMEPACT_REDCAP_EXPORT_FAIL -eq 0 && $HEMEPACT_VALIDATION_FAIL -eq 0 && $ARCHER_REDCAP_EXPORT_FAIL -eq 0 && $ARCHER_VALIDATION_FAIL -eq 0 ]]; then
-    sendSuccessMessageMskPipelineLogsSlack
+    sendSuccessMessageMskPipelineLogsSlack "ALL studies"
+else
+    if [[ $MSKIMPACT_REDCAP_EXPORT_FAIL -eq 0 && $MSKIMPACT_VALIDATION_FAIL -eq 0 ]] ; then
+        sendSuccessMessageMskPipelineLogsSlack "MSKIMPACT"
+    fi
+    if [[ $RAINDANCE_REDCAP_EXPORT_FAIL -eq 0 && $RAINDANCE_VALIDATION_FAIL -eq 0 ]] ; then
+        sendSuccessMessageMskPipelineLogsSlack "RAINDANCE"
+    fi
+    if [[ $HEMEPACT_REDCAP_EXPORT_FAIL -eq 0 && $HEMEPACT_VALIDATION_FAIL -eq 0 ]] ; then
+        sendSuccessMessageMskPipelineLogsSlack "HEMEPACT"
+    fi
+    if [[ $ARCHER_REDCAP_EXPORT_FAIL -eq 0 && $ARCHER_VALIDATION_FAIL -eq 0 ]] ; then
+        sendSuccessMessageMskPipelineLogsSlack "ARCHER"
+    fi
 fi
 
 # -----------------------------------------------------------------------------------------------------------
