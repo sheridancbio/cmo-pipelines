@@ -1,12 +1,22 @@
 #!/bin/bash
+
 TESTING_DIRECTORY=/var/lib/jenkins/tempdir
-REDCAP_EXPORTS_DIRECTORY=$TESTING_DIRECTORY/redcap_exports
-LIB_DIRECTORY=$TESTING_DIRECTORY/lib
+if [ ! -d $TESTING_DIRECTORY ] ; then
+    mkdir -p $TESTING_DIRECTORY
+fi
+TESTING_DIRECTORY_TEMP=$(mktemp -d $TESTING_DIRECTORY/cron-integration.XXXXXX)
+REDCAP_EXPORTS_DIRECTORY=$TESTING_DIRECTORY_TEMP/redcap_exports
+LIB_DIRECTORY=$TESTING_DIRECTORY_TEMP/lib
 CMO_PIPELINES_DIRECTORY="$(pwd)"
 CMO_REDCAP_DIRECTORY=$CMO_PIPELINES_DIRECTORY/redcap
 CMO_INTEGRATION_TESTS_DIRECTORY=$CMO_PIPELINES_DIRECTORY/integration-tests
 REDCAP_JAR=$CMO_REDCAP_DIRECTORY/redcap_pipeline/target/redcap_pipeline.jar
 TEST_SUCCESS=0
+
+# Function for alerting slack channel of any failures
+function sendFailureMessageMskPipelineLogsSlack {
+    curl -X POST --data-urlencode "payload={\"channel\": \"#msk-pipeline-logs\", \"username\": \"jenkins\", \"text\": \"Redcap ID mappings integration test failed! Please fix before the production run.\", \"icon_emoji\": \":face_palm:\"}" https://hooks.slack.com/services/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
+}
 
 mkdir -p $REDCAP_EXPORTS_DIRECTORY $LIB_DIRECTORY
 echo "Running integration tests!"
@@ -20,13 +30,14 @@ cd $CMO_INTEGRATION_TESTS_DIRECTORY
 python scan-for-expected-redcap-projects.py -e expected_study_project_list.txt -t $REDCAP_EXPORTS_DIRECTORY -j $LIB_DIRECTORY/redcap_pipeline.jar
 if [ $? -gt 0 ] ; then
     echo "Test failed - ID mappings project in redcap differs from expected"
+    sendFailureMessageMskPipelineLogsSlack
     TEST_SUCCESS=0
 else
     echo "Test success - ID mapping project in redcap matches expected"
     TEST_SUCCESS=1
 fi
 
-rm -rf $TESTING_DIRECTORY
+rm -rf $TESTING_DIRECTORY_TEMP
 if [ $TEST_SUCCESS -eq 0 ] ; then
     exit 1
 fi
