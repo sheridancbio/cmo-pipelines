@@ -6,7 +6,6 @@ JENKINS_PIPELINES_CREDENTIALS=$JENKINS_USER_HOME_DIRECTORY/pipelines-credentials
 JENKINS_GIT_CREDENTIALS=$JENKINS_USER_HOME_DIRECTORY/git/git-credentials
 JENKINS_SSH_CREDENTIALS_FILE=/var/lib/jenkins/id_rsa_jenkins_user
 JENKINS_HOME_DIRECTORY=/var/lib/jenkins
-TESTING_DIRECTORY=/home/jenkins-user/tempdir
 
 # CMO_PIPELINES_DIRECTORY is starting directory - location on jenkins machine where github repo is cloned
 CMO_PIPELINES_DIRECTORY="$(pwd)"
