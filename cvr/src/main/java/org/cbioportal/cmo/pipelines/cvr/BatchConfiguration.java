@@ -128,8 +128,8 @@ public class BatchConfiguration {
     public Job gmlJsonJob() {
         return jobBuilderFactory.get(GML_JSON_JOB)
                 .start(cvrSampleListsStep())
-                .next(gmlMutationStep())
                 .next(gmlClinicalStep())
+                .next(gmlMutationStep())
                 .build();
     }
 

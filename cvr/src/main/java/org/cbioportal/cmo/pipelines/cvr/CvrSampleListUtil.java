@@ -115,6 +115,7 @@ public class CvrSampleListUtil {
      */
     public void setNewDmpSamples(Set<String> newDmpSamples) {
         this.newDmpSamples = newDmpSamples;
+        updatePortalSamples(newDmpSamples);
     }
 
     /**
