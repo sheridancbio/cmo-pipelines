@@ -41,8 +41,6 @@ import java.text.*;
 import java.util.*;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.*;
 
 /**
  *
@@ -61,6 +59,7 @@ public class CVRUtilities {
     public static final String CNA_FILE = "data_CNA.txt";
     public static final String SEG_FILE = "_data_cna_hg19.seg";
     public static final String FUSION_FILE = "data_fusions.txt";
+    public static final String FUSION_GML_FILE = "data_fusions_gml.txt";
     public static final String SV_FILE = "data_SV.txt";
     public static final String GENE_PANEL_FILE = "data_gene_matrix.txt";
     public static final String GML_FILE = "cvr_gml_data.json";

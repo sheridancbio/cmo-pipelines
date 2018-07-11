@@ -412,6 +412,15 @@ public class CvrSampleListUtil {
         return this.unfilteredSampleSnpCounts;
     }
 
+    public String getSamplePatientId(String sampleId) {
+        for (String patientId : gmlPatientSampleMap.keySet()) {
+            if (sampleId.contains(patientId)) {
+                return patientId;
+            }
+        }
+        return null;
+    }
+
     private void saveSampleListStats() {
         Map<String, String> sampleListStats = new HashMap<>();
         sampleListStats.put("dmpMasterList", String.valueOf(dmpMasterList.size()));

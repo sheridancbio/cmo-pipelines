@@ -82,22 +82,7 @@ public class GMLResult {
 
     @JsonProperty("cnv-intragenic-variants-gml")
     public List<GMLCnvIntragenicVariant> getCnvIntragenicVariantsGml() {
-        return cnvIntragenicVariantsGml;
-    }
-
-    @JsonProperty("cnv-variants-gml")
-    public List<CVRCnvVariant> getCnvVariantsGml() {
-        return cnvVariantsGml;
-    }
-
-    @JsonProperty("meta-data")
-    public GMLMetaData getMetaData() {
-        return metaData;
-    }
-
-    @JsonProperty("snp-indel-gml")
-    public List<GMLSnp> getSnpIndelGml() {
-        return snpIndelGml;
+        return cnvIntragenicVariantsGml != null ? cnvIntragenicVariantsGml : new ArrayList();
     }
 
     @JsonProperty("cnv-intragenic-variants-gml")
@@ -106,13 +91,28 @@ public class GMLResult {
     }
 
     @JsonProperty("cnv-variants-gml")
+    public List<CVRCnvVariant> getCnvVariantsGml() {
+        return cnvVariantsGml != null ? cnvVariantsGml : new ArrayList();
+    }
+
+    @JsonProperty("cnv-variants-gml")
     public void setCnvVariantsGml(List<CVRCnvVariant> cnvVariantsGml) {
         this.cnvVariantsGml = cnvVariantsGml;
     }
 
     @JsonProperty("meta-data")
+    public GMLMetaData getMetaData() {
+        return metaData;
+    }
+
+    @JsonProperty("meta-data")
     public void setMetaData(GMLMetaData metaData) {
         this.metaData = metaData;
+    }
+
+    @JsonProperty("snp-indel-gml")
+    public List<GMLSnp> getSnpIndelGml() {
+        return snpIndelGml != null ? snpIndelGml : new ArrayList();
     }
 
     @JsonProperty("snp-indel-gml")

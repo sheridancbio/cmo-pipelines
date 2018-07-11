@@ -97,7 +97,6 @@ public class GMLClinicalDataReader implements ItemStreamReader<CVRClinicalRecord
             reader.setLinesToSkip(1);
             reader.open(ec);
 
-            Map<String, List<String>> patientSampleMap = new HashMap<>();
             try {
                 CVRClinicalRecord to_add;
                 while ((to_add = reader.read()) != null) {
