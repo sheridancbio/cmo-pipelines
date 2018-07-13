@@ -35,10 +35,10 @@ COLUMN_HEADER_KEY = 'column_header'
 ATTRIBUTE_TYPE_KEY = 'attribute_type'
 PRIORITY_KEY = 'priority'
 OVERRIDDEN_STUDY_NAME_KEY = 'name'
-BASE_URL = "http://oncotree.mskcc.org/cdd/api/"
+DEFAULT_URL = "http://oncotree.mskcc.org/cdd/api/"
 
-def check_valid_studyid(study_id):
-    query = BASE_URL + "cancerStudies"
+def check_valid_studyid(study_id, base_cdd_url):
+    query = base_cdd_url + "cancerStudies"
     response = requests.get(query)
     check_response_returned(response)
     response_as_json = json.loads(response.text)
@@ -51,9 +51,9 @@ def check_response_returned(response):
         print >> ERROR_FILE, "Error code returned from CDD, aborting..."
         sys.exit(2)
 
-def get_clinical_attribute_metadata_from_cdd(study_id, header):
+def get_clinical_attribute_metadata_from_cdd(study_id, header, base_cdd_url):
     metadata_mapping = {}
-    response = requests.post(BASE_URL + "?cancerStudy=" + study_id if study_id else BASE_URL, json=list(header))
+    response = requests.post(base_cdd_url + "?cancerStudy=" + study_id if study_id else base_cdd_url, json=list(header))
     check_response_returned(response)
     response_as_json = json.loads(response.text)
 
@@ -106,11 +106,19 @@ def main():
     parser.add_argument("-f", "--files", nargs = "+", help = "file(s) to add metadata headers", required = True)
     parser.add_argument("-m", "--mixed-attribute-types", help = "flag for whether file is new/old format -- whether patient/sample attributes are seperated", action = "store_true")
     parser.add_argument("-s", "--study-id", help = "study id for specific overrides", required = False)
+    parser.add_argument("-c", "--cdd-url", help = "the url for the cdd web application, default is http://oncotree.mskcc.org/cdd/api/", required = False)
     args = parser.parse_args()
 
     clinical_files = args.files
     is_mixed_attribute_types_format = args.mixed_attribute_types
     study_id = args.study_id
+    cdd_url = args.cdd_url
+
+    # change base url if specified (i.e for testing)
+    if cdd_url:
+        base_cdd_url = cdd_url
+    else:
+        base_cdd_url = DEFAULT_URL
 
     # check file (args) validity and return error if any file fails check
     missing_clinical_files = [clinical_file for clinical_file in clinical_files if not os.path.exists(clinical_file)]
@@ -123,7 +131,7 @@ def main():
         sys.exit(2)
 
     if (study_id):
-        check_valid_studyid(study_id)
+        check_valid_studyid(study_id, base_cdd_url)
 
     metadata_dictionary = {}
     all_attributes = set()
@@ -132,8 +140,8 @@ def main():
     for clinical_file in clinical_files:
         all_attributes = all_attributes.union(get_header(clinical_file))
 
-    metadata_dictionary = get_clinical_attribute_metadata_from_cdd(study_id, all_attributes)
-     
+    metadata_dictionary = get_clinical_attribute_metadata_from_cdd(study_id, all_attributes, base_cdd_url)
+
     # check metadata is defined for all attributes in CDD
     if len(metadata_dictionary.keys()) != len(all_attributes):
         print >> ERROR_FILE, 'Error, metadata not found for attribute(s): ' + ', '.join(all_attributes.difference(metadata_dictionary.keys()))
