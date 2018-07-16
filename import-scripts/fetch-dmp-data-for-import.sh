@@ -48,6 +48,7 @@ MSK_LEHIGH_SUBSET_FAIL=0
 MSK_MCI_SUBSET_FAIL=0
 MSK_HARTFORD_SUBSET_FAIL=0
 MSK_RALPHLAUREN_SUBSET_FAIL=0
+MSK_TAILORMEDJAPAN_SUBSET_FAIL=0
 MSKIMPACT_PED_SUBSET_FAIL=0
 SCLC_MSKIMPACT_SUBSET_FAIL=0
 LYMPHOMA_SUPER_COHORT_SUBSET_FAIL=0
@@ -1144,6 +1145,17 @@ else
     addCancerTypeCaseLists $MSK_RALPHLAUREN_DATA_HOME "msk_ralphlauren" "data_clinical_sample.txt" "data_clinical_patient.txt"
     touch $MSK_RALPHLAUREN_IMPORT_TRIGGER
 fi
+
+bash $PORTAL_HOME/scripts/subset-impact-data.sh -i=msk_tailormedjapan -o=$MSK_TAILORMEDJAPAN_DATA_HOME -d=$MSK_MIXEDPACT_DATA_HOME -f="INSTITUTE=Tailor Med Japan" -s=$MSK_DMP_TMPDIR/tailormedjapan_subset.txt -c=$MSK_MIXEDPACT_DATA_HOME/data_clinical_sample.txt
+if [ $? -gt 0 ] ; then
+    echo "MSK Tailor Med Japan subset failed! Study will not be updated in the portal."
+    sendFailureMessageMskPipelineLogsSlack "TAILORMEDJAPAN subset"
+    MSK_TAILORMEDJAPAN_SUBSET_FAIL=1
+else
+    echo "MSK Tailor Med Japan subset successful!"
+    addCancerTypeCaseLists $MSK_TAILORMEDJAPAN_DATA_HOME "msk_tailormedjapan" "data_clinical_sample.txt" "data_clinical_patient.txt"
+    touch $MSK_TAILORMEDJAPAN_IMPORT_TRIGGER
+fi
 #--------------------------------------------------------------
 
 # Subset MSKIMPACT on PED_IND for MSKIMPACT_PED cohort
@@ -1357,6 +1369,12 @@ EMAIL_BODY="Failed to subset Ralph Lauren Center data. Subset study will not be 
 if [ $MSK_RALPHLAUREN_SUBSET_FAIL -gt 0 ] ; then
     echo -e "Sending email $EMAIL_BODY"
     echo -e "$EMAIL_BODY" |  mail -s "RALPHLAUREN Subset Failure: Study will not be updated." $email_list
+fi
+
+EMAIL_BODY="Failed to subset MSK Tailor Med Japan data. Subset study will not be updated."
+if [ $MSK_TAILORMEDJAPAN_SUBSET_FAIL -gt 0 ] ; then
+    echo -e "Sending email $EMAIL_BODY"
+    echo -e "$EMAIL_BODY" |  mail -s "TAILORMEDJAPAN Subset Failure: Study will not be updated." $email_list
 fi
 
 EMAIL_BODY="Failed to subset MSKIMPACT_PED data. Subset study will not be updated."
