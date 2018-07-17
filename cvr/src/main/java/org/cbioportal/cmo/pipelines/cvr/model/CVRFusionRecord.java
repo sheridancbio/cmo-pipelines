@@ -52,6 +52,7 @@ public class CVRFusionRecord {
     private String method;
     private String frame;
     private String comments;
+    private String fusionStatus;
 
     public CVRFusionRecord() {
     }
@@ -96,6 +97,7 @@ public class CVRFusionRecord {
         this.frame = "unknown";
         // comments do not get imported into db so length of this field won't throw a MysqlDataTruncation exception
         this.comments = (!StringUtils.isNullOrEmpty(variant.getInterpretation())) ? variant.getInterpretation().replaceAll("[\\t\\n\\r]+"," ") : "";
+        this.fusionStatus = "GERMLINE";
     }
 
     public String getHugo_Symbol() {
@@ -177,6 +179,15 @@ public class CVRFusionRecord {
     public void setComments(String comments) {
         this.comments = comments;
     }
+
+    public String getFusion_Status() {
+        return fusionStatus != null ? fusionStatus : "";
+    }
+
+    public void setFusion_Status(String fusionStatus) {
+        this.fusionStatus = fusionStatus;
+    }
+
     public static List<String> getFieldNames() {
         List<String> fieldNames = new ArrayList<String>();
         fieldNames.add("Hugo_Symbol");
@@ -189,6 +200,12 @@ public class CVRFusionRecord {
         fieldNames.add("Method");
         fieldNames.add("Frame");
         fieldNames.add("Comments");
+        return fieldNames;
+    }
+
+    public static List<String> getGermlineFieldNames() {
+        List<String> fieldNames = getFieldNames();
+        fieldNames.add("Fusion_Status");
         return fieldNames;
     }
 }

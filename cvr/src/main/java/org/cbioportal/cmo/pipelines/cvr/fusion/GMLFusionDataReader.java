@@ -79,8 +79,9 @@ public class GMLFusionDataReader implements ItemStreamReader<CVRFusionRecord> {
         // load existing germline fusions
         processGmlFusionsFile();
 
-        // set fusion file to write to for writer
+        // set fusion file and header to write to for processor, writer
         ec.put("fusionsFilename", CVRUtilities.FUSION_GML_FILE);
+        ec.put("fusionHeader", CVRFusionRecord.getGermlineFieldNames());
     }
 
     private void processJsonFile() {
