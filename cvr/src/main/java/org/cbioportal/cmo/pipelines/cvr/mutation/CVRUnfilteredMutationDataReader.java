@@ -132,7 +132,7 @@ public class CVRUnfilteredMutationDataReader implements ItemStreamReader<Annotat
                 MutationRecord record = cvrUtilities.buildCVRMutationRecord(snp, sampleId, somaticStatus);
                 AnnotatedRecord annotatedRecord;
                 try {
-                    annotatedRecord = annotator.annotateRecord(record, false, "mskcc", true);
+                    annotatedRecord = annotator.annotateRecord(record, true, "mskcc", true);
                 } catch (HttpServerErrorException e) {
                     log.warn("Failed to annotate a record from json! Sample: " + sampleId + " Variant: " + cvrUtilities.getVariantAsHgvs(record));
                     annotatedRecord = cvrUtilities.buildCVRAnnotatedRecord(record);
@@ -177,7 +177,7 @@ public class CVRUnfilteredMutationDataReader implements ItemStreamReader<Annotat
             }
             AnnotatedRecord to_add_annotated;
             try {
-                to_add_annotated = annotator.annotateRecord(to_add, false, "mskcc", forceAnnotation);
+                to_add_annotated = annotator.annotateRecord(to_add, true, "mskcc", forceAnnotation);
             } catch (HttpServerErrorException e) {
                 log.warn("Failed to annotate a record from existing file! Sample: " + to_add.getTUMOR_SAMPLE_BARCODE() + " Variant: " + cvrUtilities.getVariantAsHgvs(to_add));
                 to_add_annotated = cvrUtilities.buildCVRAnnotatedRecord(to_add);
