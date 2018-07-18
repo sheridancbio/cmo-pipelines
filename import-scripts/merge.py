@@ -84,6 +84,9 @@ GENE_MATRIX_META_PATTERN = 'meta_gene_matrix.txt'
 SV_FILE_PATTERN = 'data_SV.txt'
 SV_META_PATTERN = 'meta_SV.txt'
 
+FUSIONS_GML_FILE_PATTERN = 'data_fusions_gml.txt'
+FUSIONS_GML_META_PATTERN = 'meta_fusions_gml.txt'
+
 # we do not want to copy over or merge json files or meta_study.txt files
 FILE_PATTERN_FILTERS = ['.json', 'meta_study.txt', '.orig', '.merge', 'ignore', 'data_gene_panel']
 
@@ -111,7 +114,8 @@ NORMAL_MERGE_PATTERNS = [MUTATION_META_PATTERN,
     CLINICAL_SAMPLE_META_PATTERN,
     GENE_MATRIX_META_PATTERN,
     SV_META_PATTERN,
-    TIMELINE_META_PATTERN]
+    TIMELINE_META_PATTERN,
+    FUSIONS_GML_META_PATTERN]
 
 PROFILE_MERGE_PATTERNS = [CNA_META_PATTERN,
     LOG2_META_PATTERN,
@@ -146,7 +150,8 @@ META_FILE_MAP = {MUTATION_META_PATTERN:(MUTATION_FILE_PATTERN, 'mutations'),
     CLINICAL_SAMPLE_META_PATTERN:(CLINICAL_SAMPLE_FILE_PATTERN, 'clinical_sample'),
     GENE_MATRIX_META_PATTERN:(GENE_MATRIX_FILE_PATTERN, 'gene_matrix'),
     SV_META_PATTERN:(SV_FILE_PATTERN, 'structural_variant'),
-    TIMELINE_META_PATTERN:(TIMELINE_FILE_PATTERN, 'timeline')}
+    TIMELINE_META_PATTERN:(TIMELINE_FILE_PATTERN, 'timeline'),
+    FUSIONS_GML_META_PATTERN:(FUSIONS_GML_FILE_PATTERN, 'fusions_gml')}
 
 MUTATION_FILE_PREFIX = 'data_mutations_'
 DATA_CLINICAL_SUPP_PREFIX = 'data_clinical_supp'
@@ -727,6 +732,8 @@ def organize_files(studies, file_types, merge_clinical):
                 file_types[SV_META_PATTERN].append(study_file)
             elif TIMELINE_META_PATTERN in study_file:
                 file_types[TIMELINE_META_PATTERN].append(study_file)
+            elif FUSIONS_GML_META_PATTERN in study_file:
+                file_types[FUSIONS_GML_META_PATTERN].append(study_file)
             # FILE PATTERN MATCHING
             elif MUTATION_FILE_PATTERN in study_file:
                 file_types[MUTATION_FILE_PATTERN].append(study_file)
@@ -764,6 +771,8 @@ def organize_files(studies, file_types, merge_clinical):
                 file_types[SV_FILE_PATTERN].append(study_file)
             elif TIMELINE_FILE_PATTERN in study_file:
                 file_types[TIMELINE_FILE_PATTERN].append(study_file)
+            elif FUSIONS_GML_FILE_PATTERN in study_file:
+                file_types[FUSIONS_GML_FILE_PATTERN].append(study_file)
             # CLINICAL FILE PATTERN MATCHING
             elif CLINICAL_META_PATTERN in study_file:
                 file_types[CLINICAL_META_PATTERN].append(study_file)
@@ -847,6 +856,7 @@ def main():
         GENE_MATRIX_FILE_PATTERN: [],
         SV_FILE_PATTERN: [],
         TIMELINE_FILE_PATTERN: [],
+        FUSIONS_GML_FILE_PATTERN: [],
         MUTATION_META_PATTERN: [],
         CNA_META_PATTERN: [],
         FUSION_META_PATTERN: [],
@@ -865,6 +875,7 @@ def main():
         GENE_MATRIX_META_PATTERN: [],
         SV_META_PATTERN: [],
         TIMELINE_META_PATTERN: [],
+        FUSIONS_GML_META_PATTERN: [],
         SUPP_DATA: [],
         CLINICAL_META_PATTERN: [],
         CLINICAL_PATIENT_META_PATTERN: [],
