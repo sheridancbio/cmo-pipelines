@@ -146,6 +146,7 @@ public class BatchConfiguration {
     public Flow cvrJsonJobFlow() {
         return new FlowBuilder<Flow>("cvrJsonJobFlow")
                 .start(cvrSampleListsStep())
+                .next(linkedMskimpactCaseFlow())
                 .next(clinicalStep())
                 .next(mutationsStepFlow())
                 .next(cnaStepFlow())
