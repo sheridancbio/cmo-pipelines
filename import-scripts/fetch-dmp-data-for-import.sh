@@ -9,6 +9,9 @@ JAVA_IMPORTER_ARGS="$JAVA_PROXY_ARGS $JAVA_DEBUG_ARGS -ea -Dspring.profiles.acti
 #default darwin demographics row count is 2 to allow minimum records written to be 1 in fetched Darwin Demographics result (allow 10% drop)
 DEFAULT_DARWIN_DEMOGRAPHICS_ROW_COUNT=2
 
+# Clinical attribute fields which should never be filtered because of empty content
+FILTER_EMPTY_COLUMNS_KEEP_COLUMN_LIST="PATIENT_ID,SAMPLE_ID,ONCOTREE_CODE,PARTA_CONSENTED_12_245,PARTC_CONSENTED_12_245"
+
 # Flags indicating whether a study can be updated
 IMPORT_STATUS_IMPACT=0
 IMPORT_STATUS_HEME=0
@@ -99,7 +102,7 @@ function import_project_to_redcap {
     filename=$1
     project_title=$2
     $JAVA_HOME/bin/java -jar $PORTAL_HOME/lib/redcap_pipeline.jar -i --filename $filename --redcap-project-title $project_title
-    if [ $? -ne 0 ] ; then
+    if [ $? -gt 0 ] ; then
         #log error
         echo "Failed to import file $filename into redcap project $project_title"
         return 1
@@ -111,7 +114,7 @@ function export_project_from_redcap {
     directory=$1
     project_title=$2
     $JAVA_HOME/bin/java -jar $PORTAL_HOME/lib/redcap_pipeline.jar -e -r -d $directory --redcap-project-title $project_title
-    if [ $? -ne 0 ] ; then
+    if [ $? -gt 0 ] ; then
         #log error
         echo "Failed to export project $project_title from redcap into directory $directory"
         return 1
@@ -128,7 +131,7 @@ function export_stable_id_from_redcap {
         ignored_projects_argument="-m $list_of_ignored_projects"
     fi
     $JAVA_HOME/bin/java -jar $PORTAL_HOME/lib/redcap_pipeline.jar -e -s ${stable_id} -d ${directory} ${ignored_projects_argument}
-    if [ $? -ne 0 ] ; then
+    if [ $? -gt 0 ] ; then
         #log error
         echo "Failed to export stable_id ${stable_id} from redcap into directory ${directory}"
         return 1
@@ -289,6 +292,14 @@ function remove_raw_clinical_timeline_data_files {
         fi
     done
 }
+
+# Function for filtering columns from derived studies' clinical data
+function filter_derived_clinical_data {
+    STUDY_DIRECTORY=$1
+    filter_empty_columns.py -file $STUDY_DIRECTORY/data_clinical_patient.txt --keep-column-list $FILTER_EMPTY_COLUMNS_KEEP_COLUMN_LIST &&
+    filter_empty_columns.py -file $STUDY_DIRECTORY/data_clinical_sample.txt --keep-column-list $FILTER_EMPTY_COLUMNS_KEEP_COLUMN_LIST
+}
+
 # -----------------------------------------------------------------------------------------------------------
 echo $(date)
 
@@ -326,7 +337,7 @@ if [ $? -gt 0 ]; then
     sendFailureMessageMskPipelineLogsSlack "$message"
     ONCOTREE_RECACHE_FAIL=1
 fi
-if [[ $CDD_RECACHE_FAIL -ne 0 || $ONCOTREE_RECACHE_FAIL -ne 0 ]] ; then
+if [[ $CDD_RECACHE_FAIL -gt 0 || $ONCOTREE_RECACHE_FAIL -gt 0 ]] ; then
     echo "Oncotree and/or CDD recache failed! Exiting..."
     exit 2
 fi
@@ -502,7 +513,7 @@ if [ $FETCH_DARWIN_IMPACT_FAIL -eq 0 ] ; then
     fi
 fi
 
-if [ $PERFORM_CRDB_FETCH -ne 0 ] ; then
+if [ $PERFORM_CRDB_FETCH -gt 0 ] ; then
     # fetch CRDB data
     echo "fetching CRDB data"
     echo $(date)
@@ -780,7 +791,7 @@ fi
 # import newly fetched files into redcap
 echo "Starting import into redcap"
 
-if [ $PERFORM_CRDB_FETCH -ne 0 ] && [ $FETCH_CRDB_IMPACT_FAIL -eq 0 ] ; then
+if [ $PERFORM_CRDB_FETCH -gt 0 ] && [ $FETCH_CRDB_IMPACT_FAIL -eq 0 ] ; then
     import_crdb_to_redcap
     if [ $? -gt 0 ] ; then
         #NOTE: we have decided to allow import of mskimpact project to proceed even when CRDB data has been lost from redcap (not setting IMPORT_STATUS_IMPACT)
@@ -948,7 +959,7 @@ if [ $IMPORT_STATUS_IMPACT -eq 0 ] ; then
     else
         if [ $GENERATE_MASTERLIST_FAIL -eq 0 ] ; then
             $PYTHON_BINARY $PORTAL_HOME/scripts/filter_dropped_samples_patients.py -s $MSK_IMPACT_DATA_HOME/data_clinical_sample.txt -p $MSK_IMPACT_DATA_HOME/data_clinical_patient.txt -t $MSK_IMPACT_DATA_HOME/data_timeline.txt -f $MSK_DMP_TMPDIR/sample_masterlist_for_filtering.txt
-            if [ $? -ne 0 ] ; then
+            if [ $? -gt 0 ] ; then
                 cd $MSK_IMPACT_DATA_HOME ; $HG_BINARY update -C ; find . -name "*.orig" -delete
             else
                 cd $MSK_IMPACT_DATA_HOME ; find . -name "*.orig" -delete ; $HG_BINARY add * ; $HG_BINARY commit -m "Latest MSK-IMPACT Dataset: Clinical and Timeline"
@@ -1086,9 +1097,16 @@ if [ $? -gt 0 ] ; then
     sendFailureMessageMskPipelineLogsSlack "KINGSCOUNTY subset"
     MSK_KINGS_SUBSET_FAIL=1
 else
-    echo "MSK Kings County subset successful!"
-    addCancerTypeCaseLists $MSK_KINGS_DATA_HOME "msk_kingscounty" "data_clinical_sample.txt" "data_clinical_patient.txt"
-    touch $MSK_KINGS_IMPORT_TRIGGER
+    filter_derived_clinical_data $MSK_KINGS_DATA_HOME
+    if [ $? -gt 0 ] ; then
+        echo "MSK Kings County subset clinical attribute filtering step failed! Study will not be updated in the portal."
+        sendFailureMessageMskPipelineLogsSlack "KINGSCOUNTY subset"
+        MSK_KINGS_SUBSET_FAIL=1
+    else
+        echo "MSK Kings County subset successful!"
+        addCancerTypeCaseLists $MSK_KINGS_DATA_HOME "msk_kingscounty" "data_clinical_sample.txt" "data_clinical_patient.txt"
+        touch $MSK_KINGS_IMPORT_TRIGGER
+    fi
 fi
 
 bash $PORTAL_HOME/scripts/subset-impact-data.sh -i=msk_lehighvalley -o=$MSK_LEHIGH_DATA_HOME -d=$MSK_MIXEDPACT_DATA_HOME -f="INSTITUTE=Lehigh Valley Health Network" -s=$MSK_DMP_TMPDIR/lehigh_subset.txt -c=$MSK_MIXEDPACT_DATA_HOME/data_clinical_sample.txt
@@ -1097,9 +1115,16 @@ if [ $? -gt 0 ] ; then
     sendFailureMessageMskPipelineLogsSlack "LEHIGHVALLEY subset"
     MSK_LEHIGH_SUBSET_FAIL=1
 else
-    echo "MSK Lehigh Valley subset successful!"
-    addCancerTypeCaseLists $MSK_LEHIGH_DATA_HOME "msk_lehighvalley" "data_clinical_sample.txt" "data_clinical_patient.txt"
-    touch $MSK_LEHIGH_IMPORT_TRIGGER
+    filter_derived_clinical_data $MSK_LEHIGH_DATA_HOME
+    if [ $? -gt 0 ] ; then
+        echo "MSK Lehigh Valley subset clinical attribute filtering step failed! Study will not be updated in the portal."
+        sendFailureMessageMskPipelineLogsSlack "LEHIGHVALLEY subset"
+        MSK_LEHIGH_SUBSET_FAIL=1
+    else
+        echo "MSK Lehigh Valley subset successful!"
+        addCancerTypeCaseLists $MSK_LEHIGH_DATA_HOME "msk_lehighvalley" "data_clinical_sample.txt" "data_clinical_patient.txt"
+        touch $MSK_LEHIGH_IMPORT_TRIGGER
+    fi
 fi
 
 bash $PORTAL_HOME/scripts/subset-impact-data.sh -i=msk_queenscancercenter -o=$MSK_QUEENS_DATA_HOME -d=$MSK_MIXEDPACT_DATA_HOME -f="INSTITUTE=Queens Cancer Center,Queens Hospital Cancer Center" -s=$MSK_DMP_TMPDIR/queens_subset.txt -c=$MSK_MIXEDPACT_DATA_HOME/data_clinical_sample.txt
@@ -1108,9 +1133,16 @@ if [ $? -gt 0 ] ; then
     sendFailureMessageMskPipelineLogsSlack "QUEENSCANCERCENTER subset"
     MSK_QUEENS_SUBSET_FAIL=1
 else
-    echo "MSK Queens Cancer Center subset successful!"
-    addCancerTypeCaseLists $MSK_QUEENS_DATA_HOME "msk_queenscancercenter" "data_clinical_sample.txt" "data_clinical_patient.txt"
-    touch $MSK_QUEENS_IMPORT_TRIGGER
+    filter_derived_clinical_data $MSK_QUEENS_DATA_HOME
+    if [ $? -gt 0 ] ; then
+        echo "MSK Queens Cancer Center subset clinical attribute filtering step failed! Study will not be updated in the portal."
+        sendFailureMessageMskPipelineLogsSlack "QUEENSCANCERCENTER subset"
+        MSK_QUEENS_SUBSET_FAIL=1
+    else
+        echo "MSK Queens Cancer Center subset successful!"
+        addCancerTypeCaseLists $MSK_QUEENS_DATA_HOME "msk_queenscancercenter" "data_clinical_sample.txt" "data_clinical_patient.txt"
+        touch $MSK_QUEENS_IMPORT_TRIGGER
+    fi
 fi
 
 bash $PORTAL_HOME/scripts/subset-impact-data.sh -i=msk_miamicancerinstitute -o=$MSK_MCI_DATA_HOME -d=$MSK_MIXEDPACT_DATA_HOME -f="INSTITUTE=Miami Cancer Institute" -s=$MSK_DMP_TMPDIR/mci_subset.txt -c=$MSK_MIXEDPACT_DATA_HOME/data_clinical_sample.txt
@@ -1119,9 +1151,16 @@ if [ $? -gt 0 ] ; then
     sendFailureMessageMskPipelineLogsSlack "MIAMICANCERINSTITUTE subset"
     MSK_MCI_SUBSET_FAIL=1
 else
-    echo "MSK Miami Cancer Institute subset successful!"
-    addCancerTypeCaseLists $MSK_MCI_DATA_HOME "msk_miamicancerinstitute" "data_clinical_sample.txt" "data_clinical_patient.txt"
-    touch $MSK_MCI_IMPORT_TRIGGER
+    filter_derived_clinical_data $MSK_MCI_DATA_HOME
+    if [ $? -gt 0 ] ; then
+        echo "MSK Miami Cancer Institute subset clinical attribute filtering step failed! Study will not be updated in the portal."
+        sendFailureMessageMskPipelineLogsSlack "MIAMICANCERINSTITUTE subset"
+        MSK_MCI_SUBSET_FAIL=1
+    else
+        echo "MSK Miami Cancer Institute subset successful!"
+        addCancerTypeCaseLists $MSK_MCI_DATA_HOME "msk_miamicancerinstitute" "data_clinical_sample.txt" "data_clinical_patient.txt"
+        touch $MSK_MCI_IMPORT_TRIGGER
+    fi
 fi
 
 bash $PORTAL_HOME/scripts/subset-impact-data.sh -i=msk_hartfordhealthcare -o=$MSK_HARTFORD_DATA_HOME -d=$MSK_MIXEDPACT_DATA_HOME -f="INSTITUTE=Hartford Healthcare" -s=$MSK_DMP_TMPDIR/hartford_subset.txt -c=$MSK_MIXEDPACT_DATA_HOME/data_clinical_sample.txt
@@ -1130,9 +1169,16 @@ if [ $? -gt 0 ] ; then
     sendFailureMessageMskPipelineLogsSlack "HARTFORDHEALTHCARE subset"
     MSK_HARTFORD_SUBSET_FAIL=1
 else
-    echo "MSK Hartford Healthcare subset successful!"
-    addCancerTypeCaseLists $MSK_HARTFORD_DATA_HOME "msk_hartfordhealthcare" "data_clinical_sample.txt" "data_clinical_patient.txt"
-    touch $MSK_HARTFORD_IMPORT_TRIGGER
+    filter_derived_clinical_data $MSK_HARTFORD_DATA_HOME
+    if [ $? -gt 0 ] ; then
+        echo "MSK Hartford Healthcare subset clinical attribute filtering step failed! Study will not be updated in the portal."
+        sendFailureMessageMskPipelineLogsSlack "HARTFORDHEALTHCARE subset"
+        MSK_HARTFORD_SUBSET_FAIL=1
+    else
+        echo "MSK Hartford Healthcare subset successful!"
+        addCancerTypeCaseLists $MSK_HARTFORD_DATA_HOME "msk_hartfordhealthcare" "data_clinical_sample.txt" "data_clinical_patient.txt"
+        touch $MSK_HARTFORD_IMPORT_TRIGGER
+    fi
 fi
 
 bash $PORTAL_HOME/scripts/subset-impact-data.sh -i=msk_ralphlauren -o=$MSK_RALPHLAUREN_DATA_HOME -d=$MSK_MIXEDPACT_DATA_HOME -f="INSTITUTE=Ralph Lauren Center" -s=$MSK_DMP_TMPDIR/ralphlauren_subset.txt -c=$MSK_MIXEDPACT_DATA_HOME/data_clinical_sample.txt
@@ -1141,9 +1187,16 @@ if [ $? -gt 0 ] ; then
     sendFailureMessageMskPipelineLogsSlack "RALPHLAUREN subset"
     MSK_RALPHLAUREN_SUBSET_FAIL=1
 else
-    echo "MSK Ralph Lauren subset successful!"
-    addCancerTypeCaseLists $MSK_RALPHLAUREN_DATA_HOME "msk_ralphlauren" "data_clinical_sample.txt" "data_clinical_patient.txt"
-    touch $MSK_RALPHLAUREN_IMPORT_TRIGGER
+    filter_derived_clinical_data $MSK_RALPHLAUREN_DATA_HOME
+    if [ $? -gt 0 ] ; then
+        echo "MSK Ralph Lauren subset clinical attribute filtering step failed! Study will not be updated in the portal."
+        sendFailureMessageMskPipelineLogsSlack "RALPHLAUREN subset"
+        MSK_RALPHLAUREN_SUBSET_FAIL=1
+    else
+        echo "MSK Ralph Lauren subset successful!"
+        addCancerTypeCaseLists $MSK_RALPHLAUREN_DATA_HOME "msk_ralphlauren" "data_clinical_sample.txt" "data_clinical_patient.txt"
+        touch $MSK_RALPHLAUREN_IMPORT_TRIGGER
+    fi
 fi
 
 bash $PORTAL_HOME/scripts/subset-impact-data.sh -i=msk_tailormedjapan -o=$MSK_TAILORMEDJAPAN_DATA_HOME -d=$MSK_MIXEDPACT_DATA_HOME -f="INSTITUTE=Tailor Med Japan" -s=$MSK_DMP_TMPDIR/tailormedjapan_subset.txt -c=$MSK_MIXEDPACT_DATA_HOME/data_clinical_sample.txt
@@ -1152,9 +1205,16 @@ if [ $? -gt 0 ] ; then
     sendFailureMessageMskPipelineLogsSlack "TAILORMEDJAPAN subset"
     MSK_TAILORMEDJAPAN_SUBSET_FAIL=1
 else
-    echo "MSK Tailor Med Japan subset successful!"
-    addCancerTypeCaseLists $MSK_TAILORMEDJAPAN_DATA_HOME "msk_tailormedjapan" "data_clinical_sample.txt" "data_clinical_patient.txt"
-    touch $MSK_TAILORMEDJAPAN_IMPORT_TRIGGER
+    filter_derived_clinical_data $MSK_TAILORMEDJAPAN_DATA_HOME
+    if [ $? -gt 0 ] ; then
+        echo "MSK Tailor Med Japan subset clinical attribute filtering step failed! Study will not be updated in the portal."
+        sendFailureMessageMskPipelineLogsSlack "TAILORMEDJAPAN subset"
+        MSK_TAILORMEDJAPAN_SUBSET_FAIL=1
+    else
+        echo "MSK Tailor Med Japan subset successful!"
+        addCancerTypeCaseLists $MSK_TAILORMEDJAPAN_DATA_HOME "msk_tailormedjapan" "data_clinical_sample.txt" "data_clinical_patient.txt"
+        touch $MSK_TAILORMEDJAPAN_IMPORT_TRIGGER
+    fi
 fi
 #--------------------------------------------------------------
 
@@ -1177,9 +1237,16 @@ else
         sendFailureMessageMskPipelineLogsSlack "MSKIMPACT_PED subset"
         MSKIMPACT_PED_SUBSET_FAIL=1
     else
-        echo "MSKIMPACT_PED subset successful!"
-        addCancerTypeCaseLists $MSKIMPACT_PED_DATA_HOME "mskimpact_ped" "data_clinical_sample.txt" "data_clinical_patient.txt"
-        touch $MSKIMPACT_PED_IMPORT_TRIGGER
+        filter_derived_clinical_data $MSKIMPACT_PED_DATA_HOME
+        if [ $? -gt 0 ] ; then
+            echo "MSKIMPACT_PED subset clinical attribute filtering step failed! Study will not be updated in the portal."
+            sendFailureMessageMskPipelineLogsSlack "MSKIMPACT_PED subset"
+            MSKIMPACT_PED_SUBSET_FAIL=1
+        else
+            echo "MSKIMPACT_PED subset successful!"
+            addCancerTypeCaseLists $MSKIMPACT_PED_DATA_HOME "mskimpact_ped" "data_clinical_sample.txt" "data_clinical_patient.txt"
+            touch $MSKIMPACT_PED_IMPORT_TRIGGER
+        fi
     fi
 fi
 
@@ -1193,9 +1260,16 @@ if [ $? -gt 0 ] ; then
     sendFailureMessageMskPipelineLogsSlack "SCLCMSKIMPACT subset"
     SCLC_MSKIMPACT_SUBSET_FAIL=1
 else
-    echo "MSKIMPACT SCLC subset successful!"
-    addCancerTypeCaseLists $MSK_SCLC_DATA_HOME "sclc_mskimpact_2017" "data_clinical_sample.txt" "data_clinical_patient.txt"
-    touch $MSK_SCLC_IMPORT_TRIGGER
+    filter_derived_clinical_data $MSK_SCLC_DATA_HOME
+    if [ $? -gt 0 ] ; then
+        echo "MSKIMPACT SCLC subset clinical attribute filtering step failed! Study will not be updated in the portal."
+        sendFailureMessageMskPipelineLogsSlack "SCLCMSKIMPACT subset"
+        SCLC_MSKIMPACT_SUBSET_FAIL=1
+    else
+        echo "MSKIMPACT SCLC subset successful!"
+        addCancerTypeCaseLists $MSK_SCLC_DATA_HOME "sclc_mskimpact_2017" "data_clinical_sample.txt" "data_clinical_patient.txt"
+        touch $MSK_SCLC_IMPORT_TRIGGER
+    fi
 fi
 #--------------------------------------------------------------
 
@@ -1259,12 +1333,19 @@ if [ $LYMPHOMA_SUPER_COHORT_SUBSET_FAIL -eq 0 ] ; then
         sendFailureMessageMskPipelineLogsSlack "LYMPHOMASUPERCOHORT merge"
         LYMPHOMA_SUPER_COHORT_SUBSET_FAIL=1
     else
-        # add metadata headers before importing
-        $PYTHON_BINARY $PORTAL_HOME/scripts/add_clinical_attribute_metadata_headers.py -f $LYMPHOMA_SUPER_COHORT_DATA_HOME/data_clinical*
+        filter_derived_clinical_data $LYMPHOMA_SUPER_COHORT_DATA_HOME
         if [ $? -gt 0 ] ; then
-            echo "Error: Adding metadata headers for LYMPHOMA_SUPER_COHORT failed! Study will not be updated in portal."
+            echo "Lymphoma super subset clinical attribute filtering step failed! Study will not be updated in the portal."
+            sendFailureMessageMskPipelineLogsSlack "LYMPHOMASUPERCOHORT merge"
+            LYMPHOMA_SUPER_COHORT_SUBSET_FAIL=1
         else
-            touch $LYMPHOMA_SUPER_COHORT_IMPORT_TRIGGER
+            # add metadata headers before importing
+            $PYTHON_BINARY $PORTAL_HOME/scripts/add_clinical_attribute_metadata_headers.py -f $LYMPHOMA_SUPER_COHORT_DATA_HOME/data_clinical*
+            if [ $? -gt 0 ] ; then
+                echo "Error: Adding metadata headers for LYMPHOMA_SUPER_COHORT failed! Study will not be updated in portal."
+            else
+                touch $LYMPHOMA_SUPER_COHORT_IMPORT_TRIGGER
+            fi
         fi
     fi
     # remove files we don't need for lymphoma super cohort
