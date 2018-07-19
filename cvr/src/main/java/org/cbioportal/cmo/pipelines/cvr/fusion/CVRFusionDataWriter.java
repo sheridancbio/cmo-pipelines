@@ -57,6 +57,9 @@ public class CVRFusionDataWriter implements ItemStreamWriter<String> {
     @Value("#{stepExecutionContext['fusionsFilename']}")
     private String fusionsFilename;
 
+    @Value("#{stepExecutionContext['fusionHeader']}")
+    private List<String> header;
+
     @Autowired
     public CVRUtilities cvrUtilities;
 
@@ -70,7 +73,7 @@ public class CVRFusionDataWriter implements ItemStreamWriter<String> {
         flatFileItemWriter.setHeaderCallback(new FlatFileHeaderCallback() {
            @Override
            public void writeHeader(Writer writer) throws IOException {
-               writer.write(StringUtils.join(CVRFusionRecord.getFieldNames(),"\t"));
+               writer.write(StringUtils.join(header, "\t"));
            }
         });
         flatFileItemWriter.setResource(new FileSystemResource(stagingFile));

@@ -39,6 +39,7 @@ import org.cbioportal.cmo.pipelines.cvr.model.CVRFusionRecord;
 import org.cbioportal.cmo.pipelines.util.CVRUtils;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 
 /**
  *
@@ -46,13 +47,16 @@ import org.springframework.beans.factory.annotation.Autowired;
  */
 public class CVRFusionDataProcessor implements ItemProcessor<CVRFusionRecord, String> {
 
+    @Value("#{stepExecutionContext['fusionHeader']}")
+    private List<String> header;
+
     @Autowired
     private CVRUtils cvrUtils;
 
     @Override
     public String process(CVRFusionRecord i) throws Exception {
         List<String> record = new ArrayList<>();
-        for (String field : CVRFusionRecord.getFieldNames()) {
+        for (String field : header) {
             record.add(cvrUtils.convertWhitespace(i.getClass().getMethod("get" + field).invoke(i).toString()));
         }
         return StringUtils.join(record, "\t");

@@ -73,8 +73,9 @@ public class CVRFusionDataReader implements ItemStreamReader<CVRFusionRecord> {
         // merge existing and new fusion records
         processJsonFile();
 
-        // set fusion file to write to for writer
+        // set fusion file and header to write to for processor, writer
         ec.put("fusionsFilename", CVRUtilities.FUSION_FILE);
+        ec.put("fusionHeader", CVRFusionRecord.getFieldNames());
     }
 
     private void processFusionsFile() {
