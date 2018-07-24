@@ -92,7 +92,7 @@ public class LinkedMskimpactCaseReader implements ItemStreamReader<LinkedMskimpa
             // existing linkages will override data for any overlapping sample ids
             compiledLinkedIdsMap.putAll(existingLinkedIdsMap);
         }
-        this.linkedIds = Arrays.asList((LinkedMskimpactCaseRecord[]) compiledLinkedIdsMap.values().toArray());
+        this.linkedIds = new ArrayList(compiledLinkedIdsMap.values());
     }
 
     private void loadNewLinkedIds() {
