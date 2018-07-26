@@ -8,6 +8,7 @@ export MSK_IMPACT_DATA_HOME=$PORTAL_DATA_HOME/dmp/mskimpact
 export MSK_RAINDANCE_DATA_HOME=$PORTAL_DATA_HOME/dmp/mskraindance
 export MSK_HEMEPACT_DATA_HOME=$PORTAL_DATA_HOME/dmp/mskimpact_heme
 export MSK_ARCHER_DATA_HOME=$PORTAL_DATA_HOME/dmp/mskarcher
+export MSK_ARCHER_UNFILTERED_DATA_HOME=$PORTAL_DATA_HOME/dmp/mskarcher_unfiltered
 export MSK_MIXEDPACT_DATA_HOME=$PORTAL_DATA_HOME/dmp/mixedpact
 export MSK_SOLID_HEME_DATA_HOME=$PORTAL_DATA_HOME/dmp/msk_solid_heme
 export MSK_KINGS_DATA_HOME=$PORTAL_DATA_HOME/dmp/msk_kingscounty
