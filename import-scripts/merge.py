@@ -340,22 +340,31 @@ def data_okay_to_add(is_clinical_or_timeline_file, file_header, reference_set, d
     if len(reference_set) == 0:
         return True
     found = False
-    if is_clinical_or_timeline_file and not 'SAMPLE_ID' in file_header:
+    if is_clinical_or_timeline_file:
         patient_id = data_values[file_header.index('PATIENT_ID')]
-        found = (patient_id in PATIENT_SAMPLE_MAP.keys())
-        if not keep_match:
-            # if patient id not found in patient sample map and we are not keeping
-            # matches anyway then return False
-            if not found:
-                return False
-            # if at least one sample is not in reference set and keep match is false
-            # then we want to return true so that data for this patient isn't filtered out
-            for sample_id in PATIENT_SAMPLE_MAP[patient_id]:
-                if not sample_id in reference_set:
-                    return True
-    else:
-        if len([True for val in data_values if val in reference_set]) > 0:
-            found = True
+        if not 'SAMPLE_ID' in file_header
+            found = (patient_id in PATIENT_SAMPLE_MAP.keys())
+            if not keep_match:
+                # if patient id not found in patient sample map and we are not keeping
+                # matches anyway then return False
+                if not found:
+                    return False
+                # if at least one sample is not in reference set and keep match is false
+                # then we want to return true so that data for this patient isn't filtered out
+                for sample_id in PATIENT_SAMPLE_MAP[patient_id]:
+                    if not sample_id in reference_set:
+                        return True
+        else:
+            # want to explicitly check if sample in reference set if SAMPLE_ID in header
+            # to avoid filtering out samples with clin attr's that may contain other patient/sample IDs
+            # that may be linked to the current sample but we do not want to filter out of the final dataset
+            #
+            # Ex: OTHER_SAMPLE_ID/OTHER_PATIENT_ID, or similar attr's like RNA_ID, METHYLATION_ID
+            #     which indicate what other sample IDs are linked to current sample record
+            sample_id = data_values[file_header.index('SAMPLE_ID')]
+            found = (sample_id in PATIENT_SAMPLE_MAP[patient_id])
+    elif len([True for val in data_values if val in reference_set]) > 0:
+        found = True
     return (keep_match == found)
 
 
