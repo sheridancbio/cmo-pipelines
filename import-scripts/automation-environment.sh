@@ -38,11 +38,10 @@ export CDD_HOME=$PORTAL_GIT_HOME/clinical-data-dictionary
 
 # trigger files to communicate between fetch-dmp-data and import-dmp-data
 export MSK_DMP_TMPDIR=$PORTAL_HOME/tmp/import-cron-dmp-msk
-export MSK_IMPACT_IMPORT_TRIGGER=$MSK_DMP_TMPDIR/mskimpact_import_trigger.txt
+export MSK_IMPACT_CONSUME_TRIGGER=$MSK_DMP_TMPDIR/mskimpact_consume_trigger.txt
+export MSK_HEMEPACT_CONSUME_TRIGGER=$MSK_DMP_TMPDIR/mskimpact_heme_consume_trigger.txt
 export MSK_RAINDANCE_IMPORT_TRIGGER=$MSK_DMP_TMPDIR/mskraindance_import_trigger.txt
-export MSK_HEMEPACT_IMPORT_TRIGGER=$MSK_DMP_TMPDIR/mskimpact_heme_import_trigger.txt
 export MSK_ARCHER_IMPORT_TRIGGER=$MSK_DMP_TMPDIR/mskarcher_import_trigger.txt
-export MSK_MIXEDPACT_IMPORT_TRIGGER=$MSK_DMP_TMPDIR/mixedpact_import_trigger.txt
 export MSK_SOLID_HEME_IMPORT_TRIGGER=$MSK_DMP_TMPDIR/msk_solid_heme_import_trigger.txt
 export MSK_KINGS_IMPORT_TRIGGER=$MSK_DMP_TMPDIR/kingscounty_import_trigger.txt
 export MSK_LEHIGH_IMPORT_TRIGGER=$MSK_DMP_TMPDIR/lehighvalley_import_trigger.txt

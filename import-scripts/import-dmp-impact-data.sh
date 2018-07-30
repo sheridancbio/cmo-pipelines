@@ -70,6 +70,21 @@ function restartSchultzTomcats {
         echo -e "$EMAIL_BODY" | mail -s "$TOMCAT_SERVER_PRETTY_DISPLAY_NAME Restart Error : unable to trigger restart" $email_list
     fi
 }
+
+# Function for consuming fetched samples after successful import
+function consumeSamplesAfterSolidHemeImport {
+    if [ -f $MSK_IMPACT_CONSUME_TRIGGER ] ; then
+        echo "Consuming mskimpact samples from cvr"
+        $JAVA_HOME/bin/java $JAVA_PROXY_ARGS $JAVA_DEBUG_ARGS -jar $PORTAL_HOME/lib/cvr_fetcher.jar -c $MSK_IMPACT_DATA_HOME/cvr_data.json
+        rm -f $MSK_IMPACT_CONSUME_TRIGGER
+    fi
+    if [ -f $MSK_HEMEPACT_CONSUME_TRIGGER ] ; then
+        echo "Consuming mskimpact_heme samples from cvr"
+        $JAVA_HOME/bin/java $JAVA_PROXY_ARGS $JAVA_DEBUG_ARGS -jar $PORTAL_HOME/lib/cvr_fetcher.jar -c $MSK_HEMEPACT_DATA_HOME/cvr_data.json
+        rm -f $MSK_HEMEPACT_CONSUME_TRIGGER
+    fi
+}
+
 # -----------------------------------------------------------------------------------------------------------
 echo $(date)
 
@@ -183,28 +198,39 @@ fi
 # (10): importer jar
 # (11): transcript overrides source [ uniprot | mskcc ]
 
-## TEMP STUDY IMPORT: MSKIMPACT
 RESTART_AFTER_IMPACT_IMPORT=0
-if [ $DB_VERSION_FAIL -eq 0 ] && [ -f $MSK_IMPACT_IMPORT_TRIGGER ] ; then
+# TEMP STUDY IMPORT: MSKSOLIDHEME
+if [ $DB_VERSION_FAIL -eq 0 ] && [ -f $MSK_SOLID_HEME_IMPORT_TRIGGER ] ; then
+    echo "Importing MSKSOLIDHEME (will be renamed MSKIMPACT) study..."
     echo $(date)
-    bash $PORTAL_HOME/scripts/import-temp-study.sh --study-id="mskimpact" --temp-study-id="temporary_mskimpact" --backup-study-id="yesterday_mskimpact" --portal-name="mskimpact-portal" --study-path="$MSK_IMPACT_DATA_HOME" --notification-file="$mskimpact_notification_file" --tmp-directory="$MSK_DMP_TMPDIR" --email-list="$email_list" --oncotree-version="${ONCOTREE_VERSION_TO_USE}" --importer-jar="$PORTAL_HOME/lib/msk-dmp-importer.jar" --transcript-overrides-source="mskcc"
+    # this usage is a little different -- we are comparing the backup-study-id "yesterday_mskimpact" because we will be renaming this imported study to mskimpact after a successful import
+    bash $PORTAL_HOME/scripts/import-temp-study.sh --study-id="mskimpact" --temp-study-id="temporary_mskimpact" --backup-study-id="yesterday_mskimpact" --portal-name="msk-solid-heme-portal" --study-path="$MSK_SOLID_HEME_DATA_HOME" --notification-file="$msk_solid_heme_notification_file" --tmp-directory="$MSK_DMP_TMPDIR" --email-list="$email_list" --oncotree-version="${ONCOTREE_VERSION_TO_USE}" --importer-jar="$PORTAL_HOME/lib/msk-dmp-importer.jar" --transcript-overrides-source="mskcc"
     if [ $? -eq 0 ] ; then
+        consumeSamplesAfterSolidHemeImport
         RESTART_AFTER_IMPACT_IMPORT=1
-        IMPORT_FAIL_IMPACT=0
+        IMPORT_FAIL_MSKSOLIDHEME=0
     fi
-    rm $MSK_IMPACT_IMPORT_TRIGGER
+    rm $MSK_SOLID_HEME_IMPORT_TRIGGER
 else
     if [ $DB_VERSION_FAIL -gt 0 ] ; then
-        echo "Not importing MSKIMPACT - database version is not compatible"
+        echo "Not importing MSKSOLIDHEME - database version is not compatible"
     else
-        echo "Not importing MSKIMPACT - something went wrong with a fetch"
+        echo "Not importing MSKSOLIDHEME - something went wrong with a merging clinical studies"
     fi
 fi
-if [ $IMPORT_FAIL_IMPACT -gt 0 ] ; then
-    sendFailureMessageMskPipelineLogsSlack "MSKIMPACT import"
+
+## TODO: Move commit to fetch-dmp-data-for-import.sh
+# commit or revert changes for MSKSOLIDHEME
+if [ $IMPORT_FAIL_MSKSOLIDHEME -gt 0 ] ; then
+    sendFailureMessageMskPipelineLogsSlack "MSKSOLIDHEME import"
+    echo "MSKSOLIDHEME merge and/or updates failed! Reverting data to last commit."
+    cd $MSK_SOLID_HEME_DATA_HOME ; $HG_BINARY update -C ; find . -name "*.orig" -delete
 else
-    sendSuccessMessageMskPipelineLogsSlack "MSKIMPACT"
-fi 
+    sendSuccessMessageMskPipelineLogsSlack "MSKSOLIDHEME"
+    echo "Committing MSKSOLIDHEME data"
+    cd $MSK_SOLID_HEME_DATA_HOME ; find . -name "*.orig" -delete ; $HG_BINARY add * ; $HG_BINARY commit -m "Latest MSKSOLIDHEME dataset"
+fi
+
 ## TOMCAT RESTART
 # restart tomcat only if the MSK-IMPACT update was succesful
 if [ $RESTART_AFTER_IMPACT_IMPORT -eq 0 ] ; then
@@ -216,28 +242,6 @@ fi
 
 # set 'RESTART_AFTER_DMP_PIPELINES_IMPORT' flag to 1 if RAINDANCE, ARCHER, HEMEPACT, MIXEDPACT, or MSKSOLIDHEME succesfully update
 RESTART_AFTER_DMP_PIPELINES_IMPORT=0
-
-## TEMP STUDY IMPORT: MSKIMPACT_HEME
-if [ $DB_VERSION_FAIL -eq 0 ] && [ -f $MSK_HEMEPACT_IMPORT_TRIGGER ] ; then
-    echo $(date)
-    bash $PORTAL_HOME/scripts/import-temp-study.sh --study-id="mskimpact_heme" --temp-study-id="temporary_mskimpact_heme" --backup-study-id="yesterday_mskimpact_heme" --portal-name="mskheme-portal" --study-path="$MSK_HEMEPACT_DATA_HOME" --notification-file="$mskheme_notification_file" --tmp-directory="$MSK_DMP_TMPDIR" --email-list="$email_list" --oncotree-version="${ONCOTREE_VERSION_TO_USE}" --importer-jar="$PORTAL_HOME/lib/msk-dmp-importer.jar" --transcript-overrides-source="mskcc"
-    if [ $? -eq 0 ] ; then
-        RESTART_AFTER_DMP_PIPELINES_IMPORT=1
-        IMPORT_FAIL_HEME=0
-    fi
-    rm $MSK_HEMEPACT_IMPORT_TRIGGER 
-else
-    if [ $DB_VERSION_FAIL -gt 0 ] ; then
-        echo "Not importing MSKIMPACT_HEME - database version is not compatible"
-    else
-        echo "Not importing MSKIMPACT_HEME - something went wrong with a fetch"
-    fi
-fi
-if [ $IMPORT_FAIL_HEME -gt 0 ] ; then
-    sendFailureMessageMskPipelineLogsSlack "HEMEPACT import"
-else
-    sendSuccessMessageMskPipelineLogsSlack "HEMEPACT"
-fi
 
 ## TEMP STUDY IMPORT: MSKRAINDANCE
 if [ $DB_VERSION_FAIL -eq 0 ] && [ -f $MSK_RAINDANCE_IMPORT_TRIGGER ] ; then
@@ -283,66 +287,6 @@ else
     sendSuccessMessageMskPipelineLogsSlack "ARCHER"
 fi
 
-# TEMP STUDY IMPORT: MIXEDPACT
-if [ $DB_VERSION_FAIL -eq 0 ] && [ -f $MSK_MIXEDPACT_IMPORT_TRIGGER ] ; then
-    echo "Importing MIXEDPACT study..."
-    echo $(date)
-    bash $PORTAL_HOME/scripts/import-temp-study.sh --study-id="mixedpact" --temp-study-id="temporary_mixedpact" --backup-study-id="yesterday_mixedpact" --portal-name="mixedpact-portal" --study-path="$MSK_MIXEDPACT_DATA_HOME" --notification-file="$mixedpact_notification_file" --tmp-directory="$MSK_DMP_TMPDIR" --email-list="$email_list" --oncotree-version="${ONCOTREE_VERSION_TO_USE}" --importer-jar="$PORTAL_HOME/lib/msk-dmp-importer.jar" --transcript-overrides-source="mskcc"
-    if [ $? -eq 0 ] ; then
-        RESTART_AFTER_DMP_PIPELINES_IMPORT=1
-        IMPORT_FAIL_MIXEDPACT=0
-    fi
-    rm $MSK_MIXEDPACT_IMPORT_TRIGGER 
-else
-    if [ $DB_VERSION_FAIL -gt 0 ] ; then
-        echo "Not importing MIXEDPACT - database version is not compatible"
-    else
-        echo "Not importing MIXEDPACT - something went wrong with a merging clinical studies"
-    fi
-fi
-
-## TODO: Move commit to fetch-dmp-data-for-import.sh
-# commit or revert changes for MIXEDPACT
-if [ $IMPORT_FAIL_MIXEDPACT -gt 0 ] ; then
-    sendFailureMessageMskPipelineLogsSlack "MIXEDPACT import"
-    echo "MIXEDPACT merge and/or updates failed! Reverting data to last commit."
-    cd $MSK_MIXEDPACT_DATA_HOME ; $HG_BINARY update -C ; find . -name "*.orig" -delete
-else
-    sendSuccessMessageMskPipelineLogsSlack "MIXEDPACT"
-    echo "Committing MIXEDPACT data"
-    cd $MSK_MIXEDPACT_DATA_HOME ; find . -name "*.orig" -delete ; $HG_BINARY add * ; $HG_BINARY commit -m "Latest MIXEDPACT dataset"
-fi
-
-# TEMP STUDY IMPORT: MSKSOLIDHEME
-if [ $DB_VERSION_FAIL -eq 0 ] && [ -f $MSK_SOLID_HEME_IMPORT_TRIGGER ] ; then
-    echo "Importing MSKSOLIDHEME study..."
-    echo $(date)
-    bash $PORTAL_HOME/scripts/import-temp-study.sh --study-id="msk_solid_heme" --temp-study-id="temporary_msk_solid_heme" --backup-study-id="yesterday_msk_solid_heme" --portal-name="msk-solid-heme-portal" --study-path="$MSK_SOLID_HEME_DATA_HOME" --notification-file="$msk_solid_heme_notification_file" --tmp-directory="$MSK_DMP_TMPDIR" --email-list="$email_list" --oncotree-version="${ONCOTREE_VERSION_TO_USE}" --importer-jar="$PORTAL_HOME/lib/msk-dmp-importer.jar" --transcript-overrides-source="mskcc"
-    if [ $? -eq 0 ] ; then
-        RESTART_AFTER_DMP_PIPELINES_IMPORT=1
-        IMPORT_FAIL_MSKSOLIDHEME=0
-    fi
-    rm $MSK_SOLID_HEME_IMPORT_TRIGGER
-else
-    if [ $DB_VERSION_FAIL -gt 0 ] ; then
-        echo "Not importing MSKSOLIDHEME - database version is not compatible"
-    else
-        echo "Not importing MSKSOLIDHEME - something went wrong with a merging clinical studies"
-    fi
-fi
-
-## TODO: Move commit to fetch-dmp-data-for-import.sh
-# commit or revert changes for MSKSOLIDHEME
-if [ $IMPORT_FAIL_MSKSOLIDHEME -gt 0 ] ; then
-    sendFailureMessageMskPipelineLogsSlack "MSKSOLIDHEME import"
-    echo "MSKSOLIDHEME merge and/or updates failed! Reverting data to last commit."
-    cd $MSK_SOLID_HEME_DATA_HOME ; $HG_BINARY update -C ; find . -name "*.orig" -delete
-else
-    sendSuccessMessageMskPipelineLogsSlack "MSKSOLIDHEME"
-    echo "Committing MSKSOLIDHEME data"
-    cd $MSK_SOLID_HEME_DATA_HOME ; find . -name "*.orig" -delete ; $HG_BINARY add * ; $HG_BINARY commit -m "Latest MSKSOLIDHEME dataset"
-fi
-
 ## TOMCAT RESTART
 # Restart will only execute if at least one of these studies succesfully updated.
 #   MSKIMPACT_HEME
@@ -372,7 +316,7 @@ if [ $DB_VERSION_FAIL -eq 0 ] && [ -f $MSK_KINGS_IMPORT_TRIGGER ] ; then
         RESTART_AFTER_MSK_AFFILIATE_IMPORT=1
         IMPORT_FAIL_KINGS=0
     fi
-    rm $MSK_KINGS_IMPORT_TRIGGER 
+    rm $MSK_KINGS_IMPORT_TRIGGER
 else
     if [ $DB_VERSION_FAIL -gt 0 ] ; then
         echo "Not importing KINGSCOUNTY - database version is not compatible"
@@ -402,7 +346,7 @@ if [ $DB_VERSION_FAIL -eq 0 ] && [ -f $MSK_LEHIGH_IMPORT_TRIGGER ] ; then
         RESTART_AFTER_MSK_AFFILIATE_IMPORT=1
         IMPORT_FAIL_LEHIGH=0
     fi
-    rm $MSK_LEHIGH_IMPORT_TRIGGER 
+    rm $MSK_LEHIGH_IMPORT_TRIGGER
 else
     if [ $DB_VERSION_FAIL -gt 0 ] ; then
         echo "Not importing LEHIGHVALLEY - database version is not compatible"
@@ -522,7 +466,7 @@ if [ $DB_VERSION_FAIL -eq 0 ] && [ -f $MSK_RALPHLAUREN_IMPORT_TRIGGER ] ; then
         RESTART_AFTER_MSK_AFFILIATE_IMPORT=1
         IMPORT_FAIL_RALPHLAUREN=0
     fi
-    rm $MSK_RALPHLAUREN_IMPORT_TRIGGER 
+    rm $MSK_RALPHLAUREN_IMPORT_TRIGGER
 else
     if [ $DB_VERSION_FAIL -gt 0 ] ; then
         echo "Not importing RALPHLAUREN - database version is not compatible"
@@ -552,7 +496,7 @@ if [ $DB_VERSION_FAIL -eq 0 ] && [ -f $MSK_TAILORMEDJAPAN_IMPORT_TRIGGER ] ; the
         RESTART_AFTER_MSK_AFFILIATE_IMPORT=1
         IMPORT_FAIL_TAILORMEDJAPAN=0
     fi
-    rm $MSK_TAILORMEDJAPAN_IMPORT_TRIGGER 
+    rm $MSK_TAILORMEDJAPAN_IMPORT_TRIGGER
 else
     if [ $DB_VERSION_FAIL -gt 0 ] ; then
         echo "Not importing TAILORMEDJAPAN - database version is not compatible"

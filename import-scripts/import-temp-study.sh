@@ -189,12 +189,6 @@ else
                 if [ $? -gt 0 ]; then
                     echo "Failed to rename temporary study '$TEMP_CANCER_STUDY_IDENTIFIER' to '$CANCER_STUDY_IDENTIFIER!"
                     RENAME_FAIL=1
-                else
-                    # only consume samples if study is mskimpact or mskimpact_heme
-                    if [[ $CANCER_STUDY_IDENTIFIER == "mskimpact" || $CANCER_STUDY_IDENTIFIER == "mskimpact_heme" ]]; then
-                        echo "Consuming mskimpact samples from cvr"
-                        $JAVA_HOME/bin/java $JAVA_PROXY_ARGS $JAVA_DEBUG_ARGS -jar $PORTAL_HOME/lib/cvr_fetcher.jar -c $STUDY_PATH/cvr_data.json
-                    fi
                 fi
             fi
         fi
