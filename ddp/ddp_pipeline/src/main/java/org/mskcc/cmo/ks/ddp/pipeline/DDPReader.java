@@ -143,7 +143,7 @@ public class DDPReader implements ItemStreamReader<DDPCompositeRecord> {
     private List<DDPCompositeRecord> getDDPCompositeRecordsByCohortId(Integer cohortId) throws Exception {
         List<CohortPatient> records = ddpDataSource.getPatientRecordsByCohortId(cohortId);
         LOG.info("Fetched " + records.size()+  " active patients for cohort: " + cohortName);
-        
+
         List<DDPCompositeRecord> compositeRecords = new ArrayList<>();
         Map<String, CompletableFuture<PatientIdentifiers>> futurePatientIdentifiers = new HashMap<String, CompletableFuture<PatientIdentifiers>>();
         Map<String, CohortPatient> cohortPatientRecords = new HashMap<String, CohortPatient>();
@@ -183,7 +183,7 @@ public class DDPReader implements ItemStreamReader<DDPCompositeRecord> {
         }
         //for(CompletableFuture<PatientIdentifiers> patientIdentifier : futures) {
         //    System.out.println("DMPPatientId is " + patientIdentifier.get().getDmpPatientId());
-        //} 
+        //}
         // filter composite records to return if excluded patient id list is not empty
         if (!excludedPatientIds.isEmpty()) {
             return filterCompositeRecords(compositeRecords);
@@ -197,7 +197,7 @@ public class DDPReader implements ItemStreamReader<DDPCompositeRecord> {
      * @return
      */
     private List<DDPCompositeRecord> getCompositeRecordsByPatientIds() throws Exception {
-        String testToken = authenticationUtil.getAuthenticationToken();
+        String authenticationToken = authenticationUtil.getAuthenticationToken();
         Set<String> patientIds = new HashSet<>();
         try {
             patientIds = loadPatientIdsFromFile(subsetFilename);
@@ -206,7 +206,7 @@ public class DDPReader implements ItemStreamReader<DDPCompositeRecord> {
         }
         List<DDPCompositeRecord> records = getDDPCompositeRecordsByPatientIds(patientIds);
         System.out.println("Moving on to the processor");
-        
+
         return records;
     }
 

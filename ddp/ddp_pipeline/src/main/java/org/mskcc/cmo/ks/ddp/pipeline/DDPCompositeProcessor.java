@@ -74,14 +74,14 @@ public class DDPCompositeProcessor implements ItemProcessor<DDPCompositeRecord, 
     public CompositeResult process(DDPCompositeRecord compositeRecord) throws Exception {
         LOG.info("Processing " + compositeRecord.getDmpPatientId());
         // all get methods are asynchrnous - won't wait for completion before completing
-        CompletableFuture<PatientDemographics> futurePatientDemographics = ddpDataSource.getPatientDemographics(compositeRecord.getDmpPatientId());; 
-        CompletableFuture<List<PatientDiagnosis>> futurePatientDiagnosis = ddpDataSource.getPatientDiagnoses(compositeRecord.getDmpPatientId());;; 
+        CompletableFuture<PatientDemographics> futurePatientDemographics = ddpDataSource.getPatientDemographics(compositeRecord.getDmpPatientId());
+        CompletableFuture<List<PatientDiagnosis>> futurePatientDiagnosis = ddpDataSource.getPatientDiagnoses(compositeRecord.getDmpPatientId());
         CompletableFuture<List<Radiation>> futureRadiation = ddpDataSource.getPatientRadiationProcedures(compositeRecord.getDmpPatientId());
         CompletableFuture<List<Chemotherapy>> futureChemotherapy = ddpDataSource.getPatientChemoProcedures(compositeRecord.getDmpPatientId());
-        CompletableFuture<List<Surgery>> futureSurgery = ddpDataSource.getPatientSurgicalProcedures(compositeRecord.getDmpPatientId()); 
+        CompletableFuture<List<Surgery>> futureSurgery = ddpDataSource.getPatientSurgicalProcedures(compositeRecord.getDmpPatientId());
         // we don't have to check if ddpDataSource.getPatientDemographics or ddpDataSource.getPatientDiagnoses
         // are null because an exception will be thrown in that case too (by the repository)
-        try { 
+        try {
             compositeRecord.setPatientDemographics(futurePatientDemographics.get());
         } catch (InvalidAuthenticationException e) {
             throw new RuntimeException(e.getMessage());
@@ -90,13 +90,13 @@ public class DDPCompositeProcessor implements ItemProcessor<DDPCompositeRecord, 
             // dmp patient id and return null so that writer skips this record
             ddpPatientListUtil.addPatientsMissingDemographics(compositeRecord.getDmpPatientId());
             return null;
-        } 
+        }
         try {
             compositeRecord.setPatientDiagnosis(futurePatientDiagnosis.get());
         } catch (Exception e) {
             ddpPatientListUtil.addPatientsMissingDiagnoses(compositeRecord.getDmpPatientId());
         }
-    
+
         // get all available procedures for patient
         compositeRecord.setRadiationProcedures(futureRadiation.get());
         compositeRecord.setChemoProcedures(futureChemotherapy.get());

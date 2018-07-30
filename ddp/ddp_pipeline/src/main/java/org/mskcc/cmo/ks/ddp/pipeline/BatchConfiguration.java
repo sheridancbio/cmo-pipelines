@@ -61,30 +61,51 @@ import java.util.concurrent.Executor;
 @EnableAsync
 public class BatchConfiguration {
 
-    @Bean(name = "threadPoolTaskExecutor")
+    @Value("${async.DDP.thread.pool.size}")
+    private String asyncDDPThreadPoolSize;
+
+    @Value("${async.DDP.thread.pool.max}")
+    private String asyncDDPThreadPoolMax;
+
+    @Value("${processor.thread.pool.size}")
+    private String processorThreadPoolSize;
+
+    @Value("${processor.thread.pool.max}")
+    private String processorThreadPoolMax;
+
+    @Bean(name = "asyncDDPRequestsThreadPoolTaskExecutor")
     @StepScope
-    public ThreadPoolTaskExecutor threadPoolTaskExecutor() {
+    public ThreadPoolTaskExecutor asyncDDPRequestsThreadPoolTaskExecutor() {
         ThreadPoolTaskExecutor threadPoolTaskExecutor = new ThreadPoolTaskExecutor();
-        threadPoolTaskExecutor.setCorePoolSize(300);
-        threadPoolTaskExecutor.setMaxPoolSize(350);
+        threadPoolTaskExecutor.setCorePoolSize(Integer.parseInt(asyncDDPThreadPoolSize));
+        threadPoolTaskExecutor.setMaxPoolSize(Integer.parseInt(asyncDDPThreadPoolMax));
+        threadPoolTaskExecutor.initialize();
+        return threadPoolTaskExecutor;
+    }
+
+    @Bean(name = "processorThreadPoolTaskExecutor")
+    @StepScope
+    public ThreadPoolTaskExecutor processorThreadPoolTaskExecutor() {
+        ThreadPoolTaskExecutor threadPoolTaskExecutor = new ThreadPoolTaskExecutor();
+        threadPoolTaskExecutor.setCorePoolSize(Integer.parseInt(processorThreadPoolSize));
+        threadPoolTaskExecutor.setMaxPoolSize(Integer.parseInt(processorThreadPoolMax));
         threadPoolTaskExecutor.initialize();
         return threadPoolTaskExecutor;
     }
 
     @Bean
     @StepScope
-    public ItemProcessor asyncItemProcessor(DDPCompositeProcessor ddpCompositeProcessor, ThreadPoolTaskExecutor threadPoolTaskExecutor) {
-        AsyncItemProcessor<DDPCompositeRecord, CompositeResult> asyncItemProcessor = new AsyncItemProcessor<DDPCompositeRecord, CompositeResult>();
-        asyncItemProcessor.setTaskExecutor(threadPoolTaskExecutor);
-        asyncItemProcessor.setDelegate(ddpCompositeProcessor);
+    public ItemProcessor<DDPCompositeRecord, Future<CompositeResult>> asyncItemProcessor() {
+        AsyncItemProcessor<DDPCompositeRecord, CompositeResult> asyncItemProcessor = new AsyncItemProcessor<>();
+        asyncItemProcessor.setTaskExecutor(processorThreadPoolTaskExecutor());
+        asyncItemProcessor.setDelegate(ddpCompositeProcessor());
         return asyncItemProcessor;
     }
 
-    @Bean 
-    @StepScope
-    AsyncItemWriter asyncItemWriter(CompositeItemWriter compositeItemWriter) {
-        AsyncItemWriter asyncItemWriter = new AsyncItemWriter();
-        asyncItemWriter.setDelegate(compositeItemWriter);
+    @Bean
+    ItemWriter<Future<CompositeResult>> asyncItemWriter() {
+        AsyncItemWriter<CompositeResult> asyncItemWriter = new AsyncItemWriter<>();
+        asyncItemWriter.setDelegate(ddpCompositeWriter());
         return asyncItemWriter;
     }
 
@@ -111,10 +132,10 @@ public class BatchConfiguration {
     @Bean
     public Step ddpStep() {
         return stepBuilderFactory.get("ddpStep")
-                .<DDPCompositeRecord, CompositeResult> chunk(chunkInterval)
+                .<DDPCompositeRecord, Future<CompositeResult>> chunk(chunkInterval)
                 .reader(ddpReader())
-                .processor(asyncItemProcessor(ddpCompositeProcessor(), threadPoolTaskExecutor()))
-                .writer(asyncItemWriter(ddpCompositeWriter()))
+                .processor(asyncItemProcessor())
+                .writer(asyncItemWriter())
                 .build();
     }
 

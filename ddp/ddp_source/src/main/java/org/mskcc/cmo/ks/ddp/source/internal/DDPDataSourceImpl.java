@@ -68,37 +68,37 @@ public class DDPDataSourceImpl implements DDPDataSource {
     public static void main(String[] args) throws Exception {}
 
     @Override
-    @Async("testExecutor")
+    @Async("asyncDDPRequestsThreadPoolTaskExecutor")
     public CompletableFuture<PatientDemographics> getPatientDemographics(String patientId) throws Exception {
         return CompletableFuture.completedFuture(ddpRepository.getPatientDemographics(patientId));
     }
 
     @Override
-    @Async("testExecutor")
+    @Async("asyncDDPRequestsThreadPoolTaskExecutor")
     public CompletableFuture<List<PatientDiagnosis>> getPatientDiagnoses(String patientId) throws Exception {
         return CompletableFuture.completedFuture(ddpRepository.getPatientDiagnoses(patientId));
     }
 
     @Override
-    @Async("testExecutor")
+    @Async("asyncDDPRequestsThreadPoolTaskExecutor")
     public CompletableFuture<PatientIdentifiers> getPatientIdentifiers(String patientId) throws Exception {
         return CompletableFuture.completedFuture(ddpRepository.getPatientIdentifiers(patientId));
     }
 
     @Override
-    @Async("testExecutor")
+    @Async("asyncDDPRequestsThreadPoolTaskExecutor")
     public CompletableFuture<List<Radiation>> getPatientRadiationProcedures(String patientId) {
         return CompletableFuture.completedFuture(ddpRepository.getPatientRadiationProcedures(patientId));
     }
 
     @Override
-    @Async("testExecutor")
+    @Async("asyncDDPRequestsThreadPoolTaskExecutor")
     public CompletableFuture<List<Chemotherapy>> getPatientChemoProcedures(String patientId) {
         return CompletableFuture.completedFuture(ddpRepository.getPatientChemoProcedures(patientId));
     }
 
     @Override
-    @Async("testExecutor")
+    @Async("asyncDDPRequestsThreadPoolTaskExecutor")
     public CompletableFuture<List<Surgery>> getPatientSurgicalProcedures(String patientId) {
         return CompletableFuture.completedFuture(ddpRepository.getPatientSurgicalProcedures(patientId));
     }
