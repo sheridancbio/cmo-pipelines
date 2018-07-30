@@ -962,7 +962,7 @@ if [ $IMPORT_STATUS_IMPACT -eq 0 ] ; then
                 cd $MSK_IMPACT_DATA_HOME ; find . -name "*.orig" -delete ; $HG_BINARY add * ; $HG_BINARY commit -m "Latest MSKIMPACT Dataset: Clinical and Timeline"
             fi
         fi
-        touch $MSK_IMPACT_IMPORT_TRIGGER
+        touch $MSK_IMPACT_CONSUME_TRIGGER
     fi
 fi
 
@@ -974,7 +974,7 @@ if [ $IMPORT_STATUS_HEME -eq 0 ] ; then
         cd $MSK_HEMEPACT_DATA_HOME ; $HG_BINARY update -C ; find . -name "*.orig" -delete
         sendFailureMessageMskPipelineLogsSlack "HEMEPACT Redcap Export"
     else
-        touch $MSK_HEMEPACT_IMPORT_TRIGGER
+        touch $MSK_HEMEPACT_CONSUME_TRIGGER
         cd $MSK_HEMEPACT_DATA_HOME ; find . -name "*.orig" -delete ; $HG_BINARY add * ; $HG_BINARY commit -m "Latest HEMEPACT Dataset: Clinical and Timeline"
     fi
 fi
@@ -1060,18 +1060,19 @@ if [ $? -gt 0 ] ; then
     sendFailureMessageMskPipelineLogsSlack "MIXEDPACT merge"
     echo $(date)
     MIXEDPACT_MERGE_FAIL=1
-    # we rollback/clean mercurial after the import of MIXEDPACT (if merge or import fails)
 else
-    echo "MIXEDPACT merge successful! Creating cancer type case lists..."
+    echo "MIXEDPACT merge successful!"
     echo $(date)
-    # add metadata headers and overrides before importing
-    $PYTHON_BINARY $PORTAL_HOME/scripts/add_clinical_attribute_metadata_headers.py -s mixedpact -f $MSK_MIXEDPACT_DATA_HOME/data_clinical*
-    if [ $? -gt 0 ] ; then
-        echo "Error: Adding metadata headers for MIXEDPACT failed! Study will not be updated in portal."
-    else
-        touch $MSK_MIXEDPACT_IMPORT_TRIGGER
-    fi
-    addCancerTypeCaseLists $MSK_MIXEDPACT_DATA_HOME "mixedpact" "data_clinical_sample.txt" "data_clinical_patient.txt"
+fi
+
+if [ $MIXEDPACT_MERGE_FAIL -gt 0 ] ; then
+    sendFailureMessageMskPipelineLogsSlack "MIXEDPACT merge"
+    echo "MIXEDPACT merge failed! Reverting data to last commit."
+    cd $MSK_MIXEDPACT_DATA_HOME ; $HG_BINARY update -C ; find . -name "*.orig" -delete
+else
+    sendSuccessMessageMskPipelineLogsSlack "MIXEDPACT merge"
+    echo "Committing MIXEDPACT data"
+    cd $MSK_MIXEDPACT_DATA_HOME ; find . -name "*.orig" -delete ; $HG_BINARY add * ; $HG_BINARY commit -m "Latest MIXEDPACT dataset"
 fi
 
 echo "Beginning merge of MSK-IMPACT, HEMEPACT, RAINDANCE, ARCHER data for MSKSOLIDHEME..."
