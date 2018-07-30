@@ -43,6 +43,7 @@ FETCH_CVR_HEME_FAIL=1
 FETCH_CVR_RAINDANCE_FAIL=1
 FETCH_CVR_ARCHER_FAIL=1
 
+UNLINKED_ARCHER_SUBSET_FAIL=0
 MIXEDPACT_MERGE_FAIL=0
 MSK_SOLID_HEME_MERGE_FAIL=0
 MSK_KINGS_SUBSET_FAIL=0
@@ -248,31 +249,31 @@ function import_raindance_ddp_to_redcap {
 # Function for importing archer darwin files to redcap
 function import_archer_darwin_to_redcap {
     return_value=0
-    if ! import_project_to_redcap $MSK_ARCHER_DATA_HOME/data_clinical_supp_darwin_demographics.txt mskarcher_data_clinical_supp_darwin_demographics ; then return_value=1 ; fi
+    if ! import_project_to_redcap $MSK_ARCHER_UNFILTERED_DATA_HOME/data_clinical_supp_darwin_demographics.txt mskarcher_data_clinical_supp_darwin_demographics ; then return_value=1 ; fi
     return $return_value
 }
 
 # Function for importing archer cvr files to redcap
 function import_archer_cvr_to_redcap {
     return_value=0
-    if ! import_project_to_redcap $MSK_ARCHER_DATA_HOME/data_clinical_mskarcher_data_clinical.txt mskarcher_data_clinical ; then return_value=1 ; fi
+    if ! import_project_to_redcap $MSK_ARCHER_UNFILTERED_DATA_HOME/data_clinical_mskarcher_data_clinical.txt mskarcher_data_clinical ; then return_value=1 ; fi
     return $return_value
 }
 
 # Function for importing archer supp date files to redcap
 function import_archer_supp_date_to_redcap {
     return_value=0
-    if ! import_project_to_redcap $MSK_ARCHER_DATA_HOME/data_clinical_mskarcher_data_clinical_supp_date.txt mskarcher_data_clinical_supp_date ; then return_value=1 ; fi
+    if ! import_project_to_redcap $MSK_ARCHER_UNFILTERED_DATA_HOME/data_clinical_mskarcher_data_clinical_supp_date.txt mskarcher_data_clinical_supp_date ; then return_value=1 ; fi
     return $return_value
 }
 
 # Function for import archer ddp files to redcap
 function import_archer_ddp_to_redcap {
     return_value=0
-    if ! import_project_to_redcap $MSK_ARCHER_DATA_HOME/data_clinical_ddp.txt mskarcher_data_clinical_ddp_demographics ; then return_value=1 ; fi
-    if ! import_project_to_redcap $MSK_ARCHER_DATA_HOME/data_timeline_ddp_chemotherapy.txt mskarcher_timeline_chemotherapy_ddp; then return_value=1 ; fi
-    if ! import_project_to_redcap $MSK_ARCHER_DATA_HOME/data_timeline_ddp_radiation.txt mskarcher_timeline_radiation_ddp ; then return_value=1 ; fi
-    if ! import_project_to_redcap $MSK_ARCHER_DATA_HOME/data_timeline_ddp_surgery.txt mskarcher_data_timeline_surgery_ddp ; then return_value=1 ; fi
+    if ! import_project_to_redcap $MSK_ARCHER_UNFILTERED_DATA_HOME/data_clinical_ddp.txt mskarcher_data_clinical_ddp_demographics ; then return_value=1 ; fi
+    if ! import_project_to_redcap $MSK_ARCHER_UNFILTERED_DATA_HOME/data_timeline_ddp_chemotherapy.txt mskarcher_timeline_chemotherapy_ddp; then return_value=1 ; fi
+    if ! import_project_to_redcap $MSK_ARCHER_UNFILTERED_DATA_HOME/data_timeline_ddp_radiation.txt mskarcher_timeline_radiation_ddp ; then return_value=1 ; fi
+    if ! import_project_to_redcap $MSK_ARCHER_UNFILTERED_DATA_HOME/data_timeline_ddp_surgery.txt mskarcher_data_timeline_surgery_ddp ; then return_value=1 ; fi
     return $return_value
 }
 
@@ -379,7 +380,7 @@ if [ $? -gt 0 ] ; then
 fi
 
 echo "exporting archer data_clinical_supp_date.txt from redcap"
-export_project_from_redcap $MSK_ARCHER_DATA_HOME mskarcher_data_clinical_supp_date
+export_project_from_redcap $MSK_ARCHER_UNFILTERED_DATA_HOME mskarcher_data_clinical_supp_date
 if [ $? -gt 0 ] ; then
     EXPORT_SUPP_DATE_ARCHER_FAIL=1
     sendFailureMessageMskPipelineLogsSlack "ARCHER Redcap export of mskarcher_data_clinical_supp_date"
@@ -409,7 +410,7 @@ if [ $? -gt 0 ] ; then
 fi
 
 echo "exporting archer data_clinical.txt from redcap"
-export_project_from_redcap $MSK_ARCHER_DATA_HOME mskarcher_data_clinical
+export_project_from_redcap $MSK_ARCHER_UNFILTERED_DATA_HOME mskarcher_data_clinical
 if [ $? -gt 0 ] ; then
     IMPORT_STATUS_ARCHER=1
     sendFailureMessageMskPipelineLogsSlack "ARCHER Redcap export of mskarcher_data_clinical_cvr"
@@ -433,7 +434,7 @@ if [ $? -gt 0 ] ; then
 else
     FETCH_DARWIN_IMPACT_FAIL=0
     echo "committing darwin data"
-    cd $MSK_IMPACT_DATA_HOME ; $HG_BINARY commit -m "Latest MSK-IMPACT Dataset: Darwin impact"
+    cd $MSK_IMPACT_DATA_HOME ; $HG_BINARY commit -m "Latest MSKIMPACT Dataset: Darwin"
 fi
 
 if [ $IMPORT_STATUS_IMPACT -eq 0 ] ; then
@@ -465,7 +466,7 @@ if [ $IMPORT_STATUS_IMPACT -eq 0 ] ; then
             else
                 FETCH_CVR_IMPACT_FAIL=0
                 echo "committing cvr data"
-                cd $MSK_IMPACT_DATA_HOME ; $HG_BINARY commit -m "Latest MSK-IMPACT Dataset: CVR"
+                cd $MSK_IMPACT_DATA_HOME ; $HG_BINARY commit -m "Latest MSKIMPACT Dataset: CVR"
             fi
         fi
     fi
@@ -493,7 +494,7 @@ if [ $IMPORT_STATUS_IMPACT -eq 0 ] ; then
             FETCH_CVR_IMPACT_FAIL=1
         else
             echo "committing CVR germline data"
-            cd $MSK_IMPACT_DATA_HOME ; $HG_BINARY commit -m "Latest MSK-IMPACT Dataset: CVR Germline"
+            cd $MSK_IMPACT_DATA_HOME ; $HG_BINARY commit -m "Latest MSKIMPACT Dataset: CVR Germline"
         fi
     fi
 fi
@@ -509,7 +510,7 @@ if [ $FETCH_DARWIN_IMPACT_FAIL -eq 0 ] ; then
     else
         FETCH_DDP_IMPACT_FAIL=0
         echo "committing DDP data"
-        cd $MSK_IMPACT_DATA_HOME ; $HG_BINARY commit -m "Latest MSK-IMPACT Dataset: DDP demographics/timeline"
+        cd $MSK_IMPACT_DATA_HOME ; $HG_BINARY commit -m "Latest MSKIMPACT Dataset: DDP demographics/timeline"
     fi
 fi
 
@@ -544,7 +545,7 @@ if [ $? -gt 0 ] ; then
 else
     FETCH_DARWIN_HEME_FAIL=0
     echo "committing darwin data for heme"
-    cd $MSK_HEMEPACT_DATA_HOME ; $HG_BINARY commit -m "Latest MSK-IMPACT Dataset: Darwin heme"
+    cd $MSK_HEMEPACT_DATA_HOME ; $HG_BINARY commit -m "Latest HEMEPACT Dataset: Darwin"
 fi
 
 if [ $IMPORT_STATUS_HEME -eq 0 ] ; then
@@ -569,7 +570,7 @@ if [ $IMPORT_STATUS_HEME -eq 0 ] ; then
         else
             FETCH_CVR_HEME_FAIL=0
             echo "committing cvr data for heme"
-            cd $MSK_HEMEPACT_DATA_HOME ; $HG_BINARY commit -m "Latest heme dataset"
+            cd $MSK_HEMEPACT_DATA_HOME ; $HG_BINARY commit -m "Latest HEMEPACT dataset"
         fi
     fi
 fi
@@ -584,7 +585,7 @@ fi
 #    else
 #        FETCH_DDP_HEME_FAIL=0
 #        echo "committing DDP data for heme"
-#        cd $MSK_HEMEPACT_DATA_HOME ; $HG_BINARY commit -m "Latest MSK-IMPACT Dataset: DDP demographics/timeline heme"
+#        cd $MSK_HEMEPACT_DATA_HOME ; $HG_BINARY commit -m "Latest HEMEPACT Dataset: DDP demographics/timeline"
 #    fi
 #fi
 
@@ -604,7 +605,7 @@ if [ $? -gt 0 ] ; then
 else
     FETCH_DARWIN_RAINDANCE_FAIL=0
     echo "commting darwin data for raindance"
-    cd $MSK_RAINDANCE_DATA_HOME ; $HG_BINARY commit -m "Latest MSK-IMPACT Dataset: Darwin raindance"
+    cd $MSK_RAINDANCE_DATA_HOME ; $HG_BINARY commit -m "Latest RAINDANCE Dataset: Darwin"
 fi
 
 if [ $IMPORT_STATUS_RAINDANCE -eq 0 ] ; then
@@ -628,7 +629,7 @@ if [ $IMPORT_STATUS_RAINDANCE -eq 0 ] ; then
             IMPORT_STATUS_RAINDANCE=1
         else
             FETCH_CVR_RAINDANCE_FAIL=0
-            cd $MSK_RAINDANCE_DATA_HOME ; $HG_BINARY commit -m "Latest Raindance dataset"
+            cd $MSK_RAINDANCE_DATA_HOME ; $HG_BINARY commit -m "Latest RAINDANCE dataset"
         fi
     fi
 fi
@@ -643,7 +644,7 @@ fi
 #    else
 #        FETCH_DDP_RAINDANCE_FAIL=0
 #        echo "committing DDP data for raindance"
-#        cd $MSK_RAINDANCE_DATA_HOME ; $HG_BINARY commit -m "Latest MSK-IMPACT Dataset: DDP demographics/timeline raindance"
+#        cd $MSK_RAINDANCE_DATA_HOME ; $HG_BINARY commit -m "Latest RAINDANCE Dataset: DDP demographics/timeline"
 #    fi
 #fi
 
@@ -656,14 +657,14 @@ ARCHER_DARWIN_DEMOGRAPHICS_RECORD_COUNT=$(wc -l < $ARCHER_REDCAP_BACKUP/data_cli
 if [ $ARCHER_DARWIN_DEMOGRAPHICS_RECORD_COUNT -le $DEFAULT_DARWIN_DEMOGRAPHICS_ROW_COUNT ] ; then
     ARCHER_DARWIN_DEMOGRAPHICS_RECORD_COUNT=$DEFAULT_DARWIN_DEMOGRAPHICS_ROW_COUNT
 fi
-$JAVA_HOME/bin/java -jar $PORTAL_HOME/lib/darwin_fetcher.jar -d $MSK_ARCHER_DATA_HOME -s mskarcher -c $ARCHER_DARWIN_DEMOGRAPHICS_RECORD_COUNT
+$JAVA_HOME/bin/java -jar $PORTAL_HOME/lib/darwin_fetcher.jar -d $MSK_ARCHER_UNFILTERED_DATA_HOME -s mskarcher -c $ARCHER_DARWIN_DEMOGRAPHICS_RECORD_COUNT
 if [ $? -gt 0 ] ; then
-    cd $MSK_ARCHER_DATA_HOME ; $HG_BINARY update -C ; find . -name "*.orig" -delete
-    sendFailureMessageMskPipelineLogsSlack "ARCHER DARWIN Fetch"
+    cd $MSK_ARCHER_UNFILTERED_DATA_HOME ; $HG_BINARY update -C ; find . -name "*.orig" -delete
+    sendFailureMessageMskPipelineLogsSlack "ARCHER_UNFILTERED DARWIN Fetch"
 else
     FETCH_DARWIN_ARCHER_FAIL=0
     echo " committing darwin data for archer"
-    cd $MSK_ARCHER_DATA_HOME ; $HG_BINARY commit -m "Latest MSK-IMPACT Dataset: Darwin archer"
+    cd $MSK_ARCHER_UNFILTERED_DATA_HOME ; $HG_BINARY commit -m "Latest ARCHER_UNFILTERED Dataset: Darwin"
 fi
 
 if [ $IMPORT_STATUS_ARCHER -eq 0 ] ; then
@@ -671,41 +672,41 @@ if [ $IMPORT_STATUS_ARCHER -eq 0 ] ; then
     echo "fetching CVR archer data..."
     echo $(date)
     # archer has -b option to block warnings for samples with zero variants (all samples will have zero variants)
-    $JAVA_HOME/bin/java -jar $PORTAL_HOME/lib/cvr_fetcher.jar -d $MSK_ARCHER_DATA_HOME -n data_clinical_mskarcher_data_clinical.txt -i mskarcher -s -b $CVR_TEST_MODE_ARGS
+    $JAVA_HOME/bin/java -jar $PORTAL_HOME/lib/cvr_fetcher.jar -d $MSK_ARCHER_UNFILTERED_DATA_HOME -n data_clinical_mskarcher_data_clinical.txt -i mskarcher -s -b $CVR_TEST_MODE_ARGS
     if [ $? -gt 0 ] ; then
         echo "CVR Archer fetch failed!"
         echo "This will not affect importing of mskimpact"
-        cd $MSK_ARCHER_DATA_HOME ; $HG_BINARY update -C ; find . -name "*.orig" -delete
-        sendFailureMessageMskPipelineLogsSlack "ARCHER CVR Fetch"
+        cd $MSK_ARCHER_UNFILTERED_DATA_HOME ; $HG_BINARY update -C ; find . -name "*.orig" -delete
+        sendFailureMessageMskPipelineLogsSlack "ARCHER_UNFILTERED CVR Fetch"
         IMPORT_STATUS_ARCHER=1
     else
         # check for PHI
-        $PYTHON_BINARY $PORTAL_HOME/scripts/phi-scanner.py -a $PIPELINES_CONFIG_HOME/properties/fetch-cvr/phi-scanner-attributes.txt -j $MSK_ARCHER_DATA_HOME/cvr_data.json
+        $PYTHON_BINARY $PORTAL_HOME/scripts/phi-scanner.py -a $PIPELINES_CONFIG_HOME/properties/fetch-cvr/phi-scanner-attributes.txt -j $MSK_ARCHER_UNFILTERED_DATA_HOME/cvr_data.json
         if [ $? -gt 0 ] ; then
-            echo "PHI attributes found in $MSK_ARCHER_DATA_HOME/cvr_data.json! ARCHER will not be imported!"
-            cd $MSK_ARCHER_DATA_HOME; $HG_BINARY update -C ; find . -name "*.orig" -delete
-            sendFailureMessageMskPipelineLogsSlack "ARCHER PHI attributes scan failed on $MSK_ARCHER_DATA_HOME/cvr_data.json"
+            echo "PHI attributes found in $MSK_ARCHER_UNFILTERED_DATA_HOME/cvr_data.json! UNLINKED_ARCHER will not be imported!"
+            cd $MSK_ARCHER_UNFILTERED_DATA_HOME; $HG_BINARY update -C ; find . -name "*.orig" -delete
+            sendFailureMessageMskPipelineLogsSlack "ARCHER PHI attributes scan failed on $MSK_ARCHER_UNFILTERED_DATA_HOME/cvr_data.json"
             IMPORT_STATUS_ARCHER=1
         else
             FETCH_CVR_ARCHER_FAIL=0
             # renaming gene matrix file until we get the mskarcher gene panel imported
-            cd $MSK_ARCHER_DATA_HOME ; mv data_gene_matrix.txt ignore_data_gene_matrix.txt
-            cd $MSK_ARCHER_DATA_HOME ; $HG_BINARY commit -m "Latest archer dataset"
+            cd $MSK_ARCHER_UNFILTERED_DATA_HOME ; mv data_gene_matrix.txt ignore_data_gene_matrix.txt
+            cd $MSK_ARCHER_UNFILTERED_DATA_HOME ; $HG_BINARY commit -m "Latest ARCHER_UNFILTERED dataset"
         fi
     fi
 fi
 
 # For future use: when we want to replace darwin demographics attributes with ddp-fetched attributes
 #if [ $FETCH_CVR_ARCHER_FAIL -eq 0 ] ; then
-#    awk -F'\t' 'NR==1 { for (i=1; i<=NF; i++) { f[$i] = i } }{ if ($f["PATIENT_ID"] != "PATIENT_ID") { print $(f["PATIENT_ID"]) } }' $MSK_ARCHER_DATA_HOME/data_clinical_mskarcher_data_clinical.txt | sort | uniq > $MSK_DMP_TMPDIR/mskarcher_patient_list.txt
-#    $JAVA_HOME/bin/java -jar $PORTAL_HOME/lib/ddp_fetcher.jar -o $MSK_ARCHER_DATA_HOME -s $MSK_DMP_TMPDIR/mskarcher_patient_list.txt
+#    awk -F'\t' 'NR==1 { for (i=1; i<=NF; i++) { f[$i] = i } }{ if ($f["PATIENT_ID"] != "PATIENT_ID") { print $(f["PATIENT_ID"]) } }' $MSK_ARCHER_UNFILTERED_DATA_HOME/data_clinical_mskarcher_data_clinical.txt | sort | uniq > $MSK_DMP_TMPDIR/mskarcher_patient_list.txt
+#    $JAVA_HOME/bin/java -jar $PORTAL_HOME/lib/ddp_fetcher.jar -o $MSK_ARCHER_UNFILTERED_DATA_HOME -s $MSK_DMP_TMPDIR/mskarcher_patient_list.txt
 #    if [ $? -gt 0 ] ; then
-#        cd $MSK_ARCHER_DATA_HOME ; $HG_BINARY update -C ; find . -name "*.orig" -delete
-#        sendFailureMessageMskPipelineLogsSlack "ARCHER DDP Fetch"
+#        cd $MSK_ARCHER_UNFILTERED_DATA_HOME ; $HG_BINARY update -C ; find . -name "*.orig" -delete
+#        sendFailureMessageMskPipelineLogsSlack "ARCHER_UNFILTERED DDP Fetch"
 #    else
 #        FETCH_DDP_ARCHER_FAIL=0
 #        echo "committing DDP data for archer"
-#        cd $MSK_ARCHER_DATA_HOME ; $HG_BINARY commit -m "Latest MSK-IMPACT Dataset: DDP demographics/timeline archer"
+#        cd $MSK_ARCHER_UNFILTERED_DATA_HOME ; $HG_BINARY commit -m "Latest ARCHER_UNFILTERED Dataset: DDP demographics/timeline"
 #    fi
 #fi
 
@@ -714,7 +715,7 @@ fi
 # generate case lists by cancer type and add "DATE ADDED" info to clinical data for MSK-IMPACT
 if [ $IMPORT_STATUS_IMPACT -eq 0 ] && [ $FETCH_CVR_IMPACT_FAIL -eq 0 ] ; then
     addCancerTypeCaseLists $MSK_IMPACT_DATA_HOME "mskimpact" "data_clinical_mskimpact_data_clinical_cvr.txt"
-    cd $MSK_IMPACT_DATA_HOME ; find . -name "*.orig" -delete ; $HG_BINARY add * ; $HG_BINARY forget data_clinical* ; $HG_BINARY forget data_timeline* ; $HG_BINARY commit -m "Latest MSK-IMPACT Dataset: Case Lists"
+    cd $MSK_IMPACT_DATA_HOME ; find . -name "*.orig" -delete ; $HG_BINARY add * ; $HG_BINARY forget data_clinical* ; $HG_BINARY forget data_timeline* ; $HG_BINARY commit -m "Latest MSKIMPACT Dataset: Case Lists"
     if [ $EXPORT_SUPP_DATE_IMPACT_FAIL -eq 0 ] ; then
         addDateAddedData $MSK_IMPACT_DATA_HOME "data_clinical_mskimpact_data_clinical_cvr.txt" "data_clinical_mskimpact_supp_date_cbioportal_added.txt"
     fi
@@ -739,40 +740,36 @@ if [ $IMPORT_STATUS_RAINDANCE -eq 0 ] && [ $FETCH_CVR_RAINDANCE_FAIL -eq 0 ] ; t
 fi
 
 # generate case lists by cancer type and add "DATE ADDED" info to clinical data for ARCHER
-if [ $IMPORT_STATUS_ARCHER -eq 0 ] && [ $FETCH_CVR_ARCHER_FAIL -eq 0 ] ; then
-    addCancerTypeCaseLists $MSK_ARCHER_DATA_HOME "mskarcher" "data_clinical_mskarcher_data_clinical.txt"
-    cd $MSK_ARCHER_DATA_HOME ; find . -name "*.orig" -delete ; $HG_BINARY add * ; $HG_BINARY forget data_clinical* ; $HG_BINARY forget data_timeline* ; $HG_BINARY commit -m "Latest ARCHER Dataset: Case Lists"
-    if [ $EXPORT_SUPP_DATE_ARCHER_FAIL -eq 0 ] ; then
-        addDateAddedData $MSK_ARCHER_DATA_HOME "data_clinical_mskarcher_data_clinical.txt" "data_clinical_mskarcher_data_clinical_supp_date.txt"
-    fi
+if [[ $IMPORT_STATUS_ARCHER -eq 0 && $FETCH_CVR_ARCHER_FAIL -eq 0 && $EXPORT_SUPP_DATE_ARCHER_FAIL -eq 0 ]] ; then
+    addDateAddedData $MSK_ARCHER_UNFILTERED_DATA_HOME "data_clinical_mskarcher_data_clinical.txt" "data_clinical_mskarcher_data_clinical_supp_date.txt"
 fi
 
 # -------------------------------- Additional processing -----------------------------------
 # we maintain a file with the list of ARCHER samples to exclude from any merges/subsets involving
-# ARCHER data to prevent duplicate fusion events ($MSK_ARCHER_DATA_HOME/cvr/mapped_archer_fusion_samples.txt)
-MAPPED_ARCHER_FUSION_SAMPLES_FILE=$MSK_ARCHER_DATA_HOME/cvr/mapped_archer_fusion_samples.txt
+# ARCHER data to prevent duplicate fusion events ($MSK_ARCHER_UNFILTERED_DATA_HOME/cvr/mapped_archer_fusion_samples.txt)
+MAPPED_ARCHER_FUSION_SAMPLES_FILE=$MSK_ARCHER_UNFILTERED_DATA_HOME/cvr/mapped_archer_fusion_samples.txt
 
-# add linked ARCHER fusions to MSKIMPACT
+# add linked ARCHER_UNFILTERED fusions to MSKIMPACT
 if [ $IMPORT_STATUS_IMPACT -eq 0 ] && [ $FETCH_CVR_ARCHER_FAIL -eq 0 ] && [ $FETCH_CVR_IMPACT_FAIL -eq 0 ] ; then
-    # Merge ARCHER fusion data into the MSKIMPACT cohort
-    $PYTHON_BINARY $PORTAL_HOME/scripts/archer_fusions_merger.py --archer-fusions $MSK_ARCHER_DATA_HOME/data_fusions.txt --linked-cases-filename $MSK_ARCHER_DATA_HOME/cvr/linked_cases.txt --fusions-filename $MSK_IMPACT_DATA_HOME/data_fusions.txt --clinical-filename $MSK_IMPACT_DATA_HOME/data_clinical_mskimpact_data_clinical_cvr.txt --mapped-archer-samples-filename $MAPPED_ARCHER_FUSION_SAMPLES_FILE --study-id "mskimpact"
+    # Merge ARCHER_UNFILTERED fusion data into the MSKIMPACT cohort
+    $PYTHON_BINARY $PORTAL_HOME/scripts/archer_fusions_merger.py --archer-fusions $MSK_ARCHER_UNFILTERED_DATA_HOME/data_fusions.txt --linked-cases-filename $MSK_ARCHER_UNFILTERED_DATA_HOME/cvr/linked_cases.txt --fusions-filename $MSK_IMPACT_DATA_HOME/data_fusions.txt --clinical-filename $MSK_IMPACT_DATA_HOME/data_clinical_mskimpact_data_clinical_cvr.txt --mapped-archer-samples-filename $MAPPED_ARCHER_FUSION_SAMPLES_FILE --study-id "mskimpact"
     if [ $? -gt 0 ] ; then
         ARCHER_MERGE_IMPACT_FAIL=1
         cd $MSK_IMPACT_DATA_HOME; $HG_BINARY update -C ; find . -name "*.orig" -delete
     else
-        cd $MSK_IMPACT_DATA_HOME ; find . -name "*.orig" -delete ; $HG_BINARY add * ; $HG_BINARY forget data_clinical* ; $HG_BINARY forget data_timeline* ; $HG_BINARY commit -m "Adding ARCHER fusions to MSKIMPACT"
+        cd $MSK_IMPACT_DATA_HOME ; find . -name "*.orig" -delete ; $HG_BINARY add * ; $HG_BINARY forget data_clinical* ; $HG_BINARY forget data_timeline* ; $HG_BINARY commit -m "Adding ARCHER_UNFILTERED fusions to MSKIMPACT"
     fi
 fi
 
-# add linked ARCHER fusions to HEMEPACT
+# add linked ARCHER_UNFILTERED fusions to HEMEPACT
 if [ $IMPORT_STATUS_HEME -eq 0 ] && [ $FETCH_CVR_ARCHER_FAIL -eq 0 ] && [ $FETCH_CVR_HEME_FAIL -eq 0 ] ; then
-    # Merge ARCHER fusion data into the HEMEPACT cohort
-    $PYTHON_BINARY $PORTAL_HOME/scripts/archer_fusions_merger.py --archer-fusions $MSK_ARCHER_DATA_HOME/data_fusions.txt --linked-cases-filename $MSK_ARCHER_DATA_HOME/cvr/linked_cases.txt --fusions-filename $MSK_HEMEPACT_DATA_HOME/data_fusions.txt --clinical-filename $MSK_HEMEPACT_DATA_HOME/data_clinical_hemepact_data_clinical.txt --mapped-archer-samples-filename $MAPPED_ARCHER_FUSION_SAMPLES_FILE --study-id "mskimpact_heme"
+    # Merge ARCHER_UNFILTERED fusion data into the HEMEPACT cohort
+    $PYTHON_BINARY $PORTAL_HOME/scripts/archer_fusions_merger.py --archer-fusions $MSK_ARCHER_UNFILTERED_DATA_HOME/data_fusions.txt --linked-cases-filename $MSK_ARCHER_UNFILTERED_DATA_HOME/cvr/linked_cases.txt --fusions-filename $MSK_HEMEPACT_DATA_HOME/data_fusions.txt --clinical-filename $MSK_HEMEPACT_DATA_HOME/data_clinical_hemepact_data_clinical.txt --mapped-archer-samples-filename $MAPPED_ARCHER_FUSION_SAMPLES_FILE --study-id "mskimpact_heme"
     if [ $? -gt 0 ] ; then
         ARCHER_MERGE_HEME_FAIL=1
         cd $MSK_HEMEPACT_DATA_HOME; $HG_BINARY update -C ; find . -name "*.orig" -delete
     else
-        cd $MSK_HEMEPACT_DATA_HOME ; find . -name "*.orig" -delete ; $HG_BINARY add * ; $HG_BINARY forget data_clinical* ; $HG_BINARY forget data_timeline* ; $HG_BINARY commit -m "Adding ARCHER fusions to HEMEPACT"
+        cd $MSK_HEMEPACT_DATA_HOME ; find . -name "*.orig" -delete ; $HG_BINARY add * ; $HG_BINARY forget data_clinical* ; $HG_BINARY forget data_timeline* ; $HG_BINARY commit -m "Adding ARCHER_UNFILTERED fusions to HEMEPACT"
     fi
 fi
 
@@ -870,7 +867,7 @@ if [ $FETCH_DARWIN_ARCHER_FAIL -eq 0 ] ; then
     import_archer_darwin_to_redcap
     if [ $? -gt 0 ] ; then
         IMPORT_STATUS_ARCHER=1
-        sendFailureMessageMskPipelineLogsSlack "Archer Darwin Redcap Import"
+        sendFailureMessageMskPipelineLogsSlack "ARCHER_UNFILTERED Darwin Redcap Import"
     fi
 fi
 
@@ -879,7 +876,7 @@ fi
 #    import_archer_ddp_to_redcap
 #    if [$? -gt 0 ] ; then
 #        IMPORT_STATUS_ARCHER=1
-#        sendFailureMessageMskPipelineLogsSlack "Archer DDP Redcap Import"
+#        sendFailureMessageMskPipelineLogsSlack "ARCHER_UNFILTERED DDP Redcap Import"
 #    fi
 #fi
 
@@ -888,12 +885,12 @@ if [ $FETCH_CVR_ARCHER_FAIL -eq 0 ] ; then
     import_archer_cvr_to_redcap
     if [ $? -gt 0 ] ; then
         IMPORT_STATUS_ARCHER=1
-        sendFailureMessageMskPipelineLogsSlack "Archer CVR Redcap Import"
+        sendFailureMessageMskPipelineLogsSlack "ARCHER_UNFILTERED CVR Redcap Import"
     fi
     if [ $EXPORT_SUPP_DATE_ARCHER_FAIL -eq 0 ] ; then
         import_archer_supp_date_to_redcap
         if [ $? -gt 0 ] ; then
-            sendFailureMessageMskPipelineLogsSlack "Mskimpact Supp Date Redcap Import. Project is now empty, data restoration required"
+            sendFailureMessageMskPipelineLogsSlack "ARCHER_UNFILTERED Supp Date Redcap Import. Project is now empty, data restoration required"
         fi
     fi
 fi
@@ -944,7 +941,7 @@ echo "removing raw clinical & timeline files for mskraindance"
 remove_raw_clinical_timeline_data_files $MSK_RAINDANCE_DATA_HOME
 
 echo "removing raw clinical & timeline files for mskarcher"
-remove_raw_clinical_timeline_data_files $MSK_ARCHER_DATA_HOME
+remove_raw_clinical_timeline_data_files $MSK_ARCHER_UNFILTERED_DATA_HOME
 
 # -------------------------------------------------------------
 # export data in standard cbioportal mode from redcap
@@ -955,14 +952,14 @@ if [ $IMPORT_STATUS_IMPACT -eq 0 ] ; then
     if [ $? -gt 0 ] ; then
         IMPORT_STATUS_IMPACT=1
         cd $MSK_IMPACT_DATA_HOME ; $HG_BINARY update -C ; find . -name "*.orig" -delete
-        sendFailureMessageMskPipelineLogsSlack "Mskimpact Redcap Export"
+        sendFailureMessageMskPipelineLogsSlack "MSKIMPACT Redcap Export"
     else
         if [ $GENERATE_MASTERLIST_FAIL -eq 0 ] ; then
             $PYTHON_BINARY $PORTAL_HOME/scripts/filter_dropped_samples_patients.py -s $MSK_IMPACT_DATA_HOME/data_clinical_sample.txt -p $MSK_IMPACT_DATA_HOME/data_clinical_patient.txt -t $MSK_IMPACT_DATA_HOME/data_timeline.txt -f $MSK_DMP_TMPDIR/sample_masterlist_for_filtering.txt
             if [ $? -gt 0 ] ; then
                 cd $MSK_IMPACT_DATA_HOME ; $HG_BINARY update -C ; find . -name "*.orig" -delete
             else
-                cd $MSK_IMPACT_DATA_HOME ; find . -name "*.orig" -delete ; $HG_BINARY add * ; $HG_BINARY commit -m "Latest MSK-IMPACT Dataset: Clinical and Timeline"
+                cd $MSK_IMPACT_DATA_HOME ; find . -name "*.orig" -delete ; $HG_BINARY add * ; $HG_BINARY commit -m "Latest MSKIMPACT Dataset: Clinical and Timeline"
             fi
         fi
         touch $MSK_IMPACT_IMPORT_TRIGGER
@@ -975,7 +972,7 @@ if [ $IMPORT_STATUS_HEME -eq 0 ] ; then
     if [ $? -gt 0 ] ; then
         IMPORT_STATUS_HEME=1
         cd $MSK_HEMEPACT_DATA_HOME ; $HG_BINARY update -C ; find . -name "*.orig" -delete
-        sendFailureMessageMskPipelineLogsSlack "Hemepact Redcap Export"
+        sendFailureMessageMskPipelineLogsSlack "HEMEPACT Redcap Export"
     else
         touch $MSK_HEMEPACT_IMPORT_TRIGGER
         cd $MSK_HEMEPACT_DATA_HOME ; find . -name "*.orig" -delete ; $HG_BINARY add * ; $HG_BINARY commit -m "Latest HEMEPACT Dataset: Clinical and Timeline"
@@ -988,7 +985,7 @@ if [ $IMPORT_STATUS_RAINDANCE -eq 0 ] ; then
     if [ $? -gt 0 ] ; then
         IMPORT_STATUS_RAINDANCE=1
         cd $MSK_RAINDANCE_DATA_HOME ; $HG_BINARY update -C ; find . -name "*.orig" -delete
-        sendFailureMessageMskPipelineLogsSlack "Raindance Redcap Export"
+        sendFailureMessageMskPipelineLogsSlack "RAINDANCE Redcap Export"
     else
         touch $MSK_RAINDANCE_IMPORT_TRIGGER
         cd $MSK_RAINDANCE_DATA_HOME ; find . -name "*.orig" -delete ; $HG_BINARY add * ; $HG_BINARY commit -m "Latest RAINDANCE Dataset: Clinical and Timeline"
@@ -997,17 +994,44 @@ fi
 
 echo "exporting archer data from redcap"
 if [ $IMPORT_STATUS_ARCHER -eq 0 ] ; then
-    export_stable_id_from_redcap mskarcher $MSK_ARCHER_DATA_HOME
+    export_stable_id_from_redcap mskarcher $MSK_ARCHER_UNFILTERED_DATA_HOME
     if [ $? -gt 0 ] ; then
         IMPORT_STATUS_ARCHER=1
-        cd $MSK_ARCHER_DATA_HOME ; $HG_BINARY update -C ; find . -name "*.orig" -delete
-        sendFailureMessageMskPipelineLogsSlack "Archer Redcap Export"
+        cd $MSK_ARCHER_UNFILTERED_DATA_HOME ; $HG_BINARY update -C ; find . -name "*.orig" -delete
+        sendFailureMessageMskPipelineLogsSlack "ARCHER_UNFILTERED Redcap Export"
     else
         touch $MSK_ARCHER_IMPORT_TRIGGER
-        cd $MSK_ARCHER_DATA_HOME ; find . -name "*.orig" -delete ; $HG_BINARY add * ; $HG_BINARY commit -m "Latest ARCHER Dataset: Clinical and Timeline"
+        cd $MSK_ARCHER_UNFILTERED_DATA_HOME ; find . -name "*.orig" -delete ; $HG_BINARY add * ; $HG_BINARY commit -m "Latest ARCHER_UNFILTERED Dataset: Clinical and Timeline"
     fi
 fi
 
+# process data for UNLINKED_ARCHER
+if [[ $IMPORT_STATUS_ARCHER -eq 0 && $FETCH_CVR_ARCHER_FAIL -eq 0 ]] ; then
+    # attempt to subset archer unfiltered w/same excluded archer samples list used for MIXEDPACT, MSKSOLIDHEME
+    $PYTHON_BINARY $PORTAL_HOME/scripts/merge.py -d $MSK_ARCHER_DATA_HOME -i mskarcher -m "true" -e $MAPPED_ARCHER_FUSION_SAMPLES_FILE $MSK_ARCHER_UNFILTERED_DATA_HOME
+    if [ $? -gt 0 ] ; then
+        echo "UNLINKED_ARCHER subset failed! Study will not be updated in the portal."
+        sendFailureMessageMskPipelineLogsSlack "UNLINKED_ARCHER subset"
+        echo $(date)
+        cd $MSK_ARCHER_DATA_HOME ; $HG_BINARY update -C ; find . -name "*.orig" -delete
+        UNLINKED_ARCHER_SUBSET_FAIL=1
+    else
+        echo "UNLINKED_ARCHER subset successful! Creating cancer type case lists..."
+        echo $(date)
+        # add metadata headers and overrides before importing
+        $PYTHON_BINARY $PORTAL_HOME/scripts/add_clinical_attribute_metadata_headers.py -s mskarcher -f $MSK_ARCHER_DATA_HOME/data_clinical*
+        if [ $? -gt 0 ] ; then
+            echo "Error: Adding metadata headers for UNLINKED_ARCHER failed! Study will not be updated in portal."
+            cd $MSK_ARCHER_DATA_HOME ; $HG_BINARY update -C ; find . -name "*.orig" -delete
+        else
+            # commit updates and generated case lists
+            cd $MSK_ARCHER_DATA_HOME ; find . -name "*.orig" -delete ; $HG_BINARY add * ; $HG_BINARY commit -m "Latest UNLINKED_ARCHER Dataset"
+            addCancerTypeCaseLists $MSK_ARCHER_DATA_HOME "mskarcher" "data_clinical_sample.txt" "data_clinical_patient.txt"
+            cd $MSK_ARCHER_DATA_HOME ; find . -name "*.orig" -delete ; $HG_BINARY add * ; $HG_BINARY forget data_clinical* ; $HG_BINARY forget data_timeline* ; $HG_BINARY commit -m "Latest UNLINKED_ARCHER Dataset: Case Lists"
+            touch $MSK_ARCHER_IMPORT_TRIGGER
+        fi
+    fi
+fi
 #--------------------------------------------------------------
 ## Merge studies for MIXEDPACT, MSKSOLIDHEME:
 #   (1) MSK-IMPACT, HEMEPACT, RAINDANCE, and ARCHER (MIXEDPACT)
@@ -1022,15 +1046,15 @@ if [ ! -f $MSK_HEMEPACT_DATA_HOME/meta_SV.txt ] ; then
     touch $MSK_HEMEPACT_DATA_HOME/meta_SV.txt
 fi
 
-if [ ! -f $MSK_ARCHER_DATA_HOME/meta_SV.txt ] ; then
-    touch $MSK_ARCHER_DATA_HOME/meta_SV.txt
+if [ ! -f $MSK_ARCHER_UNFILTERED_DATA_HOME/meta_SV.txt ] ; then
+    touch $MSK_ARCHER_UNFILTERED_DATA_HOME/meta_SV.txt
 fi
 
 echo "Beginning merge of MSK-IMPACT, HEMEPACT, RAINDANCE, ARCHER data for MIXEDPACT..."
 echo $(date)
 
 # MIXEDPACT merge and check exit code
-$PYTHON_BINARY $PORTAL_HOME/scripts/merge.py -d $MSK_MIXEDPACT_DATA_HOME -i mixedpact -m "true" -e $MAPPED_ARCHER_FUSION_SAMPLES_FILE $MSK_IMPACT_DATA_HOME $MSK_HEMEPACT_DATA_HOME $MSK_RAINDANCE_DATA_HOME $MSK_ARCHER_DATA_HOME
+$PYTHON_BINARY $PORTAL_HOME/scripts/merge.py -d $MSK_MIXEDPACT_DATA_HOME -i mixedpact -m "true" -e $MAPPED_ARCHER_FUSION_SAMPLES_FILE $MSK_IMPACT_DATA_HOME $MSK_HEMEPACT_DATA_HOME $MSK_RAINDANCE_DATA_HOME $MSK_ARCHER_UNFILTERED_DATA_HOME
 if [ $? -gt 0 ] ; then
     echo "MIXEDPACT merge failed! Study will not be updated in the portal."
     sendFailureMessageMskPipelineLogsSlack "MIXEDPACT merge"
@@ -1054,7 +1078,7 @@ echo "Beginning merge of MSK-IMPACT, HEMEPACT, RAINDANCE, ARCHER data for MSKSOL
 echo $(date)
 
 # MSKSOLIDHEME merge and check exit code
-$PYTHON_BINARY $PORTAL_HOME/scripts/merge.py -d $MSK_SOLID_HEME_DATA_HOME -i msk_solid_heme -m "true" -e $MAPPED_ARCHER_FUSION_SAMPLES_FILE $MSK_IMPACT_DATA_HOME $MSK_HEMEPACT_DATA_HOME $MSK_ARCHER_DATA_HOME
+$PYTHON_BINARY $PORTAL_HOME/scripts/merge.py -d $MSK_SOLID_HEME_DATA_HOME -i msk_solid_heme -m "true" -e $MAPPED_ARCHER_FUSION_SAMPLES_FILE $MSK_IMPACT_DATA_HOME $MSK_HEMEPACT_DATA_HOME $MSK_ARCHER_UNFILTERED_DATA_HOME
 if [ $? -gt 0 ] ; then
     echo "MSKSOLIDHEME merge failed! Study will not be updated in the portal."
     sendFailureMessageMskPipelineLogsSlack "MSKSOLIDHEME merge"
@@ -1083,8 +1107,8 @@ if [ $(wc -l < $MSK_HEMEPACT_DATA_HOME/meta_SV.txt) -eq 0 ] ; then
     rm $MSK_HEMEPACT_DATA_HOME/meta_SV.txt
 fi
 
-if [ $(wc -l < $MSK_ARCHER_DATA_HOME/meta_SV.txt) -eq 0 ] ; then
-    rm $MSK_ARCHER_DATA_HOME/meta_SV.txt
+if [ $(wc -l < $MSK_ARCHER_UNFILTERED_DATA_HOME/meta_SV.txt) -eq 0 ] ; then
+    rm $MSK_ARCHER_UNFILTERED_DATA_HOME/meta_SV.txt
 fi
 
 #--------------------------------------------------------------
@@ -1402,6 +1426,12 @@ EMAIL_BODY="Failed to merge ARCHER fusion events into HEMEPACT"
 if [ $ARCHER_MERGE_HEME_FAIL -gt 0 ] ; then
     echo -e "Sending email $EMAIL_BODY"
     echo -e "$EMAIL_BODY" |  mail -s "HEMEPACT-ARCHER Merge Failure: Study will be updated without new ARCHER fusion events." $email_list
+fi
+
+EMAIL_BODY="Failed to subset UNLINKED_ARCHER data from ARCHER_UNFILTERED"
+if [ $UNLINKED_ARCHER_SUBSET_FAIL -gt 0 ] ; then
+    echo -e "Sending email $EMAIL_BODY"
+    echo -e "$EMAIL_BODY" |  mail -s "UNLINKED_ARCHER Subset Failure: Study will not be updated." $email_list
 fi
 
 EMAIL_BODY="Failed to merge MSK-IMPACT, HEMEPACT, ARCHER, and RAINDANCE data. Merged study will not be updated."
