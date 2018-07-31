@@ -342,7 +342,7 @@ def data_okay_to_add(is_clinical_or_timeline_file, file_header, reference_set, d
     found = False
     if is_clinical_or_timeline_file:
         patient_id = data_values[file_header.index('PATIENT_ID')]
-        if not 'SAMPLE_ID' in file_header
+        if not 'SAMPLE_ID' in file_header:
             found = (patient_id in PATIENT_SAMPLE_MAP.keys())
             if not keep_match:
                 # if patient id not found in patient sample map and we are not keeping
