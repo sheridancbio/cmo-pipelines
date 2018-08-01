@@ -666,6 +666,10 @@ def load_patient_sample_mapping(data_filenames, reference_set, keep_match):
                 update_map = (keep_match == (data[case_id_col] in reference_set))
                 if update_map:
                     update_patient_sample_map(data['PATIENT_ID'], data['SAMPLE_ID'], reference_set, case_id_col)
+                else:
+                    # need to exclude samples linked to patients if excluded reference set is by patient id
+                    if not keep_match and case_id_col == 'PATIENT_ID':
+                        reference_set.add(data['SAMPLE_ID'])
         data_file.close()
     print >> OUTPUT_FILE, 'Finished loading patient - sample mapping!\n'
     return reference_set
