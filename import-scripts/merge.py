@@ -362,7 +362,7 @@ def data_okay_to_add(is_clinical_or_timeline_file, file_header, reference_set, d
             # Ex: OTHER_SAMPLE_ID/OTHER_PATIENT_ID, or similar attr's like RNA_ID, METHYLATION_ID
             #     which indicate what other sample IDs are linked to current sample record
             sample_id = data_values[file_header.index('SAMPLE_ID')]
-            found = (patient_id in PATIENT_SAMPLE_MAP.keys() and sample_id in PATIENT_SAMPLE_MAP[patient_id])
+            found = (sample_id in reference_set)
     elif len([True for val in data_values if val in reference_set]) > 0:
         found = True
     return (keep_match == found)
@@ -801,7 +801,7 @@ def organize_files(studies, file_types, merge_clinical):
                 file_types[SUPP_DATA].append(study_file)
 
 def usage():
-    print >> OUTPUT_FILE, 'merge.py --subset [/path/to/subset] --output-directory [/path/to/output] --study-id [study id] --cancer-type [cancer type] --merge-clinical [true/false] --exclude-supplemental-data [/path/to/exclude_list] <path/to/study path/to/study ...>'
+    print >> OUTPUT_FILE, 'merge.py --subset [/path/to/subset] --output-directory [/path/to/output] --study-id [study id] --cancer-type [cancer type] --merge-clinical [true/false] --exclude-supplemental-data [true/false] --excluded-samples [/path/to/exclude_list] <path/to/study path/to/study ...>'
 
 def main():
     """ Handle command line args, checks the directories exist, then calls passes things along to the other functions """
