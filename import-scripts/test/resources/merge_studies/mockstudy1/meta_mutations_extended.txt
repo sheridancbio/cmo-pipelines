@@ -1,0 +1,8 @@
+cancer_study_identifier: mockstudy1
+genetic_alteration_type: MUTATION_EXTENDED
+datatype: MAF
+stable_id: mockstudy1_mutations
+profile_name: Mutations
+profile_description: Mutation data from whole exome sequencing.
+show_profile_in_analysis_tab: true
+data_filename: data_mutations_extended.txt
