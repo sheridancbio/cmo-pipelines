@@ -1079,7 +1079,7 @@ echo "Beginning merge of MSK-IMPACT, HEMEPACT, RAINDANCE, ARCHER data for MSKSOL
 echo $(date)
 
 # MSKSOLIDHEME merge and check exit code
-$PYTHON_BINARY $PORTAL_HOME/scripts/merge.py -d $MSK_SOLID_HEME_DATA_HOME -i msk_solid_heme -m "true" -e $MAPPED_ARCHER_FUSION_SAMPLES_FILE $MSK_IMPACT_DATA_HOME $MSK_HEMEPACT_DATA_HOME $MSK_ARCHER_UNFILTERED_DATA_HOME
+$PYTHON_BINARY $PORTAL_HOME/scripts/merge.py -d $MSK_SOLID_HEME_DATA_HOME -i mskimpact -m "true" -e $MAPPED_ARCHER_FUSION_SAMPLES_FILE $MSK_IMPACT_DATA_HOME $MSK_HEMEPACT_DATA_HOME
 if [ $? -gt 0 ] ; then
     echo "MSKSOLIDHEME merge failed! Study will not be updated in the portal."
     sendFailureMessageMskPipelineLogsSlack "MSKSOLIDHEME merge"
