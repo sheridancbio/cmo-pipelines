@@ -1090,13 +1090,13 @@ else
     echo "MSKSOLIDHEME merge successful! Creating cancer type case lists..."
     echo $(date)
     # add metadata headers and overrides before importing
-    $PYTHON_BINARY $PORTAL_HOME/scripts/add_clinical_attribute_metadata_headers.py -s msk_solid_heme -f $MSK_SOLID_HEME_DATA_HOME/data_clinical*
+    $PYTHON_BINARY $PORTAL_HOME/scripts/add_clinical_attribute_metadata_headers.py -s mskimpact -f $MSK_SOLID_HEME_DATA_HOME/data_clinical*
     if [ $? -gt 0 ] ; then
         echo "Error: Adding metadata headers for MSKSOLIDHEME failed! Study will not be updated in portal."
     else
         touch $MSK_SOLID_HEME_IMPORT_TRIGGER
     fi
-    addCancerTypeCaseLists $MSK_SOLID_HEME_DATA_HOME "msk_solid_heme" "data_clinical_sample.txt" "data_clinical_patient.txt"
+    addCancerTypeCaseLists $MSK_SOLID_HEME_DATA_HOME "mskimpact" "data_clinical_sample.txt" "data_clinical_patient.txt"
 fi
 
 # check that meta_SV.txt are actually empty files before deleting from IMPACT, HEME, and ARCHER studies
