@@ -39,11 +39,17 @@ import java.util.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.stereotype.Service;
+
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.CompletableFuture;
 /**
  *
  * @author ochoaa
  */
 @Repository
+@Service
 public class DDPDataSourceImpl implements DDPDataSource {
 
     @Autowired
@@ -62,32 +68,38 @@ public class DDPDataSourceImpl implements DDPDataSource {
     public static void main(String[] args) throws Exception {}
 
     @Override
-    public PatientDemographics getPatientDemographics(String patientId) throws Exception {
-        return ddpRepository.getPatientDemographics(patientId);
+    @Async("asyncDDPRequestsThreadPoolTaskExecutor")
+    public CompletableFuture<PatientDemographics> getPatientDemographics(String patientId) throws Exception {
+        return CompletableFuture.completedFuture(ddpRepository.getPatientDemographics(patientId));
     }
 
     @Override
-    public List<PatientDiagnosis> getPatientDiagnoses(String patientId) throws Exception {
-        return ddpRepository.getPatientDiagnoses(patientId);
+    @Async("asyncDDPRequestsThreadPoolTaskExecutor")
+    public CompletableFuture<List<PatientDiagnosis>> getPatientDiagnoses(String patientId) throws Exception {
+        return CompletableFuture.completedFuture(ddpRepository.getPatientDiagnoses(patientId));
     }
 
     @Override
-    public PatientIdentifiers getPatientIdentifiers(String patientId) throws Exception {
-        return ddpRepository.getPatientIdentifiers(patientId);
+    @Async("asyncDDPRequestsThreadPoolTaskExecutor")
+    public CompletableFuture<PatientIdentifiers> getPatientIdentifiers(String patientId) throws Exception {
+        return CompletableFuture.completedFuture(ddpRepository.getPatientIdentifiers(patientId));
     }
 
     @Override
-    public List<Radiation> getPatientRadiationProcedures(String patientId) {
-        return ddpRepository.getPatientRadiationProcedures(patientId);
+    @Async("asyncDDPRequestsThreadPoolTaskExecutor")
+    public CompletableFuture<List<Radiation>> getPatientRadiationProcedures(String patientId) {
+        return CompletableFuture.completedFuture(ddpRepository.getPatientRadiationProcedures(patientId));
     }
 
     @Override
-    public List<Chemotherapy> getPatientChemoProcedures(String patientId) {
-        return ddpRepository.getPatientChemoProcedures(patientId);
+    @Async("asyncDDPRequestsThreadPoolTaskExecutor")
+    public CompletableFuture<List<Chemotherapy>> getPatientChemoProcedures(String patientId) {
+        return CompletableFuture.completedFuture(ddpRepository.getPatientChemoProcedures(patientId));
     }
 
     @Override
-    public List<Surgery> getPatientSurgicalProcedures(String patientId) {
-        return ddpRepository.getPatientSurgicalProcedures(patientId);
+    @Async("asyncDDPRequestsThreadPoolTaskExecutor")
+    public CompletableFuture<List<Surgery>> getPatientSurgicalProcedures(String patientId) {
+        return CompletableFuture.completedFuture(ddpRepository.getPatientSurgicalProcedures(patientId));
     }
 }

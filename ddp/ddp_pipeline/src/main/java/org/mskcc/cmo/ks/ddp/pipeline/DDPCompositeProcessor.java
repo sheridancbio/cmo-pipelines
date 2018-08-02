@@ -35,8 +35,10 @@ package org.mskcc.cmo.ks.ddp.pipeline;
 import org.mskcc.cmo.ks.ddp.source.composite.DDPCompositeRecord;
 import org.mskcc.cmo.ks.ddp.pipeline.util.DDPPatientListUtil;
 import org.mskcc.cmo.ks.ddp.source.DDPDataSource;
+import org.mskcc.cmo.ks.ddp.source.model.*;
 import org.mskcc.cmo.ks.ddp.source.exception.InvalidAuthenticationException;
-
+import java.util.concurrent.CompletableFuture;
+import java.util.*;
 import com.google.common.base.Strings;
 import org.apache.log4j.Logger;
 import org.springframework.batch.item.ItemProcessor;
@@ -70,10 +72,17 @@ public class DDPCompositeProcessor implements ItemProcessor<DDPCompositeRecord, 
 
     @Override
     public CompositeResult process(DDPCompositeRecord compositeRecord) throws Exception {
+        LOG.info("Processing " + compositeRecord.getDmpPatientId());
+        // all get methods are asynchrnous - won't wait for completion before completing
+        CompletableFuture<PatientDemographics> futurePatientDemographics = ddpDataSource.getPatientDemographics(compositeRecord.getDmpPatientId());
+        CompletableFuture<List<PatientDiagnosis>> futurePatientDiagnosis = ddpDataSource.getPatientDiagnoses(compositeRecord.getDmpPatientId());
+        CompletableFuture<List<Radiation>> futureRadiation = ddpDataSource.getPatientRadiationProcedures(compositeRecord.getDmpPatientId());
+        CompletableFuture<List<Chemotherapy>> futureChemotherapy = ddpDataSource.getPatientChemoProcedures(compositeRecord.getDmpPatientId());
+        CompletableFuture<List<Surgery>> futureSurgery = ddpDataSource.getPatientSurgicalProcedures(compositeRecord.getDmpPatientId());
         // we don't have to check if ddpDataSource.getPatientDemographics or ddpDataSource.getPatientDiagnoses
         // are null because an exception will be thrown in that case too (by the repository)
         try {
-            compositeRecord.setPatientDemographics(ddpDataSource.getPatientDemographics(compositeRecord.getDmpPatientId()));
+            compositeRecord.setPatientDemographics(futurePatientDemographics.get());
         } catch (InvalidAuthenticationException e) {
             throw new RuntimeException(e.getMessage());
         } catch (Exception e) {
@@ -83,14 +92,15 @@ public class DDPCompositeProcessor implements ItemProcessor<DDPCompositeRecord, 
             return null;
         }
         try {
-            compositeRecord.setPatientDiagnosis(ddpDataSource.getPatientDiagnoses(compositeRecord.getDmpPatientId()));
+            compositeRecord.setPatientDiagnosis(futurePatientDiagnosis.get());
         } catch (Exception e) {
             ddpPatientListUtil.addPatientsMissingDiagnoses(compositeRecord.getDmpPatientId());
         }
+
         // get all available procedures for patient
-        compositeRecord.setRadiationProcedures(ddpDataSource.getPatientRadiationProcedures(compositeRecord.getDmpPatientId()));
-        compositeRecord.setChemoProcedures(ddpDataSource.getPatientChemoProcedures(compositeRecord.getDmpPatientId()));
-        compositeRecord.setSurgicalProcedures(ddpDataSource.getPatientSurgicalProcedures(compositeRecord.getDmpPatientId()));
+        compositeRecord.setRadiationProcedures(futureRadiation.get());
+        compositeRecord.setChemoProcedures(futureChemotherapy.get());
+        compositeRecord.setSurgicalProcedures(futureSurgery.get());
 
         // check that clinical result is valid - return null if not so that this record is skipped by writer
         String clinicalResult = null;
