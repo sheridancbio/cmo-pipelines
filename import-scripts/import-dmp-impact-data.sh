@@ -215,7 +215,7 @@ else
     if [ $DB_VERSION_FAIL -gt 0 ] ; then
         echo "Not importing MSKSOLIDHEME - database version is not compatible"
     else
-        echo "Not importing MSKSOLIDHEME - something went wrong with a merging clinical studies"
+        echo "Not importing MSKSOLIDHEME - something went wrong with merging clinical studies"
     fi
 fi
 
