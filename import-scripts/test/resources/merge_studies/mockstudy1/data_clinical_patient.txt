@@ -1,0 +1,9 @@
+#Patient Identifier	Display name 1	Display name 2	Display name 3
+#Identifier to uniquely specify a patient.	Description 1	Description 2	Description 3
+#STRING	STRING	STRING	STRING
+#0	1	1	1
+PATIENT_ID	PT_CLIN_ATTR_1	PT_CLIN_ATTR_2	PT_CLIN_ATTR_3
+P01-000001	VALUE1	VALUE2	VALUE3
+P01-000002	VALUE1	VALUE2	VALUE3
+P01-000003	VALUE1	VALUE2	VALUE3
+P01-000004	VALUE1	VALUE2	VALUE3
