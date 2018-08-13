@@ -76,10 +76,8 @@ import javax.annotation.Generated;
     "so_comments",
     "so_status_name",
     "somatic_status",
-    "tmb_cohort",
     "tmb_cohort_percentile",
     "tmb_score",
-    "tmb_tt_cohort",
     "tmb_tt_percentile",
     "tumor_purity",
     "tumor_type_code",
@@ -141,14 +139,10 @@ public class CVRMetaData {
     private String soStatusName;
     @JsonProperty("somatic_status")
     private String somaticStatus;
-    @JsonProperty("tmb_cohort")
-    private Double tmbCohort;
     @JsonProperty("tmb_cohort_percentile")
     private Double tmbCohortPercentile;
     @JsonProperty("tmb_score")
     private Double tmbScore;
-    @JsonProperty("tmb_tt_cohort")
-    private Double tmbTtCohort;
     @JsonProperty("tmb_tt_percentile")
     private Double tmbTtPercentile;
     @JsonProperty("tumor_purity")
@@ -196,10 +190,8 @@ public class CVRMetaData {
      * @param soComments
      * @param soStatusName
      * @param somaticStatus
-     * @param tmbCohort
      * @param tmbCohortPercentile
      * @param tmbScore
-     * @param tmbTtCohort
      * @param tmbTtPercentile
      * @param tumorPurity
      * @param tumorTypeCode
@@ -209,8 +201,8 @@ public class CVRMetaData {
             Integer dmpAlysTaskId, String dmpAlysTaskName, String dmpPatientId, String dmpSampleId, Integer dmpSampleSoId, Integer gender,
             String genePanel, Integer isMetastasis, String legacyPatientId, String legacySampleId, String metastasisSite, String mrevComments,
             String msiComment, String msiScore, String msiType, String outsideInstitute, String primarySite, Integer retrieveStatus,
-            Integer sampleCoverage, String soComments, String soStatusName, String somaticStatus, Double tmbCohort, Double tmbCohortPercentile,
-            Double tmbScore, Double tmbTtCohort, Double tmbTtPercentile, String tumorPurity, String tumorTypeCode, String tumorTypeName) {
+            Integer sampleCoverage, String soComments, String soStatusName, String somaticStatus,Double tmbCohortPercentile,
+            Double tmbScore, Double tmbTtPercentile, String tumorPurity, String tumorTypeCode, String tumorTypeName) {
         this.alys2sampleId = alys2sampleId;
         this.cbxPatientId = cbxPatientId;
         this.cbxSampleId = cbxSampleId;
@@ -237,10 +229,8 @@ public class CVRMetaData {
         this.soComments = soComments;
         this.soStatusName = soStatusName;
         this.somaticStatus = somaticStatus;
-        this.tmbCohort = tmbCohort;
         this.tmbCohortPercentile = tmbCohortPercentile;
         this.tmbScore = tmbScore;
-        this.tmbTtCohort = tmbTtCohort;
         this.tmbTtPercentile = tmbTtPercentile;
         this.tumorPurity = tumorPurity;
         this.tumorTypeCode = tumorTypeCode;
@@ -781,26 +771,6 @@ public class CVRMetaData {
     /**
      *
      * @return
-     * The tmbCohort
-     */
-    @JsonProperty("tmb_cohort")
-    public Double getTmbCohort() {
-        return tmbCohort;
-    }
-
-    /**
-     *
-     * @param tmbCohort
-     * The tmb_cohort
-     */
-    @JsonProperty("tmb_cohort")
-    public void setTmbCohort(Double tmbCohort) {
-        this.tmbCohort = tmbCohort;
-    }
-
-    /**
-     *
-     * @return
      * The tmbCohortPercentile
      */
     @JsonProperty("tmb_cohort_percentile")
@@ -836,26 +806,6 @@ public class CVRMetaData {
     @JsonProperty("tmb_score")
     public void setTmbScore(Double tmbScore) {
         this.tmbScore = tmbScore;
-    }
-
-    /**
-     *
-     * @return
-     * The tmbTtCohort
-     */
-    @JsonProperty("tmb_tt_cohort")
-    public Double getTmbTtCohort() {
-        return tmbTtCohort;
-    }
-
-    /**
-     *
-     * @param tmbTtCohort
-     * The tmb_tt_cohort
-     */
-    @JsonProperty("tmb_tt_cohort")
-    public void setTmbTtCohort(Double tmbTtCohort) {
-        this.tmbTtCohort = tmbTtCohort;
     }
 
     /**
