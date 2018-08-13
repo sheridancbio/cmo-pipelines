@@ -197,7 +197,6 @@ public class DDPReader implements ItemStreamReader<DDPCompositeRecord> {
      * @return
      */
     private List<DDPCompositeRecord> getCompositeRecordsByPatientIds() throws Exception {
-        String authenticationToken = authenticationUtil.getAuthenticationToken();
         Set<String> patientIds = new HashSet<>();
         try {
             patientIds = loadPatientIdsFromFile(subsetFilename);
