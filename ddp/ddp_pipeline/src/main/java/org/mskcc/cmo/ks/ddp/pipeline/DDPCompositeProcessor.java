@@ -72,7 +72,6 @@ public class DDPCompositeProcessor implements ItemProcessor<DDPCompositeRecord, 
 
     @Override
     public CompositeResult process(DDPCompositeRecord compositeRecord) throws Exception {
-        LOG.info("Processing " + compositeRecord.getDmpPatientId());
         // all get methods are asynchrnous - won't wait for completion before completing
         CompletableFuture<PatientDemographics> futurePatientDemographics = ddpDataSource.getPatientDemographics(compositeRecord.getDmpPatientId());
         CompletableFuture<List<PatientDiagnosis>> futurePatientDiagnosis = ddpDataSource.getPatientDiagnoses(compositeRecord.getDmpPatientId());

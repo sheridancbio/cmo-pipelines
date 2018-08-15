@@ -39,6 +39,7 @@ import com.google.common.base.Strings;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.io.*;
 import org.apache.commons.lang.StringUtils;
 
 /**
@@ -302,5 +303,43 @@ public class DDPUtils {
      */
     public static Boolean isNullEmptyValue(String value) {
         return (Strings.isNullOrEmpty(value) || NULL_EMPTY_VALUES.contains(value.trim()));
+    }
+
+    /**
+     * Reads a file into a list, sorts, and overwrites original file with sorted records
+     */
+    public static void sortAndWrite(String filename, String header) throws IOException {
+        List<String> recordsInFile = readRecordsFromFile(filename);
+        Collections.sort(recordsInFile);
+        writeRecordsToFile(filename, header, recordsInFile);
+    }
+
+    /**
+     * Returns a list where each index contains a row from a given file
+     * first line is skipped under the assumption it is a header
+     * @param filename
+     */
+    public static List<String> readRecordsFromFile(String filename) throws IOException {
+        List<String> recordsInFile = new ArrayList<String>();
+        BufferedReader reader = new BufferedReader(new FileReader(filename));
+        // skip first line (header)
+        reader.readLine();
+        String line;
+        while ((line = reader.readLine()) != null) {
+            recordsInFile.add(line);
+        }
+        reader.close();
+        return recordsInFile;
+    }
+
+    public static void writeRecordsToFile(String filename, String header, List<String> records) throws IOException {
+        BufferedWriter writer = new BufferedWriter(new FileWriter(filename));
+        writer.write(header);
+        writer.newLine();
+        for (String record : records) {
+            writer.write(record);
+            writer.newLine();
+        }
+        writer.close();
     }
 }
