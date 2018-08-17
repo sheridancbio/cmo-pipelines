@@ -125,6 +125,7 @@ public class BatchConfiguration {
     public Job ddpCohortJob() {
         return jobBuilderFactory.get(DDP_COHORT_JOB)
                 .start(ddpStep())
+                .next(ddpSortStep())
                 .next(ddpEmailStep())
                 .build();
     }
@@ -186,6 +187,19 @@ public class BatchConfiguration {
         delegates.add(timelineSurgeryWriter());
         writer.setDelegates(delegates);
         return writer;
+    }
+
+    @Bean
+    public Step ddpSortStep() {
+        return stepBuilderFactory.get("ddpSortStep")
+        .tasklet(ddpSortTasklet())
+        .build();
+    }
+
+    @Bean
+    @StepScope
+    public Tasklet ddpSortTasklet() {
+        return new DDPSortTasklet();
     }
 
     @Bean
