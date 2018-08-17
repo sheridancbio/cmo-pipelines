@@ -75,6 +75,9 @@ public class AuthenticationUtil {
     private Cookie authenticationCookie;
 
     private final Logger LOG = Logger.getLogger(AuthenticationUtil.class);
+    private final int COOKIE_ATTEMPT_WAIT_TIME = 10000; // milliseconds
+    private final int COOKIE_ATTEMPT_COUNT_LIMIT = 27;
+    private final int COOKIE_EXPIRATION_TIME_LIMIT = 30; // minutes
 
     /**
      * @return the username
@@ -90,19 +93,19 @@ public class AuthenticationUtil {
      */
     public synchronized Cookie getAuthenticationCookie() {
         Calendar calendar = Calendar.getInstance(); // right now
-        calendar.add(Calendar.MINUTE, 30);
-        // if we don't have a cookie, or it will have expired in 30 minutes
+        calendar.add(Calendar.MINUTE, COOKIE_EXPIRATION_TIME_LIMIT);
+        // if we don't have a cookie, or it will expire too quickly
         if (authenticationCookie == null || authenticationCookie.isExpired(calendar.getTime())) {
-            for (int count = 0; count < 3; count++) {
+            for (int count = 0; count < COOKIE_ATTEMPT_COUNT_LIMIT; count++) {
                 try {
                     fillAuthCookie();
                     break;
                 } catch (Exception e) {
                     // exception thrown from authentication endpoint
-                    // sleep 1.5 minutes (in case DDP is temporarily down) before trying again
-                    LOG.warn("Failed to generate authentication cookie ... trying again in a minute");
+                    // sleep before trying again (in case DDP is temporarily down) 
+                    LOG.warn("Failed to generate authentication cookie ... trying again in " + (COOKIE_ATTEMPT_WAIT_TIME / 1000) + " seconds");
                     try {
-                        Thread.sleep(90000);
+                        Thread.sleep(COOKIE_ATTEMPT_WAIT_TIME);
                     } catch (InterruptedException interruptException) {
                         LOG.warn("InterruptedException thrown");
                         Thread.currentThread().interrupt();

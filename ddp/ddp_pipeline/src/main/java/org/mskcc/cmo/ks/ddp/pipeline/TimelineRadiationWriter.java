@@ -52,13 +52,14 @@ public class TimelineRadiationWriter implements ItemStreamWriter<CompositeResult
 
     @Value("#{jobParameters[outputDirectory]}")
     private String outputDirectory;
+    @Value("${ddp.timeline_radiation_filename}")
+    private String timelineRadiationFilename;
 
-    private final String filename = "data_timeline_ddp_radiation.txt";
     private FlatFileItemWriter<String> flatFileItemWriter = new FlatFileItemWriter<>();
 
     @Override
     public void open(ExecutionContext ec) throws ItemStreamException {
-        File stagingFile = new File(outputDirectory, filename);
+        File stagingFile = new File(outputDirectory, timelineRadiationFilename);
         LineAggregator<String> aggr = new PassThroughLineAggregator<>();
         flatFileItemWriter.setLineAggregator(aggr);
         flatFileItemWriter.setHeaderCallback(new FlatFileHeaderCallback() {

@@ -52,13 +52,14 @@ public class TimelineSurgeryWriter implements ItemStreamWriter<CompositeResult> 
 
     @Value("#{jobParameters[outputDirectory]}")
     private String outputDirectory;
+    @Value("${ddp.timeline_surgery_filename}")
+    private String timelineSurgeryFilename;
 
-    private final String filename = "data_timeline_ddp_surgery.txt";
     private FlatFileItemWriter<String> flatFileItemWriter = new FlatFileItemWriter<>();
 
     @Override
     public void open(ExecutionContext ec) throws ItemStreamException {
-        File stagingFile = new File(outputDirectory, filename);
+        File stagingFile = new File(outputDirectory, timelineSurgeryFilename);
         LineAggregator<String> aggr = new PassThroughLineAggregator<>();
         flatFileItemWriter.setLineAggregator(aggr);
         flatFileItemWriter.setHeaderCallback(new FlatFileHeaderCallback() {

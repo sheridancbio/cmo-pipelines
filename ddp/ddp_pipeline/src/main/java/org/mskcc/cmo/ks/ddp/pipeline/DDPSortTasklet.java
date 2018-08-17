@@ -58,11 +58,14 @@ public class DDPSortTasklet implements Tasklet {
 
     @Value("#{jobParameters[outputDirectory]}")
     private String outputDirectory;
-
-    private final String clinicalFilename = "data_clinical_ddp.txt";
-    private final String timelineChemotherapyFilename = "data_timeline_ddp_chemotherapy.txt";
-    private final String timelineRadiationFilename = "data_timeline_ddp_radiation.txt";
-    private final String timelineSurgeryFilename = "data_timeline_ddp_surgery.txt";
+    @Value("${ddp.clinical_filename}")
+    private String clinicalFilename;
+    @Value("${ddp.timeline_chemotherapy_filename}")
+    private String timelineChemotherapyFilename;
+    @Value("${ddp.timeline_radiation_filename}")
+    private String timelineRadiationFilename;
+    @Value("${ddp.timeline_surgery_filename}")
+    private String timelineSurgeryFilename;
 
     @Override
     public RepeatStatus execute(StepContribution stepContribution, ChunkContext chunkContext) throws Exception {
