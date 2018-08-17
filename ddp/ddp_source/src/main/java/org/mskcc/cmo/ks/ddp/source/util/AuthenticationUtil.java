@@ -33,16 +33,24 @@
 package org.mskcc.cmo.ks.ddp.source.util;
 
 import org.mskcc.cmo.ks.ddp.source.exception.InvalidAuthenticationException;
-import org.mskcc.cmo.ks.ddp.source.model.AuthenticationToken;
 
+import java.io.IOException;
+import java.lang.Thread;
 import java.util.*;
+import org.json.JSONObject;
 import org.apache.log4j.Logger;
+import org.apache.http.client.protocol.HttpClientContext;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.cookie.Cookie;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.StatusLine;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.PropertySource;
-import org.springframework.http.*;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Repository;
-import org.springframework.web.client.RestTemplate;
-import java.lang.Thread;
 
 /**
  *
@@ -55,8 +63,8 @@ public class AuthenticationUtil {
     @Value("${ddp.base_url}")
     private String ddpBaseUrl;
 
-    @Value("${ddp.authtoken.endpoint}")
-    private String ddpAuthTokenEndpoint;
+    @Value("${ddp.authcookie.endpoint}")
+    private String ddpAuthCookieEndpoint;
 
     @Value("${ddp.username}")
     private String username;
@@ -64,9 +72,12 @@ public class AuthenticationUtil {
     @Value("${ddp.password}")
     private String password;
 
-    private String authenticationToken;
+    private Cookie authenticationCookie;
 
     private final Logger LOG = Logger.getLogger(AuthenticationUtil.class);
+    private final int COOKIE_ATTEMPT_WAIT_TIME = 10000; // milliseconds
+    private final int COOKIE_ATTEMPT_COUNT_LIMIT = 27;
+    private final int COOKIE_EXPIRATION_TIME_LIMIT = 30; // minutes
 
     /**
      * @return the username
@@ -76,22 +87,25 @@ public class AuthenticationUtil {
     }
 
     /**
-     * @return the authenticationToken
-     * attempts max 3 times to generate  an authentication token
+     * @return the authenticationCookie
+     * attempts max 3 times to generate an authentication cookie
      * failure throws an InvalidAuthenticationException that is handled differently
      */
-    public String getAuthenticationToken() {
-        if (authenticationToken == null || authenticationToken.isEmpty()) {
-            for (int count = 0; count < 3; count++) { 
+    public synchronized Cookie getAuthenticationCookie() {
+        Calendar calendar = Calendar.getInstance(); // right now
+        calendar.add(Calendar.MINUTE, COOKIE_EXPIRATION_TIME_LIMIT);
+        // if we don't have a cookie, or it will expire too quickly
+        if (authenticationCookie == null || authenticationCookie.isExpired(calendar.getTime())) {
+            for (int count = 0; count < COOKIE_ATTEMPT_COUNT_LIMIT; count++) {
                 try {
-                    fillAuthToken();
+                    fillAuthCookie();
                     break;
                 } catch (Exception e) {
-                    // exception thrown from authentication endpoint which does not map to AuthenticationToken.class
-                    // sleep 1.5 minutes (in case DDP is temporarily down) before trying again
-                    LOG.warn("Failed to generate authentication token... trying again in a minute");
+                    // exception thrown from authentication endpoint
+                    // sleep before trying again (in case DDP is temporarily down) 
+                    LOG.warn("Failed to generate authentication cookie ... trying again in " + (COOKIE_ATTEMPT_WAIT_TIME / 1000) + " seconds");
                     try {
-                        Thread.sleep(90000);
+                        Thread.sleep(COOKIE_ATTEMPT_WAIT_TIME);
                     } catch (InterruptedException interruptException) {
                         LOG.warn("InterruptedException thrown");
                         Thread.currentThread().interrupt();
@@ -99,17 +113,11 @@ public class AuthenticationUtil {
                 }
             }
         }
-        if (authenticationToken == null || authenticationToken.isEmpty()) {
-            throw new InvalidAuthenticationException("Failed to generate authentication token (multiple tries attempted)");
+        if (authenticationCookie == null || authenticationCookie.isExpired(calendar.getTime())) {
+            LOG.error("Failed to generate authentication cookie (multiple tries attempted)");
+            throw new InvalidAuthenticationException("Failed to generate authentication cookie (multiple tries attempted)");
         }
-        return authenticationToken;
-    }
-
-    /**
-     * @param authenticationToken the authenticationToken to set
-     */
-    public void setAuthenticationToken(String authenticationToken) {
-        this.authenticationToken = authenticationToken;
+        return authenticationCookie;
     }
 
     /**
@@ -123,21 +131,33 @@ public class AuthenticationUtil {
         return credentials;
     }
 
-    private void fillAuthToken() {
-        String url = ddpBaseUrl + ddpAuthTokenEndpoint;
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
-        Map<String, String> credentials = getUserCredentials();
-        HttpEntity<Map<String, String>> requestEntity = new HttpEntity<>(credentials, headers);
-        RestTemplate restTemplate = new RestTemplate();
-        ResponseEntity<AuthenticationToken> response = restTemplate.exchange(url, HttpMethod.POST, requestEntity, AuthenticationToken.class);
-        if (response != null) {
-            this.authenticationToken = response.getBody().getAuthToken();
-            LOG.info("Authentication token: " + authenticationToken);
+    private void fillAuthCookie() throws IOException {
+        String url = ddpBaseUrl + ddpAuthCookieEndpoint;
+        HttpClientContext context = HttpClientContext.create();
+        CloseableHttpClient client = HttpClients.createDefault();
+        HttpPost postRequest = new HttpPost(url);
+        StringEntity input = new StringEntity(new JSONObject(getUserCredentials()).toString());
+        input.setContentType("application/json");
+        postRequest.setEntity(input);
+        CloseableHttpResponse response = client.execute(postRequest, context);
+
+        StatusLine statusLine = response.getStatusLine(); 
+        if (statusLine.getStatusCode() == HttpStatus.OK.value()) {
+            // get the cookie
+            List<Cookie> cookies = context.getCookieStore().getCookies();
+            for (Cookie cookie : cookies) {
+                LOG.debug("Cookie name: '" + cookie.getName() + "' value: '" + cookie.getValue() + "'");
+                if (cookie.getName().equals("session")) {
+                    this.authenticationCookie = cookie;
+                    break; // found the cookie
+                }
+            }
+        } else {
+            LOG.error("Response status: '" + statusLine + "'");
         }
-        else {
-            throw new RuntimeException("Error getting authentication token!");
-        }
+
+        // close stuff
+        client.close();
+        response.close();
     }
 }

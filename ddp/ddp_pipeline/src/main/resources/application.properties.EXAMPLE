@@ -1,11 +1,17 @@
 spring.batch.job.enabled=false
 chunk=500
 
+# DDP Filenames
+ddp.clinical_filename=data_clinical_ddp.txt
+ddp.timeline_chemotherapy_filename=data_timeline_ddp_chemotherapy.txt
+ddp.timeline_radiation_filename=data_timeline_ddp_radiation.txt
+ddp.timeline_surgery_filename=data_timeline_ddp_surgery.txt
+
 # DDP Endpoints
 ddp.base_url=https://ddp.mskcc.org/api/v1/
 ddp.cohorts.endpoint=cohorts/
 ddp.cohorts.pt.endpoint=patients/
-ddp.authtoken.endpoint=/authenticate/token
+ddp.authcookie.endpoint=authenticate/login
 ddp.pt.demographics.endpoint=patient/demographics/general/
 ddp.pt.diagnosis.endpoint=patient/diagnosis/code/
 ddp.pt.identifiers.endpoint=patient/id/
@@ -18,3 +24,9 @@ email.server=localhost
 email.sender=
 email.recipient=
 email.subject=Failure in DDP Pipeline
+
+# DDP thread pool sizes
+async.DDP.thread.pool.size=50
+async.DDP.thread.pool.max=50
+processor.thread.pool.size=100
+processor.thread.pool.max=100

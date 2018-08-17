@@ -45,7 +45,12 @@ import org.springframework.batch.item.support.CompositeItemWriter;
 import org.springframework.beans.factory.annotation.*;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.*;
+import org.springframework.scheduling.annotation.EnableAsync;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+import org.springframework.batch.integration.async.*;
 
+import java.util.concurrent.Future;
+import java.util.concurrent.Executor;
 /**
  *
  * @author ochoaa
@@ -53,7 +58,56 @@ import org.springframework.context.annotation.*;
 @Configuration
 @EnableBatchProcessing
 @ComponentScan(basePackages = "org.mskcc.cmo.ks.ddp.source")
+@EnableAsync
 public class BatchConfiguration {
+
+    @Value("${async.DDP.thread.pool.size}")
+    private String asyncDDPThreadPoolSize;
+
+    @Value("${async.DDP.thread.pool.max}")
+    private String asyncDDPThreadPoolMax;
+
+    @Value("${processor.thread.pool.size}")
+    private String processorThreadPoolSize;
+
+    @Value("${processor.thread.pool.max}")
+    private String processorThreadPoolMax;
+
+    @Bean(name = "asyncDDPRequestsThreadPoolTaskExecutor")
+    @StepScope
+    public ThreadPoolTaskExecutor asyncDDPRequestsThreadPoolTaskExecutor() {
+        ThreadPoolTaskExecutor threadPoolTaskExecutor = new ThreadPoolTaskExecutor();
+        threadPoolTaskExecutor.setCorePoolSize(Integer.parseInt(asyncDDPThreadPoolSize));
+        threadPoolTaskExecutor.setMaxPoolSize(Integer.parseInt(asyncDDPThreadPoolMax));
+        threadPoolTaskExecutor.initialize();
+        return threadPoolTaskExecutor;
+    }
+
+    @Bean(name = "processorThreadPoolTaskExecutor")
+    @StepScope
+    public ThreadPoolTaskExecutor processorThreadPoolTaskExecutor() {
+        ThreadPoolTaskExecutor threadPoolTaskExecutor = new ThreadPoolTaskExecutor();
+        threadPoolTaskExecutor.setCorePoolSize(Integer.parseInt(processorThreadPoolSize));
+        threadPoolTaskExecutor.setMaxPoolSize(Integer.parseInt(processorThreadPoolMax));
+        threadPoolTaskExecutor.initialize();
+        return threadPoolTaskExecutor;
+    }
+
+    @Bean
+    @StepScope
+    public ItemProcessor<DDPCompositeRecord, Future<CompositeResult>> asyncItemProcessor() {
+        AsyncItemProcessor<DDPCompositeRecord, CompositeResult> asyncItemProcessor = new AsyncItemProcessor<>();
+        asyncItemProcessor.setTaskExecutor(processorThreadPoolTaskExecutor());
+        asyncItemProcessor.setDelegate(ddpCompositeProcessor());
+        return asyncItemProcessor;
+    }
+
+    @Bean
+    ItemWriter<Future<CompositeResult>> asyncItemWriter() {
+        AsyncItemWriter<CompositeResult> asyncItemWriter = new AsyncItemWriter<>();
+        asyncItemWriter.setDelegate(ddpCompositeWriter());
+        return asyncItemWriter;
+    }
 
     public static final String DDP_COHORT_JOB = "ddpCohortJob";
     @Autowired
@@ -71,6 +125,7 @@ public class BatchConfiguration {
     public Job ddpCohortJob() {
         return jobBuilderFactory.get(DDP_COHORT_JOB)
                 .start(ddpStep())
+                .next(ddpSortStep())
                 .next(ddpEmailStep())
                 .build();
     }
@@ -78,10 +133,10 @@ public class BatchConfiguration {
     @Bean
     public Step ddpStep() {
         return stepBuilderFactory.get("ddpStep")
-                .<DDPCompositeRecord, CompositeResult> chunk(chunkInterval)
+                .<DDPCompositeRecord, Future<CompositeResult>> chunk(chunkInterval)
                 .reader(ddpReader())
-                .processor(ddpCompositeProcessor())
-                .writer(ddpCompositeWriter())
+                .processor(asyncItemProcessor())
+                .writer(asyncItemWriter())
                 .build();
     }
 
@@ -132,6 +187,19 @@ public class BatchConfiguration {
         delegates.add(timelineSurgeryWriter());
         writer.setDelegates(delegates);
         return writer;
+    }
+
+    @Bean
+    public Step ddpSortStep() {
+        return stepBuilderFactory.get("ddpSortStep")
+        .tasklet(ddpSortTasklet())
+        .build();
+    }
+
+    @Bean
+    @StepScope
+    public Tasklet ddpSortTasklet() {
+        return new DDPSortTasklet();
     }
 
     @Bean

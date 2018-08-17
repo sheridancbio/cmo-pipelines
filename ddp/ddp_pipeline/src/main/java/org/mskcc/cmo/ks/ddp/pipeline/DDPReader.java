@@ -33,6 +33,7 @@
 package org.mskcc.cmo.ks.ddp.pipeline;
 
 import org.mskcc.cmo.ks.ddp.source.DDPDataSource;
+import org.mskcc.cmo.ks.ddp.source.util.AuthenticationUtil;
 import org.mskcc.cmo.ks.ddp.source.composite.DDPCompositeRecord;
 import org.mskcc.cmo.ks.ddp.source.model.CohortPatient;
 import org.mskcc.cmo.ks.ddp.source.model.PatientIdentifiers;
@@ -46,6 +47,8 @@ import org.apache.log4j.Logger;
 import org.springframework.batch.item.*;
 import org.springframework.beans.factory.annotation.*;
 
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.CompletableFuture;
 /**
  *
  * @author ochoaa
@@ -72,6 +75,9 @@ public class DDPReader implements ItemStreamReader<DDPCompositeRecord> {
 
     @Autowired
     private DDPPatientListUtil ddpPatientListUtil;
+
+    @Autowired
+    private AuthenticationUtil authenticationUtil;
 
     private List<DDPCompositeRecord> ddpCompositeRecordList;
     private Set<String> excludedPatientIds = new HashSet<>();
@@ -139,21 +145,35 @@ public class DDPReader implements ItemStreamReader<DDPCompositeRecord> {
         LOG.info("Fetched " + records.size()+  " active patients for cohort: " + cohortName);
 
         List<DDPCompositeRecord> compositeRecords = new ArrayList<>();
-        int count = 0;
+        Map<String, CompletableFuture<PatientIdentifiers>> futurePatientIdentifiers = new HashMap<String, CompletableFuture<PatientIdentifiers>>();
+        Map<String, CohortPatient> cohortPatientRecords = new HashMap<String, CohortPatient>();
+
         for (CohortPatient record : records) {
-            PatientIdentifiers pids;
             try {
-                pids = ddpDataSource.getPatientIdentifiers(record.getPID().toString());
+                cohortPatientRecords.put(record.getPID().toString(), record);
+                // getPatientIdentifiers() is an Async function meaning the loop does not depend on request being completed
+                futurePatientIdentifiers.put(record.getPID().toString(), ddpDataSource.getPatientIdentifiers(record.getPID().toString()));
             } catch (Exception e) {
-                LOG.error("Failed to resolve dmp id's for record '" + record.getPID() + "' -- skipping");
+                LOG.error("Failed to resolve dmp id's for record'" + record.getPID() + "' -- skipping (" + e.getMessage() + ")");
                 ddpPatientListUtil.addPatientsMissingDMPId(record.getPID());
                 continue;
             }
+        }
+
+        // ensures composite records will not be created until all requests for Patient Identifiers are completed
+        for(String patientIdentifier : futurePatientIdentifiers.keySet()) {
+            futurePatientIdentifiers.get(patientIdentifier).get();
+        }
+
+        int count = 0;
+        LOG.info("creating composite Records");
+        for(String  patientIdentifier : futurePatientIdentifiers.keySet()) {
+            PatientIdentifiers pids = futurePatientIdentifiers.get(patientIdentifier).get();
             if (pids != null && !Strings.isNullOrEmpty(pids.getDmpPatientId())) {
-                compositeRecords.add(new DDPCompositeRecord(pids.getDmpPatientId(), pids.getDmpSampleIds(), record));
+                compositeRecords.add(new DDPCompositeRecord(pids.getDmpPatientId(), pids.getDmpSampleIds(), cohortPatientRecords.get(patientIdentifier)));
             } else {
-                LOG.error("Failed to resolve dmp id's for record '" + record.getPID() + "' -- skipping");
-                ddpPatientListUtil.addPatientsMissingDMPId(record.getPID());
+                LOG.error("Failed to resolve dmp id's for record '" + patientIdentifier + "' -- skipping");
+                ddpPatientListUtil.addPatientsMissingDMPId(Integer.parseInt(patientIdentifier));
             }
             count++;
             if (testMode && count >= TEST_MODE_PATIENT_THRESHOLD) {
