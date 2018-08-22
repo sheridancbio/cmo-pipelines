@@ -5,7 +5,7 @@ CVR_FETCHER_JAR_FILENAME="$PORTAL_HOME/lib/cvr_fetcher.jar"
 IMPORTER_JAR_FILENAME="$PORTAL_HOME/lib/msk-dmp-importer.jar"
 JAVA_CVR_FETCHER_ARGS="-jar $CVR_FETCHER_JAR_FILENAME"
 JAVA_DEBUG_ARGS="-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182"
-JAVA_IMPORTER_ARGS="$JAVA_PROXY_ARGS $JAVA_DEBUG_ARGS -ea -cp $IMPORTER_JAR_FILENAME org.mskcc.cbio.importer.Admin -Dspring.profiles.active=dbcp -Djava.io.tmpdir=$MSK_DMP_TMPDIR"
+JAVA_IMPORTER_ARGS="$JAVA_PROXY_ARGS $JAVA_DEBUG_ARGS -Dspring.profiles.active=dbcp -Djava.io.tmpdir=$MSK_DMP_TMPDIR -ea -cp $IMPORTER_JAR_FILENAME org.mskcc.cbio.importer.Admin"
 ONCOTREE_VERSION_TO_USE=oncotree_candidate_release
 
 ## FUNCTIONS
@@ -182,7 +182,7 @@ fi
 if [ $DB_VERSION_FAIL -eq 0 ] ; then
     # import into portal database
     echo "importing cancer type updates into msk portal database..."
-    $JAVA_BINARY $JAVA_IMPORTER_ARGS -Xmx16g --import-types-of-cancer --oncotree-version ${ONCOTREE_VERSION_TO_USE}
+    $JAVA_BINARY -Xmx16g $JAVA_IMPORTER_ARGS --import-types-of-cancer --oncotree-version ${ONCOTREE_VERSION_TO_USE}
     if [ $? -gt 0 ] ; then
         sendFailureMessageMskPipelineLogsSlack "Cancer type updates"
     fi
