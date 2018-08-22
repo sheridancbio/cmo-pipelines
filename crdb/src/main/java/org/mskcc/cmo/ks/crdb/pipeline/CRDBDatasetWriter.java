@@ -41,6 +41,7 @@ import org.springframework.batch.item.file.transform.PassThroughLineAggregator;
 import org.springframework.beans.factory.annotation.Value;
 
 import java.io.*;
+import java.nio.file.Paths;
 import java.util.*;
 
 import org.apache.commons.lang.StringUtils;
@@ -51,8 +52,7 @@ import org.apache.commons.lang.StringUtils;
  * @author ochoaa
  */
 
-public class CRDBDatasetWriter implements ItemStreamWriter<String>
-{
+public class CRDBDatasetWriter implements ItemStreamWriter<String> {
     @Value("#{jobParameters[stagingDirectory]}")
     private String stagingDirectory;
 
@@ -61,7 +61,6 @@ public class CRDBDatasetWriter implements ItemStreamWriter<String>
 
     private List<String> writeList = new ArrayList<String>();
     private FlatFileItemWriter<String> flatFileItemWriter = new FlatFileItemWriter<String>();
-    private String stagingFile;
 
     @Override
     public void open(ExecutionContext executionContext) throws ItemStreamException {
@@ -73,12 +72,7 @@ public class CRDBDatasetWriter implements ItemStreamWriter<String>
                 writer.write(normalizeHeaders(new CRDBDataset().getFieldNames()));
             }
         });
-        if (stagingDirectory.endsWith("/")){
-            stagingFile = stagingDirectory+datasetFilename;
-        }
-        else{
-            stagingFile = stagingDirectory+"/"+datasetFilename;
-        }
+        String stagingFile = Paths.get(stagingDirectory, datasetFilename).toString();
         flatFileItemWriter.setResource(new FileSystemResource(stagingFile));
         flatFileItemWriter.open(executionContext);
     }
@@ -86,17 +80,14 @@ public class CRDBDatasetWriter implements ItemStreamWriter<String>
     private String normalizeHeaders(List<String> columns) {
         List<String> normColumns = new ArrayList<>();
         for (String col : columns){
-            if (col.equals("DMP_ID")){
+            if (col.equals("DMP_ID")) {
                 normColumns.add("PATIENT_ID");
-            }
-            else if (col.equals("COMMENTS")){
-                normColumns.add("CRDB_BASIC_"+col);
-            }
-            else if (col.equals("PARTA_CONSENTED")) {
+            } else if (col.equals("COMMENTS")) {
+                normColumns.add("CRDB_BASIC_" + col);
+            } else if (col.equals("PARTA_CONSENTED")) {
                 normColumns.add("PARTA_CONSENTED_12_245");
-            }
-            else {
-                normColumns.add("CRDB_"+col);
+            } else {
+                normColumns.add("CRDB_" + col);
             }
         }
         return StringUtils.join(normColumns, "\t");

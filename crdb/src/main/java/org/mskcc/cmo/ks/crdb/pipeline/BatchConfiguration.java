@@ -32,8 +32,7 @@
 
 package org.mskcc.cmo.ks.crdb;
 
-import org.mskcc.cmo.ks.crdb.model.CRDBDataset;
-import org.mskcc.cmo.ks.crdb.model.CRDBSurvey;
+import org.mskcc.cmo.ks.crdb.model.*;
 import org.mskcc.cmo.ks.crdb.pipeline.util.CRDBUtils;
 import org.springframework.batch.core.*;
 import org.springframework.batch.core.configuration.annotation.*;
@@ -53,6 +52,7 @@ import org.springframework.context.annotation.*;
 public class BatchConfiguration
 {
     public static final String CRDB_IMPACT_JOB = "crdbImpactJob";
+    public static final String CRDB_PDX_JOB = "crdbPDXJob";
 
     @Autowired
     public JobBuilderFactory jobBuilderFactory;
@@ -68,8 +68,18 @@ public class BatchConfiguration
     @Bean
     public Job crdbImpactJob() {
         return jobBuilderFactory.get(CRDB_IMPACT_JOB)
-            .start(step1())
-            .next(step2())
+            .start(crdbSurveyStep())
+            .next(crdbDatasetStep())
+            .build();
+    }
+
+    @Bean
+    public Job crdbPDXJob() { 
+        return jobBuilderFactory.get(CRDB_PDX_JOB)
+            .start(crdbPDXClinicalSampleStep())
+            .next(crdbPDXClinicalPatientStep())
+            .next(crdbPDXTimelineStep())
+            .next(crdbPDXSourceToDestinationMappingStep())
             .build();
     }
 
@@ -77,29 +87,29 @@ public class BatchConfiguration
      * Step 1 reads, processes, and writes the CRDB Survey query results
      */
     @Bean
-    public Step step1() {
-        return stepBuilderFactory.get("step1")
+    public Step crdbSurveyStep() {
+        return stepBuilderFactory.get("crdbSurveyStep")
             .<CRDBSurvey, String> chunk(10)
-            .reader(reader1())
-            .processor(processor1())
-            .writer(writer1())
+            .reader(crdbSurveyReader())
+            .processor(crdbSurveyProcessor())
+            .writer(crdbSurveyWriter())
             .build();
     }
 
     @Bean
     @StepScope
-	public ItemStreamReader<CRDBSurvey> reader1() {
+	public ItemStreamReader<CRDBSurvey> crdbSurveyReader() {
 		return new CRDBSurveyReader();
 	}
 
     @Bean
-    public CRDBSurveyProcessor processor1() {
+    public CRDBSurveyProcessor crdbSurveyProcessor() {
         return new CRDBSurveyProcessor();
     }
 
     @Bean
     @StepScope
-    public ItemStreamWriter<String> writer1() {
+    public ItemStreamWriter<String> crdbSurveyWriter() {
         return new CRDBSurveyWriter();
     }
 
@@ -107,29 +117,142 @@ public class BatchConfiguration
      * Step 2 reads, processes, and writes the CRDB Dataset query results
      */
     @Bean
-    public Step step2() {
-        return stepBuilderFactory.get("step2")
+    public Step crdbDatasetStep() {
+        return stepBuilderFactory.get("crdbDatasetStep")
             .<CRDBDataset, String> chunk(10)
-            .reader(reader2())
-            .processor(processor2())
-            .writer(writer2())
+            .reader(crdbDatasetReader())
+            .processor(crdbDatasetProcessor())
+            .writer(crdbDatasetWriter())
             .build();
     }
 
     @Bean
     @StepScope
-	public ItemStreamReader<CRDBDataset> reader2() {
-		return new CRDBDatasetReader();
-	}
+    public ItemStreamReader<CRDBDataset> crdbDatasetReader() {
+	return new CRDBDatasetReader();
+    }
 
     @Bean
-    public CRDBDatasetProcessor processor2() {
+    public CRDBDatasetProcessor crdbDatasetProcessor() {
         return new CRDBDatasetProcessor();
     }
 
     @Bean
     @StepScope
-    public ItemStreamWriter<String> writer2() {
+    public ItemStreamWriter<String> crdbDatasetWriter() {
         return new CRDBDatasetWriter();
     }
+
+    @Bean
+    public Step crdbPDXSourceToDestinationMappingStep() {
+        return stepBuilderFactory.get("crdbPDXSourceToDestinationMappingStep")
+            .<CRDBPDXSourceToDestinationMapping, String> chunk(10)
+            .reader(crdbPDXSourceToDestinationMappingReader())
+            .processor(crdbPDXSourceToDestinationMappingProcessor())
+            .writer(crdbPDXSourceToDestinationMappingWriter())
+            .build();
+    }
+    
+    @Bean
+    @StepScope
+    public ItemStreamReader<CRDBPDXSourceToDestinationMapping> crdbPDXSourceToDestinationMappingReader() {
+        return new CRDBPDXSourceToDestinationMappingReader();
+    }
+    
+    @Bean
+    @StepScope
+    public CRDBPDXSourceToDestinationMappingProcessor crdbPDXSourceToDestinationMappingProcessor() {
+        return new CRDBPDXSourceToDestinationMappingProcessor();
+    }
+
+    @Bean
+    @StepScope
+    public ItemStreamWriter<String> crdbPDXSourceToDestinationMappingWriter() {
+        return new CRDBPDXSourceToDestinationMappingWriter();
+    }
+    
+    @Bean
+    public Step crdbPDXClinicalSampleStep() {
+        return stepBuilderFactory.get("crdbPDXClinicalSampleStep")
+            .<CRDBPDXClinicalSampleDataset, String> chunk(10)
+            .reader(crdbPDXClinicalSampleReader())
+            .processor(crdbPDXClinicalSampleProcessor())
+            .writer(crdbPDXClinicalSampleWriter())
+            .build();
+    }
+    
+    @Bean
+    @StepScope
+    public ItemStreamReader<CRDBPDXClinicalSampleDataset> crdbPDXClinicalSampleReader() {
+        return new CRDBPDXClinicalSampleReader();
+    }
+    
+    @Bean
+    @StepScope
+    public CRDBPDXClinicalSampleProcessor crdbPDXClinicalSampleProcessor() {
+        return new CRDBPDXClinicalSampleProcessor();
+    }
+
+    @Bean
+    @StepScope
+    public ItemStreamWriter<String> crdbPDXClinicalSampleWriter() {
+        return new CRDBPDXClinicalSampleWriter();
+    }
+    
+    @Bean
+    public Step crdbPDXClinicalPatientStep() {
+        return stepBuilderFactory.get("crdbPDXClinicalPatientStep")
+            .<CRDBPDXClinicalPatientDataset, String> chunk(10)
+            .reader(crdbPDXClinicalPatientReader())
+            .processor(crdbPDXClinicalPatientProcessor())
+            .writer(crdbPDXClinicalPatientWriter())
+            .build();
+    } 
+    
+    @Bean
+    @StepScope
+    public ItemStreamReader<CRDBPDXClinicalPatientDataset> crdbPDXClinicalPatientReader() {
+        return new CRDBPDXClinicalPatientReader();
+    }
+    
+    @Bean
+    @StepScope
+    public CRDBPDXClinicalPatientProcessor crdbPDXClinicalPatientProcessor() {
+        return new CRDBPDXClinicalPatientProcessor();
+    }
+
+    @Bean
+    @StepScope
+    public ItemStreamWriter<String> crdbPDXClinicalPatientWriter() {
+        return new CRDBPDXClinicalPatientWriter();
+    }
+    
+    @Bean
+    public Step crdbPDXTimelineStep() {
+        return stepBuilderFactory.get("crdbPDXTimelineStep")
+            .<CRDBPDXTimelineDataset, String> chunk(10)
+            .reader(crdbPDXTimelineReader())
+            .processor(crdbPDXTimelineProcessor())
+            .writer(crdbPDXTimelineWriter())
+            .build();
+    }
+    
+    @Bean
+    @StepScope
+    public ItemStreamReader<CRDBPDXTimelineDataset> crdbPDXTimelineReader() {
+        return new CRDBPDXTimelineReader();
+    }
+    
+    @Bean
+    @StepScope
+    public CRDBPDXTimelineProcessor crdbPDXTimelineProcessor() {
+        return new CRDBPDXTimelineProcessor();
+    }
+
+    @Bean
+    @StepScope
+    public ItemStreamWriter<String> crdbPDXTimelineWriter() {
+        return new CRDBPDXTimelineWriter();
+    }
 }
+
