@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2017 Memorial Sloan-Kettering Cancer Center.
+ * Copyright (c) 2016 - 2018 Memorial Sloan-Kettering Cancer Center.
  *
  * This library is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS
@@ -74,7 +74,7 @@ public class BatchConfiguration
     }
 
     @Bean
-    public Job crdbPDXJob() { 
+    public Job crdbPDXJob() {
         return jobBuilderFactory.get(CRDB_PDX_JOB)
             .start(crdbPDXClinicalSampleStep())
             .next(crdbPDXClinicalPatientStep())
@@ -152,13 +152,13 @@ public class BatchConfiguration
             .writer(crdbPDXSourceToDestinationMappingWriter())
             .build();
     }
-    
+
     @Bean
     @StepScope
     public ItemStreamReader<CRDBPDXSourceToDestinationMapping> crdbPDXSourceToDestinationMappingReader() {
         return new CRDBPDXSourceToDestinationMappingReader();
     }
-    
+
     @Bean
     @StepScope
     public CRDBPDXSourceToDestinationMappingProcessor crdbPDXSourceToDestinationMappingProcessor() {
@@ -170,7 +170,7 @@ public class BatchConfiguration
     public ItemStreamWriter<String> crdbPDXSourceToDestinationMappingWriter() {
         return new CRDBPDXSourceToDestinationMappingWriter();
     }
-    
+
     @Bean
     public Step crdbPDXClinicalSampleStep() {
         return stepBuilderFactory.get("crdbPDXClinicalSampleStep")
@@ -180,13 +180,13 @@ public class BatchConfiguration
             .writer(crdbPDXClinicalSampleWriter())
             .build();
     }
-    
+
     @Bean
     @StepScope
     public ItemStreamReader<CRDBPDXClinicalSampleDataset> crdbPDXClinicalSampleReader() {
         return new CRDBPDXClinicalSampleReader();
     }
-    
+
     @Bean
     @StepScope
     public CRDBPDXClinicalSampleProcessor crdbPDXClinicalSampleProcessor() {
@@ -198,7 +198,7 @@ public class BatchConfiguration
     public ItemStreamWriter<String> crdbPDXClinicalSampleWriter() {
         return new CRDBPDXClinicalSampleWriter();
     }
-    
+
     @Bean
     public Step crdbPDXClinicalPatientStep() {
         return stepBuilderFactory.get("crdbPDXClinicalPatientStep")
@@ -207,14 +207,14 @@ public class BatchConfiguration
             .processor(crdbPDXClinicalPatientProcessor())
             .writer(crdbPDXClinicalPatientWriter())
             .build();
-    } 
-    
+    }
+
     @Bean
     @StepScope
     public ItemStreamReader<CRDBPDXClinicalPatientDataset> crdbPDXClinicalPatientReader() {
         return new CRDBPDXClinicalPatientReader();
     }
-    
+
     @Bean
     @StepScope
     public CRDBPDXClinicalPatientProcessor crdbPDXClinicalPatientProcessor() {
@@ -226,7 +226,7 @@ public class BatchConfiguration
     public ItemStreamWriter<String> crdbPDXClinicalPatientWriter() {
         return new CRDBPDXClinicalPatientWriter();
     }
-    
+
     @Bean
     public Step crdbPDXTimelineStep() {
         return stepBuilderFactory.get("crdbPDXTimelineStep")
@@ -236,13 +236,13 @@ public class BatchConfiguration
             .writer(crdbPDXTimelineWriter())
             .build();
     }
-    
+
     @Bean
     @StepScope
     public ItemStreamReader<CRDBPDXTimelineDataset> crdbPDXTimelineReader() {
         return new CRDBPDXTimelineReader();
     }
-    
+
     @Bean
     @StepScope
     public CRDBPDXTimelineProcessor crdbPDXTimelineProcessor() {

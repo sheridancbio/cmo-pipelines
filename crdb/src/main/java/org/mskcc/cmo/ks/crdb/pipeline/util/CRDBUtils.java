@@ -39,5 +39,5 @@ public class CRDBUtils {
     public String convertWhitespace(String s) {
         return s.replaceAll("^[\\t|\\n|\\r]+", "").replaceAll("[\\t|\\n|\\r]+$", "").replaceAll("[\\t|\\n|\\r]+", " ");
     }
-    
+
 }
