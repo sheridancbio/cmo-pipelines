@@ -54,7 +54,7 @@ public class CRDBPDXSourceToDestinationMapping {
      */
     public CRDBPDXSourceToDestinationMapping() {
     }
-    
+
     public CRDBPDXSourceToDestinationMapping(String PATIENT_ID, String SOURCE_STUDY_ID, String DESTINATION_STUDY_ID, String DESTINATION_PATIENT_ID) {
         this.PATIENT_ID = PATIENT_ID == null ? "NA" : PATIENT_ID;
         this.SOURCE_STUDY_ID = SOURCE_STUDY_ID == null ? "NA" : SOURCE_STUDY_ID;
@@ -87,7 +87,7 @@ public class CRDBPDXSourceToDestinationMapping {
     }
 
     /**
-     * 
+     *
      * @param SOURCE_STUDY_ID
      */
     public void setSOURCE_STUDY_ID(String SOURCE_STUDY_ID) {
@@ -95,7 +95,7 @@ public class CRDBPDXSourceToDestinationMapping {
     }
 
     /**
-     * 
+     *
      * @return DESTINATION_STUDY_ID
      */
     public String getDESTINATION_STUDY_ID() {
@@ -103,7 +103,7 @@ public class CRDBPDXSourceToDestinationMapping {
     }
 
     /**
-     * 
+     *
      * @param DESTINATION_STUDY_ID
      */
     public void setDESTINATION_STUDY_ID(String DESTINATION_STUDY_ID) {
@@ -111,7 +111,7 @@ public class CRDBPDXSourceToDestinationMapping {
     }
 
     /**
-     * 
+     *
      * @return DESTINATION_PATIENT_ID
      */
     public String getDESTINATION_PATIENT_ID() {
@@ -119,12 +119,12 @@ public class CRDBPDXSourceToDestinationMapping {
     }
 
     /**
-     * 
+     *
      * @param DESTINATION_PATIENT_ID
      */
     public void setDESTINATION_PATIENT_ID(String DESTINATION_PATIENT_ID) {
         this.DESTINATION_PATIENT_ID = DESTINATION_PATIENT_ID;
-    } 
+    }
 
     /**
      * Returns the field names in CRDBDataset without additional properties.

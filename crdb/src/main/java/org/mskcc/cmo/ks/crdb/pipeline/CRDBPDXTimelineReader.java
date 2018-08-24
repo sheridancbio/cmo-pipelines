@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2018 Memorial Sloan-Kettering Cancer Center.
+ * Copyright (c) 2016 - 2018 Memorial Sloan-Kettering Cancer Center.
  *
  * This library is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS
@@ -82,7 +82,7 @@ public class CRDBPDXTimelineReader implements ItemStreamReader<CRDBPDXTimelineDa
         CRDBPDXTimelineDataset qCRDBD = alias(CRDBPDXTimelineDataset.class, crdbPDXTimelineDatasetView);
         List<CRDBPDXTimelineDataset> crdbTimelineDatasetResults = crdbQueryFactory.selectDistinct(
                 Projections.constructor(CRDBPDXTimelineDataset.class, $(qCRDBD.getPATIENT_ID()), $(qCRDBD.getSAMPLE_ID()), $(qCRDBD.getPDX_ID()),
-                                        $(qCRDBD.getDESTINATION_STUDY_ID()), $(qCRDBD.getSTART_DATE()), $(qCRDBD.getSTOP_DATE()), $(qCRDBD.getEVENT_TYPE()),
+                                        $(qCRDBD.getSTART_DATE()), $(qCRDBD.getSTOP_DATE()), $(qCRDBD.getEVENT_TYPE()),
                                         $(qCRDBD.getPASSAGE_ID()), $(qCRDBD.getTREATMENT_TYPE()), $(qCRDBD.getSUBTYPE()), $(qCRDBD.getAGENT()),
                                         $(qCRDBD.getRESPONSE()), $(qCRDBD.getRESPONSE_DURATION_MONTHS()), $(qCRDBD.getREASON_FOR_TX_DISCONTINUATION()),
                                         $(qCRDBD.getSURGERY_DETAILS()), $(qCRDBD.getEVENT_TYPE_DETAILED()), $(qCRDBD.getPROCEDURE_LOCATION()),

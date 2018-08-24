@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Memorial Sloan-Kettering Cancer Center.
+ * Copyright (c) 2016 - 2018 Memorial Sloan-Kettering Cancer Center.
  *
  * This library is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS
@@ -68,7 +68,7 @@ public class CRDBPipeline {
         SpringApplication app = new SpringApplication(CRDBPipeline.class);
         ConfigurableApplicationContext ctx = app.run(args);
         JobLauncher jobLauncher = ctx.getBean(JobLauncher.class);
-        
+
         JobParameters jobParameters = new JobParametersBuilder()
                 .addString("stagingDirectory", stagingDirectory)
                 .addString("pdxMode", String.valueOf(pdx))
@@ -80,7 +80,7 @@ public class CRDBPipeline {
         } else {
             System.out.println("Launching impact job");
             crdbJob = ctx.getBean(BatchConfiguration.CRDB_IMPACT_JOB, Job.class);
-        }  
+        }
         JobExecution jobExecution = jobLauncher.run(crdbJob, jobParameters);
         System.out.println("Shutting down CRDBPipeline.");
         ctx.close();

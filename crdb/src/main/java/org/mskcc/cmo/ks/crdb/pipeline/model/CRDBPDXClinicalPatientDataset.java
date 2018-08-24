@@ -44,7 +44,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class CRDBPDXClinicalPatientDataset {
 
     private String PATIENT_ID;
-    private String DESTINATION_STUDY_ID;
     private String SEX;
     private String ETHNICITY;
     private String RACE;
@@ -73,13 +72,12 @@ public class CRDBPDXClinicalPatientDataset {
     public CRDBPDXClinicalPatientDataset() {
     }
 
-    public CRDBPDXClinicalPatientDataset(String PATIENT_ID, String DESTINATION_STUDY_ID, String SEX, String ETHNICITY, String RACE, 
+    public CRDBPDXClinicalPatientDataset(String PATIENT_ID, String SEX, String ETHNICITY, String RACE,
                                          String SMOKING_HISTORY, String CROHN_DISEASE, String ULCERATIVE_COLITIS, String BARRETTS_ESOPHAGUS,
                                          String H_PYLORI, String MDS_RISK_FACTOR, String MENOPAUSE_STATUS, String UV_EXPOSURE, String RADIATION_THERAPY,
-                                         String BREAST_IMPLANTS, String BRCA, String RETINOBLASTOMA, String GRADE_1, String GRADE_2, 
+                                         String BREAST_IMPLANTS, String BRCA, String RETINOBLASTOMA, String GRADE_1, String GRADE_2,
                                          String GRADE_3, String PLATINUM_SENSITIVE, String PLATINUM_RESISTANT) {
         this.PATIENT_ID = PATIENT_ID == null ? "NA" : PATIENT_ID;
-        this.DESTINATION_STUDY_ID = DESTINATION_STUDY_ID == null ? "NA" : DESTINATION_STUDY_ID;
         this.SEX = SEX == null ? "NA" : SEX;
         this.ETHNICITY = ETHNICITY == null ? "NA" : ETHNICITY;
         this.RACE = RACE == null ? "NA" : RACE;
@@ -101,93 +99,43 @@ public class CRDBPDXClinicalPatientDataset {
         this.PLATINUM_SENSITIVE = PLATINUM_SENSITIVE == null ? "NA" : PLATINUM_SENSITIVE;
         this.PLATINUM_RESISTANT = PLATINUM_RESISTANT == null ? "NA" : PLATINUM_RESISTANT;
     }
-    
-    /**
-     *
-     * @return PATIENT_ID
-     */
+
     public String getPATIENT_ID() {
         return PATIENT_ID;
     }
 
-    /**
-     * @param PATIENT_ID
-     */
     public void setPATIENT_ID(String PATIENT_ID) {
         this.PATIENT_ID = PATIENT_ID;
     }
 
-    /**
-     *
-     * @return DESTINATION_STUDY_ID
-     */
-    public String getDESTINATION_STUDY_ID() {
-        return DESTINATION_STUDY_ID;
-    }
-
-    /**
-     * @param DESTINATION_STUDY_ID
-     */
-    public void setDESTINATION_STUDY_ID(String DESTINATION_STUDY_ID) {
-        this.DESTINATION_STUDY_ID = DESTINATION_STUDY_ID;
-    }
-
-    /**
-     *
-     * @return SEX
-     */
     public String getSEX() {
         return SEX;
     }
 
-    /**
-     * @param SEX
-     */
     public void setSEX(String SEX) {
         this.SEX = SEX;
     }
-    
-    /**
-     *
-     * @return ETHNICITY
-     */
+
     public String getETHNICITY() {
         return ETHNICITY;
     }
 
-    /**
-     * @param ETHNICITY
-     */
     public void setETHNICITY(String ETHNICITY) {
         this.ETHNICITY = ETHNICITY;
     }
 
-    /**
-     *
-     * @return RACE
-     */
     public String getRACE() {
         return RACE;
     }
 
-    /**
-     * @param RACE
-     */
     public void setRACE(String RACE) {
         this.RACE = RACE;
     }
 
-    /**
-     *
-     * @return SMOKING_HISTORY
-     */
     public String getSMOKING_HISTORY() {
         return SMOKING_HISTORY;
     }
 
-    /**
-     * @param SMOKING_HISTORY
-     */
     public void setSMOKING_HISTORY(String SMOKING_HISTORY) {
         this.SMOKING_HISTORY = SMOKING_HISTORY;
     }
@@ -321,13 +269,12 @@ public class CRDBPDXClinicalPatientDataset {
     }
 
     /**
-     * Returns the field names in CRDBDataset without additional properties.
+     * Returns the field names in CRDBPDXClinicalPatientDataset without additional properties.
      * @return List<String>
      */
     public List<String> getFieldNames() {
         List<String> fieldNames = new ArrayList<>();
         fieldNames.add("PATIENT_ID");
-        //fieldNames.add("DESTINATION_STUDY_ID"); // This field is not a true clinical attribute -- do not output
         fieldNames.add("SEX");
         fieldNames.add("ETHNICITY");
         fieldNames.add("RACE");
@@ -336,7 +283,7 @@ public class CRDBPDXClinicalPatientDataset {
         fieldNames.add("ULCERATIVE_COLITIS");
         fieldNames.add("BARRETTS_ESOPHAGUS");
         fieldNames.add("H_PYLORI");
-        //fieldNames.add("MDS_RISK_FACTOR"); // This field is not yet available - update reader also when it is
+        fieldNames.add("MDS_RISK_FACTOR");
         fieldNames.add("MENOPAUSE_STATUS");
         fieldNames.add("UV_EXPOSURE");
         fieldNames.add("RADIATION_THERAPY");
