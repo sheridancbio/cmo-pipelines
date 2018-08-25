@@ -30,21 +30,19 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-package org.mskcc.cmo.ks.crdb;
-
-import org.mskcc.cmo.ks.crdb.model.CRDBPDXTimelineDataset;
+package org.mskcc.cmo.ks.crdb.pipeline;
 
 import static com.querydsl.core.alias.Alias.$;
 import static com.querydsl.core.alias.Alias.alias;
 import com.querydsl.core.types.Projections;
 import com.querydsl.sql.SQLQueryFactory;
-
-import org.springframework.batch.item.*;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.util.*;
+import org.mskcc.cmo.ks.crdb.pipeline.model.CRDBPDXTimelineDataset;
+import org.mskcc.cmo.ks.crdb.pipeline.util.CRDBUtils;
+import org.springframework.batch.item.*;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Class for querying the CRDB PDX Timeline Dataset view.
@@ -53,11 +51,15 @@ import java.util.*;
  */
 
 public class CRDBPDXTimelineReader implements ItemStreamReader<CRDBPDXTimelineDataset> {
+
     @Value("${crdb.pdx_timeline_dataset_view}")
     private String crdbPDXTimelineDatasetView;
 
     @Autowired
     SQLQueryFactory crdbQueryFactory;
+
+    @Autowired
+    private CRDBUtils crdbUtils;
 
     private List<CRDBPDXTimelineDataset> crdbTimelineDatasetResults;
 
@@ -67,6 +69,7 @@ public class CRDBPDXTimelineReader implements ItemStreamReader<CRDBPDXTimelineDa
         if (crdbTimelineDatasetResults.isEmpty()) {
             throw new ItemStreamException("Error fetching records from CRDB PDX Timeline Dataset View");
         }
+        executionContext.put("crdbPdxFieldOrder", crdbUtils.standardizeTimelineFieldOrder(CRDBPDXTimelineDataset.getFieldNames()));
     }
 
     /**

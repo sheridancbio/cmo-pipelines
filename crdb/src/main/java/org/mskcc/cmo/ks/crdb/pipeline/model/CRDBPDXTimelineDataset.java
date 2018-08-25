@@ -29,11 +29,10 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-package org.mskcc.cmo.ks.crdb.model;
+
+package org.mskcc.cmo.ks.crdb.pipeline.model;
 
 import java.util.*;
-
-import org.apache.commons.lang.builder.ToStringBuilder;
 
 /**
  * Model for CRDBPDXClinicalPatientDataset results.
@@ -42,6 +41,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 
 public class CRDBPDXTimelineDataset {
+
     private String PATIENT_ID;
     private String SAMPLE_ID;
     private String PDX_ID;
@@ -72,8 +72,14 @@ public class CRDBPDXTimelineDataset {
     private String SAMPLE_TYPE;
     private String SITE_OF_RECURRENCE;
     private String TIME_TO_RECURRENCE;
+
     private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
+    private static List<String> fieldNameList = initializeFieldNameList();
+
+    /**
+     * No args constructor for use in serialization
+     */
     public CRDBPDXTimelineDataset() {
     }
 
@@ -118,7 +124,6 @@ public class CRDBPDXTimelineDataset {
         this.SITE_OF_RECURRENCE = SITE_OF_RECURRENCE == null ? "NA" : SITE_OF_RECURRENCE;
         this.TIME_TO_RECURRENCE = TIME_TO_RECURRENCE == null ? "NA" : TIME_TO_RECURRENCE;
     }
-
 
     public String getPATIENT_ID() {
         return PATIENT_ID;
@@ -264,7 +269,6 @@ public class CRDBPDXTimelineDataset {
         this.DIAGNOSTIC_TYPE = DIAGNOSTIC_TYPE;
     }
 
-
     public String getDIAGNOSTIC_TYPE_SITE() {
         return DIAGNOSTIC_TYPE_SITE;
     }
@@ -304,7 +308,6 @@ public class CRDBPDXTimelineDataset {
     public void setAGE_AT_PROCEDURE(String AGE_AT_PROCEDURE) {
         this.AGE_AT_PROCEDURE = AGE_AT_PROCEDURE;
     }
-
 
     public String getLATERALITY() {
         return LATERALITY;
@@ -362,50 +365,54 @@ public class CRDBPDXTimelineDataset {
         this.TIME_TO_RECURRENCE = TIME_TO_RECURRENCE;
     }
 
-    /**
-     * Returns the field names in CRDBPDXTimelineDataset without additional properties.
-     * @return List<String>
-     */
-    public List<String> getFieldNames() {
-        List<String> fieldNames = new ArrayList<>();
-        fieldNames.add("PATIENT_ID");
-        fieldNames.add("SAMPLE_ID");
-        fieldNames.add("PDX_ID");
-        fieldNames.add("START_DATE");
-        fieldNames.add("STOP_DATE");
-        fieldNames.add("EVENT_TYPE");
-        fieldNames.add("PASSAGE_ID");
-        fieldNames.add("TREATMENT_TYPE");
-        fieldNames.add("SUBTYPE");
-        fieldNames.add("AGENT");
-        fieldNames.add("RESPONSE");
-        fieldNames.add("RESPONSE_DURATION_MONTHS");
-        fieldNames.add("REASON_FOR_TX_DISCONTINUATION");
-        fieldNames.add("SURGERY_DETAILS");
-        fieldNames.add("EVENT_TYPE_DETAILED");
-        fieldNames.add("PROCEDURE_LOCATION");
-        fieldNames.add("PROCEDURE_LOCATION_SPECIFY");
-        fieldNames.add("DIAGNOSTIC_TYPE");
-        fieldNames.add("DIAGNOSTIC_TYPE_SITE");
-        fieldNames.add("IMAGING");
-        fieldNames.add("SPECIMEN_TYPE");
-        fieldNames.add("SPECIMEN_SITE");
-        fieldNames.add("AGE_AT_PROCEDURE");
-        fieldNames.add("LATERALITY");
-        fieldNames.add("DISEASE_STATUS");
-        fieldNames.add("METASTATIC_SITE");
-        fieldNames.add("TIME_TO_METASTASIS_MONTHS");
-        fieldNames.add("SAMPLE_TYPE");
-        fieldNames.add("SITE_OF_RECURRENCE");
-        fieldNames.add("TIME_TO_RECURRENCE");
-        return fieldNames;
-    }
-
     public Map<String, Object> getAdditionalProperties() {
         return this.additionalProperties;
     }
 
     public void setAdditionalProperty(String name, Object value) {
         this.additionalProperties.put(name, value);
+    }
+
+    /**
+     * Returns the field names without additional properties.
+     * @return List<String>
+     */
+    public static List<String> getFieldNames() {
+        return CRDBPDXTimelineDataset.fieldNameList;
+    }
+
+    private static List<String> initializeFieldNameList() {
+        List<String> fieldNameList = new ArrayList<String>(35);
+        fieldNameList.add("PATIENT_ID");
+        fieldNameList.add("SAMPLE_ID");
+        fieldNameList.add("PDX_ID");
+        fieldNameList.add("START_DATE");
+        fieldNameList.add("STOP_DATE");
+        fieldNameList.add("EVENT_TYPE");
+        fieldNameList.add("PASSAGE_ID");
+        fieldNameList.add("TREATMENT_TYPE");
+        fieldNameList.add("SUBTYPE");
+        fieldNameList.add("AGENT");
+        fieldNameList.add("RESPONSE");
+        fieldNameList.add("RESPONSE_DURATION_MONTHS");
+        fieldNameList.add("REASON_FOR_TX_DISCONTINUATION");
+        fieldNameList.add("SURGERY_DETAILS");
+        fieldNameList.add("EVENT_TYPE_DETAILED");
+        fieldNameList.add("PROCEDURE_LOCATION");
+        fieldNameList.add("PROCEDURE_LOCATION_SPECIFY");
+        fieldNameList.add("DIAGNOSTIC_TYPE");
+        fieldNameList.add("DIAGNOSTIC_TYPE_SITE");
+        fieldNameList.add("IMAGING");
+        fieldNameList.add("SPECIMEN_TYPE");
+        fieldNameList.add("SPECIMEN_SITE");
+        fieldNameList.add("AGE_AT_PROCEDURE");
+        fieldNameList.add("LATERALITY");
+        fieldNameList.add("DISEASE_STATUS");
+        fieldNameList.add("METASTATIC_SITE");
+        fieldNameList.add("TIME_TO_METASTASIS_MONTHS");
+        fieldNameList.add("SAMPLE_TYPE");
+        fieldNameList.add("SITE_OF_RECURRENCE");
+        fieldNameList.add("TIME_TO_RECURRENCE");
+        return Collections.unmodifiableList(fieldNameList);
     }
 }

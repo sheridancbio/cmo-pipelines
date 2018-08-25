@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 - 2017 Memorial Sloan-Kettering Cancer Center.
+ * Copyright (c) 2016 - 2018 Memorial Sloan-Kettering Cancer Center.
  *
  * This library is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS
@@ -30,15 +30,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-package org.mskcc.cmo.ks.crdb;
+package org.mskcc.cmo.ks.crdb.pipeline;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import java.util.ArrayList;
-import java.util.List;
-import org.mskcc.cmo.ks.crdb.model.CRDBDataset;
+import java.util.*;
+import org.mskcc.cmo.ks.crdb.pipeline.model.CRDBDataset;
 import org.mskcc.cmo.ks.crdb.pipeline.util.CRDBUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.batch.item.ItemProcessor;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * Class for processing the CRDB Dataset results for the staging file.
@@ -48,21 +46,21 @@ import org.springframework.batch.item.ItemProcessor;
 
 public class CRDBDatasetProcessor implements ItemProcessor<CRDBDataset, String> {
 
-    ObjectMapper mapper = new ObjectMapper();
-
     @Autowired
     private CRDBUtils crdbUtils;
+
+    private List<String> CRDB_DATASET_FIELD_ORDER = CRDBDataset.getFieldNames();
 
     @Override
     public String process(final CRDBDataset crdbDataset) throws Exception {
         List<String> record = new ArrayList<>();
-        for (String field : new CRDBDataset().getFieldNames()) {
+        for (String field : CRDB_DATASET_FIELD_ORDER) {
             String value;
             if (field.equals("PARTA_CONSENTED")) {
                 // resolve part a consented value
                 value = resolvePartAConsented(crdbDataset.getCONSENT_DATE_DAYS());
             } else {
-                value = crdbDataset.getClass().getMethod("get"+field).invoke(crdbDataset).toString();
+                value = crdbDataset.getClass().getMethod("get" + field).invoke(crdbDataset).toString();
             }
             record.add(crdbUtils.convertWhitespace(value));
         }

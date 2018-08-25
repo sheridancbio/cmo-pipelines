@@ -30,21 +30,18 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-package org.mskcc.cmo.ks.crdb;
-
-import org.mskcc.cmo.ks.crdb.model.CRDBDataset;
+package org.mskcc.cmo.ks.crdb.pipeline;
 
 import static com.querydsl.core.alias.Alias.$;
 import static com.querydsl.core.alias.Alias.alias;
 import com.querydsl.core.types.Projections;
 import com.querydsl.sql.SQLQueryFactory;
-
-import org.springframework.batch.item.*;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.util.*;
+import org.mskcc.cmo.ks.crdb.pipeline.model.CRDBDataset;
+import org.springframework.batch.item.*;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Class for querying the CRDB Dataset view.
@@ -53,6 +50,7 @@ import java.util.*;
  */
 
 public class CRDBDatasetReader implements ItemStreamReader<CRDBDataset> {
+
     @Value("${crdb.dataset_view}")
     private String crdbDatasetView;
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Memorial Sloan-Kettering Cancer Center.
+ * Copyright (c) 2017 - 2018 Memorial Sloan-Kettering Cancer Center.
  *
  * This library is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS
@@ -32,12 +32,44 @@
 
 package org.mskcc.cmo.ks.crdb.pipeline.util;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class CRDBUtils {
+
+    private static List<String> STARTING_TIMELINE_FIELD_ORDER = initializeStartingTimelineFieldOrder();
 
     public CRDBUtils() {}
 
+    private static List<String> initializeStartingTimelineFieldOrder() {
+        List<String> fieldNameList = new ArrayList<String>(5);
+        fieldNameList.add("PATIENT_ID");
+        fieldNameList.add("START_DATE");
+        fieldNameList.add("STOP_DATE");
+        fieldNameList.add("EVENT_TYPE");
+        fieldNameList.add("SAMPLE_ID");
+        return fieldNameList;
+    }
+
     public String convertWhitespace(String s) {
         return s.replaceAll("^[\\t|\\n|\\r]+", "").replaceAll("[\\t|\\n|\\r]+$", "").replaceAll("[\\t|\\n|\\r]+", " ");
+    }
+
+    public List<String> standardizeTimelineFieldOrder(List<String> fieldNames) {
+        List<String> timelineFieldNameList = new ArrayList<String>(fieldNames.size());
+        for (String timelineFieldName : STARTING_TIMELINE_FIELD_ORDER) {
+            int index = fieldNames.lastIndexOf(timelineFieldName);
+            if (index == -1) {
+                throw new RuntimeException("expected to see field name '" + timelineFieldName + "' in timeline record datatype, but not found");
+            }
+            timelineFieldNameList.add(timelineFieldName);
+        }
+        for (String fieldName : fieldNames) {
+            if (!STARTING_TIMELINE_FIELD_ORDER.contains(fieldName)) {
+                timelineFieldNameList.add(fieldName);
+            }
+        }
+        return timelineFieldNameList;
     }
 
 }

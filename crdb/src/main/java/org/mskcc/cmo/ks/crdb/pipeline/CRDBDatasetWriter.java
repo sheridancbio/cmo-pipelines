@@ -30,21 +30,17 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-package org.mskcc.cmo.ks.crdb;
-
-import org.mskcc.cmo.ks.crdb.model.CRDBDataset;
-
-import org.springframework.core.io.*;
-import org.springframework.batch.item.*;
-import org.springframework.batch.item.file.*;
-import org.springframework.batch.item.file.transform.PassThroughLineAggregator;
-import org.springframework.beans.factory.annotation.Value;
+package org.mskcc.cmo.ks.crdb.pipeline;
 
 import java.io.*;
 import java.nio.file.Paths;
 import java.util.*;
-
-import org.apache.commons.lang.StringUtils;
+import org.mskcc.cmo.ks.crdb.pipeline.model.CRDBDataset;
+import org.springframework.batch.item.*;
+import org.springframework.batch.item.file.*;
+import org.springframework.batch.item.file.transform.PassThroughLineAggregator;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.*;
 
 /**
  * Class for writing the CRDB Dataset results to the staging file.
@@ -53,13 +49,14 @@ import org.apache.commons.lang.StringUtils;
  */
 
 public class CRDBDatasetWriter implements ItemStreamWriter<String> {
+
     @Value("#{jobParameters[stagingDirectory]}")
     private String stagingDirectory;
 
     @Value("${crdb.dataset_filename}")
     private String datasetFilename;
 
-    private List<String> writeList = new ArrayList<String>();
+    private List<String> CRDB_DATASET_FIELD_ORDER = CRDBDataset.getFieldNames();
     private FlatFileItemWriter<String> flatFileItemWriter = new FlatFileItemWriter<String>();
 
     @Override
@@ -69,7 +66,7 @@ public class CRDBDatasetWriter implements ItemStreamWriter<String> {
         flatFileItemWriter.setHeaderCallback(new FlatFileHeaderCallback() {
             @Override
             public void writeHeader(Writer writer) throws IOException {
-                writer.write(normalizeHeaders(new CRDBDataset().getFieldNames()));
+                writer.write(normalizeHeaders(CRDB_DATASET_FIELD_ORDER));
             }
         });
         String stagingFile = Paths.get(stagingDirectory, datasetFilename).toString();
@@ -90,7 +87,7 @@ public class CRDBDatasetWriter implements ItemStreamWriter<String> {
                 normColumns.add("CRDB_" + col);
             }
         }
-        return StringUtils.join(normColumns, "\t");
+        return String.join("\t", normColumns);
     }
 
     @Override
@@ -103,7 +100,6 @@ public class CRDBDatasetWriter implements ItemStreamWriter<String> {
 
     @Override
     public void write(List<? extends String> items) throws Exception {
-        writeList.clear();
         List<String> writeList = new ArrayList<>();
         for (String result : items) {
             writeList.add(result);

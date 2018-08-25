@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2018 Memorial Sloan-Kettering Cancer Center.
+ * Copyright (c) 2016 - 2018 Memorial Sloan-Kettering Cancer Center.
  *
  * This library is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS
@@ -29,11 +29,10 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-package org.mskcc.cmo.ks.crdb.model;
+
+package org.mskcc.cmo.ks.crdb.pipeline.model;
 
 import java.util.*;
-
-import org.apache.commons.lang.builder.ToStringBuilder;
 
 /**
  * Model for CRDBPDXClinicalPatientDataset results.
@@ -64,7 +63,10 @@ public class CRDBPDXClinicalPatientDataset {
     private String GRADE_3;
     private String PLATINUM_SENSITIVE;
     private String PLATINUM_RESISTANT;
+
     private Map<String, Object> additionalProperties = new HashMap<String, Object>();
+
+    private static List<String> fieldNameList = initializeFieldNameList();
 
     /**
      * No args constructor for use in serialization
@@ -268,41 +270,45 @@ public class CRDBPDXClinicalPatientDataset {
         this.PLATINUM_RESISTANT = PLATINUM_RESISTANT;
     }
 
-    /**
-     * Returns the field names in CRDBPDXClinicalPatientDataset without additional properties.
-     * @return List<String>
-     */
-    public List<String> getFieldNames() {
-        List<String> fieldNames = new ArrayList<>();
-        fieldNames.add("PATIENT_ID");
-        fieldNames.add("SEX");
-        fieldNames.add("ETHNICITY");
-        fieldNames.add("RACE");
-        fieldNames.add("SMOKING_HISTORY");
-        fieldNames.add("CROHN_DISEASE");
-        fieldNames.add("ULCERATIVE_COLITIS");
-        fieldNames.add("BARRETTS_ESOPHAGUS");
-        fieldNames.add("H_PYLORI");
-        fieldNames.add("MDS_RISK_FACTOR");
-        fieldNames.add("MENOPAUSE_STATUS");
-        fieldNames.add("UV_EXPOSURE");
-        fieldNames.add("RADIATION_THERAPY");
-        fieldNames.add("BREAST_IMPLANTS");
-        fieldNames.add("BRCA");
-        fieldNames.add("RETINOBLASTOMA");
-        fieldNames.add("GRADE_1");
-        fieldNames.add("GRADE_2");
-        fieldNames.add("GRADE_3");
-        fieldNames.add("PLATINUM_SENSITIVE");
-        fieldNames.add("PLATINUM_RESISTANT");
-        return fieldNames;
-    }
-
     public Map<String, Object> getAdditionalProperties() {
         return this.additionalProperties;
     }
 
     public void setAdditionalProperty(String name, Object value) {
         this.additionalProperties.put(name, value);
+    }
+
+    /**
+     * Returns the field names without additional properties.
+     * @return List<String>
+     */
+    public static List<String> getFieldNames() {
+        return CRDBPDXClinicalPatientDataset.fieldNameList;
+    }
+
+    private static List<String> initializeFieldNameList() {
+        List<String> fieldNameList = new ArrayList<String>(35);
+        fieldNameList.add("PATIENT_ID");
+        fieldNameList.add("SEX");
+        fieldNameList.add("ETHNICITY");
+        fieldNameList.add("RACE");
+        fieldNameList.add("SMOKING_HISTORY");
+        fieldNameList.add("CROHN_DISEASE");
+        fieldNameList.add("ULCERATIVE_COLITIS");
+        fieldNameList.add("BARRETTS_ESOPHAGUS");
+        fieldNameList.add("H_PYLORI");
+        fieldNameList.add("MDS_RISK_FACTOR");
+        fieldNameList.add("MENOPAUSE_STATUS");
+        fieldNameList.add("UV_EXPOSURE");
+        fieldNameList.add("RADIATION_THERAPY");
+        fieldNameList.add("BREAST_IMPLANTS");
+        fieldNameList.add("BRCA");
+        fieldNameList.add("RETINOBLASTOMA");
+        fieldNameList.add("GRADE_1");
+        fieldNameList.add("GRADE_2");
+        fieldNameList.add("GRADE_3");
+        fieldNameList.add("PLATINUM_SENSITIVE");
+        fieldNameList.add("PLATINUM_RESISTANT");
+        return Collections.unmodifiableList(fieldNameList);
     }
 }
