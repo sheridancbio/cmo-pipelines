@@ -32,12 +32,42 @@
 
 package org.cbioportal.cmo.pipelines.util;
 
+import java.io.*;
+import java.util.*;
+
 public class CVRUtils {
+
+    private String METADATA_PREFIX = "#";
+    private String DELIMITER = "\t";
 
     public CVRUtils() {}
 
     public String convertWhitespace(String s) {
         return s.replaceAll("^[\\t|\\n|\\r]+", "").replaceAll("[\\t|\\n|\\r]+$", "").replaceAll("[\\t|\\n|\\r]+", " ");
     }
-    
+
+    public String[] getFileHeader(File dataFile) throws IOException {
+        String[] columnNames;
+
+        try (FileReader reader = new FileReader(dataFile)) {
+            BufferedReader buff = new BufferedReader(reader);
+            String line = buff.readLine();
+
+            // keep reading until line does not start with meta data prefix
+            while (line.startsWith(METADATA_PREFIX)) {
+                line = buff.readLine();
+            }
+            // extract the maf file header
+            columnNames = splitDataFields(line);
+            reader.close();
+        }
+
+        return columnNames;
+    }
+
+    private String[] splitDataFields(String line) {
+        line = line.replaceAll("^" + METADATA_PREFIX + "+", "");
+        String[] fields = line.split(DELIMITER, -1);
+        return fields;
+    }
 }
