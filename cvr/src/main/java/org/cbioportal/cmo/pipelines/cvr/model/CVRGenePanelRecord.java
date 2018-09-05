@@ -43,11 +43,12 @@ public class CVRGenePanelRecord {
 
     public CVRGenePanelRecord() {}
 
-    public CVRGenePanelRecord(CVRMetaData metaData) {
+    public CVRGenePanelRecord(CVRMetaData metaData, List<String> geneticProfiles) {
         this.sampleId = metaData.getDmpSampleId();
         panelMap = new LinkedHashMap<>();
-        // We could have more profiles in the future - for now only mutation is supported
-        panelMap.put("mutations", metaData.getGenePanel());
+        for (String profile : geneticProfiles) {
+            panelMap.put(profile, metaData.getGenePanel());
+        }
     }
 
     public String getSAMPLE_ID() {

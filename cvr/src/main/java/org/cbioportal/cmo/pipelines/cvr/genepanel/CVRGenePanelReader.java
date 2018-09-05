@@ -37,7 +37,10 @@ import org.cbioportal.cmo.pipelines.cvr.model.*;
 
 import java.io.*;
 import java.util.*;
+import java.util.logging.Level;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
+import org.cbioportal.cmo.pipelines.util.CVRUtils;
 import org.springframework.batch.item.*;
 import org.springframework.batch.item.file.*;
 import org.springframework.batch.item.file.mapping.DefaultLineMapper;
@@ -53,19 +56,34 @@ public class CVRGenePanelReader implements ItemStreamReader<CVRGenePanelRecord> 
     @Value("#{jobParameters[stagingDirectory]}")
     private String stagingDirectory;
 
+    @Value("#{jobParameters[studyId]}")
+    private String studyId;
+
     @Autowired
     public CVRUtilities cvrUtilities;
 
     @Autowired
+    private CVRUtils cvrUtils;
+
+    @Autowired
     public CvrSampleListUtil cvrSampleListUtil;
-    
+
     private List<CVRGenePanelRecord> genePanelRecords = new ArrayList();
     private Set<String> processedRecords = new HashSet();
-    
+    List<String> geneticProfiles;
+
     Logger log = Logger.getLogger(CVRGenePanelReader.class);
 
     @Override
     public void open(ExecutionContext ec) throws ItemStreamException {
+        // get genetic profiles for study if known, otherwise use default list
+        if (CVRUtilities.GENETIC_PROFILES_BY_STUDY.containsKey(studyId)) {
+            this.geneticProfiles = CVRUtilities.GENETIC_PROFILES_BY_STUDY.get(studyId);
+        }
+        else {
+            this.geneticProfiles = CVRUtilities.DEFAULT_GENETIC_PROFILES;
+        }
+
         CVRData cvrData = new CVRData();
         // load cvr data from cvr_data.json file
         File cvrFile = new File(stagingDirectory, cvrUtilities.CVR_FILE);
@@ -83,6 +101,7 @@ public class CVRGenePanelReader implements ItemStreamReader<CVRGenePanelRecord> 
         else {
             log.info("Loading gene panel data from: " + genePanelFile.getName());
             final DelimitedLineTokenizer tokenizer = new DelimitedLineTokenizer(DelimitedLineTokenizer.DELIMITER_TAB);
+            tokenizer.setNames(getGenePanelMatrixHeader(genePanelFile));
             DefaultLineMapper<CVRGenePanelRecord> mapper = new DefaultLineMapper<>();
             mapper.setLineTokenizer(tokenizer);
             mapper.setFieldSetMapper(new CVRGenePanelFieldSetMapper());
@@ -91,12 +110,6 @@ public class CVRGenePanelReader implements ItemStreamReader<CVRGenePanelRecord> 
             reader.setResource(new FileSystemResource(genePanelFile));
             reader.setLineMapper(mapper);
             reader.setLinesToSkip(1);
-            reader.setSkippedLinesCallback(new LineCallbackHandler() {
-                @Override
-                public void handleLine(String line) {
-                    tokenizer.setNames(line.split("\t"));
-                }
-            });
             reader.open(ec);
 
             try {
@@ -115,13 +128,35 @@ public class CVRGenePanelReader implements ItemStreamReader<CVRGenePanelRecord> 
         }
 
         for (CVRMergedResult result : cvrData.getResults()) {
-            CVRGenePanelRecord record = new CVRGenePanelRecord(result.getMetaData());
+            CVRGenePanelRecord record = new CVRGenePanelRecord(result.getMetaData(), geneticProfiles);
             genePanelRecords.add(record);
         }
-        // only try setting header if gene panel records list is not empty
+        // only try setting header and genetic profiles if gene panel records list is not empty
         if (!genePanelRecords.isEmpty()) {
-            setGenePanelHeader(ec, genePanelRecords.get(0));
-        }        
+            setGenePanelHeader(ec);
+            ec.put("geneticProfiles", geneticProfiles);
+        }
+    }
+
+    private String[] getGenePanelMatrixHeader(File genePanelMatrixFile){
+        String[] header;
+        try {
+            header = cvrUtils.getFileHeader(genePanelMatrixFile);
+            for (String profile : geneticProfiles) {
+                if (!Arrays.asList(header).contains(profile)) {
+                    String message = "File '" + genePanelMatrixFile.getName() +
+                            "' is missing one or more expected genetic profiles in header: "
+                            + StringUtils.join(geneticProfiles, ",");
+                    log.error(message);
+                    throw new ItemStreamException(message);
+                }
+            }
+        }
+        catch (IOException e) {
+            log.error("Error loading header from: " + genePanelMatrixFile.getName());
+            throw new ItemStreamException(e);
+        }
+        return header;
     }
 
     @Override
@@ -150,10 +185,10 @@ public class CVRGenePanelReader implements ItemStreamReader<CVRGenePanelRecord> 
         return null;
     }
 
-    private void setGenePanelHeader(ExecutionContext ec, CVRGenePanelRecord record) {
+    private void setGenePanelHeader(ExecutionContext ec) {
         List<String> header = new ArrayList<>();
         header.add("SAMPLE_ID");
-        header.addAll(record.getPanelMap().keySet());
+        header.addAll(geneticProfiles);
         ec.put("genePanelHeader", header);
     }
 }

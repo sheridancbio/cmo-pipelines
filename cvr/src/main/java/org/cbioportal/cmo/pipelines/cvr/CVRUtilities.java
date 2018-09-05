@@ -94,6 +94,17 @@ public class CVRUtilities {
         return map;
     }
 
+    public static List<String> DEFAULT_GENETIC_PROFILES = new LinkedList(Arrays.asList(new String[]{"mutations"}));
+    public static Map<String, List<String>> GENETIC_PROFILES_BY_STUDY = geneticProfilesByStudy();
+    private static Map<String, List<String>> geneticProfilesByStudy() {
+        Map<String, List<String>> map = new HashMap<>();
+        map.put("mskimpact", new LinkedList(Arrays.asList(new String[]{"mutations", "cna"})));
+        map.put("mskimpact_heme", new LinkedList(Arrays.asList(new String[]{"mutations", "cna"})));
+        map.put("mskarcher", new LinkedList(Arrays.asList(new String[]{"mutations"})));
+        map.put("mskraindance", new LinkedList(Arrays.asList(new String[]{"mutations"})));
+        return map;
+    }
+
     public CVRUtilities() {}
 
     public CVRData readJson(File cvrFile) throws IOException {
