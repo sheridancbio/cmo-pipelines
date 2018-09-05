@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2018 Memorial Sloan-Kettering Cancer Center.
+ * Copyright (c) 2016 - 2018 Memorial Sloan-Kettering Cancer Center.
  *
  * This library is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS
@@ -29,11 +29,10 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-package org.mskcc.cmo.ks.crdb.model;
+
+package org.mskcc.cmo.ks.crdb.pipeline.model;
 
 import java.util.*;
-
-import org.apache.commons.lang.builder.ToStringBuilder;
 
 /**
  * Model for CRDBPDXClinicalPatientDataset results.
@@ -47,7 +46,10 @@ public class CRDBPDXSourceToDestinationMapping {
     private String SOURCE_STUDY_ID;
     private String DESTINATION_STUDY_ID;
     private String DESTINATION_PATIENT_ID;
+
     private Map<String, Object> additionalProperties = new HashMap<String, Object>();
+
+    private static List<String> fieldNameList = initializeFieldNameList();
 
     /**
      * No args constructor for use in serialization
@@ -126,24 +128,28 @@ public class CRDBPDXSourceToDestinationMapping {
         this.DESTINATION_PATIENT_ID = DESTINATION_PATIENT_ID;
     }
 
-    /**
-     * Returns the field names in CRDBDataset without additional properties.
-     * @return List<String>
-     */
-    public List<String> getFieldNames() {
-        List<String> fieldNames = new ArrayList<>();
-        fieldNames.add("PATIENT_ID");
-        fieldNames.add("SOURCE_STUDY_ID");
-        fieldNames.add("DESTINATION_STUDY_ID");
-        fieldNames.add("DESTINATION_PATIENT_ID");
-        return fieldNames;
-    }
-
     public Map<String, Object> getAdditionalProperties() {
         return this.additionalProperties;
     }
 
     public void setAdditionalProperty(String name, Object value) {
         this.additionalProperties.put(name, value);
+    }
+
+    /**
+     * Returns the field names without additional properties.
+     * @return List<String>
+     */
+    public static List<String> getFieldNames() {
+        return CRDBPDXSourceToDestinationMapping.fieldNameList;
+    }
+
+    private static List<String> initializeFieldNameList() {
+        List<String> fieldNameList = new ArrayList<String>(5);
+        fieldNameList.add("PATIENT_ID");
+        fieldNameList.add("SOURCE_STUDY_ID");
+        fieldNameList.add("DESTINATION_STUDY_ID");
+        fieldNameList.add("DESTINATION_PATIENT_ID");
+        return Collections.unmodifiableList(fieldNameList);
     }
 }

@@ -30,21 +30,18 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-package org.mskcc.cmo.ks.crdb;
-
-import org.mskcc.cmo.ks.crdb.model.CRDBPDXTimelineDataset;
-
-import org.springframework.core.io.*;
-import org.springframework.batch.item.*;
-import org.springframework.batch.item.file.*;
-import org.springframework.batch.item.file.transform.PassThroughLineAggregator;
-import org.springframework.beans.factory.annotation.Value;
+package org.mskcc.cmo.ks.crdb.pipeline;
 
 import java.io.*;
 import java.nio.file.Paths;
 import java.util.*;
-
-import org.apache.commons.lang.StringUtils;
+import org.mskcc.cmo.ks.crdb.pipeline.model.CRDBPDXTimelineDataset;
+import org.springframework.batch.item.*;
+import org.springframework.batch.item.file.*;
+import org.springframework.batch.item.file.transform.PassThroughLineAggregator;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.*;
 
 /**
  * Class for writing the CRDB Dataset results to the staging file.
@@ -53,11 +50,15 @@ import org.apache.commons.lang.StringUtils;
  */
 
 public class CRDBPDXTimelineWriter implements ItemStreamWriter<String> {
+
     @Value("#{jobParameters[stagingDirectory]}")
     private String stagingDirectory;
 
     @Value("${crdb.pdx_timeline_dataset_filename}")
     private String pdxTimelineDatasetFilename;
+
+    @Value("#stepExecutionContext['crdbPdxFieldOrder']")
+    private List<String> crdbPdxTimelineFieldOrder;
 
     private FlatFileItemWriter<String> flatFileItemWriter = new FlatFileItemWriter<String>();
 
@@ -68,7 +69,7 @@ public class CRDBPDXTimelineWriter implements ItemStreamWriter<String> {
         flatFileItemWriter.setHeaderCallback(new FlatFileHeaderCallback() {
             @Override
             public void writeHeader(Writer writer) throws IOException {
-                writer.write(StringUtils.join(new CRDBPDXTimelineDataset().getFieldNames(), "\t"));
+                writer.write(String.join("\t", crdbPdxTimelineFieldOrder));
             }
         });
         String stagingFile = Paths.get(stagingDirectory, pdxTimelineDatasetFilename).toString();
@@ -88,4 +89,5 @@ public class CRDBPDXTimelineWriter implements ItemStreamWriter<String> {
     public void write(List<? extends String> items) throws Exception {
         flatFileItemWriter.write(items);
     }
+
 }

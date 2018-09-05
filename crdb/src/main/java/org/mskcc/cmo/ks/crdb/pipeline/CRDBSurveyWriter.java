@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Memorial Sloan-Kettering Cancer Center.
+ * Copyright (c) 2016 - 2018 Memorial Sloan-Kettering Cancer Center.
  *
  * This library is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS
@@ -30,21 +30,17 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-package org.mskcc.cmo.ks.crdb;
-
-import org.mskcc.cmo.ks.crdb.model.CRDBSurvey;
-
-import org.springframework.core.io.*;
-import org.springframework.batch.item.*;
-import org.springframework.batch.item.file.*;
-import org.springframework.batch.item.file.transform.PassThroughLineAggregator;
-import org.springframework.beans.factory.annotation.Value;
+package org.mskcc.cmo.ks.crdb.pipeline;
 
 import java.io.*;
 import java.nio.file.Paths;
 import java.util.*;
-
-import org.apache.commons.lang.StringUtils;
+import org.mskcc.cmo.ks.crdb.pipeline.model.CRDBSurvey;
+import org.springframework.batch.item.*;
+import org.springframework.batch.item.file.*;
+import org.springframework.batch.item.file.transform.PassThroughLineAggregator;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.*;
 
 /**
  * Class for writing the CRDB Survey results to the staging file.
@@ -52,15 +48,15 @@ import org.apache.commons.lang.StringUtils;
  * @author ochoaa
  */
 
-public class CRDBSurveyWriter implements ItemStreamWriter<String>
-{
+public class CRDBSurveyWriter implements ItemStreamWriter<String> {
+
     @Value("#{jobParameters[stagingDirectory]}")
     private String stagingDirectory;
 
     @Value("${crdb.survey_filename}")
     private String surveyFilename;
 
-    private final List<String> writeList = new ArrayList<>();
+    private List<String> CRDB_SURVEY_FIELD_ORDER = CRDBSurvey.getFieldNames();
     private final FlatFileItemWriter<String> flatFileItemWriter = new FlatFileItemWriter<>();
 
     @Override
@@ -70,7 +66,7 @@ public class CRDBSurveyWriter implements ItemStreamWriter<String>
         flatFileItemWriter.setHeaderCallback(new FlatFileHeaderCallback() {
             @Override
             public void writeHeader(Writer writer) throws IOException {
-                writer.write(normalizeHeaders(new CRDBSurvey().getFieldNames()));
+                writer.write(normalizeHeaders(CRDB_SURVEY_FIELD_ORDER));
             }
         });
         String stagingFile = Paths.get(stagingDirectory, surveyFilename).toString();
@@ -89,7 +85,7 @@ public class CRDBSurveyWriter implements ItemStreamWriter<String>
                 normColumns.add("CRDB_" + col);
             }
         }
-        return StringUtils.join(normColumns, "\t");
+        return String.join("\t", normColumns);
     }
 
     @Override
@@ -102,7 +98,6 @@ public class CRDBSurveyWriter implements ItemStreamWriter<String>
 
     @Override
     public void write(List<? extends String> items) throws Exception {
-        writeList.clear();
         List<String> writeList = new ArrayList<>();
         for (String result : items) {
             writeList.add(result);

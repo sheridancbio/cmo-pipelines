@@ -29,11 +29,10 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-package org.mskcc.cmo.ks.crdb.model;
+
+package org.mskcc.cmo.ks.crdb.pipeline.model;
 
 import java.util.*;
-
-import org.apache.commons.lang.builder.ToStringBuilder;
 
 /**
  * Model for CRDBSurvey results.
@@ -42,6 +41,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 
 public class CRDBSurvey {
+
     private String DMP_ID;
     private Date QS_DATE;
     private String ADJ_TXT;
@@ -50,12 +50,14 @@ public class CRDBSurvey {
     private String BRAINMET;
     private String ECOG;
     private String COMMENTS;
+
     private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
+    private static List<String> fieldNameList = initializeFieldNameList();
+
     /**
-    * No args constructor for use in serialization
-    *
-    */
+     * No args constructor for use in serialization
+     */
     public CRDBSurvey() {
     }
 
@@ -290,25 +292,6 @@ public class CRDBSurvey {
         return this;
     }
 
-    @Override
-    public String toString() {
-        return ToStringBuilder.reflectionToString(this);
-    }
-
-    /**
-     * Returns the field names in CRDBSurvey without additional properties.
-     * @return List<String>
-     */
-    public List<String> getFieldNames() {
-        List<String> fieldNames = new ArrayList<>();
-        for (String field : toString().substring(toString().indexOf("[")+1,toString().indexOf("]")).split(",")) {
-            if (!field.startsWith("additionalProperties")) {
-                fieldNames.add(field.split("=")[0]);
-            }
-        }
-        return fieldNames;
-    }
-
     public Map<String, Object> getAdditionalProperties() {
         return this.additionalProperties;
     }
@@ -320,5 +303,26 @@ public class CRDBSurvey {
     public CRDBSurvey withAdditionalProperty(String name, Object value) {
         this.additionalProperties.put(name, value);
         return this;
+    }
+
+    /**
+     * Returns the field names without additional properties.
+     * @return List<String>
+     */
+    public static List<String> getFieldNames() {
+        return CRDBSurvey.fieldNameList;
+    }
+
+    private static List<String> initializeFieldNameList() {
+        List<String> fieldNameList = new ArrayList<String>(10);
+        fieldNameList.add("DMP_ID");
+        fieldNameList.add("QS_DATE");
+        fieldNameList.add("ADJ_TXT");
+        fieldNameList.add("NOSYSTXT");
+        fieldNameList.add("PRIOR_RX");
+        fieldNameList.add("BRAINMET");
+        fieldNameList.add("ECOG");
+        fieldNameList.add("COMMENTS");
+        return Collections.unmodifiableList(fieldNameList);
     }
 }

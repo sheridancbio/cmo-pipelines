@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Memorial Sloan-Kettering Cancer Center.
+ * Copyright (c) 2016 - 2018 Memorial Sloan-Kettering Cancer Center.
  *
  * This library is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS
@@ -30,22 +30,19 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-package org.mskcc.cmo.ks.crdb;
-
-import org.mskcc.cmo.ks.crdb.model.CRDBSurvey;
+package org.mskcc.cmo.ks.crdb.pipeline;
 
 import static com.querydsl.core.alias.Alias.$;
 import static com.querydsl.core.alias.Alias.alias;
 import com.querydsl.core.types.Projections;
 import com.querydsl.sql.SQLExpressions;
 import com.querydsl.sql.SQLQueryFactory;
-
-import org.springframework.batch.item.*;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.util.*;
+import org.mskcc.cmo.ks.crdb.pipeline.model.CRDBSurvey;
+import org.springframework.batch.item.*;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Class for querying the CRDB Survey view.
@@ -54,6 +51,7 @@ import java.util.*;
  */
 
 public class CRDBSurveyReader implements ItemStreamReader<CRDBSurvey> {
+
     @Value("${crdb.survey_view}")
     private String crdbSurveyView;
 
@@ -79,7 +77,6 @@ public class CRDBSurveyReader implements ItemStreamReader<CRDBSurvey> {
     @Transactional
     private List<CRDBSurvey> getCrdbSurveyResults() {
         System.out.println("Beginning CRDB Survey View import...");
-
         CRDBSurvey qCRDBS = alias(CRDBSurvey.class, crdbSurveyView);
         List<CRDBSurvey> crdbSurveyResults = new ArrayList<>();
         List<String> dmpIdList = crdbQueryFactory.selectDistinct($(qCRDBS.getDMP_ID())).from($(qCRDBS)).fetch();
@@ -96,8 +93,7 @@ public class CRDBSurveyReader implements ItemStreamReader<CRDBSurvey> {
                     .fetchFirst();
             crdbSurveyResults.add(record);
         }
-
-        System.out.println("Imported "+crdbSurveyResults.size()+" records from CRDB Survey View.");
+        System.out.println("Imported " + crdbSurveyResults.size() + " records from CRDB Survey View.");
         return crdbSurveyResults;
     }
 

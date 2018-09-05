@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 - 2018 Memorial Sloan-Kettering Cancer Center.
+ * Copyright (c) 2018 Memorial Sloan-Kettering Cancer Center.
  *
  * This library is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS
@@ -23,41 +23,28 @@
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-package org.mskcc.cmo.ks.crdb.pipeline;
+package org.mskcc.cmo.ks.crdb.pipeline.util;
 
 import java.util.*;
-import org.mskcc.cmo.ks.crdb.pipeline.model.CRDBPDXClinicalPatientDataset;
+import org.mockito.ArgumentMatchers;
+import org.mockito.Mockito;
 import org.mskcc.cmo.ks.crdb.pipeline.util.CRDBUtils;
-import org.springframework.batch.item.ItemProcessor;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
-/**
- * Class for processing the CRDB Dataset results for the staging file.
- *
- * @author ochoaa
- */
+@Configuration
+public class CRDBTestConfiguration {
 
-public class CRDBPDXClinicalPatientProcessor implements ItemProcessor<CRDBPDXClinicalPatientDataset, String> {
-
-    @Autowired
-    private CRDBUtils crdbUtils;
-
-    private List<String> CRDB_PDX_CLINICAL_PATIENT_FIELD_ORDER = CRDBPDXClinicalPatientDataset.getFieldNames();
-
-    @Override
-    public String process(final CRDBPDXClinicalPatientDataset crdbPDXClinicalPatientDataset) throws Exception {
-        List<String> record = new ArrayList<>();
-        for (String field : CRDB_PDX_CLINICAL_PATIENT_FIELD_ORDER) {
-            String value = crdbPDXClinicalPatientDataset.getClass().getMethod("get" + field).invoke(crdbPDXClinicalPatientDataset).toString();
-            record.add(crdbUtils.convertWhitespace(value));
-        }
-        return String.join("\t", record);
+    @Bean
+    public CRDBUtils crdbUtils() {
+        return new CRDBUtils();
     }
+
 }

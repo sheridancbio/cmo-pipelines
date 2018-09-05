@@ -30,13 +30,17 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-package org.mskcc.cmo.ks.crdb;
+package org.mskcc.cmo.ks.crdb.pipeline;
 
-import org.mskcc.cmo.ks.crdb.model.*;
+import org.mskcc.cmo.ks.crdb.pipeline.model.CRDBDataset;
+import org.mskcc.cmo.ks.crdb.pipeline.model.CRDBPDXClinicalPatientDataset;
+import org.mskcc.cmo.ks.crdb.pipeline.model.CRDBPDXClinicalSampleDataset;
+import org.mskcc.cmo.ks.crdb.pipeline.model.CRDBPDXSourceToDestinationMapping;
+import org.mskcc.cmo.ks.crdb.pipeline.model.CRDBPDXTimelineDataset;
+import org.mskcc.cmo.ks.crdb.pipeline.model.CRDBSurvey;
 import org.mskcc.cmo.ks.crdb.pipeline.util.CRDBUtils;
 import org.springframework.batch.core.*;
 import org.springframework.batch.core.configuration.annotation.*;
-import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.item.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.*;
@@ -49,8 +53,8 @@ import org.springframework.context.annotation.*;
 
 @Configuration
 @EnableBatchProcessing
-public class BatchConfiguration
-{
+public class BatchConfiguration {
+
     public static final String CRDB_IMPACT_JOB = "crdbImpactJob";
     public static final String CRDB_PDX_JOB = "crdbPDXJob";
 
@@ -98,9 +102,9 @@ public class BatchConfiguration
 
     @Bean
     @StepScope
-	public ItemStreamReader<CRDBSurvey> crdbSurveyReader() {
-		return new CRDBSurveyReader();
-	}
+    public ItemStreamReader<CRDBSurvey> crdbSurveyReader() {
+        return new CRDBSurveyReader();
+    }
 
     @Bean
     public CRDBSurveyProcessor crdbSurveyProcessor() {
@@ -129,7 +133,7 @@ public class BatchConfiguration
     @Bean
     @StepScope
     public ItemStreamReader<CRDBDataset> crdbDatasetReader() {
-	return new CRDBDatasetReader();
+        return new CRDBDatasetReader();
     }
 
     @Bean

@@ -30,16 +30,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-package org.mskcc.cmo.ks;
-
-import org.mskcc.cmo.ks.crdb.BatchConfiguration;
+package org.mskcc.cmo.ks.crdb;
 
 import org.apache.commons.cli.*;
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.ConfigurableApplicationContext;
+import org.mskcc.cmo.ks.crdb.pipeline.BatchConfiguration;
 import org.springframework.batch.core.*;
 import org.springframework.batch.core.launch.JobLauncher;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.SpringApplication;
+import org.springframework.context.ConfigurableApplicationContext;
 
 /**
  * Pipeline for running the CRDB clinical data job.
@@ -53,8 +52,8 @@ public class CRDBPipeline {
     private static Options getOptions(String[] args) {
         Options options = new Options();
         options.addOption("h", "help", false, "shows this help document and quits.")
-            .addOption("d", "directory", true, "Staging directory")
-            .addOption("p", "pdx", false, "Run pdx job");
+                .addOption("d", "directory", true, "Staging directory")
+                .addOption("p", "pdx", false, "Run pdx job");
         return options;
     }
 
@@ -68,7 +67,6 @@ public class CRDBPipeline {
         SpringApplication app = new SpringApplication(CRDBPipeline.class);
         ConfigurableApplicationContext ctx = app.run(args);
         JobLauncher jobLauncher = ctx.getBean(JobLauncher.class);
-
         JobParameters jobParameters = new JobParametersBuilder()
                 .addString("stagingDirectory", stagingDirectory)
                 .addString("pdxMode", String.valueOf(pdx))
@@ -90,8 +88,7 @@ public class CRDBPipeline {
         Options options = CRDBPipeline.getOptions(args);
         CommandLineParser parser = new DefaultParser();
         CommandLine commandLine = parser.parse(options, args);
-        if (commandLine.hasOption("h") ||
-            !commandLine.hasOption("d")) {
+        if (commandLine.hasOption("h") || !commandLine.hasOption("d")) {
             help(options, 0);
         }
         launchJob(args, commandLine.getOptionValue("d"), commandLine.hasOption("p"));

@@ -29,11 +29,10 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-package org.mskcc.cmo.ks.crdb.model;
+
+package org.mskcc.cmo.ks.crdb.pipeline.model;
 
 import java.util.*;
-
-import org.apache.commons.lang.builder.ToStringBuilder;
 
 /**
  * Model for CRDBPDXClinicalSampleDataset results.
@@ -42,6 +41,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 
 public class CRDBPDXClinicalSampleDataset {
+
     private String PATIENT_ID;
     private String SAMPLE_ID;
     private String PDX_ID;
@@ -88,12 +88,14 @@ public class CRDBPDXClinicalSampleDataset {
     private String AR_NEGATIVE;
     private String KRAS_POSITIVE;
     private String KRAS_NEGATIVE;
+
     private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
+    private static List<String> fieldNameList = initializeFieldNameList();
+
     /**
-    * No args constructor for use in serialization
-    *
-    */
+     * No args constructor for use in serialization
+     */
     public CRDBPDXClinicalSampleDataset() {
     }
 
@@ -575,66 +577,70 @@ public class CRDBPDXClinicalSampleDataset {
         this.KRAS_NEGATIVE = KRAS_NEGATIVE;
     }
 
-    /**
-     * Returns the field names in CRDBPDXClinicalSampleDataset without additional properties.
-     * @return List<String>
-     */
-    public List<String> getFieldNames() {
-        List<String> fieldNames = new ArrayList<>();
-        fieldNames.add("PATIENT_ID");
-        fieldNames.add("SAMPLE_ID");
-        fieldNames.add("PDX_ID");
-        fieldNames.add("COLLAB_ID");
-        fieldNames.add("AGE_AT_INITIAL_DIAGNOSIS");
-        fieldNames.add("PASSAGE_ID");
-        fieldNames.add("ONCOTREE_CODE");
-        fieldNames.add("STAGE_CODE");
-        fieldNames.add("T_STAGE");
-        fieldNames.add("N_STAGE");
-        fieldNames.add("M_STAGE");
-        fieldNames.add("GRADE");
-        fieldNames.add("SAMPLE_TYPE");
-        fieldNames.add("PRIMARY_SITE");
-        fieldNames.add("SAMPLE_CLASS");
-        fieldNames.add("PROCEDURE_TYPE");
-        fieldNames.add("PRETREATED");
-        fieldNames.add("TREATED");
-        fieldNames.add("ER_POSITIVE");
-        fieldNames.add("ER_NEGATIVE");
-        fieldNames.add("HER2_POSITIVE");
-        fieldNames.add("HER2_NEGATIVE");
-        fieldNames.add("HPV_POSITIVE");
-        fieldNames.add("HPV_NEGATIVE");
-        fieldNames.add("P16_POSITIVE");
-        fieldNames.add("P16_NEGATIVE");
-        fieldNames.add("PR_POSITIVE");
-        fieldNames.add("PR_NEGATIVE");
-        fieldNames.add("IDH1_POSITIVE");
-        fieldNames.add("IDH1_NEGATIVE");
-        fieldNames.add("IDH2_POSITIVE");
-        fieldNames.add("IDH2_NEGATIVE");
-        fieldNames.add("EGFR_POSITIVE");
-        fieldNames.add("EGFR_NEGATIVE");
-        fieldNames.add("ALK_POSITIVE");
-        fieldNames.add("ALK_NEGATIVE");
-        fieldNames.add("BRCA1_POSITIVE");
-        fieldNames.add("BRCA1_NEGATIVE");
-        fieldNames.add("BRCA2_POSITIVE");
-        fieldNames.add("BRCA2_NEGATIVE");
-        fieldNames.add("C_MYC_POSITIVE");
-        fieldNames.add("C_MYC_NEGATIVE");
-        fieldNames.add("AR_POSITIVE");
-        fieldNames.add("AR_NEGATIVE");
-        fieldNames.add("KRAS_POSITIVE");
-        fieldNames.add("KRAS_NEGATIVE");
-        return fieldNames;
-    }
-
     public Map<String, Object> getAdditionalProperties() {
         return this.additionalProperties;
     }
 
     public void setAdditionalProperty(String name, Object value) {
         this.additionalProperties.put(name, value);
+    }
+
+    /**
+     * Returns the field names without additional properties.
+     * @return List<String>
+     */
+    public static List<String> getFieldNames() {
+        return CRDBPDXClinicalSampleDataset.fieldNameList;
+    }
+
+    private static List<String> initializeFieldNameList() {
+        List<String> fieldNameList = new ArrayList<String>(35);
+        fieldNameList.add("PATIENT_ID");
+        fieldNameList.add("SAMPLE_ID");
+        fieldNameList.add("PDX_ID");
+        fieldNameList.add("COLLAB_ID");
+        fieldNameList.add("AGE_AT_INITIAL_DIAGNOSIS");
+        fieldNameList.add("PASSAGE_ID");
+        fieldNameList.add("ONCOTREE_CODE");
+        fieldNameList.add("STAGE_CODE");
+        fieldNameList.add("T_STAGE");
+        fieldNameList.add("N_STAGE");
+        fieldNameList.add("M_STAGE");
+        fieldNameList.add("GRADE");
+        fieldNameList.add("SAMPLE_TYPE");
+        fieldNameList.add("PRIMARY_SITE");
+        fieldNameList.add("SAMPLE_CLASS");
+        fieldNameList.add("PROCEDURE_TYPE");
+        fieldNameList.add("PRETREATED");
+        fieldNameList.add("TREATED");
+        fieldNameList.add("ER_POSITIVE");
+        fieldNameList.add("ER_NEGATIVE");
+        fieldNameList.add("HER2_POSITIVE");
+        fieldNameList.add("HER2_NEGATIVE");
+        fieldNameList.add("HPV_POSITIVE");
+        fieldNameList.add("HPV_NEGATIVE");
+        fieldNameList.add("P16_POSITIVE");
+        fieldNameList.add("P16_NEGATIVE");
+        fieldNameList.add("PR_POSITIVE");
+        fieldNameList.add("PR_NEGATIVE");
+        fieldNameList.add("IDH1_POSITIVE");
+        fieldNameList.add("IDH1_NEGATIVE");
+        fieldNameList.add("IDH2_POSITIVE");
+        fieldNameList.add("IDH2_NEGATIVE");
+        fieldNameList.add("EGFR_POSITIVE");
+        fieldNameList.add("EGFR_NEGATIVE");
+        fieldNameList.add("ALK_POSITIVE");
+        fieldNameList.add("ALK_NEGATIVE");
+        fieldNameList.add("BRCA1_POSITIVE");
+        fieldNameList.add("BRCA1_NEGATIVE");
+        fieldNameList.add("BRCA2_POSITIVE");
+        fieldNameList.add("BRCA2_NEGATIVE");
+        fieldNameList.add("C_MYC_POSITIVE");
+        fieldNameList.add("C_MYC_NEGATIVE");
+        fieldNameList.add("AR_POSITIVE");
+        fieldNameList.add("AR_NEGATIVE");
+        fieldNameList.add("KRAS_POSITIVE");
+        fieldNameList.add("KRAS_NEGATIVE");
+        return Collections.unmodifiableList(fieldNameList);
     }
 }

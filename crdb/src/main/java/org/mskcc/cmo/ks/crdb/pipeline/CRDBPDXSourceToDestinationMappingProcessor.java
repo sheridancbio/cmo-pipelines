@@ -30,15 +30,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-package org.mskcc.cmo.ks.crdb;
+package org.mskcc.cmo.ks.crdb.pipeline;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import java.util.ArrayList;
-import java.util.List;
-import org.mskcc.cmo.ks.crdb.model.CRDBPDXSourceToDestinationMapping;
+import java.util.*;
+import org.mskcc.cmo.ks.crdb.pipeline.model.CRDBPDXSourceToDestinationMapping;
 import org.mskcc.cmo.ks.crdb.pipeline.util.CRDBUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.batch.item.ItemProcessor;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * Class for processing the CRDB Dataset results for the staging file.
@@ -48,16 +46,16 @@ import org.springframework.batch.item.ItemProcessor;
 
 public class CRDBPDXSourceToDestinationMappingProcessor implements ItemProcessor<CRDBPDXSourceToDestinationMapping, String> {
 
-    ObjectMapper mapper = new ObjectMapper();
-
     @Autowired
     private CRDBUtils crdbUtils;
+
+    private List<String> CRDB_PDX_MAPPING_FIELD_ORDER = CRDBPDXSourceToDestinationMapping.getFieldNames();
 
     @Override
     public String process(final CRDBPDXSourceToDestinationMapping crdbPDXSourceToDestinationMapping) throws Exception {
         List<String> record = new ArrayList<>();
-        for (String field : new CRDBPDXSourceToDestinationMapping().getFieldNames()) {
-            String value = crdbPDXSourceToDestinationMapping.getClass().getMethod("get"+field).invoke(crdbPDXSourceToDestinationMapping).toString();
+        for (String field : CRDB_PDX_MAPPING_FIELD_ORDER) {
+            String value = crdbPDXSourceToDestinationMapping.getClass().getMethod("get" + field).invoke(crdbPDXSourceToDestinationMapping).toString();
             record.add(crdbUtils.convertWhitespace(value));
         }
         return String.join("\t", record);

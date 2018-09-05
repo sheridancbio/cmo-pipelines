@@ -30,21 +30,17 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-package org.mskcc.cmo.ks.crdb;
-
-import org.mskcc.cmo.ks.crdb.model.CRDBPDXClinicalSampleDataset;
-
-import org.springframework.core.io.*;
-import org.springframework.batch.item.*;
-import org.springframework.batch.item.file.*;
-import org.springframework.batch.item.file.transform.PassThroughLineAggregator;
-import org.springframework.beans.factory.annotation.Value;
+package org.mskcc.cmo.ks.crdb.pipeline;
 
 import java.io.*;
 import java.nio.file.Paths;
 import java.util.*;
-
-import org.apache.commons.lang.StringUtils;
+import org.mskcc.cmo.ks.crdb.pipeline.model.CRDBPDXClinicalSampleDataset;
+import org.springframework.batch.item.*;
+import org.springframework.batch.item.file.*;
+import org.springframework.batch.item.file.transform.PassThroughLineAggregator;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.*;
 
 /**
  * Class for writing the CRDB Dataset results to the staging file.
@@ -53,12 +49,14 @@ import org.apache.commons.lang.StringUtils;
  */
 
 public class CRDBPDXClinicalSampleWriter implements ItemStreamWriter<String> {
+
     @Value("#{jobParameters[stagingDirectory]}")
     private String stagingDirectory;
 
     @Value("${crdb.pdx_clinical_sample_dataset_filename}")
     private String pdxClinicalSampleDatasetFilename;
 
+    private List<String> CRDB_PDX_CLINICAL_SAMPLE_FIELD_ORDER = CRDBPDXClinicalSampleDataset.getFieldNames();
     private FlatFileItemWriter<String> flatFileItemWriter = new FlatFileItemWriter<String>();
 
     @Override
@@ -68,7 +66,7 @@ public class CRDBPDXClinicalSampleWriter implements ItemStreamWriter<String> {
         flatFileItemWriter.setHeaderCallback(new FlatFileHeaderCallback() {
             @Override
             public void writeHeader(Writer writer) throws IOException {
-                writer.write(StringUtils.join(new CRDBPDXClinicalSampleDataset().getFieldNames(), "\t"));
+                writer.write(String.join("\t", CRDB_PDX_CLINICAL_SAMPLE_FIELD_ORDER));
             }
         });
         String stagingFile = Paths.get(stagingDirectory, pdxClinicalSampleDatasetFilename).toString();

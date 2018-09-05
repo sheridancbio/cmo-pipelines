@@ -138,7 +138,7 @@ public class CVRGenePanelReader implements ItemStreamReader<CVRGenePanelRecord> 
         }
     }
 
-    private String[] getGenePanelMatrixHeader(File genePanelMatrixFile){
+    private String[] getGenePanelMatrixHeader(File genePanelMatrixFile) {
         String[] header;
         try {
             header = cvrUtils.getFileHeader(genePanelMatrixFile);

@@ -30,15 +30,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-package org.mskcc.cmo.ks.crdb;
+package org.mskcc.cmo.ks.crdb.pipeline;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import java.util.ArrayList;
-import java.util.List;
-import org.mskcc.cmo.ks.crdb.model.CRDBPDXTimelineDataset;
+import java.util.*;
+import org.mskcc.cmo.ks.crdb.pipeline.model.CRDBPDXTimelineDataset;
 import org.mskcc.cmo.ks.crdb.pipeline.util.CRDBUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.batch.item.ItemProcessor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 
 /**
  * Class for processing the CRDB Dataset results for the staging file.
@@ -48,7 +47,8 @@ import org.springframework.batch.item.ItemProcessor;
 
 public class CRDBPDXTimelineProcessor implements ItemProcessor<CRDBPDXTimelineDataset, String> {
 
-    ObjectMapper mapper = new ObjectMapper();
+    @Value("#stepExecutionContext['crdbPdxFieldOrder']")
+    private List<String> crdbPdxTimelineFieldOrder;
 
     @Autowired
     private CRDBUtils crdbUtils;
@@ -56,10 +56,11 @@ public class CRDBPDXTimelineProcessor implements ItemProcessor<CRDBPDXTimelineDa
     @Override
     public String process(final CRDBPDXTimelineDataset crdbPDXTimelineDataset) throws Exception {
         List<String> record = new ArrayList<>();
-        for (String field : new CRDBPDXTimelineDataset().getFieldNames()) {
-            String value = crdbPDXTimelineDataset.getClass().getMethod("get"+field).invoke(crdbPDXTimelineDataset).toString();
+        for (String field : crdbPdxTimelineFieldOrder) {
+            String value = crdbPDXTimelineDataset.getClass().getMethod("get" + field).invoke(crdbPDXTimelineDataset).toString();
             record.add(crdbUtils.convertWhitespace(value));
         }
         return String.join("\t", record);
     }
+
 }

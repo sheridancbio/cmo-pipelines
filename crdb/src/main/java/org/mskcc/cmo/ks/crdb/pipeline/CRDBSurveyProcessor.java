@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 - 2017 Memorial Sloan-Kettering Cancer Center.
+ * Copyright (c) 2016 - 2018 Memorial Sloan-Kettering Cancer Center.
  *
  * This library is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS
@@ -30,12 +30,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-package org.mskcc.cmo.ks.crdb;
+package org.mskcc.cmo.ks.crdb.pipeline;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import java.util.ArrayList;
-import java.util.List;
-import org.mskcc.cmo.ks.crdb.model.CRDBSurvey;
+import java.util.*;
+import org.mskcc.cmo.ks.crdb.pipeline.model.CRDBSurvey;
 import org.mskcc.cmo.ks.crdb.pipeline.util.CRDBUtils;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,17 +45,18 @@ import org.springframework.beans.factory.annotation.Autowired;
  */
 
 public class CRDBSurveyProcessor implements ItemProcessor<CRDBSurvey, String> {
-    ObjectMapper mapper = new ObjectMapper();
 
     @Autowired
     private CRDBUtils crdbUtils;
 
+    private List<String> CRDB_SURVEY_FIELD_ORDER = CRDBSurvey.getFieldNames();
+
     @Override
     public String process(final CRDBSurvey crdbSurvey) throws Exception {
         List<String> record = new ArrayList<>();
-        for (String field : new CRDBSurvey().getFieldNames()) {
+        for (String field : CRDB_SURVEY_FIELD_ORDER) {
             if (!field.startsWith("QS_DATE")) {
-                String value = crdbSurvey.getClass().getMethod("get"+field).invoke(crdbSurvey).toString();
+                String value = crdbSurvey.getClass().getMethod("get" + field).invoke(crdbSurvey).toString();
                 record.add(crdbUtils.convertWhitespace(value));
             }
         }

@@ -30,21 +30,17 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-package org.mskcc.cmo.ks.crdb;
-
-import org.mskcc.cmo.ks.crdb.model.CRDBPDXSourceToDestinationMapping;
-
-import org.springframework.core.io.*;
-import org.springframework.batch.item.*;
-import org.springframework.batch.item.file.*;
-import org.springframework.batch.item.file.transform.PassThroughLineAggregator;
-import org.springframework.beans.factory.annotation.Value;
+package org.mskcc.cmo.ks.crdb.pipeline;
 
 import java.io.*;
 import java.nio.file.Paths;
 import java.util.*;
-
-import org.apache.commons.lang.StringUtils;
+import org.mskcc.cmo.ks.crdb.pipeline.model.CRDBPDXSourceToDestinationMapping;
+import org.springframework.batch.item.*;
+import org.springframework.batch.item.file.*;
+import org.springframework.batch.item.file.transform.PassThroughLineAggregator;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.*;
 
 /**
  * Class for writing the CRDB Dataset results to the staging file.
@@ -53,12 +49,14 @@ import org.apache.commons.lang.StringUtils;
  */
 
 public class CRDBPDXSourceToDestinationMappingWriter implements ItemStreamWriter<String> {
+
     @Value("#{jobParameters[stagingDirectory]}")
     private String stagingDirectory;
 
     @Value("${crdb.source_to_destination_mappings_filename}")
     private String sourceToDestinationMappingsFilename;
 
+    private List<String> CRDB_PDX_MAPPING_FIELD_ORDER = CRDBPDXSourceToDestinationMapping.getFieldNames();
     private FlatFileItemWriter<String> flatFileItemWriter = new FlatFileItemWriter<String>();
 
     @Override
@@ -68,7 +66,7 @@ public class CRDBPDXSourceToDestinationMappingWriter implements ItemStreamWriter
         flatFileItemWriter.setHeaderCallback(new FlatFileHeaderCallback() {
             @Override
             public void writeHeader(Writer writer) throws IOException {
-                writer.write(StringUtils.join(new CRDBPDXSourceToDestinationMapping().getFieldNames(), "\t"));
+                writer.write(String.join("\t", CRDB_PDX_MAPPING_FIELD_ORDER));
             }
         });
         String stagingFile = Paths.get(stagingDirectory, sourceToDestinationMappingsFilename).toString();

@@ -30,15 +30,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-package org.mskcc.cmo.ks.crdb;
+package org.mskcc.cmo.ks.crdb.pipeline;
 
 import com.querydsl.sql.OracleTemplates;
 import com.querydsl.sql.SQLQueryFactory;
 import com.querydsl.sql.SQLTemplates;
-import oracle.jdbc.pool.OracleDataSource;
-
 import java.sql.SQLException;
-
+import oracle.jdbc.pool.OracleDataSource;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -51,6 +49,7 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class CRDBConfiguration {
+
     @Value("${crdb.username}")
     private String username;
 

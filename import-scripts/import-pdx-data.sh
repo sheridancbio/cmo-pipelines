@@ -359,6 +359,7 @@ if [ -s "$importer_notification_file" ] ; then
     cat "$importer_notification_file" >> "$EMAIL_MESSAGE_FILE"
 fi
 
-echo -e "Sending email $EMAIL_BODY"
-echo -e "$EMAIL_BODY" | mail -s "$EMAIL_SUBJECT" $pdx_email_list
+echo -e "Sending email:"
+cat "$EMAIL_MESSAGE_FILE"
+cat "$EMAIL_MESSAGE_FILE" | mail -s "$EMAIL_SUBJECT" $pdx_email_list
 exit 0
