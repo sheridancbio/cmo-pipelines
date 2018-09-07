@@ -4,6 +4,8 @@
 # - if not running, start it up
 # - if running but unresponsive, shut it down and restart
 
+REDIS_PROPERTIES_FILE=/data/portal-cron/pipelines-credentials/redis.properties
+REDIS_PASSWORD=`grep password $REDIS_PROPERTIES_FILE | sed 's/password://g'`
 REDIS_SERVER_HOST=127.0.0.1
 REDIS_SERVER_PORT=6379
 REDIS_HOME=/srv/data/redis/redis-stable
@@ -29,7 +31,7 @@ function sendRedisRestartNotification {
 function ping_reqeust_succeeds {
     if [ $DEBUG_MODE -ne 0 ] ; then echo entering function ping_reqeust_succeeds ; fi
     timeout=$1
-    if timeout $timeout redis-cli -p $REDIS_SERVER_PORT ping >> /dev/null ; then
+    if timeout $timeout redis-cli -a $REDIS_PASSWORD -p $REDIS_SERVER_PORT ping >> /dev/null ; then
         return 0 # 0 means "success" or "yes"
     else
         return 1
