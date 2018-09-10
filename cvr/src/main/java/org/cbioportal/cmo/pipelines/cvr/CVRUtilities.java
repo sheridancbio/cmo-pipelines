@@ -326,10 +326,10 @@ public class CVRUtilities {
         String sequencer = "";
         String tumorSampleUUID = "";
         String matchedNormSampleUUID = "";
-        String tRefCount = "";
-        String nRefCount = String.valueOf(snp.getDepth() - snp.getAlleleDepth());
-        String tAltCount = "";
-        String nAltCount = String.valueOf(snp.getAlleleDepth());
+        String tRefCount = String.valueOf(snp.getDepth() - snp.getAlleleDepth());
+        String nRefCount = "";
+        String tAltCount = String.valueOf(snp.getAlleleDepth());
+        String nAltCount = "";
         String cDNA_Change = snp.getCDNAChange();
         String aminoAcidChange = snp.getAaChange();
         String transcript = snp.getTranscriptId();
