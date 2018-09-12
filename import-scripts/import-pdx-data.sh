@@ -208,7 +208,7 @@ fi
 
 # importer mercurial fetch step
 echo "fetching updates from bic-mskcc repository..."
-$JAVA_BINARY $JAVA_IMPORTER_ARGS --fetch-data --data-source bic-mskcc --run-date latest
+$JAVA_BINARY $JAVA_IMPORTER_ARGS --fetch-data --data-source bic-mskcc --run-date latest --update-worksheet
 if [ $? -gt 0 ] ; then
     sendFailureMessageMskPipelineLogsSlack "Fetch BIC-MSKCC Studies From Mercurial Failure"
 else
