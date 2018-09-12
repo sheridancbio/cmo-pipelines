@@ -40,7 +40,7 @@ fi
 # fetch updates in private repository
 echo "fetching updates from private..."
 PRIVATE_FETCH_FAIL=0
-$JAVA_BINARY $JAVA_IMPORTER_ARGS --fetch-data --data-source private --run-date latest --update-worksheet
+$JAVA_BINARY $JAVA_IMPORTER_ARGS --fetch-data --data-source private --run-date latest
 if [ $? -gt 0 ]; then
     echo "CMO (private) fetch failed!"
     PRIVATE_FETCH_FAIL=1

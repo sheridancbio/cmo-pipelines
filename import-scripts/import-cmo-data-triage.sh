@@ -41,7 +41,7 @@ fi
 # fetch updates in private repository
 echo "fetching updates from private..."
 PRIVATE_FETCH_FAIL=0
-$JAVA_BINARY $JAVA_IMPORTER_ARGS --fetch-data --data-source private --run-date latest --update-worksheet
+$JAVA_BINARY $JAVA_IMPORTER_ARGS --fetch-data --data-source private --run-date latest
 if [ $? -gt 0 ]; then
     echo "private fetch failed!"
     PRIVATE_FETCH_FAIL=1
@@ -65,7 +65,7 @@ fi
 # fetch updates in CMO impact
 echo "fetching updates from impact..."
 CMO_IMPACT_FETCH_FAIL=0
-$JAVA_BINARY $JAVA_IMPORTER_ARGS --fetch-data --data-source impact --run-date latest --update-worksheet
+$JAVA_BINARY $JAVA_IMPORTER_ARGS --fetch-data --data-source impact --run-date latest
 if [ $? -gt 0 ]; then
     echo "impact fetch failed!"
     CMO_IMPACT_FETCH_FAIL=1
@@ -76,7 +76,7 @@ fi
 
 echo "fetching updates from impact-MERGED..."
 IMPACT_MERGED_FETCH_FAIL=0
-$JAVA_BINARY $JAVA_IMPORTER_ARGS --fetch-data --data-source impact-MERGED --run-date latest --update-worksheet
+$JAVA_BINARY $JAVA_IMPORTER_ARGS --fetch-data --data-source impact-MERGED --run-date latest
 if [ $? -gt 0 ]; then
     echo "impact-MERGED fetch failed!"
     IMPACT_MERGED_FETCH_FAIL=1
