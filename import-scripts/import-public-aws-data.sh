@@ -6,7 +6,7 @@ if [[ -z $PORTAL_HOME || -z $JAVA_BINARY ]] ; then
     exit 1
 fi
 
-tmp=$PORTAL_HOME/tmp/import-cron-public
+tmp=$PORTAL_HOME/tmp/import-cron-public-aws
 if [[ -d "$tmp" && "$tmp" != "/" ]]; then
     rm -rf "$tmp"/*
 fi
