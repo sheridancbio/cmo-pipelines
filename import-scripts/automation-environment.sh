@@ -11,7 +11,7 @@ export JAVA_BINARY=$JAVA_HOME/bin/java
 export PYTHON_BINARY=/data/tools/python2.7/bin/python
 export MAVEN_BINARY=/data/portal-cron/bin/mvn
 export HG_BINARY=/usr/bin/hg
-export PATH=/data/tools/python2.7/bin:/home/grossb/local/bin/:$PATH:/usr/bin/:/bin/
+export PATH=/data/tools/python2.7/bin:/data/tools:/home/grossb/local/bin:$PATH
 
 #######################
 # environment variables for top-level data repositories / code bases
