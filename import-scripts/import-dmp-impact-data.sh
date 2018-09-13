@@ -499,5 +499,6 @@ fi
 echo "Fetching and importing of clinical datasets complete!"
 echo $(date)
 
-
+echo "Cleaning up any untracked files in $PORTAL_DATA_HOME/dmp..."
+bash $PORTAL_HOME/scripts/datasource-repo-cleanup.sh $DMP_DATA_HOME
 exit 0

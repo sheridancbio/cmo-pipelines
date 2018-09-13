@@ -362,4 +362,8 @@ fi
 echo -e "Sending email:"
 cat "$EMAIL_MESSAGE_FILE"
 cat "$EMAIL_MESSAGE_FILE" | mail -s "$EMAIL_SUBJECT" $pdx_email_list
+
+echo "Cleaning up any untracked files from MSK-PDX import..."
+bash $PORTAL_HOME/scripts/datasource-repo-cleanup.sh $PORTAL_DATA_HOME/bic-mskcc $PORTAL_DATA_HOME/pdx
+
 exit 0
