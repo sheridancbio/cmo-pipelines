@@ -97,6 +97,9 @@ fi
 
 $JAVA_BINARY $JAVA_IMPORTER_ARGS --send-update-notification --portal genie-portal --notification-file "$genie_portal_notification_file"
 
+echo "Cleaning up any untracked files from MSK-TRIAGE import..."
+bash $PORTAL_HOME/scripts/datasource-repo-cleanup.sh $PORTAL_DATA_HOME/genie
+
 if [[ -d "$tmp" && "$tmp" != "/" ]]; then
     rm -rf "$tmp"/*
 fi
