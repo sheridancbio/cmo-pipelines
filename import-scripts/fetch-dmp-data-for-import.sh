@@ -1281,6 +1281,7 @@ fi
 # check updated data back into mercurial
 echo "Pushing DMP-IMPACT updates back to dmp repository..."
 echo $(date)
+MERCURIAL_PUSH_FAIL=0
 cd $DMP_DATA_HOME ; $HG_BINARY push
 if [ $? -gt 0 ] ; then
     MERCURIAL_PUSH_FAIL=1
