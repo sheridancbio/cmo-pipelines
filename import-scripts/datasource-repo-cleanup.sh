@@ -52,8 +52,8 @@ function cleanupMercurialRepository {
 
     MERCURIAL_REPOSITORY_PATH=$1
     cd $MERCURIAL_REPOSITORY_PATH
-    echo "hg status -un | xargs rm"
-    $HG_BINARY status -un | xargs rm ; return_value=$?
+    echo "hg status -un | xargs rm -f"
+    $HG_BINARY status -un | xargs rm -f ; return_value=$?
     $HG_BINARY update -C
     return $return_value
 }
