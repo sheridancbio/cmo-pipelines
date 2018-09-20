@@ -57,7 +57,7 @@ public class CRDBPDXTimelineWriter implements ItemStreamWriter<String> {
     @Value("${crdb.pdx_timeline_dataset_filename}")
     private String pdxTimelineDatasetFilename;
 
-    @Value("#stepExecutionContext['crdbPdxFieldOrder']")
+    @Value("#{stepExecutionContext['crdbPdxFieldOrder']}")
     private List<String> crdbPdxTimelineFieldOrder;
 
     private FlatFileItemWriter<String> flatFileItemWriter = new FlatFileItemWriter<String>();
