@@ -47,7 +47,7 @@ import org.springframework.beans.factory.annotation.Value;
 
 public class CRDBPDXTimelineProcessor implements ItemProcessor<CRDBPDXTimelineDataset, String> {
 
-    @Value("#stepExecutionContext['crdbPdxFieldOrder']")
+    @Value("#{stepExecutionContext['crdbPdxFieldOrder']}")
     private List<String> crdbPdxTimelineFieldOrder;
 
     @Autowired
