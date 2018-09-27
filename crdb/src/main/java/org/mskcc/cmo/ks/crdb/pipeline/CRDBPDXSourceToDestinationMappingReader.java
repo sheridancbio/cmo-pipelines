@@ -83,6 +83,7 @@ public class CRDBPDXSourceToDestinationMappingReader implements ItemStreamReader
                     $(qCRDBD.getSOURCE_STUDY_ID()), $(qCRDBD.getDESTINATION_STUDY_ID()),
                     $(qCRDBD.getDESTINATION_PATIENT_ID())))
                 .from($(qCRDBD))
+                .where($(qCRDBD.getPATIENT_ID()).ne("NA"))
                 .fetch();
 
         System.out.println("Imported " + crdbPDXSourceToDestinationMappingResults.size() + " records from CRDB PDX Source To Destination Mapping View.");

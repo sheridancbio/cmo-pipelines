@@ -87,6 +87,7 @@ public class CRDBPDXClinicalPatientReader implements ItemStreamReader<CRDBPDXCli
                                         $(qCRDBD.getRETINOBLASTOMA()), $(qCRDBD.getGRADE_1()), $(qCRDBD.getGRADE_2()), $(qCRDBD.getGRADE_3()),
                                         $(qCRDBD.getPLATINUM_SENSITIVE()), $(qCRDBD.getPLATINUM_RESISTANT())))
                 .from($(qCRDBD))
+                .where($(qCRDBD.getPATIENT_ID()).ne("NA"))
                 .fetch();
         System.out.println("Imported " + crdbPDXClinicalPatientDatasetResults.size() + " records from CRDB PDX Clinical Patient Dataset View.");
         return crdbPDXClinicalPatientDatasetResults;

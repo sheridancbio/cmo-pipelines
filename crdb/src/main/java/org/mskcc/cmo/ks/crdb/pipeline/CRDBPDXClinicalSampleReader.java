@@ -92,6 +92,7 @@ public class CRDBPDXClinicalSampleReader implements ItemStreamReader<CRDBPDXClin
                                         $(qCRDBD.getBRCA2_POSITIVE()), $(qCRDBD.getBRCA2_NEGATIVE()), $(qCRDBD.getC_MYC_POSITIVE()), $(qCRDBD.getC_MYC_NEGATIVE()),
                                         $(qCRDBD.getAR_POSITIVE()), $(qCRDBD.getAR_NEGATIVE()), $(qCRDBD.getKRAS_POSITIVE()), $(qCRDBD.getKRAS_NEGATIVE())))
                 .from($(qCRDBD))
+                .where($(qCRDBD.getPATIENT_ID()).ne("NA"))
                 .fetch();
         System.out.println("Imported " + crdbPDXClinicalSampleDatasetResults.size() + " records from CRDB PDX Clinical Sample Dataset View.");
         return crdbPDXClinicalSampleDatasetResults;
