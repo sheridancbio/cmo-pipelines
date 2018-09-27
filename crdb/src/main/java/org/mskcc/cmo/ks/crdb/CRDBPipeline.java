@@ -82,6 +82,10 @@ public class CRDBPipeline {
         JobExecution jobExecution = jobLauncher.run(crdbJob, jobParameters);
         System.out.println("Shutting down CRDBPipeline.");
         ctx.close();
+        if (!jobExecution.getExitStatus().equals(ExitStatus.COMPLETED)) {
+            System.out.println("CRDBPipeline job failed with exit status: " + jobExecution.getExitStatus().getExitCode());
+            System.exit(1);
+        }
     }
 
     public static void main(String[] args) throws Exception {
