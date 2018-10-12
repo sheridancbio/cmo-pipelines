@@ -69,11 +69,13 @@ public class MskimpactPatientDemographics {
     private String PT_NAACCR_SEX_CODE;
     private String PED_IND;
     private String SAMPLE_ID_PATH_DMP;
+    private Integer LAST_CONTACT_YEAR;
+    private Integer AGE_AT_LAST_CONTACT_YEAR_IN_DAYS;
     private Map<String, Object> additionalProperties = new HashMap<>();
 
     public MskimpactPatientDemographics() {}
 
-    public MskimpactPatientDemographics(String DMP_ID_DEMO, String PT_NAACCR_SEX_CODE, String PT_NAACCR_RACE_CODE_PRIMARY, String PT_NAACCR_ETHNICITY_CODE, String RELIGION, String PT_VITAL_STATUS, Integer PT_BIRTH_YEAR, Integer PT_DEATH_YEAR, Integer TM_DX_YEAR, Integer AGE_AT_LAST_KNOWN_ALIVE_IN_DAYS, Integer AGE_AT_TM_DX_DATE_IN_DAYS, Integer AGE_AT_DATE_OF_DEATH_IN_DAYS, String PED_IND, String SAMPLE_ID_PATH_DMP){
+    public MskimpactPatientDemographics(String DMP_ID_DEMO, String PT_NAACCR_SEX_CODE, String PT_NAACCR_RACE_CODE_PRIMARY, String PT_NAACCR_ETHNICITY_CODE, String RELIGION, String PT_VITAL_STATUS, Integer PT_BIRTH_YEAR, Integer PT_DEATH_YEAR, Integer TM_DX_YEAR, Integer AGE_AT_LAST_KNOWN_ALIVE_IN_DAYS, Integer AGE_AT_TM_DX_DATE_IN_DAYS, Integer AGE_AT_DATE_OF_DEATH_IN_DAYS, String PED_IND, String SAMPLE_ID_PATH_DMP, Integer LAST_CONTACT_YEAR, Integer AGE_AT_LAST_CONTACT_YEAR_IN_DAYS){
         this.DMP_ID_DEMO =  StringUtils.isNotEmpty(DMP_ID_DEMO) ? DMP_ID_DEMO : "NA";
         this.PT_NAACCR_SEX_CODE =  StringUtils.isNotEmpty(PT_NAACCR_SEX_CODE) ? PT_NAACCR_SEX_CODE : "-1";
         this.PT_NAACCR_RACE_CODE_PRIMARY =  StringUtils.isNotEmpty(PT_NAACCR_RACE_CODE_PRIMARY) ? PT_NAACCR_RACE_CODE_PRIMARY : "-1";
@@ -89,6 +91,8 @@ public class MskimpactPatientDemographics {
         this.AGE_AT_DATE_OF_DEATH_IN_DAYS = AGE_AT_DATE_OF_DEATH_IN_DAYS;
         this.PED_IND = PED_IND;
         this.SAMPLE_ID_PATH_DMP = SAMPLE_ID_PATH_DMP;
+        this.LAST_CONTACT_YEAR = LAST_CONTACT_YEAR;
+        this.AGE_AT_LAST_CONTACT_YEAR_IN_DAYS = AGE_AT_LAST_CONTACT_YEAR_IN_DAYS;
     }
 
     public MskimpactPatientDemographics(String DMP_ID_DEMO, Integer PT_BIRTH_YEAR, Integer PT_DEATH_YEAR) {
@@ -396,16 +400,22 @@ public class MskimpactPatientDemographics {
     public static List<String> getVitalStatusFieldNames() {
         List<String> fieldNames = new ArrayList<>();
         fieldNames.add("DMP_ID_DEMO");
+        fieldNames.add("LAST_CONTACT_YEAR");
+        fieldNames.add("PT_DEATH_YEAR");
+        fieldNames.add("AGE_AT_LAST_CONTACT_YEAR_IN_DAYS");
         fieldNames.add("AGE_AT_DATE_OF_DEATH_IN_DAYS");
-        fieldNames.add("AGE_AT_LAST_KNOWN_ALIVE_IN_DAYS");
+        fieldNames.add("OS_STATUS");
         return fieldNames;
     }
 
     public static List<String> getVitalStatusHeaders() {
         List<String> fieldNames = new ArrayList<>();
         fieldNames.add("PATIENT_ID");
-        fieldNames.add("AGE_AT_DEATH");
-        fieldNames.add("AGE_AT_LAST_FOLLOWUP");
+        fieldNames.add("YEAR_CONTACT");
+        fieldNames.add("YEAR_DEATH");
+        fieldNames.add("INT_CONTACT");
+        fieldNames.add("INT_DOD");
+        fieldNames.add("DEAD");
         return fieldNames;
     }
 
@@ -485,5 +495,21 @@ public class MskimpactPatientDemographics {
      */
     public void setSAMPLE_ID_PATH_DMP(String SAMPLE_ID_PATH_DMP) {
         this.SAMPLE_ID_PATH_DMP = SAMPLE_ID_PATH_DMP;
+    }
+
+    public Integer getLAST_CONTACT_YEAR() {
+        return LAST_CONTACT_YEAR;
+    }
+
+    public void setLAST_CONTACT_YEAR(Integer LAST_CONTACT_YEAR) {
+        this.LAST_CONTACT_YEAR = LAST_CONTACT_YEAR;
+    }
+
+    public Integer getAGE_AT_LAST_CONTACT_YEAR_IN_DAYS() {
+        return AGE_AT_LAST_CONTACT_YEAR_IN_DAYS;
+    }
+
+    public void setAGE_AT_LAST_CONTACT_YEAR_IN_DAYS(Integer AGE_AT_LAST_CONTACT_YEAR_IN_DAYS) {
+        this.AGE_AT_LAST_CONTACT_YEAR_IN_DAYS = AGE_AT_LAST_CONTACT_YEAR_IN_DAYS;
     }
 }

@@ -38,6 +38,7 @@ import org.mskcc.cmo.ks.darwin.pipeline.model.MskimpactCompositeDemographics;
 import java.util.*;
 import org.apache.commons.lang.StringUtils;
 import org.mskcc.cmo.ks.darwin.pipeline.util.DarwinUtils;
+import org.mskcc.cmo.ks.darwin.pipeline.util.VitalStatusUtils;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -63,11 +64,9 @@ public class MskimpactPatientDemographicsProcessor implements ItemProcessor<Mski
             Object value = darwinPatientDemographics.getClass().getMethod("get"+field).invoke(darwinPatientDemographics);            
             patientAgeResult.add(value != null ? darwinUtils.convertWhitespace(value.toString()) : "NA");
         }
-        List<String> patientVitalStatusResult = new ArrayList<>();
-        for(String field : MskimpactPatientDemographics.getVitalStatusFieldNames()){
-            Object value = darwinPatientDemographics.getClass().getMethod("get"+field).invoke(darwinPatientDemographics);            
-            patientVitalStatusResult.add(value != null ? darwinUtils.convertWhitespace(value.toString()) : "NA");
-        }
+
+        List<String> patientVitalStatusResult = VitalStatusUtils.getVitalStatusResult(darwinUtils, darwinPatientDemographics);
+
         MskimpactCompositeDemographics compositeRecord = new MskimpactCompositeDemographics();
         compositeRecord.setDemographicsResult(StringUtils.join(patientDemographicsResult, "\t"));
         compositeRecord.setAgeResult(StringUtils.join(patientAgeResult, "\t"));
