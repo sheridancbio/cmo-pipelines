@@ -336,7 +336,7 @@ else
                     echo -e "The import of CRDB PDX studies completed successfully, however there was a problem restarting the webserver and so the display of the imported data may be delayed while we perform a manual restart of the webserver." >> "$EMAIL_MESSAGE_FILE"
                 else
                     echo -e "The import of CRDB PDX studies completed successfully." >> "$EMAIL_MESSAGE_FILE"
-                    EMAIL_SUBJECT="CRDB PDX cBioPortal import success"
+                    EMAIL_SUBJECT="CRDB PDX cBioPortal import updates"
                     sendSuccessMessageMskPipelineLogsSlack "CRDB PDX Pipeline Success"
                 fi
             fi
