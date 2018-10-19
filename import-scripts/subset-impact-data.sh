@@ -65,6 +65,8 @@ if [ $STUDY_ID == "genie" ]; then
     # copy the darwin genie files to the output directory with different filenames
     cp $INPUT_DIRECTORY/darwin/darwin_naaccr.txt $OUTPUT_DIRECTORY/data_clinical_supp_patient.txt
     cut -f1,2 $CLINICAL_FILENAME | grep -v "^#" > $OUTPUT_DIRECTORY/data_clinical_supp_sample.txt
+    # starting in Nov 2018 releases, all vital status information will be removed from patient file and placed in a separate file:
+    cp $INPUT_DIRECTORY/darwin/darwin_vital_status.txt $OUTPUT_DIRECTORY/vital_status.txt
 
     # run the generate clinical subset script to generate list of sample ids to subset from impact data - subset of sample ids will be written to given $SUBSET_FILENAME
     echo "Generating subset list from $INPUT_DIRECTORY/cvr/seq_date.txt using filter criteria $FILTER_CRITERIA..."
@@ -85,28 +87,11 @@ if [ $STUDY_ID == "genie" ]; then
         $PYTHON_BINARY $PORTAL_SCRIPTS_DIRECTORY/add-age-at-seq-report.py --clinical-file="$OUTPUT_DIRECTORY/data_clinical_supp_sample.txt" --seq-date-file="$INPUT_DIRECTORY/cvr/seq_date.txt" --age-file="$INPUT_DIRECTORY/darwin/darwin_age.txt" --convert-to-days="true"
         if [ $? -gt 0 ] ; then
             echo "Failed to add AGE_AT_SEQ_REPORT to $OUTPUT_DIRECTORY/data_clinical_supp_sample.txt using $INPUT_DIRECTORY/cvr/seq_date.txt. Exiting..."
-            exit 2
-        fi
-
-        # expand data_clinical_supp_patient.txt with AGE_AT_DEATH, AGE_AT_LAST_FOLLOWUP, OS_STATUS
-        echo "Expanding patient clinical data with OS_STATUS from $INPUT_DIRECTORY/data_clinical_patient.txt"
-        $PYTHON_BINARY $PORTAL_SCRIPTS_DIRECTORY/expand-clinical-data.py --study-id="genie" --clinical-file="$OUTPUT_DIRECTORY/data_clinical_supp_patient.txt" --clinical-supp-file="$INPUT_DIRECTORY/data_clinical_patient.txt" --fields="OS_STATUS" --identifier-column-name="PATIENT_ID"
-        if [ $? -gt 0 ] ; then
-            echo "Failed to add OS_STATUS to $OUTPUT_DIRECTORY/data_clinical_supp_patient.txt from $INPUT_DIRECTORY/data_clinical_patient.txt. Exiting..."
-            exit 2
-        fi
-
-        echo "Expanding patient clinical data with AGE_AT_DEATH, AGE_AT_LAST_FOLLOWUP from $INPUT_DIRECTORY/darwin/darwin_vital_status.txt"
-        $PYTHON_BINARY $PORTAL_SCRIPTS_DIRECTORY/expand-clinical-data.py --study-id="genie" --clinical-file="$OUTPUT_DIRECTORY/data_clinical_supp_patient.txt" --clinical-supp-file="$INPUT_DIRECTORY/darwin/darwin_vital_status.txt" --fields="AGE_AT_DEATH,AGE_AT_LAST_FOLLOWUP" --identifier-column-name="PATIENT_ID"
-        if [ $? -gt 0 ] ; then
-            echo "Failed to add AGE_AT_DEATH, AGE_AT_LAST_FOLLOWUP to $OUTPUT_DIRECTORY/data_clinical_supp_patient.txt from $INPUT_DIRECTORY/darwin/darwin_vital_status.txt. Exiting..."
-            exit 2
+            exit 2l
         fi
 
         # rename GENE_PANEL to SEQ_ASSAY_ID in data_clinical_supp_sample.txt
         sed -i.bak 's/GENE_PANEL/SEQ_ASSAY_ID/' $OUTPUT_DIRECTORY/data_clinical_supp_sample.txt
-        # rename OS_STATUS to VITAL_STATUS in data_clinical_supp_patient.txt
-        sed -i.bak 's/OS_STATUS/VITAL_STATUS/' $OUTPUT_DIRECTORY/data_clinical_supp_patient.txt
         # remove temp files created
         rm $OUTPUT_DIRECTORY/*.bak
 

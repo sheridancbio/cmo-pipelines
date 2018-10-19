@@ -153,7 +153,9 @@ public class MskimpactPatientDemographicsReader implements ItemStreamReader<Mski
                 $(qMskImpactPatientIcdoRecord.getAGE_AT_TM_DX_DATE_IN_DAYS()),
                 $(qMskImpactPatientDemographics.getAGE_AT_DATE_OF_DEATH_IN_DAYS()),
                 $(qMskImpactPatientDemographics.getPED_IND()),
-                $(qMskimpactPathologyDmp.getSAMPLE_ID_PATH_DMP())))
+                $(qMskimpactPathologyDmp.getSAMPLE_ID_PATH_DMP()),
+                $(qMskImpactLatestActivity.getLAST_CONTACT_YEAR()),
+                $(qMskImpactLatestActivity.getAGE_AT_LAST_CONTACT_YEAR_IN_DAYS())))
                 .from($(qMskImpactPatientDemographics))
                 .fullJoin($(qMskImpactPatientIcdoRecord))
                 .on($(qMskImpactPatientDemographics.getDMP_ID_DEMO()).eq($(qMskImpactPatientIcdoRecord.getDMP_ID_ICDO())))
