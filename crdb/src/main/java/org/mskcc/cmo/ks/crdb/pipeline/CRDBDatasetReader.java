@@ -37,6 +37,7 @@ import static com.querydsl.core.alias.Alias.alias;
 import com.querydsl.core.types.Projections;
 import com.querydsl.sql.SQLQueryFactory;
 import java.util.*;
+import org.apache.log4j.Logger;
 import org.mskcc.cmo.ks.crdb.pipeline.model.CRDBDataset;
 import org.springframework.batch.item.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -58,6 +59,7 @@ public class CRDBDatasetReader implements ItemStreamReader<CRDBDataset> {
     SQLQueryFactory crdbQueryFactory;
 
     private List<CRDBDataset> crdbDatasetResults;
+    private final Logger LOG = Logger.getLogger(CRDBDatasetReader.class);
 
     @Override
     public void open(ExecutionContext executionContext) throws ItemStreamException {
@@ -75,7 +77,7 @@ public class CRDBDatasetReader implements ItemStreamReader<CRDBDataset> {
      */
     @Transactional
     private List<CRDBDataset> getCrdbDatasetResults() {
-        System.out.println("Beginning CRDB Dataset View import...");
+        LOG.info("Beginning CRDB Dataset View import...");
 
         CRDBDataset qCRDBD = alias(CRDBDataset.class, crdbDatasetView);
         List<CRDBDataset> crdbDatasetResults = crdbQueryFactory.selectDistinct(
@@ -86,7 +88,7 @@ public class CRDBDatasetReader implements ItemStreamReader<CRDBDataset> {
                 .from($(qCRDBD))
                 .fetch();
 
-        System.out.println("Imported " + crdbDatasetResults.size() + " records from CRDB Dataset View.");
+        LOG.info("Imported " + crdbDatasetResults.size() + " records from CRDB Dataset View.");
         return crdbDatasetResults;
     }
 

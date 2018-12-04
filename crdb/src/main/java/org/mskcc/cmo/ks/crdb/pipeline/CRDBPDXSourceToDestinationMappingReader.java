@@ -37,6 +37,7 @@ import static com.querydsl.core.alias.Alias.alias;
 import com.querydsl.core.types.Projections;
 import com.querydsl.sql.SQLQueryFactory;
 import java.util.*;
+import org.apache.log4j.Logger;
 import org.mskcc.cmo.ks.crdb.pipeline.model.CRDBPDXSourceToDestinationMapping;
 import org.springframework.batch.item.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -58,6 +59,7 @@ public class CRDBPDXSourceToDestinationMappingReader implements ItemStreamReader
     SQLQueryFactory crdbQueryFactory;
 
     private List<CRDBPDXSourceToDestinationMapping> crdbPDXSourceToDestinationMappingResults;
+    private final Logger LOG = Logger.getLogger(CRDBPDXSourceToDestinationMappingReader.class);
 
     @Override
     public void open(ExecutionContext executionContext) throws ItemStreamException {
@@ -75,7 +77,7 @@ public class CRDBPDXSourceToDestinationMappingReader implements ItemStreamReader
      */
     @Transactional
     private List<CRDBPDXSourceToDestinationMapping> getCrdbPDXSourceToDestinationMappingResults() {
-        System.out.println("Beginning CRDB PDX Source To Destination Mapping View import...");
+        LOG.info("Beginning CRDB PDX Source To Destination Mapping View import...");
 
         CRDBPDXSourceToDestinationMapping qCRDBD = alias(CRDBPDXSourceToDestinationMapping.class, crdbPDXSourceToDestinationMappingView);
         List<CRDBPDXSourceToDestinationMapping> crdbPDXSourceToDestinationMappingResults = crdbQueryFactory.selectDistinct(
@@ -86,7 +88,7 @@ public class CRDBPDXSourceToDestinationMappingReader implements ItemStreamReader
                 .where($(qCRDBD.getPATIENT_ID()).ne("NA"))
                 .fetch();
 
-        System.out.println("Imported " + crdbPDXSourceToDestinationMappingResults.size() + " records from CRDB PDX Source To Destination Mapping View.");
+        LOG.info("Imported " + crdbPDXSourceToDestinationMappingResults.size() + " records from CRDB PDX Source To Destination Mapping View.");
         return crdbPDXSourceToDestinationMappingResults;
     }
 

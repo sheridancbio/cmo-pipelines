@@ -35,9 +35,9 @@ package org.mskcc.cmo.ks.crdb.pipeline;
 import static com.querydsl.core.alias.Alias.$;
 import static com.querydsl.core.alias.Alias.alias;
 import com.querydsl.core.types.Projections;
-import com.querydsl.sql.SQLExpressions;
 import com.querydsl.sql.SQLQueryFactory;
 import java.util.*;
+import org.apache.log4j.Logger;
 import org.mskcc.cmo.ks.crdb.pipeline.model.CRDBSurvey;
 import org.springframework.batch.item.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -59,6 +59,7 @@ public class CRDBSurveyReader implements ItemStreamReader<CRDBSurvey> {
     SQLQueryFactory crdbQueryFactory;
 
     private List<CRDBSurvey> crdbSurveyResults;
+    private final Logger LOG = Logger.getLogger(CRDBSurveyReader.class);
 
     @Override
     public void open(ExecutionContext executionContext) throws ItemStreamException {
@@ -76,7 +77,7 @@ public class CRDBSurveyReader implements ItemStreamReader<CRDBSurvey> {
      */
     @Transactional
     private List<CRDBSurvey> getCrdbSurveyResults() {
-        System.out.println("Beginning CRDB Survey View import...");
+        LOG.info("Beginning CRDB Survey View import...");
         CRDBSurvey qCRDBS = alias(CRDBSurvey.class, crdbSurveyView);
         List<CRDBSurvey> crdbSurveyResults = new ArrayList<>();
         List<String> dmpIdList = crdbQueryFactory.selectDistinct($(qCRDBS.getDMP_ID())).from($(qCRDBS)).fetch();
@@ -93,7 +94,7 @@ public class CRDBSurveyReader implements ItemStreamReader<CRDBSurvey> {
                     .fetchFirst();
             crdbSurveyResults.add(record);
         }
-        System.out.println("Imported " + crdbSurveyResults.size() + " records from CRDB Survey View.");
+        LOG.info("Imported " + crdbSurveyResults.size() + " records from CRDB Survey View.");
         return crdbSurveyResults;
     }
 
