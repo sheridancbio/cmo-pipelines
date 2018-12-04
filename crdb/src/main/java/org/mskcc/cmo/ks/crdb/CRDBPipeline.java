@@ -33,6 +33,7 @@
 package org.mskcc.cmo.ks.crdb;
 
 import org.apache.commons.cli.*;
+import org.apache.log4j.Logger;
 import org.mskcc.cmo.ks.crdb.pipeline.BatchConfiguration;
 import org.springframework.batch.core.*;
 import org.springframework.batch.core.launch.JobLauncher;
@@ -48,6 +49,7 @@ import org.springframework.context.ConfigurableApplicationContext;
 
 @SpringBootApplication
 public class CRDBPipeline {
+    private static final Logger LOG = Logger.getLogger(CRDBPipeline.class);
 
     private static Options getOptions(String[] args) {
         Options options = new Options();
@@ -73,17 +75,17 @@ public class CRDBPipeline {
                 .toJobParameters();
         Job crdbJob = null;
         if (pdx) {
-            System.out.println("Launching pdx job");
+            LOG.info("Launching pdx job");
             crdbJob = ctx.getBean(BatchConfiguration.CRDB_PDX_JOB, Job.class);
         } else {
-            System.out.println("Launching impact job");
+            LOG.info("Launching impact job");
             crdbJob = ctx.getBean(BatchConfiguration.CRDB_IMPACT_JOB, Job.class);
         }
         JobExecution jobExecution = jobLauncher.run(crdbJob, jobParameters);
-        System.out.println("Shutting down CRDBPipeline.");
+        LOG.info("Shutting down CRDBPipeline.");
         ctx.close();
         if (!jobExecution.getExitStatus().equals(ExitStatus.COMPLETED)) {
-            System.out.println("CRDBPipeline job failed with exit status: " + jobExecution.getExitStatus().getExitCode());
+            System.err.println("CRDBPipeline job failed with exit status: " + jobExecution.getExitStatus().getExitCode());
             System.exit(1);
         }
     }

@@ -37,6 +37,7 @@ import static com.querydsl.core.alias.Alias.alias;
 import com.querydsl.core.types.Projections;
 import com.querydsl.sql.SQLQueryFactory;
 import java.util.*;
+import org.apache.log4j.Logger;
 import org.mskcc.cmo.ks.crdb.pipeline.model.CRDBPDXTimelineDataset;
 import org.mskcc.cmo.ks.crdb.pipeline.util.CRDBUtils;
 import org.springframework.batch.item.*;
@@ -62,6 +63,7 @@ public class CRDBPDXTimelineReader implements ItemStreamReader<CRDBPDXTimelineDa
     private CRDBUtils crdbUtils;
 
     private List<CRDBPDXTimelineDataset> crdbTimelineDatasetResults;
+    private final Logger LOG = Logger.getLogger(CRDBPDXTimelineReader.class);
 
     @Override
     public void open(ExecutionContext executionContext) throws ItemStreamException {
@@ -80,7 +82,7 @@ public class CRDBPDXTimelineReader implements ItemStreamReader<CRDBPDXTimelineDa
      */
     @Transactional
     private List<CRDBPDXTimelineDataset> getCrdbTimelineDatsetResults() {
-        System.out.println("Beginning CRDB PDX Timeline Dataset View import...");
+        LOG.info("Beginning CRDB PDX Timeline Dataset View import...");
 
         CRDBPDXTimelineDataset qCRDBD = alias(CRDBPDXTimelineDataset.class, crdbPDXTimelineDatasetView);
         List<CRDBPDXTimelineDataset> crdbTimelineDatasetResults = crdbQueryFactory.selectDistinct(
@@ -97,7 +99,7 @@ public class CRDBPDXTimelineReader implements ItemStreamReader<CRDBPDXTimelineDa
                 .from($(qCRDBD))
                 .where($(qCRDBD.getPATIENT_ID()).ne("NA"))
                 .fetch();
-        System.out.println("Imported " + crdbTimelineDatasetResults.size() + " records from CRDB PDX Timeline Dataset View.");
+        LOG.info("Imported " + crdbTimelineDatasetResults.size() + " records from CRDB PDX Timeline Dataset View.");
         return crdbTimelineDatasetResults;
     }
 

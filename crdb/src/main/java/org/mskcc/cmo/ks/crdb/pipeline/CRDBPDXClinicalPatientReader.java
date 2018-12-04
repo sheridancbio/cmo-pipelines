@@ -37,6 +37,7 @@ import static com.querydsl.core.alias.Alias.alias;
 import com.querydsl.core.types.Projections;
 import com.querydsl.sql.SQLQueryFactory;
 import java.util.*;
+import org.apache.log4j.Logger;
 import org.mskcc.cmo.ks.crdb.pipeline.model.CRDBPDXClinicalPatientDataset;
 import org.springframework.batch.item.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -58,6 +59,7 @@ public class CRDBPDXClinicalPatientReader implements ItemStreamReader<CRDBPDXCli
     SQLQueryFactory crdbQueryFactory;
 
     private List<CRDBPDXClinicalPatientDataset> crdbPDXClinicalPatientDatasetResults;
+    private final Logger LOG = Logger.getLogger(CRDBPDXClinicalPatientReader.class);
 
     @Override
     public void open(ExecutionContext executionContext) throws ItemStreamException {
@@ -75,7 +77,7 @@ public class CRDBPDXClinicalPatientReader implements ItemStreamReader<CRDBPDXCli
      */
     @Transactional
     private List<CRDBPDXClinicalPatientDataset> getCrdbPDXClinicalPatientDatasetResults() {
-        System.out.println("Beginning CRDB PDX Clinical Patient Dataset View import...");
+        LOG.info("Beginning CRDB PDX Clinical Patient Dataset View import...");
 
         CRDBPDXClinicalPatientDataset qCRDBD = alias(CRDBPDXClinicalPatientDataset.class, crdbPDXClinicalPatientDatasetView);
         List<CRDBPDXClinicalPatientDataset> crdbPDXClinicalPatientDatasetResults = crdbQueryFactory.selectDistinct(
@@ -89,7 +91,7 @@ public class CRDBPDXClinicalPatientReader implements ItemStreamReader<CRDBPDXCli
                 .from($(qCRDBD))
                 .where($(qCRDBD.getPATIENT_ID()).ne("NA"))
                 .fetch();
-        System.out.println("Imported " + crdbPDXClinicalPatientDatasetResults.size() + " records from CRDB PDX Clinical Patient Dataset View.");
+        LOG.info("Imported " + crdbPDXClinicalPatientDatasetResults.size() + " records from CRDB PDX Clinical Patient Dataset View.");
         return crdbPDXClinicalPatientDatasetResults;
     }
 
