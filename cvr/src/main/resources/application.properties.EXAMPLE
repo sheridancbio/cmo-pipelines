@@ -44,3 +44,6 @@ email.subject=Failure in CVR Pipeline
 # for emails that dmp should be included on
 dmp.email.sender=
 dmp.email.recipient=
+
+# computational pathology settings
+comppath.wsv.baseurl=https://slides-dev.mskcc.org/viewer?ids=IMAGE_ID.svs@annotation=off

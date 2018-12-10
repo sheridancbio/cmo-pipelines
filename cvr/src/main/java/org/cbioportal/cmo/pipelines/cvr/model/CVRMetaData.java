@@ -45,6 +45,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import java.util.*;
 import javax.annotation.Generated;
+import org.springframework.beans.factory.annotation.Value;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Generated("org.jsonschema2pojo")
@@ -81,7 +82,10 @@ import javax.annotation.Generated;
     "tmb_tt_percentile",
     "tumor_purity",
     "tumor_type_code",
-    "tumor_type_name"
+    "tumor_type_name",
+    "consent-parta",
+    "consent-partc",
+    "slide-viewer-id"
 })
 public class CVRMetaData {
 
@@ -151,8 +155,17 @@ public class CVRMetaData {
     private String tumorTypeCode;
     @JsonProperty("tumor_type_name")
     private String tumorTypeName;
+    @JsonProperty("consent-parta")
+    private String consentPartA;
+    @JsonProperty("consent-partc")
+    private String consentPartC;
+    @JsonProperty("slide-viewer-id")
+    private String wholeSlideViewerId;
     @JsonIgnore
     private Map<String, Object> additionalProperties = new HashMap<String, Object>();
+    @JsonIgnore
+    @Value("${comppath.wsv.baseurl}")
+    private String wholeSlideViewerBaseURL;
 
     /**
     * No args constructor for use in serialization
@@ -196,13 +209,17 @@ public class CVRMetaData {
      * @param tumorPurity
      * @param tumorTypeCode
      * @param tumorTypeName
+     * @param consentPartA
+     * @param consentPartC
+     * @param wholeSlideViewerId
      */
     public CVRMetaData(Integer alys2sampleId, Integer cbxPatientId, Integer cbxSampleId, String dateTumorSequencing, String linkedMskimpactCase,
             Integer dmpAlysTaskId, String dmpAlysTaskName, String dmpPatientId, String dmpSampleId, Integer dmpSampleSoId, Integer gender,
             String genePanel, Integer isMetastasis, String legacyPatientId, String legacySampleId, String metastasisSite, String mrevComments,
             String msiComment, String msiScore, String msiType, String outsideInstitute, String primarySite, Integer retrieveStatus,
             Integer sampleCoverage, String soComments, String soStatusName, String somaticStatus,Double tmbCohortPercentile,
-            Double tmbScore, Double tmbTtPercentile, String tumorPurity, String tumorTypeCode, String tumorTypeName) {
+            Double tmbScore, Double tmbTtPercentile, String tumorPurity, String tumorTypeCode, String tumorTypeName,
+            String consentPartA, String consentPartC, String wholeSlideViewerId) {
         this.alys2sampleId = alys2sampleId;
         this.cbxPatientId = cbxPatientId;
         this.cbxSampleId = cbxSampleId;
@@ -236,6 +253,9 @@ public class CVRMetaData {
         this.tumorTypeCode = tumorTypeCode;
         this.tumorTypeName = tumorTypeName;
         this.linkedMskimpactCase = linkedMskimpactCase;
+        this.consentPartA = consentPartA;
+        this.consentPartC = consentPartC;
+        this.wholeSlideViewerId = wholeSlideViewerId;
     }
 
     @JsonProperty("somatic_status")
@@ -886,6 +906,78 @@ public class CVRMetaData {
     @JsonProperty("tumor_type_name")
     public void setTumorTypeName(String tumorTypeName) {
         this.tumorTypeName = tumorTypeName;
+    }
+
+    /**
+     *
+     * @return
+     * The consent-parta
+     */
+    @JsonProperty("consent-parta")
+    public String getConsentPartA() {
+        return consentPartA.equals("1") ? "YES" : "NO";
+    }
+
+    /**
+     *
+     * @param consentPartA
+     * The consent-parta
+     */
+    @JsonProperty("consent-parta")
+    public void setConsentPartA(String consentPartA) {
+        this.consentPartA = consentPartA;
+    }
+
+    /**
+     *
+     * @return
+     * The consent-partc
+     */
+    @JsonProperty("consent-partc")
+    public String getConsentPartC() {
+        return consentPartC.equals("1") ? "YES" : "NO";
+    }
+
+    /**
+     *
+     * @param consentPartC
+     * The consent-partc
+     */
+    @JsonProperty("consent-partc")
+    public void setConsentPartC(String consentPartC) {
+        this.consentPartC = consentPartC;
+    }
+
+    /**
+     *
+     * @return
+     * The slide-viewer-id
+     */
+    @JsonProperty("slide-viewer-id")
+    public String getWholeSlideViewerId() {
+        return wholeSlideViewerId;
+    }
+
+    /**
+     *
+     * @param wholeSlideViewerId
+     * The slide-viewer-id
+     */
+    @JsonProperty("slide-viewer-id")
+    public void setWholeSlideViewerId(String wholeSlideViewerId) {
+        this.wholeSlideViewerId = wholeSlideViewerId;
+    }
+
+    /**
+     *
+     * @return
+     * The wholeSlideViewerURL
+     */
+    public String getWholeSlideViewerURL() {
+        if (wholeSlideViewerId.length() > 0) {
+            return wholeSlideViewerBaseURL.replace("IMAGE_ID", wholeSlideViewerId);
+        }
+        return null;
     }
 
     @JsonAnyGetter

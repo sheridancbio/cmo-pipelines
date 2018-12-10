@@ -55,6 +55,7 @@ public class CVRClinicalRecord {
     private String tumorPurity;
     private String oncotreeCode;
     private String partCConsented;
+    private String partAConsented;
     private String msiComment;
     private String msiScore;
     private String msiType;
@@ -66,6 +67,7 @@ public class CVRClinicalRecord {
     private String cvrTmbCohortPercentile;
     private String cvrTmbScore;
     private String cvrTmbTtPercentile;
+    private String wholeSlideViewerURL;
 
     private final String DEFAULT_SAMPLE_CLASS = "Tumor";
 
@@ -84,7 +86,8 @@ public class CVRClinicalRecord {
         this.sampleCoverage = String.valueOf(metaData.getSampleCoverage());
         this.tumorPurity = metaData.getTumorPurity();
         this.oncotreeCode = metaData.getTumorTypeCode();
-        this.partCConsented = "NO";
+        this.partAConsented = metaData.getConsentPartA();
+        this.partCConsented = metaData.getConsentPartC();
         this.msiComment = metaData.getMsiComment();
         this.msiScore = metaData.getMsiScore();
         this.msiType = metaData.getMsiType();
@@ -96,6 +99,7 @@ public class CVRClinicalRecord {
         this.cvrTmbCohortPercentile = (metaData.getTmbCohortPercentile()!= null) ? String.valueOf(metaData.getTmbCohortPercentile()) : "NA";
         this.cvrTmbScore = (metaData.getTmbScore()!= null) ? String.valueOf(metaData.getTmbScore()) : "NA";
         this.cvrTmbTtPercentile = (metaData.getTmbTtPercentile()!= null) ? String.valueOf(metaData.getTmbTtPercentile()) : "NA";
+        this.wholeSlideViewerURL = metaData.getWholeSlideViewerURL();
     }
 
     public CVRClinicalRecord(GMLMetaData metaData) {
@@ -113,7 +117,7 @@ public class CVRClinicalRecord {
         this.sampleCoverage = String.valueOf(metaData.getSampleCoverage());
         this.tumorPurity = "";
         this.oncotreeCode = "";
-        this.partCConsented = "NO";
+        this.partCConsented = "YES";
         this.msiComment = "";
         this.msiScore = "";
         this.msiType = "";
@@ -236,6 +240,14 @@ public class CVRClinicalRecord {
         this.oncotreeCode = oncotreeCode;
     }
 
+    public String getPARTA_CONSENTED_12_245() {
+        return this.partAConsented != null ? this.partAConsented : "";
+    }
+
+    public void setPARTA_CONSENTED_12_245(String partAConsented) {
+        this.partAConsented = partAConsented;
+    }
+
     public String getPARTC_CONSENTED_12_245() {
         return this.partCConsented != null ? this.partCConsented : "";
     }
@@ -336,6 +348,10 @@ public class CVRClinicalRecord {
         this.cvrTmbTtPercentile = tmbTtPercentile;
     }
 
+    public String getCOMP_PATH_WSV_URL() {
+        return this.wholeSlideViewerURL != null ? this.wholeSlideViewerURL : "";
+    }
+
     private String resolveSampleType(Integer isMetastasis) {
         if (isMetastasis != null)
             return isMetastasis == 0 ? "Primary" : "Metastasis";
@@ -359,6 +375,7 @@ public class CVRClinicalRecord {
         fieldNames.add("SAMPLE_COVERAGE");
         fieldNames.add("TUMOR_PURITY");
         fieldNames.add("ONCOTREE_CODE");
+        fieldNames.add("PARTA_CONSENTED_12_245");
         fieldNames.add("PARTC_CONSENTED_12_245");
         fieldNames.add("MSI_COMMENT");
         fieldNames.add("MSI_SCORE");
@@ -370,6 +387,7 @@ public class CVRClinicalRecord {
         fieldNames.add("CVR_TMB_COHORT_PERCENTILE");
         fieldNames.add("CVR_TMB_SCORE");
         fieldNames.add("CVR_TMB_TT_COHORT_PERCENTILE");
+        fieldNames.add("COMP_PATH_WSV_URL");
         return fieldNames;
     }
     

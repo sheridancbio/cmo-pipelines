@@ -101,13 +101,6 @@ public class GMLClinicalDataReader implements ItemStreamReader<CVRClinicalRecord
                 CVRClinicalRecord to_add;
                 while ((to_add = reader.read()) != null) {
                     cvrSampleListUtil.updateGmlPatientSampleMap(to_add.getPATIENT_ID(), to_add.getSAMPLE_ID());
-                    
-                    for (String id : cvrSampleListUtil.getNewDmpGmlPatients()) {
-                        if (id.contains(to_add.getPATIENT_ID())) {
-                            to_add.setPARTC_CONSENTED_12_245("YES");
-                            break;
-                        }
-                    }
                     clinicalRecords.add(to_add);
                     cvrSampleListUtil.addPortalSample(to_add.getSAMPLE_ID());
                 }
