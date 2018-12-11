@@ -60,7 +60,9 @@ public class GeneDataReader implements ItemStreamReader<Gene> {
     private final String LOCUS_TAG_COLUMN = "LocusTag";
     private final String TYPE_OF_GENE_COLUMN = "type_of_gene";
     private final String CYTOBAND_COLUMN = "map_location";
-    
+    private final String MIR_GENE_NAME_PATTERN = "MIR";
+    private final String PROTEIN_CODING_GENE_TYPE = "protein-coding";
+
     private final Integer GENETIC_REGION_INDEX = 2;
     private final Integer GENETIC_INFORMATION_INDEX = 8;
     private final Integer GENE_START_POS_INDEX = 3;
@@ -138,7 +140,10 @@ public class GeneDataReader implements ItemStreamReader<Gene> {
                 if (!record.getProperty(LOCUS_TAG_COLUMN).equals("-")) {
                     synonyms.add(record.getProperty(LOCUS_TAG_COLUMN));
                 }
-                
+                // skip record if gene is a microRNA
+                if (isMirGeneRecord(hugoGeneSymbol, synonyms, type)) {
+                    continue;
+                }
                 Set<GeneAlias> aliases = new HashSet<>();
                 for (String alias : synonyms) {
                     aliases.add(new GeneAlias(entrezGeneId, alias.trim().toUpperCase()));
@@ -153,6 +158,30 @@ public class GeneDataReader implements ItemStreamReader<Gene> {
         reader.close();
         
         return geneRecords;
+    }
+
+    /**
+     * Checks whether record is a microRNA based on primary hugo symbol and gene synonyms.
+     * @param hugoGeneSymbol
+     * @param synonyms
+     * @return 
+     */
+    private boolean isMirGeneRecord(String hugoGeneSymbol, List<String> synonyms, String type) {
+        // don't filter out records where gene type is "protein-coding",
+        if (type.equalsIgnoreCase(PROTEIN_CODING_GENE_TYPE)) {
+            return Boolean.FALSE;
+        }
+        boolean isMirGene = (hugoGeneSymbol.toUpperCase().startsWith(MIR_GENE_NAME_PATTERN));
+        // check synonyms if hugo gene symbol doesn't match MIR_GENE_NAME_PATTERN
+        if (!isMirGene) {
+            for (String synonym : synonyms) {
+                if (synonym.toUpperCase().startsWith(MIR_GENE_NAME_PATTERN)) {
+                    isMirGene = Boolean.TRUE;
+                    break;
+                }
+            }
+        }
+        return isMirGene;
     }
 
     /**
