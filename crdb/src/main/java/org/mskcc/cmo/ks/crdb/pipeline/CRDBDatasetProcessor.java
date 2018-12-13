@@ -55,34 +55,8 @@ public class CRDBDatasetProcessor implements ItemProcessor<CRDBDataset, String> 
     public String process(final CRDBDataset crdbDataset) throws Exception {
         List<String> record = new ArrayList<>();
         for (String field : CRDB_DATASET_FIELD_ORDER) {
-            String value;
-            if (field.equals("PARTA_CONSENTED")) {
-                // resolve part a consented value
-                value = resolvePartAConsented(crdbDataset.getCONSENT_DATE_DAYS());
-            } else {
-                value = crdbDataset.getClass().getMethod("get" + field).invoke(crdbDataset).toString();
-            }
-            record.add(crdbUtils.convertWhitespace(value));
+            String value = crdbDataset.getClass().getMethod("get" + field).invoke(crdbDataset).toString();
         }
         return String.join("\t", record);
-    }
-
-    /**
-     * Resolves the value for the PARTA_CONSENTED field.
-     * @param consentDays
-     * @return
-     */
-    private String resolvePartAConsented(String consentDays) {
-        String value = "NO"; // default value is NO to minimize NA's in data
-
-        // if consent days is larger than 0 then set value to YES, else set to NO
-        try {
-            if (Integer.valueOf(consentDays) > 0) {
-                value = "YES";
-            }
-        }
-        catch (NumberFormatException ex) {}
-
-        return value;
     }
 }
