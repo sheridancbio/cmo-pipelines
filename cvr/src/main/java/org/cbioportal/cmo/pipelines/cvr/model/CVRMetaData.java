@@ -43,6 +43,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.mysql.jdbc.StringUtils;
 import java.util.*;
 import javax.annotation.Generated;
 import org.springframework.beans.factory.annotation.Value;
@@ -915,7 +916,10 @@ public class CVRMetaData {
      */
     @JsonProperty("consent-parta")
     public String getConsentPartA() {
-        return consentPartA.equals("1") ? "YES" : "NO";
+        if (!StringUtils.isNullOrEmpty(consentPartA)) {
+            return consentPartA.equals("1") ? "YES" : "NO";
+        }
+        return "";
     }
 
     /**
@@ -935,7 +939,10 @@ public class CVRMetaData {
      */
     @JsonProperty("consent-partc")
     public String getConsentPartC() {
-        return consentPartC.equals("1") ? "YES" : "NO";
+        if (!StringUtils.isNullOrEmpty(consentPartC)) {
+            return consentPartC.equals("1") ? "YES" : "NO";
+        }
+        return "";
     }
 
     /**
@@ -974,10 +981,10 @@ public class CVRMetaData {
      * The wholeSlideViewerURL
      */
     public String getWholeSlideViewerURL() {
-        if (wholeSlideViewerId.length() > 0) {
+        if (!StringUtils.isNullOrEmpty(wholeSlideViewerId)) {
             return wholeSlideViewerBaseURL.replace("IMAGE_ID", wholeSlideViewerId);
         }
-        return null;
+        return "";
     }
 
     @JsonAnyGetter
