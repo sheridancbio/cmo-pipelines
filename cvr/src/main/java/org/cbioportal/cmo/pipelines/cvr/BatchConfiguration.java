@@ -265,11 +265,14 @@ public class BatchConfiguration {
     @Bean
     public Step gmlClinicalStep() {
         return stepBuilderFactory.get("gmlClinicalStep")
-                .<CVRClinicalRecord, CompositeClinicalRecord> chunk(chunkInterval)
-                .reader(gmlClinicalDataReader())
-                .processor(clinicalDataProcessor())
-                .writer(allClinicalDataWriter())
+                .tasklet(gmlClinicalTasklet())
                 .build();
+    }
+
+    @Bean
+    @StepScope
+    public Tasklet gmlClinicalTasklet() {
+        return new GMLClinicalTasklet();
     }
 
     @Bean
@@ -442,12 +445,6 @@ public class BatchConfiguration {
     @StepScope
     public ItemStreamReader<AnnotatedRecord> gmlMutationReader() {
         return new GMLMutationDataReader();
-    }
-
-    @Bean
-    @StepScope
-    public ItemStreamReader<CVRClinicalRecord> gmlClinicalDataReader() {
-        return new GMLClinicalDataReader();
     }
 
     // Reader to get json data from CVR

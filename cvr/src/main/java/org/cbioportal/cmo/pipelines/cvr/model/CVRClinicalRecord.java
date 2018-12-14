@@ -352,6 +352,10 @@ public class CVRClinicalRecord {
         return this.wholeSlideViewerURL != null ? this.wholeSlideViewerURL : "";
     }
 
+    public void setCOMP_PATH_WSV_URL(String wholeSlideViewerURL) {
+        this.wholeSlideViewerURL = wholeSlideViewerURL;
+    }
+
     private String resolveSampleType(Integer isMetastasis) {
         if (isMetastasis != null)
             return isMetastasis == 0 ? "Primary" : "Metastasis";
