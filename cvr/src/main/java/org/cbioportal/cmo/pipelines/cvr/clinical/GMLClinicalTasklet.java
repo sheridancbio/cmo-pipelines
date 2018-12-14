@@ -32,25 +32,31 @@
 
 package org.cbioportal.cmo.pipelines.cvr.clinical;
 
-import org.cbioportal.cmo.pipelines.cvr.*;
-import org.cbioportal.cmo.pipelines.cvr.model.*;
+import org.cbioportal.cmo.pipelines.cvr.CVRUtilities;
+import org.cbioportal.cmo.pipelines.cvr.CvrSampleListUtil;
+import org.cbioportal.cmo.pipelines.cvr.model.CVRClinicalRecord;
 
-import java.io.*;
+import java.io.File;
 import java.util.*;
 import org.apache.log4j.Logger;
-
-import org.springframework.batch.item.*;
+import org.springframework.batch.core.StepContribution;
+import org.springframework.batch.core.scope.context.ChunkContext;
+import org.springframework.batch.core.step.tasklet.Tasklet;
+import org.springframework.batch.item.ExecutionContext;
+import org.springframework.batch.item.ItemStreamException;
 import org.springframework.batch.item.file.FlatFileItemReader;
 import org.springframework.batch.item.file.mapping.DefaultLineMapper;
 import org.springframework.batch.item.file.transform.DelimitedLineTokenizer;
-import org.springframework.beans.factory.annotation.*;
+import org.springframework.batch.repeat.RepeatStatus;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.FileSystemResource;
 
 /**
  *
- * @author jake
+ * @author ochoaa
  */
-public class GMLClinicalDataReader implements ItemStreamReader<CVRClinicalRecord> {
+public class GMLClinicalTasklet implements Tasklet {
     
     @Value("#{jobParameters[stagingDirectory]}")
     private String stagingDirectory;
@@ -63,29 +69,29 @@ public class GMLClinicalDataReader implements ItemStreamReader<CVRClinicalRecord
 
     @Autowired
     public CvrSampleListUtil cvrSampleListUtil;
-    
-    private List<CVRClinicalRecord> clinicalRecords = new ArrayList();
 
-    Logger log = Logger.getLogger(GMLClinicalDataReader.class);
+    private List<CVRClinicalRecord> clinicalRecords = new ArrayList();
+    private Logger LOG = Logger.getLogger(GMLClinicalTasklet.class);
 
     @Override
-    public void open(ExecutionContext ec) throws ItemStreamException {
-        GMLData gmlData = new GMLData();
-        // load gml cvr data from cvr_gml_data.json file
-        File cvrGmlFile =  new File(stagingDirectory, cvrUtilities.GML_FILE);
-        try {
-            gmlData = cvrUtilities.readGMLJson(cvrGmlFile);
-        } catch (IOException ex) {
-            log.error("Error reading file: " + cvrGmlFile);
-            ex.printStackTrace();
-        }
-        
+    public RepeatStatus execute(StepContribution sc, ChunkContext cc) throws Exception {
         File clinicalFile = new File(stagingDirectory, clinicalFilename);
+        try {
+            loadClinicalDataGmlPatientSampleMapping(clinicalFile);
+        } catch (Exception e) {
+            LOG.error("Error loading clinical data from: " + clinicalFile.getName());
+            throw new ItemStreamException(e);
+        }
+        return RepeatStatus.FINISHED;
+    }
+
+    private void loadClinicalDataGmlPatientSampleMapping(File clinicalFile) throws Exception {
+        // load clinical file and create patient-sample mapping
         if (!clinicalFile.exists()) {
-            log.error("Could not find clinical file: " + clinicalFile.getName());
+            throw new ItemStreamException("Could not find clinical file: " + clinicalFile.getName());
         }
         else {
-            log.info("Loading clinical data from: " + clinicalFile.getName());
+            LOG.info("Loading clinical data from: " + clinicalFile.getName());
             DelimitedLineTokenizer tokenizer = new DelimitedLineTokenizer(DelimitedLineTokenizer.DELIMITER_TAB);
             DefaultLineMapper<CVRClinicalRecord> mapper = new DefaultLineMapper<>();
             mapper.setLineTokenizer(tokenizer);
@@ -95,51 +101,32 @@ public class GMLClinicalDataReader implements ItemStreamReader<CVRClinicalRecord
             reader.setResource(new FileSystemResource(clinicalFile));
             reader.setLineMapper(mapper);
             reader.setLinesToSkip(1);
-            reader.open(ec);
-
-            try {
-                CVRClinicalRecord to_add;
-                while ((to_add = reader.read()) != null) {
-                    cvrSampleListUtil.updateGmlPatientSampleMap(to_add.getPATIENT_ID(), to_add.getSAMPLE_ID());
-                    
-                    for (String id : cvrSampleListUtil.getNewDmpGmlPatients()) {
-                        if (id.contains(to_add.getPATIENT_ID())) {
-                            to_add.setPARTC_CONSENTED_12_245("YES");
-                            break;
-                        }
-                    }
-                    clinicalRecords.add(to_add);
-                    cvrSampleListUtil.addPortalSample(to_add.getSAMPLE_ID());
-                }
-            } catch (Exception e) {
-                log.error("Error loading clinical data from: " + clinicalFile.getName());
-                throw new ItemStreamException(e);
+            reader.open(new ExecutionContext());
+            CVRClinicalRecord to_add;
+            while ((to_add = reader.read()) != null) {
+                cvrSampleListUtil.updateGmlPatientSampleMap(to_add.getPATIENT_ID(), to_add.getSAMPLE_ID());
+                clinicalRecords.add(to_add);
+                cvrSampleListUtil.addPortalSample(to_add.getSAMPLE_ID());
             }
             reader.close();
         }
         // updates portalSamplesNotInDmpList and dmpSamplesNotInPortal sample lists
         // portalSamples list is only updated if threshold check for max num samples to remove passes
-        cvrSampleListUtil.updateSampleLists();    
-    }
-    
-    @Override
-    public void update(ExecutionContext ec) throws ItemStreamException {
+        cvrSampleListUtil.updateSampleLists();
+        updateSamplesRemovedList();
     }
 
-    @Override
-    public void close() throws ItemStreamException {
-    }
-
-    @Override
-    public CVRClinicalRecord read() throws Exception {
-        while (!clinicalRecords.isEmpty()) {
-            CVRClinicalRecord record = clinicalRecords.remove(0);
+    /**
+     * Updates cvrSampleListUtil list 'samples removed'.
+     * Removed samples are those which are no longer in the DMP master list but
+     * still exist in the portal dataset. We do not want to accidentally reintroduce
+     * any samples during the GML fetch that shouldn't be in the final dataset.
+     */
+    private void updateSamplesRemovedList() {
+        for (CVRClinicalRecord record : clinicalRecords) {
             if (!cvrSampleListUtil.getPortalSamples().contains(record.getSAMPLE_ID())) {
                 cvrSampleListUtil.addSampleRemoved(record.getSAMPLE_ID());
-                continue;
             }
-            return record;
         }
-        return null;
     }
 }

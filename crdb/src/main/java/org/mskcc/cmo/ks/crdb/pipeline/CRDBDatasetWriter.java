@@ -81,8 +81,6 @@ public class CRDBDatasetWriter implements ItemStreamWriter<String> {
                 normColumns.add("PATIENT_ID");
             } else if (col.equals("COMMENTS")) {
                 normColumns.add("CRDB_BASIC_" + col);
-            } else if (col.equals("PARTA_CONSENTED")) {
-                normColumns.add("PARTA_CONSENTED_12_245");
             } else {
                 normColumns.add("CRDB_" + col);
             }

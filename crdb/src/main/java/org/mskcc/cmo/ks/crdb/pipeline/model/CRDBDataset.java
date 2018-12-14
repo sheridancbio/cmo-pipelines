@@ -47,7 +47,6 @@ public class CRDBDataset {
     private String TREATMENT_END_DAYS;
     private String OFF_STUDY_DAYS;
     private String COMMENTS;
-    private String PARTA_CONSENTED;
 
     private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
@@ -154,14 +153,6 @@ public class CRDBDataset {
         return this;
     }
 
-    public String getPARTA_CONSENTED() {
-        return PARTA_CONSENTED;
-    }
-
-    public void setPARTA_CONSENTED(String PARTA_CONSENTED) {
-        this.PARTA_CONSENTED = PARTA_CONSENTED;
-    }
-
     public Map<String, Object> getAdditionalProperties() {
         return this.additionalProperties;
     }
@@ -191,7 +182,6 @@ public class CRDBDataset {
         fieldNameList.add("TREATMENT_END_DAYS");
         fieldNameList.add("OFF_STUDY_DAYS");
         fieldNameList.add("COMMENTS");
-        fieldNameList.add("PARTA_CONSENTED");
         return Collections.unmodifiableList(fieldNameList);
     }
 }
