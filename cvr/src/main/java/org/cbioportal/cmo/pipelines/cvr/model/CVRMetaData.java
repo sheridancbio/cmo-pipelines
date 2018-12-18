@@ -917,7 +917,7 @@ public class CVRMetaData {
     @JsonProperty("consent-parta")
     public String getConsentPartA() {
         if (!StringUtils.isNullOrEmpty(consentPartA)) {
-            return consentPartA.equals("1") ? "YES" : "NO";
+            return consentPartA.equalsIgnoreCase("true") ? "YES" : "NO";
         }
         return "";
     }
@@ -940,7 +940,7 @@ public class CVRMetaData {
     @JsonProperty("consent-partc")
     public String getConsentPartC() {
         if (!StringUtils.isNullOrEmpty(consentPartC)) {
-            return consentPartC.equals("1") ? "YES" : "NO";
+            return consentPartC.equalsIgnoreCase("true") ? "YES" : "NO";
         }
         return "";
     }
