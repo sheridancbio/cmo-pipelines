@@ -164,9 +164,6 @@ public class CVRMetaData {
     private String wholeSlideViewerId;
     @JsonIgnore
     private Map<String, Object> additionalProperties = new HashMap<String, Object>();
-    @JsonIgnore
-    @Value("${comppath.wsv.baseurl}")
-    private String wholeSlideViewerBaseURL;
 
     /**
     * No args constructor for use in serialization
@@ -973,18 +970,6 @@ public class CVRMetaData {
     @JsonProperty("slide-viewer-id")
     public void setWholeSlideViewerId(String wholeSlideViewerId) {
         this.wholeSlideViewerId = wholeSlideViewerId;
-    }
-
-    /**
-     *
-     * @return
-     * The wholeSlideViewerURL
-     */
-    public String getWholeSlideViewerURL() {
-        if (!StringUtils.isNullOrEmpty(wholeSlideViewerId)) {
-            return wholeSlideViewerBaseURL.replace("IMAGE_ID", wholeSlideViewerId);
-        }
-        return "";
     }
 
     @JsonAnyGetter

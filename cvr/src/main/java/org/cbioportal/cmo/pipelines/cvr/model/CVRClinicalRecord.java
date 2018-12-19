@@ -32,6 +32,7 @@
 
 package org.cbioportal.cmo.pipelines.cvr.model;
 
+import com.mysql.jdbc.StringUtils;
 import java.util.*;
 
 /**
@@ -71,7 +72,7 @@ public class CVRClinicalRecord {
 
     private final String DEFAULT_SAMPLE_CLASS = "Tumor";
 
-    public CVRClinicalRecord(CVRMetaData metaData) {
+    public CVRClinicalRecord(CVRMetaData metaData, String wholeSlideViewerBaseURL) {
         this.sampleId = metaData.getDmpSampleId();
         this.patientId = metaData.getDmpPatientId();
         this.cancerType = metaData.getTumorTypeName();
@@ -99,7 +100,7 @@ public class CVRClinicalRecord {
         this.cvrTmbCohortPercentile = (metaData.getTmbCohortPercentile()!= null) ? String.valueOf(metaData.getTmbCohortPercentile()) : "NA";
         this.cvrTmbScore = (metaData.getTmbScore()!= null) ? String.valueOf(metaData.getTmbScore()) : "NA";
         this.cvrTmbTtPercentile = (metaData.getTmbTtPercentile()!= null) ? String.valueOf(metaData.getTmbTtPercentile()) : "NA";
-        this.wholeSlideViewerURL = metaData.getWholeSlideViewerURL();
+        this.wholeSlideViewerURL = resolveWholeSlideViewerURL(wholeSlideViewerBaseURL, metaData.getWholeSlideViewerId());
     }
 
     public CVRClinicalRecord(GMLMetaData metaData) {
@@ -361,6 +362,13 @@ public class CVRClinicalRecord {
             return isMetastasis == 0 ? "Primary" : "Metastasis";
         return "";
 
+    }
+
+    private String resolveWholeSlideViewerURL(String wholeSlideViewerBaseURL, String wholeSlideViewerId) {
+        if (!StringUtils.isNullOrEmpty(wholeSlideViewerId)) {
+            return wholeSlideViewerBaseURL.replace("IMAGE_ID", wholeSlideViewerId);
+        }
+        return "";
     }
 
     public static List<String> getFieldNames() {
