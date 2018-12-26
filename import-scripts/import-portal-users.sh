@@ -23,5 +23,7 @@ echo "### Starting import" >> "$CANCERSTUDIESLOGFILENAME"
 date >> "$CANCERSTUDIESLOGFILENAME"
 $PYTHON_BINARY $PORTAL_HOME/scripts/updateCancerStudies.py --secrets-file $PORTAL_DATA_HOME/portal-configuration/google-docs/client_secrets.json --creds-file $PORTAL_DATA_HOME/portal-configuration/google-docs/creds.dat --properties-file $PORTAL_HOME/cbio-portal-data/portal-configuration/properties/import-users/portal.properties.dashi.gdac --send-email-confirm true >> "$CANCERSTUDIESLOGFILENAME" 2>&1
 
-restartMSKTomcats
-restartSchultzTomcats
+restartMSKTomcats > /dev/null 2>&1
+restartSchultzTomcats > /dev/null 2>&1
+
+exit 0
