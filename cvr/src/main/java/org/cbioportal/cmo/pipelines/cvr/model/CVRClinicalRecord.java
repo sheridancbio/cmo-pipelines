@@ -365,7 +365,7 @@ public class CVRClinicalRecord {
     }
 
     private String resolveWholeSlideViewerURL(String wholeSlideViewerBaseURL, String wholeSlideViewerId) {
-        if (!StringUtils.isNullOrEmpty(wholeSlideViewerId)) {
+        if (!StringUtils.isNullOrEmpty(wholeSlideViewerId) && !wholeSlideViewerId.equalsIgnoreCase("NA")) {
             return wholeSlideViewerBaseURL.replace("IMAGE_ID", wholeSlideViewerId);
         }
         return "";
