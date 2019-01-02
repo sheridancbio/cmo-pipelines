@@ -97,6 +97,7 @@ DESTINATION_TO_MISSING_METAFILES_MAP = {}
 MISSING_SOURCE_STUDIES = set()
 MISSING_DESTINATION_STUDIES = set()
 SKIPPED_SOURCE_STUDIES = {}
+MULTIPLE_RESOLVED_STUDY_PATHS = {}
 
 IMPACT_STUDY_ID = 'msk_solid_heme'
 # TO TRACK WHETHER OR NOT TO IMPORT (TRIGGER FILES)
@@ -156,9 +157,39 @@ def create_destination_to_source_mapping(records, root_directory):
             destination_to_source_mapping[destination][IMPACT_STUDY_ID].append(Patient(dmp_pid, dmp_pid))
     return destination_to_source_mapping
 
+def resolve_source_study_path(source_id, data_source_directories):
+    # find all potential source paths for given source id in every cmo root directory
+    # ideally each source id will only resolve to one study path and if multiple
+    # study paths are found then the source id is non-unique to the cmo root directories
+    # and will be reported
+
+    source_paths = []
+    for data_source_directory in data_source_directories:
+        # find study by source id in root directory
+        source_path = os.path.join(data_source_directory, source_id)
+        if os.path.isdir(source_path):
+            source_paths.append(source_path)
+        # find study by assuming study id is path representation (first three underscores represent directory hierarchy)
+        split_source_id = source_id.split("_", 3)
+        source_path = os.path.join(data_source_directory, *split_source_id)
+        if os.path.isdir(source_path):
+            source_paths.append(source_path)
+    # only one path found, return value
+    if len(source_paths) == 1:
+        return source_paths[0]
+    # multiple paths found, source id is non-unique. Report error for warning file
+    if len(source_paths) > 1:
+        print "Multiple directories resolved for source id: " + source_id
+        MULTIPLE_RESOLVED_STUDY_PATHS[source_id] = source_paths
+    else:
+        print "Source directory path not found for " + source_id
+        MISSING_SOURCE_STUDIES.add(source_id)
+    return None
+
+
 # split cancer study identifer on first three underscores to create path
 # { ke_07_83_b : CMO_ROOT_DIRECTORY/ke/07/83/b }
-def create_source_id_to_path_mapping(destination_to_source_mapping, cmo_root_directory, impact_root_directory):
+def create_source_id_to_path_mapping(destination_to_source_mapping, data_source_directories, impact_root_directory):
     source_id_to_path_mapping = {}
     source_ids = set()
     for source_to_patients_map in destination_to_source_mapping.values():
@@ -169,15 +200,8 @@ def create_source_id_to_path_mapping(destination_to_source_mapping, cmo_root_dir
             source_path = os.path.join(impact_root_directory, source_id)
             source_id_to_path_mapping[source_id] = source_path
             continue;
-        # assuming source_id/cancer study id is path representation (first three underscores represent directory hierarchy)
-        split_source_id = source_id.split("_", 3)
-        source_path = os.path.join(cmo_root_directory, *split_source_id)
-	if not os.path.isdir(source_path):
-	    print "Source directory path not found for " + source_id
-            MISSING_SOURCE_STUDIES.add(source_id)
-            source_id_to_path_mapping[source_id] = None
-        else:
-            source_id_to_path_mapping[source_id] = source_path
+        # resolved source path 'None' handled by resolve_source_study_path(...)
+        source_id_to_path_mapping[source_id] = resolve_source_study_path(source_id, data_source_directories)
     return source_id_to_path_mapping
 
 def generate_python_subset_call(lib, cancer_study_id, destination_directory, source_directory, patient_list):
@@ -325,7 +349,7 @@ def touch_missing_metafiles(directory):
         metafile_name = get_matching_metafile_name(file)
         if metafile_name:
             touch_metafile_call = "touch " + os.path.join(directory, metafile_name)
-	    subprocess.call(touch_metafile_call, shell = True)
+            subprocess.call(touch_metafile_call, shell = True)
 
 def filter_temp_subset_files(destination_to_source_mapping, root_directory):
     for destination in destination_to_source_mapping:
@@ -388,6 +412,12 @@ def generate_warning_file(temp_directory, warning_file):
             warning_file.write("CRDB PDX mapping file contained the following source studies which could not be processed - most likely due to an unknown patient id in a source study:\n ")
             warning_file.write("\n ".join(set([source_study for skipped_source_studies in SKIPPED_SOURCE_STUDIES.values() for source_study in skipped_source_studies])))
             warning_file.write("\n\n")
+        if len(MULTIPLE_RESOLVED_STUDY_PATHS) > 1:
+            warning_file.write("CRDB PDX mapping file contained source studies which mapped to multiple data source directories:\n")
+            for source_id,source_paths in MULTIPLE_RESOLVED_STUDY_PATHS.items():
+                warning_file.write("\t" + source_id + ": " + ','.join(source_paths) + "\n")
+            warning_file.write("\n\n")
+
         success_code_message = []
         for destination, success_code_map in DESTINATION_STUDY_STATUS_FLAGS.items():
             if not all(success_code_map.values()):
@@ -405,7 +435,7 @@ def generate_warning_file(temp_directory, warning_file):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("-c", "--cmo-root-directory", help = "root directory to search all CMO source studies", required = True)
+    parser.add_argument("-d", "--data-source-directories", help = "comma-delimited root directories to search all data source directories", required = True)
     parser.add_argument("-f", "--fetch-directory", help = "directory where crdb-pdx data is stored", required = True)
     parser.add_argument("-i", "--impact-root-directory", help = "msk_solid_heme (combined IMPACT merge) directory", required = True)
     parser.add_argument("-l", "--lib", help = "directory containing subsetting/merge scripts (i.e cmo-pipelines/import-scripts)", required = True)
@@ -415,10 +445,10 @@ def main():
     parser.add_argument("-w", "--warning-file", help = "file to store all warnings/errors for email", required = True)
 
     args = parser.parse_args()
-    cmo_root_directory = args.cmo_root_directory
+    data_source_directories = map(str.strip, args.data_source_directories.split(','))
     crdb_fetch_directory = args.fetch_directory
     impact_root_directory = args.impact_root_directory
-    destination_to_source_mapping_filename = os.path.join(args.fetch_directory, args.mapping_file)
+    destination_to_source_mapping_filename = os.path.join(crdb_fetch_directory, args.mapping_file)
     lib = args.lib
     root_directory = args.root_directory
     temp_directory = args.temp_directory
@@ -426,7 +456,7 @@ def main():
 
     records = parse_file(destination_to_source_mapping_filename)
     destination_to_source_mapping = create_destination_to_source_mapping(records, root_directory)
-    source_id_to_path_mapping = create_source_id_to_path_mapping(destination_to_source_mapping, cmo_root_directory, impact_root_directory)
+    source_id_to_path_mapping = create_source_id_to_path_mapping(destination_to_source_mapping, data_source_directories, impact_root_directory)
     subset_genomic_files(destination_to_source_mapping, source_id_to_path_mapping, root_directory, lib)
     merge_genomic_files(destination_to_source_mapping, root_directory, lib)
     remove_merged_clinical_timeline_files(destination_to_source_mapping, root_directory)

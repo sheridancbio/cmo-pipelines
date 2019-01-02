@@ -42,6 +42,7 @@ export PIPELINES_CONFIG_HOME=$PORTAL_GIT_HOME/pipelines-configuration
 #######################
 export BIC_DATA_HOME=$PORTAL_DATA_HOME/bic-mskcc
 export PDX_DATA_HOME=$PORTAL_DATA_HOME/crdb_pdx
+export PRIVATE_DATA_HOME=$PORTAL_DATA_HOME/private
 export DMP_DATA_HOME=$PORTAL_DATA_HOME/dmp
 export FOUNDATION_DATA_HOME=$PORTAL_DATA_HOME/foundation
 export IMPACT_DATA_HOME=$PORTAL_DATA_HOME/impact
