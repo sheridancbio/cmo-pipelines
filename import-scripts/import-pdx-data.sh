@@ -148,7 +148,7 @@ fi
 
 . $PATH_TO_AUTOMATION_SCRIPT
 
-if [ -z $BIC_DATA_HOME ] | [ -z $PDX_DATA_HOME ] | [ -z $HG_BINARY ] | [ -z $PYTHON_BINARY ] ; then
+if [ -z $BIC_DATA_HOME ] | [ -z $PRIVATE_DATA_HOME ] | [ -z $PDX_DATA_HOME ] | [ -z $HG_BINARY ] | [ -z $PYTHON_BINARY ] ; then
     message="could not run import-pdx-data.sh: automation-environment.sh script must be run in order to set needed environment variables (like BIC_DATA_HOME, PDX_DATA_HOME, ...)"
     echo ${message}
     echo -e "${message}" |  mail -s "import-pdx-data failed to run." $pipelines_email_list
@@ -182,7 +182,10 @@ SUBSET_AND_MERGE_WARNINGS_FILENAME="subset_and_merge_pdx_studies_warnings.txt"
 # status flags (set to 1 when each stage is successfully completed)
 CRDB_PDX_FETCH_SUCCESS=0
 CRDB_PDX_SUBSET_AND_MERGE_SUCCESS=0
-MERCURIAL_FETCH_VIA_IMPORTER_SUCCESS=0
+BIC_MSKCC_HG_FETCH_SUCCESS=0
+PRIVATE_HG_FETCH_SUCESS=0
+PDX_HG_FETCH_SUCCESS=0
+ALL_HG_FETCH_SUCCESS=0
 IMPORT_SUCCESS=0
 TOMCAT_SERVER_RESTART_SUCCESS=0
 
@@ -212,16 +215,29 @@ $JAVA_BINARY $JAVA_IMPORTER_ARGS --fetch-data --data-source bic-mskcc --run-date
 if [ $? -gt 0 ] ; then
     sendFailureMessageMskPipelineLogsSlack "Fetch BIC-MSKCC Studies From Mercurial Failure"
 else
-    echo "fetching updates from pdx repository..."
-    $JAVA_BINARY $JAVA_IMPORTER_ARGS --fetch-data --data-source pdx --run-date latest
-    if [ $? -gt 0 ] ; then
-        sendFailureMessageMskPipelineLogsSlack "Fetch PDX Studies From Mercurial Failure"
-    else
-        MERCURIAL_FETCH_VIA_IMPORTER_SUCCESS=1
-    fi
+    BIC_MSKCC_HG_FETCH_SUCCESS=1
 fi
 
-if [ $MERCURIAL_FETCH_VIA_IMPORTER_SUCCESS -ne 0 ] ; then
+echo "fetching updates from private repository..."
+$JAVA_BINARY $JAVA_IMPORTER_ARGS --fetch-data --data-source private --run-date latest
+if [ $? -gt 0 ] ; then
+    sendFailureMessageMskPipelineLogsSlack "Fetch Private Studies From Mercurial Failure"
+else
+    PRIVATE_HG_FETCH_SUCESS=1
+fi
+
+echo "fetching updates from pdx repository..."
+$JAVA_BINARY $JAVA_IMPORTER_ARGS --fetch-data --data-source pdx --run-date latest
+if [ $? -gt 0 ] ; then
+    sendFailureMessageMskPipelineLogsSlack "Fetch PDX Studies From Mercurial Failure"
+else
+    PDX_HG_FETCH_SUCCESS=1
+fi
+
+
+if [[ $BIC_MSKCC_HG_FETCH_SUCCESS -eq 1 && $PRIVATE_HG_FETCH_SUCESS -eq 1 && $PDX_HG_FETCH_SUCCESS -eq 1 ]] ; then
+    # udpate status for email
+    ALL_HG_FETCH_SUCCESS=1
     echo "fetching pdx data fom crdb"
     $JAVA_BINARY $JAVA_CRDB_FETCHER_ARGS --pdx --directory $CRDB_FETCHER_PDX_HOME
     if [ $? -ne 0 ] ; then
@@ -242,7 +258,7 @@ fi
 if [ $CRDB_PDX_FETCH_SUCCESS -ne 0 ] ; then
     mapping_filename="source_to_destination_mappings.txt"
     scripts_directory="$PORTAL_HOME/scripts"
-    $PYTHON_BINARY $PORTAL_HOME/scripts/subset-and-merge-crdb-pdx-studies.py --mapping-file $mapping_filename --root-directory $PDX_DATA_HOME --lib $scripts_directory --cmo-root-directory $BIC_DATA_HOME --impact-root-directory $DMP_DATA_HOME --fetch-directory $CRDB_FETCHER_PDX_HOME --temp-directory $CRDB_PDX_TMPDIR --warning-file $SUBSET_AND_MERGE_WARNINGS_FILENAME
+    $PYTHON_BINARY $PORTAL_HOME/scripts/subset-and-merge-crdb-pdx-studies.py --mapping-file $mapping_filename --root-directory $PDX_DATA_HOME --lib $scripts_directory --data-source-directories $BIC_DATA_HOME,$PRIVATE_DATA_HOME --impact-root-directory $DMP_DATA_HOME --fetch-directory $CRDB_FETCHER_PDX_HOME --temp-directory $CRDB_PDX_TMPDIR --warning-file $SUBSET_AND_MERGE_WARNINGS_FILENAME
     if [ $? -ne 0 ] ; then
         echo "error: subset-and-merge-crdb-pdx-studies.py exited with non zero status"
         sendFailureMessageMskPipelineLogsSlack "CRDB PDX Subset-And-Merge Script Failure"
@@ -320,7 +336,7 @@ echo "sending notification email.."
 EMAIL_MESSAGE_FILE="$CRDB_PDX_TMPDIR/pdx_summary_email_body.txt"
 EMAIL_SUBJECT="CRDB PDX cBioPortal import failure"
 rm -f $EMAIL_MESSAGE_FILE
-if [ $MERCURIAL_FETCH_VIA_IMPORTER_SUCCESS -eq 0 ] ; then
+if [ $ALL_HG_FETCH_SUCCESS -eq 0 ] ; then
     echo -e "The import of CRDB PDX studies did not occur today due to a failure to update the mercurial repositories used to hold study data." >> "$EMAIL_MESSAGE_FILE"
 else
     if [ $CRDB_PDX_FETCH_SUCCESS -eq 0 ] ; then
@@ -364,6 +380,6 @@ cat "$EMAIL_MESSAGE_FILE"
 cat "$EMAIL_MESSAGE_FILE" | mail -s "$EMAIL_SUBJECT" $pdx_email_list
 
 echo "Cleaning up any untracked files from MSK-PDX import..."
-bash $PORTAL_HOME/scripts/datasource-repo-cleanup.sh $PORTAL_DATA_HOME/bic-mskcc $PORTAL_DATA_HOME/crdb_pdx
+bash $PORTAL_HOME/scripts/datasource-repo-cleanup.sh $PORTAL_DATA_HOME/bic-mskcc $PORTAL_DATA_HOME/private $PORTAL_DATA_HOME/crdb_pdx
 
 exit 0
