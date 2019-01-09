@@ -48,7 +48,13 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.annotation.DirtiesContext.*;
+import org.springframework.test.context.TestPropertySource;
 
+@TestPropertySource(
+    properties = { "redcap.batch.size=1"
+    },
+    inheritLocations = false
+)
 @ContextConfiguration(classes=ClinicalDataReaderTestConfiguration.class)
 @RunWith(SpringJUnit4ClassRunner.class)
 @DirtiesContext(classMode = ClassMode.AFTER_EACH_TEST_METHOD)
