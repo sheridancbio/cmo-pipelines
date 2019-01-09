@@ -10,6 +10,8 @@ email_list="cbioportal-pipelines@cbio.mskcc.org"
 USERSDASHILOGFILENAME="$PORTAL_HOME/logs/import-user-dashi-gdac.log"
 USERSDASHI2LOGFILENAME="$PORTAL_HOME/logs/import-user-dashi2.log"
 CANCERSTUDIESLOGFILENAME="$PORTAL_HOME/logs/update-studies-dashi-gdac.log"
+LDAPLOGFILENAME="$PORTAL_HOME/logs/purge-deactivated-ldap-users.log"
+LDAPTMPDIRECTORY="$PORTAL_HOME/tmp/ldap"
 
 echo "### Starting import" >> "$USERSDASHILOGFILENAME"
 date >> "$USERSDASHILOGFILENAME"
@@ -22,6 +24,10 @@ $PYTHON_BINARY $PORTAL_HOME/scripts/importUsers.py --port 3306 --secrets-file $P
 echo "### Starting import" >> "$CANCERSTUDIESLOGFILENAME"
 date >> "$CANCERSTUDIESLOGFILENAME"
 $PYTHON_BINARY $PORTAL_HOME/scripts/updateCancerStudies.py --secrets-file $PORTAL_DATA_HOME/portal-configuration/google-docs/client_secrets.json --creds-file $PORTAL_DATA_HOME/portal-configuration/google-docs/creds.dat --properties-file $PORTAL_HOME/cbio-portal-data/portal-configuration/properties/import-users/portal.properties.dashi.gdac --send-email-confirm true >> "$CANCERSTUDIESLOGFILENAME" 2>&1
+
+echo "### Removing deactivated LDAP users from Google spreadsheet and database" >> "$LDAPLOGFILENAME"
+date >> "$LDAPLOGFILENAME"
+$PYTHON_BINARY $PORTAL_HOME/scripts/purge_deactivated_ldap_users.py --secrets-file $PORTAL_DATA_HOME/portal-configuration/google-docs/client_secrets.json --creds-file $PORTAL_DATA_HOME/portal-configuration/google-docs/creds.dat  --properties-file $PORTAL_HOME/cbio-portal-data/portal-configuration/properties/import-users/portal.properties.dashi.gdac.ldap --tmp-directory $LDAPTMPDIRECTORY >> "$LDAPLOGFILENAME" 2>&1
 
 restartMSKTomcats > /dev/null 2>&1
 restartSchultzTomcats > /dev/null 2>&1
