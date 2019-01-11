@@ -9,6 +9,8 @@ redcap_username=
 redcap_password=
 redcap_login_hidden_input_name=
 
+# batch size for redcap API requests
+redcap.batch.size=10000
 # RedCap mapping token for ID_MAPPING - any tables that we want to access need to be in this project
 mapping_token=
 

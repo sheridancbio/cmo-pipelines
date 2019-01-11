@@ -104,7 +104,7 @@ def export_redcap_projects(fetchers_to_test, fetched_file_to_redcap_file_mapping
     print "Done exporting redcap projects"
 
 def crdb_fetch(lib, fetch_directory):
-    return "java -jar " + os.path.join(lib, "crdb_fetcher.jar") + " -stage " + fetch_directory
+    return "java -jar " + os.path.join(lib, "crdb_fetcher.jar") + " -d " + fetch_directory
 
 # darwin fetch currently does not work because jenkins machine cannot access darwin
 def darwin_fetch(lib, fetch_directory):
