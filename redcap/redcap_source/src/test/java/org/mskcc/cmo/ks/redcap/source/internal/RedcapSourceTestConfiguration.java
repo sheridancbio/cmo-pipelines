@@ -64,10 +64,10 @@ public class RedcapSourceTestConfiguration {
     public static final String RECORD_ID_NOT_AS_RECORD_NAME_FIELD_PROJECT_TOKEN = "RecordIdNotAsRecordNameFieldProjectToken";
     public static final String RECORD_ID_AS_RECORD_NAME_FIELD_PROJECT_TOKEN = "RecordIdAsRecordNameFieldProjectToken";
     public static final String RECORD_ID_NOT_PRESENT_PROJECT_TOKEN = "RecordIdNotPresentProjectToken";
-    public static Set<String> recordsPassedToRedcapSessionManagerForDeletion = null;
-    public static String recordsPassedToRedcapSessionManagerForImport = null;
+    public static Set<String> recordsPassedToRedcapSessionManagerForDeletion = new HashSet<>();
+    public static Set<String> recordsPassedToRedcapSessionManagerForImport = new HashSet<>();
 
-    public String getRecordsPassedToRedcapSessionManagerForUpload() {
+    public Set<String> getRecordsPassedToRedcapSessionManagerForUpload() {
         return recordsPassedToRedcapSessionManagerForImport;
     }
 
@@ -76,8 +76,8 @@ public class RedcapSourceTestConfiguration {
     }
 
     public void resetRedcapSessionManagerHistory() {
-        recordsPassedToRedcapSessionManagerForImport = null;
-        recordsPassedToRedcapSessionManagerForDeletion = null;
+        recordsPassedToRedcapSessionManagerForImport.clear();
+        recordsPassedToRedcapSessionManagerForDeletion.clear();
     }
 
     @Bean
@@ -123,7 +123,7 @@ public class RedcapSourceTestConfiguration {
             public Void answer(InvocationOnMock deleteRedcapProjectDataInvocation) {
                 String projectToken = deleteRedcapProjectDataInvocation.getArgument(0);
                 Set<String> recordNameSetForDeletion = deleteRedcapProjectDataInvocation.getArgument(1);
-                recordsPassedToRedcapSessionManagerForDeletion = new HashSet<String>(recordNameSetForDeletion);
+                recordsPassedToRedcapSessionManagerForDeletion.addAll(recordNameSetForDeletion);
                 return null;
             }
         };
@@ -131,7 +131,7 @@ public class RedcapSourceTestConfiguration {
             public Void answer(InvocationOnMock importRedcapProjectDataInvocation) {
                 String projectToken = (String)importRedcapProjectDataInvocation.getArguments()[0];
                 String formattedRecordsToImport = (String)importRedcapProjectDataInvocation.getArguments()[1];
-                recordsPassedToRedcapSessionManagerForImport = formattedRecordsToImport;
+                recordsPassedToRedcapSessionManagerForImport.add(formattedRecordsToImport);
                 return null;
             }
         };

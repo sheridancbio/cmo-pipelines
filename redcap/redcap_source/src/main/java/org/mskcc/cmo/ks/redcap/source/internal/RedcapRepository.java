@@ -40,6 +40,7 @@ import org.mskcc.cmo.ks.redcap.models.RedcapProjectAttribute;
 import org.mskcc.cmo.ks.redcap.util.ValueNormalizer;
 import org.springframework.beans.factory.annotation.*;
 import org.springframework.stereotype.Repository;
+import java.lang.*;
 
 @Repository
 public class RedcapRepository {
@@ -59,6 +60,9 @@ public class RedcapRepository {
 
     @Autowired
     private ValueNormalizer valueNormalizer;
+
+    @Value("${redcap.batch.size:10000}")
+    private int redcapBatchSize;
 
     private final Logger log = Logger.getLogger(RedcapRepository.class);
 
@@ -224,8 +228,33 @@ public class RedcapRepository {
             }
         }
         if (recordNamesToDelete.size() > 0) {
-            redcapSessionManager.deleteRedcapProjectData(projectToken, recordNamesToDelete);
+            int numberOfBatchedDeletions = (int)Math.ceil(recordNamesToDelete.size()/(double)redcapBatchSize);
+            if (numberOfBatchedDeletions > 1) {
+                log.warn(recordNamesToDelete.size() + " record deletions exceed redcapBatchSize (" + redcapBatchSize + "), requests will be split into " + numberOfBatchedDeletions + " batches.");
+            }
+            //  batch delete records
+            int batchNum = 1;
+            while (batchNum <= numberOfBatchedDeletions) {
+                // call function to update batch record names set and record names to delete set
+                Set<String> batchRecordNamesToDelete = generateBatchSetOfRecordsFromSet(recordNamesToDelete);
+                redcapSessionManager.deleteRedcapProjectData(projectToken, batchRecordNamesToDelete);
+                batchNum++;
+            }
         }
+    }
+
+    /**
+     * Returns batch set of records from reference record set.
+     * @param referenceRecordNamesSet
+     * @param batchRecordNamesSet
+     */
+    private Set<String> generateBatchSetOfRecordsFromSet(Set<String> recordNamesToDelete) {
+        Integer upperLimit = (recordNamesToDelete.size() > redcapBatchSize) ? redcapBatchSize : recordNamesToDelete.size();
+        Set<String> batchRecordNamesSet = new HashSet<>(Arrays.asList(
+                Arrays.copyOfRange((String[]) recordNamesToDelete.toArray(new String[recordNamesToDelete.size()]), 0, upperLimit)
+        ));
+        recordNamesToDelete.removeAll(batchRecordNamesSet);
+        return batchRecordNamesSet;
     }
 
     private void importNewOrModifiedRecordsToProject(String projectToken, boolean recordNameFieldIsRecordId, List<String> fileAttributeNameList, List<String> redcapAttributeNameList, List<String> recordsToImport) {
@@ -239,8 +268,30 @@ public class RedcapRepository {
         }
         String orderedHeaderCSV = String.join(",", headerFieldsForImports);
         List<String> recordsToImportCSV = valueNormalizer.convertTSVtoCSV(recordsToImport, true);
-        String formattedRecordsToImport = "\n" + orderedHeaderCSV + "\n" +  String.join("\n",recordsToImportCSV.toArray(new String[0])) + "\n";
-        redcapSessionManager.importClinicalData(projectToken, formattedRecordsToImport);
+        int numberOfBatchedImports = (int)Math.ceil(recordsToImportCSV.size()/(double)redcapBatchSize);
+        if (numberOfBatchedImports > 1) {
+            log.warn(recordsToImportCSV.size() + " record insertions exceed redcapBatchSize (" + redcapBatchSize + "), requests will be split into " + numberOfBatchedImports + " batches.");
+        }
+        // batch import records
+        int batchNum = 1;
+        while (batchNum <= numberOfBatchedImports) {
+            String formattedRecordsToImport = getFormattedRecordsToImport(orderedHeaderCSV, recordsToImportCSV);
+            redcapSessionManager.importClinicalData(projectToken, formattedRecordsToImport);
+            batchNum++;
+        }
+    }
+
+    /**
+     * Returns formatted string of records to import.
+     * @param orderedHeaderCSV
+     * @param recordsToImportCSV
+     * @return
+     */
+    private String getFormattedRecordsToImport(String orderedHeaderCSV, List<String> recordsToImportCSV) {
+        Integer upperLimit = (recordsToImportCSV.size() > redcapBatchSize) ? redcapBatchSize : recordsToImportCSV.size();
+        List<String> batchedRecordsToImport = Arrays.asList(Arrays.copyOfRange((String[]) recordsToImportCSV.toArray(new String[recordsToImportCSV.size()]), 0, upperLimit));
+        recordsToImportCSV.removeAll(batchedRecordsToImport);
+        return "\n" + orderedHeaderCSV + "\n" + String.join("\n", batchedRecordsToImport) + "\n";
     }
 
     private void addRecordIdColumnIfMissingInFileAndPresentInProject(List<String> recordsToImport, int nextAvailableAutonumberedRecordName) {

@@ -43,7 +43,13 @@ import org.mskcc.cmo.ks.redcap.source.internal.RedcapSourceTestConfiguration;
 import org.springframework.beans.factory.annotation.*;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.TestPropertySource;
 
+@TestPropertySource(
+    properties = { "redcap.batch.size=5"
+    },
+    inheritLocations = false
+)
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes=RedcapSourceTestConfiguration.class)
 public class ClinicalDataSourceTest {

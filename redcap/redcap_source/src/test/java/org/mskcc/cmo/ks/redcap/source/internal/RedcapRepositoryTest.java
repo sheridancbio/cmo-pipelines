@@ -43,7 +43,13 @@ import org.mskcc.cmo.ks.redcap.source.internal.RedcapSourceTestConfiguration;
 import org.springframework.beans.factory.annotation.*;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.TestPropertySource;
 
+@TestPropertySource(
+    properties = { "redcap.batch.size=2"
+    },
+    inheritLocations = false
+)
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes=RedcapSourceTestConfiguration.class)
 public class RedcapRepositoryTest {
@@ -121,21 +127,24 @@ public class RedcapRepositoryTest {
         List<String> variedFileForImport = createVariedFileForImport();
         List<String> newDuplicateFileForImport = createNewDuplicateFileForImport();
         List<String> existingDuplicateFileForImport = createExistingDuplicateFileForImport();
+        List<String> excessRecordFileForImport = createExcessRecordFileForImport();
 
-        String expectedRecordsForDefaultImport = null;
-        String expectedRecordsForNewImport = createExpectedRecordsForNewImport();
-        String expectedRecordsForNewImportWithRecordIdAsRecordNameField = createExpectedRecordsForNewImportWithRecordIdAsRecordNameField();
-        String expectedRecordsForChangedImport = createExpectedRecordsForChangedImport();
-        String expectedRecordsForChangedImportWithRecordIdAsRecordNameField = createExpectedRecordsForChangedImportWithRecordIdAsRecordNameField();
-        String expectedRecordsForVariedImportWithKeepExisting = createExpectedRecordsForVariedImportWithKeepExisting();
-        String expectedRecordsForNewDuplicateImport = createExpectedRecordsForNewDuplicateImport();
-        String expectedRecordsForExistingDuplicateImport = createExpectedRecordsForExistingDuplicateImport();
+        Set<String> expectedRecordsForDefaultImport = new HashSet<>();
+        Set<String> expectedRecordsForNewImport = createExpectedRecordsForNewImport();
+        Set<String> expectedRecordsForNewImportWithRecordIdAsRecordNameField = createExpectedRecordsForNewImportWithRecordIdAsRecordNameField();
+        Set<String> expectedRecordsForChangedImport = createExpectedRecordsForChangedImport();
+        Set<String> expectedRecordsForChangedImportWithRecordIdAsRecordNameField = createExpectedRecordsForChangedImportWithRecordIdAsRecordNameField();
+        Set<String> expectedRecordsForVariedImportWithKeepExisting = createExpectedRecordsForVariedImportWithKeepExisting();
+        Set<String> expectedRecordsForNewDuplicateImport = createExpectedRecordsForNewDuplicateImport();
+        Set<String> expectedRecordsForExistingDuplicateImport = createExpectedRecordsForExistingDuplicateImport();
+        Set<String> expectedRecordsForExcessImport = createExpectedRecordsForExcessImport();
 
-        Set<String> expectedSetForDefaultDeletion = null;
+        Set<String> expectedSetForDefaultDeletion = new HashSet<>();
         Set<String> expectedSetForChangedDeletion = createExpectedSetForChangedDeletion();
         Set<String> expectedSetForChangedDeletionWithRecordIdAsRecordNameField = createExpectedSetForChangedDeletionWithRecordIdAsRecordNameField();
-        Set<String> expectedSetForChangedDeletionWithKeepExisting = null; // no deletion when keeping existing
-
+        Set<String> expectedSetForChangedDeletionWithKeepExisting = new HashSet<>(); // no deletion when keeping existing
+        Set<String> expectedSetForDeletionWithExcessRecords = createExpectedSetForDeletionWithExcessRecords();
+        
         StringBuilder errorMessage = new StringBuilder();
 
         redcapSourceTestConfiguration.resetRedcapSessionManagerHistory();
@@ -174,6 +183,10 @@ public class RedcapRepositoryTest {
         redcapRepository.importClinicalData(RECORD_ID_ABSENT_TOKEN, existingDuplicateFileForImport, KEEP_EXISTING_RECORDS);
         errorMessage.append(compareRecordsForDeletionAndImport(expectedSetForChangedDeletionWithKeepExisting, expectedRecordsForExistingDuplicateImport));
 
+        redcapSourceTestConfiguration.resetRedcapSessionManagerHistory();
+        redcapRepository.importClinicalData(RECORD_ID_ABSENT_TOKEN, excessRecordFileForImport, DROP_EXISTING_RECORDS);
+        errorMessage.append(compareRecordsForDeletionAndImport(expectedSetForDeletionWithExcessRecords, expectedRecordsForExcessImport));
+        
         String errorString = errorMessage.toString();
         if (!errorString.isEmpty()) {
             Assert.fail(errorString);
@@ -266,42 +279,77 @@ public class RedcapRepositoryTest {
         return returnValue;
     }
 
-    private String createExpectedRecordsForNewImportWithRecordIdAsRecordNameField() {
-        String returnString = "\nrecord_id,patient_id,sample_id,necrosis,ethnicity"
-            + "\n4,P-0000004,P-0000004-T04,NO,Asian\n";
-        return returnString;
+    private List<String> createExcessRecordFileForImport() {
+        List<String> returnValue = new ArrayList<String>();
+        returnValue.add("PATIENT_ID	SAMPLE_ID	NECROSIS	ETHNICITY");
+        returnValue.add("P-0000005	P-0000005-T05	YES	Asian");
+        returnValue.add("P-0000006	P-0000006-T06	NO	Caucasian");
+        returnValue.add("P-0000007	P-0000007-T07	YES	Caucasian");
+        returnValue.add("P-0000008	P-0000008-T08	YES	Caucasian");
+        return returnValue;
+    }
+ 
+    private Set<String> createExpectedRecordsForNewImportWithRecordIdAsRecordNameField() {
+        Set<String> returnStringSet = new HashSet<>();
+        returnStringSet.add("\nrecord_id,patient_id,sample_id,necrosis,ethnicity"
+            + "\n4,P-0000004,P-0000004-T04,NO,Asian\n");
+        return returnStringSet;
     }
 
-    private String createExpectedRecordsForChangedImport() {
-        String returnString = "\npatient_id,sample_id,necrosis,ethnicity"
-            + "\nP-0000002,P-0000002-T02,YES,Caucasian\n";
-        return returnString;
+    private Set<String> createExpectedRecordsForChangedImport() {
+        Set<String> returnStringSet = new HashSet<>();
+        returnStringSet.add("\npatient_id,sample_id,necrosis,ethnicity"
+            + "\nP-0000002,P-0000002-T02,YES,Caucasian\n");
+        return returnStringSet;
     }
 
-    private String createExpectedRecordsForChangedImportWithRecordIdAsRecordNameField() {
-        String returnString = "\nrecord_id,patient_id,sample_id,necrosis,ethnicity"
-            + "\n4,P-0000002,P-0000002-T02,YES,Caucasian\n";
-        return returnString;
+    private Set<String> createExpectedRecordsForChangedImportWithRecordIdAsRecordNameField() {
+        Set<String> returnStringSet = new HashSet<>();
+        returnStringSet.add("\nrecord_id,patient_id,sample_id,necrosis,ethnicity"
+            + "\n4,P-0000002,P-0000002-T02,YES,Caucasian\n");
+        return returnStringSet;
     }
 
-    private String createExpectedRecordsForVariedImportWithKeepExisting() {
+    private Set<String> createExpectedRecordsForVariedImportWithKeepExisting() {
+        Set<String> returnStringSet = new HashSet<>();
         //Record P-0000001 is identical, P-0000002 is altered, P-0000003 is missing, P-0000004 is new
-        String returnString = "\npatient_id,sample_id,necrosis,ethnicity"
+        returnStringSet.add("\npatient_id,sample_id,necrosis,ethnicity"
             + "\nP-0000002,P-0000002-T02,YES,Caucasian"
-            + "\nP-0000004,P-0000004-T03,NO,Caucasian\n";
-        return returnString;
+            + "\nP-0000004,P-0000004-T03,NO,Caucasian\n");
+        return returnStringSet;
     }
 
-    private String createExpectedRecordsForNewDuplicateImport() {
-        String returnString = "\npatient_id,sample_id,necrosis,ethnicity"
-            + "\nP-0000004,P-0000004-T03,NO,Caucasian\n";
-        return returnString;
+    private Set<String> createExpectedRecordsForNewDuplicateImport() {
+        Set<String> returnStringSet = new HashSet<>();
+        returnStringSet.add("\npatient_id,sample_id,necrosis,ethnicity"
+            + "\nP-0000004,P-0000004-T03,NO,Caucasian\n");
+        return returnStringSet;
     }
 
-    private String createExpectedRecordsForExistingDuplicateImport() {
-        String returnString = "\npatient_id,sample_id,necrosis,ethnicity"
-            + "\nP-0000002,P-0000002-T02,YES,Caucasian\n";
-        return returnString;
+    private Set<String> createExpectedRecordsForExistingDuplicateImport() {
+        Set<String> returnStringSet = new HashSet<>();
+        returnStringSet.add("\npatient_id,sample_id,necrosis,ethnicity"
+            + "\nP-0000002,P-0000002-T02,YES,Caucasian\n");
+        return returnStringSet;
+    }
+
+    private Set<String> createExpectedRecordsForNewImport() {
+        Set<String> returnStringSet = new HashSet<>();
+        returnStringSet.add("\npatient_id,sample_id,necrosis,ethnicity"
+            + "\nP-0000004,P-0000004-T04,NO,Asian\n");
+        return returnStringSet;
+    }
+
+    private Set<String> createExpectedRecordsForExcessImport() {
+        Set<String> returnStringSet = new HashSet<>();
+        //Record P-0000001 is identical, P-0000002 is altered, P-0000003 is missing, P-0000004 is new
+        returnStringSet.add("\npatient_id,sample_id,necrosis,ethnicity"
+            + "\nP-0000005,P-0000005-T05,YES,Asian"
+            + "\nP-0000006,P-0000006-T06,NO,Caucasian\n");
+        returnStringSet.add("\npatient_id,sample_id,necrosis,ethnicity"
+            + "\nP-0000007,P-0000007-T07,YES,Caucasian"
+            + "\nP-0000008,P-0000008-T08,YES,Caucasian\n");
+        return returnStringSet;
     }
 
     private Set<String> createExpectedSetForChangedDeletion() {
@@ -317,10 +365,18 @@ public class RedcapRepositoryTest {
         return expectedSetForChangedDeletionWithRecordIdAsRecordNameField;
     }
 
-    private String compareRecordsForDeletionAndImport(Set<String> expectedSetForDeletion, String expectedRecordsForImport) {
+    private Set<String> createExpectedSetForDeletionWithExcessRecords() {
+        Set<String> expectedSetForDeletionWithExcessRecords = new HashSet<>();
+        expectedSetForDeletionWithExcessRecords.add("P-0000001");
+        expectedSetForDeletionWithExcessRecords.add("P-0000002");
+        expectedSetForDeletionWithExcessRecords.add("P-0000003");
+        return expectedSetForDeletionWithExcessRecords;
+    }
+
+    private String compareRecordsForDeletionAndImport(Set<String> expectedSetForDeletion, Set<String> expectedRecordsForImport) {
         StringBuilder results = new StringBuilder();
         Set<String> returnedSetForDeletion = redcapSourceTestConfiguration.getRecordsPassedToRedcapSessionManagerForDeletion();
-        String returnedRecordsForImport = redcapSourceTestConfiguration.getRecordsPassedToRedcapSessionManagerForUpload();
+        Set<String> returnedRecordsForImport = redcapSourceTestConfiguration.getRecordsPassedToRedcapSessionManagerForUpload();
 
         if (expectedSetForDeletion != null || returnedSetForDeletion != null) {
             if (returnedSetForDeletion == null || (returnedSetForDeletion != null && !returnedSetForDeletion.equals(expectedSetForDeletion))) {
@@ -345,12 +401,6 @@ public class RedcapRepositoryTest {
             }
         }
         return results.toString();
-    }
-
-    private String createExpectedRecordsForNewImport() {
-        String returnString = "\npatient_id,sample_id,necrosis,ethnicity"
-            + "\nP-0000004,P-0000004-T04,NO,Asian\n";
-        return returnString;
     }
 
     private String getDifferenceBetweenReturnedAndExpected(List<Map<String, String>> dataReturned, List<Map<String, String>> expectedReturnValue) {

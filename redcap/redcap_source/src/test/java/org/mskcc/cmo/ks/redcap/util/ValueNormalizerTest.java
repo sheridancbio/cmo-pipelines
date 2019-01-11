@@ -43,7 +43,13 @@ import org.springframework.beans.factory.annotation.*;
 import org.springframework.beans.factory.config.BeanExpressionContext;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.TestPropertySource;
 
+@TestPropertySource(
+    properties = { "redcap.batch.size=5"
+    },
+    inheritLocations = false
+)
 @ContextConfiguration(classes=ValueNormalizerTestConfiguration.class)
 @RunWith(SpringJUnit4ClassRunner.class)
 public class ValueNormalizerTest {
