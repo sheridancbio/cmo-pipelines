@@ -8,25 +8,50 @@ email_list="cbioportal-pipelines@cbio.mskcc.org"
 GENE_DATA_UPDATER_JAR_FILENAME="$PORTAL_HOME/lib/gene_data_updater.jar"
 JAVA_GENE_DATA_UPDATER_ARGS="$JAVA_PROXY_ARGS -jar $GENE_DATA_UPDATER_JAR_FILENAME"
 
-echo "Updating portal configuration repository..."
-cd $PORTAL_CONFIG_HOME; $HG_BINARY pull -u 
+function attempt_wget_file {
+    target_file_url=$1
+    wget $target_file_url
+    WGET_STATUS=$?
+    if [ $WGET_STATUS -ne "0" ] ; then
+        echo Error: download failed : wget $target_file_url
+        exit 1
+    fi
+}
 
-cd $tmp
+function attempt_gunzip_file {
+    target_file=$1
+    gunzip $target_file
+    GUNZIP_STATUS=$?
+    if [ $GUNZIP_STATUS -ne "0" ] ; then
+        echo Error: unzip failed : gunzip $target_file
+        exit 1
+    fi
+}
+
+echo "Updating portal configuration repository..."
+cd $PORTAL_CONFIG_HOME; $HG_BINARY pull -u
+
+if [ -d $tmp ] ; then
+    cd $tmp
+else
+    echo "Error:: tmp directory ($tmp) does not exist"
+    exit 1
+fi
 echo "Downloading gene data resources from NCBI..."
 export http_proxy='http://jxi2.mskcc.org:8080'
-wget ftp.ncbi.nih.gov:gene/DATA/GENE_INFO/Mammalia/Homo_sapiens.gene_info.gz
-wget ftp.ncbi.nih.gov:/genomes/Homo_sapiens/GFF/ref_GRCh38.p12_top_level.gff3.gz
-gunzip $tmp/Homo_sapiens.gene_info.gz
-gunzip $tmp/ref_GRCh38.p12_top_level.gff3.gz
+attempt_wget_file "ftp.ncbi.nih.gov:gene/DATA/GENE_INFO/Mammalia/Homo_sapiens.gene_info.gz"
+attempt_wget_file "ftp.ncbi.nih.gov:/genomes/Homo_sapiens/GFF/ref_GRCh38.p12_top_level.gff3.gz"
+attempt_gunzip_file "$tmp/Homo_sapiens.gene_info.gz"
+attempt_gunzip_file "$tmp/ref_GRCh38.p12_top_level.gff3.gz"
 echo "Finished!"
 
 sed -i 's/^#//; s/\"//' $tmp/Homo_sapiens.gene_info
-if [[ !  -f $tmp/Homo_sapiens.gene_info || $(wc -l < $tmp/Homo_sapiens.gene_info) -eq 0 ]]; then
+if [[ ! -f $tmp/Homo_sapiens.gene_info || $(wc -l < $tmp/Homo_sapiens.gene_info) -eq 0 ]]; then
     echo "Error downloading Homo_sapiens.gene_info from NCBI. Exiting..."
     exit 1
 fi
 
-if [[ !  -f $tmp/ref_GRCh38.p12_top_level.gff3 || $(wc -l < $tmp/ref_GRCh38.p12_top_level.gff3) -eq 0 ]]; then
+if [[ ! -f $tmp/ref_GRCh38.p12_top_level.gff3 || $(wc -l < $tmp/ref_GRCh38.p12_top_level.gff3) -eq 0 ]]; then
     echo "Error downloading ref_GRCh38.p12_top_level.gff3 from NCBI. Exiting..."
     exit 1
 fi
@@ -42,7 +67,7 @@ function runGeneUpdatePipeline {
 
     echo "Starting gene data update job on database: $DATABASE_NAME"
     $JAVA_BINARY $JAVA_GENE_DATA_UPDATER_ARGS -d $tmp/Homo_sapiens.gene_info -l $tmp/ref_GRCh38.p12_top_level.gff3 -n $tmp/gene-update-notification.txt
-    if [ $? -ne 0 ]; then 
+    if [ $? -ne 0 ]; then
         echo "Error updating gene data"
         echo -e "Error updating gene data." | mail -s "Gene Data Update Failure: $DATABASE_NAME" $email_list
     else
