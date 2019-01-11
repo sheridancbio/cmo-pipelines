@@ -135,8 +135,8 @@ public class CalculateAgeAtSeqReportForPatientTest {
 
     private Map<String, String> makeMockYearOldFileExpectedAge() {
         Map<String, String> map = new HashMap<>();
-        map.put("P-0000001-T01-IM5", "90");
-        map.put("P-0000002-T01-IM5", "15");
+        map.put("P-0000001-T01-IM5", ">90");
+        map.put("P-0000002-T01-IM5", "10");
         map.put("P-0000003-T01-IM5", "44");
         map.put("P-0000003-T02-IM5", "45");
         map.put("P-0000005-T01-IM5", "NA");
@@ -145,8 +145,8 @@ public class CalculateAgeAtSeqReportForPatientTest {
 
     private Map<String, String> makeMockCurrentFileExpectedAge() {
         Map<String, String> map = new HashMap<>();
-        map.put("P-0000001-T01-IM5", "90");
-        map.put("P-0000002-T01-IM5", "15");
+        map.put("P-0000001-T01-IM5", ">90");
+        map.put("P-0000002-T01-IM5", "10");
         map.put("P-0000003-T01-IM5", "43");
         map.put("P-0000003-T02-IM5", "44");
         map.put("P-0000005-T01-IM5", "NA");

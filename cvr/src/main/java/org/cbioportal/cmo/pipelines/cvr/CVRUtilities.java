@@ -418,12 +418,10 @@ public class CVRUtilities {
                 Double diffYears = (referenceCalculationDate.getTime() - cvrDateSequenced.getTime()) / 1000L / 60L / 60L / 24L / 365.2422;
                 Double ageAtSeqReport = Math.ceil(Integer.parseInt(patientAge) - diffYears);
                 if (ageAtSeqReport > 90) {
-                    ageAtSeqReport = 90D;
+                    record.setAGE_AT_SEQ_REPORT(">90");
+                } else {
+                    record.setAGE_AT_SEQ_REPORT(String.valueOf(ageAtSeqReport.intValue()));
                 }
-                if (ageAtSeqReport < 15) {
-                    ageAtSeqReport = 15D;
-                }
-                record.setAGE_AT_SEQ_REPORT(String.valueOf(ageAtSeqReport.intValue()));
             }
             else {
                 record.setAGE_AT_SEQ_REPORT("NA");
