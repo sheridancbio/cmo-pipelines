@@ -2,6 +2,9 @@
 
 # set necessary env variables with automation-environment.sh
 
+# we need this file for the tomcat restart funcions
+source $PORTAL_HOME/scripts/dmp-import-vars-functions.sh
+
 tmp=$PORTAL_HOME/tmp/import-cron-cmo-msk
 if [[ -d "$tmp" && "$tmp" != "/" ]]; then
     rm -rf "$tmp"/*
@@ -14,6 +17,8 @@ JAVA_DEBUG_ARGS="-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,addres
 JAVA_IMPORTER_ARGS="$JAVA_PROXY_ARGS $JAVA_DEBUG_ARGS -Dspring.profiles.active=dbcp -Djava.io.tmpdir=$tmp -ea -cp $IMPORTER_JAR_FILENAME org.mskcc.cbio.importer.Admin"
 msk_automation_notification_file=$(mktemp $tmp/msk-automation-portal-update-notification.$now.XXXXXX)
 ONCOTREE_VERSION_TO_USE=oncotree_candidate_release
+CANCERSTUDIESLOGFILENAME="$PORTAL_HOME/logs/update-studies-dashi-gdac.log"
+
 
 # refresh cdd and oncotree cache
 CDD_ONCOTREE_RECACHE_FAIL=0
@@ -78,24 +83,7 @@ if [[ $DB_VERSION_FAIL -eq 0 && $CMO_FETCH_FAIL -eq 0 && $PRIVATE_FETCH_FAIL -eq
     # redeploy war
     if [[ $IMPORT_FAIL -eq 0 && $num_studies_updated -gt 0 ]]; then
         echo "'$num_studies_updated' studies have been updated, requesting redeployment of msk portal war..."
-        TOMCAT_HOST_LIST=(dashi.cbio.mskcc.org dashi2.cbio.mskcc.org)
-        TOMCAT_HOST_USERNAME=cbioportal_importer
-        TOMCAT_HOST_SSH_KEY_FILE=${HOME}/.ssh/id_rsa_msk_tomcat_restarts_key
-        TOMCAT_SERVER_RESTART_PATH=/srv/data/portal-cron/msk-tomcat-restart
-        TOMCAT_SERVER_PRETTY_DISPLAY_NAME="MSK Tomcat" # e.g. Public Tomcat
-        TOMCAT_SERVER_DISPLAY_NAME="msk-tomcat" # e.g. schultz-tomcat
-        SSH_OPTIONS="-i ${TOMCAT_HOST_SSH_KEY_FILE} -o BATCHMODE=yes -o ConnectTimeout=3"
-        declare -a failed_restart_server_list
-        for server in ${TOMCAT_HOST_LIST[@]}; do
-            if ! ssh ${SSH_OPTIONS} ${TOMCAT_HOST_USERNAME}@${server} touch ${TOMCAT_SERVER_RESTART_PATH} ; then
-                failed_restart_server_list[${#failed_restart_server_list[*]}]=${server}
-            fi
-        done
-        if [ ${#failed_restart_server_list[*]} -ne 0 ] ; then
-            EMAIL_BODY="Attempt to trigger a restart of the $TOMCAT_SERVER_DISPLAY_NAME server on the following hosts failed: ${failed_restart_server_list[*]}"
-            echo -e "Sending email $EMAIL_BODY"
-            echo -e "$EMAIL_BODY" | mail -s "$TOMCAT_SERVER_PRETTY_DISPLAY_NAME Restart Error : unable to trigger restart" $email_list
-        fi
+        restartMSKTomcats
         echo "'$num_studies_updated' studies have been updated (no longer need to restart $TOMCAT_SERVER_DISPLAY_NAME server...)"
     else
         echo "No studies have been updated, skipping redeploy of msk portal war..."
@@ -116,3 +104,9 @@ $JAVA_BINARY $JAVA_IMPORTER_ARGS --send-update-notification --portal msk-automat
 if [[ -d "$tmp" && "$tmp" != "/" ]]; then
     rm -rf "$tmp"/*
 fi
+
+echo "### Starting import" >> "$CANCERSTUDIESLOGFILENAME"
+date >> "$CANCERSTUDIESLOGFILENAME"
+$PYTHON_BINARY $PORTAL_HOME/scripts/updateCancerStudies.py --secrets-file $PORTAL_DATA_HOME/portal-configuration/google-docs/client_secrets.json --creds-file $PORTAL_DATA_HOME/portal-configuration/google-docs/creds.dat --properties-file $PORTAL_HOME/cbio-portal-data/portal-configuration/properties/import-users/portal.properties.dashi.gdac --send-email-confirm true >> "$CANCERSTUDIESLOGFILENAME" 2>&1
+restartMSKTomcats > /dev/null 2>&1
+restartSchultzTomcats > /dev/null 2>&1
