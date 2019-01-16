@@ -69,6 +69,7 @@ public class CVRClinicalRecord {
     private String cvrTmbScore;
     private String cvrTmbTtPercentile;
     private String wholeSlideViewerURL;
+    private String mskSlideID;
 
     private final String DEFAULT_SAMPLE_CLASS = "Tumor";
 
@@ -101,6 +102,7 @@ public class CVRClinicalRecord {
         this.cvrTmbScore = (metaData.getTmbScore()!= null) ? String.valueOf(metaData.getTmbScore()) : "NA";
         this.cvrTmbTtPercentile = (metaData.getTmbTtPercentile()!= null) ? String.valueOf(metaData.getTmbTtPercentile()) : "NA";
         this.wholeSlideViewerURL = resolveWholeSlideViewerURL(wholeSlideViewerBaseURL, metaData.getWholeSlideViewerId());
+        this.mskSlideID = (!StringUtils.isNullOrEmpty(metaData.getWholeSlideViewerId())) ? metaData.getWholeSlideViewerId() : "NA";
     }
 
     public CVRClinicalRecord(GMLMetaData metaData) {
@@ -350,11 +352,19 @@ public class CVRClinicalRecord {
     }
 
     public String getCOMP_PATH_WSV_URL() {
-        return this.wholeSlideViewerURL != null ? this.wholeSlideViewerURL : "";
+        return this.wholeSlideViewerURL != null ? this.wholeSlideViewerURL : "NA";
     }
 
     public void setCOMP_PATH_WSV_URL(String wholeSlideViewerURL) {
         this.wholeSlideViewerURL = wholeSlideViewerURL;
+    }
+
+    public String getMSK_SLIDE_ID() {
+        return this.mskSlideID != null ? this.mskSlideID : "NA";
+    }
+
+    public void setMSK_SLIDE_ID(String mskSlideID) {
+        this.mskSlideID = mskSlideID;
     }
 
     private String resolveSampleType(Integer isMetastasis) {
@@ -368,7 +378,7 @@ public class CVRClinicalRecord {
         if (!StringUtils.isNullOrEmpty(wholeSlideViewerId) && !wholeSlideViewerId.equalsIgnoreCase("NA")) {
             return wholeSlideViewerBaseURL.replace("IMAGE_ID", wholeSlideViewerId);
         }
-        return "";
+        return "NA";
     }
 
     public static List<String> getFieldNames() {
@@ -400,6 +410,7 @@ public class CVRClinicalRecord {
         fieldNames.add("CVR_TMB_SCORE");
         fieldNames.add("CVR_TMB_TT_COHORT_PERCENTILE");
         fieldNames.add("COMP_PATH_WSV_URL");
+        fieldNames.add("MSK_SLIDE_ID");
         return fieldNames;
     }
     
