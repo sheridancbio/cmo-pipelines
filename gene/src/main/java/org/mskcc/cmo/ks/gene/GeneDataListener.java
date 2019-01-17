@@ -35,8 +35,9 @@ package org.mskcc.cmo.ks.gene;
 import java.util.*;
 import java.io.*;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.*;
+import org.hsqldb.types.Charset;
+import org.mskcc.cmo.ks.gene.model.Gene;
 import org.springframework.batch.core.*;
 import org.springframework.batch.item.ItemStreamException;
 import org.springframework.beans.factory.annotation.Value;
@@ -49,43 +50,75 @@ public class GeneDataListener implements StepExecutionListener {
 
     @Value("${DATABASE_NAME}")
     private String DATABASE_NAME;
-    
+
     private static final Log LOG = LogFactory.getLog(GeneDataListener.class);
-    
+
     @Override
     public void beforeStep(StepExecution stepExecution) {}
 
     @Override
     public ExitStatus afterStep(StepExecution stepExecution) {
         String notificationFileName = (String) stepExecution.getJobParameters().getString("notificationFileName");
-        
+
         int genesAdded = (int) stepExecution.getExecutionContext().getInt("genesAdded", 0);
         int genesUpdated = (int) stepExecution.getExecutionContext().getInt("genesUpdated", 0);
         int geneAliasesAdded = (int) stepExecution.getExecutionContext().getInt("geneAliasesAdded", 0);
-        
-        List<String> results = new ArrayList();
+
+        StringBuilder builder = new StringBuilder();
         if ((genesAdded + genesUpdated + geneAliasesAdded) == 0) {
-            results.add("Nothing to update in database: " + DATABASE_NAME);            
+            builder.append("Nothing to update in database: ")
+                    .append(DATABASE_NAME);
         }
         else {
-            results = Arrays.asList(new String[] {"Gene update results for database: " + DATABASE_NAME,
-                                    "\tNew genes added to database: " + String.valueOf(genesAdded), 
-                                    "\tTotal genes updated in database: " + String.valueOf(genesUpdated),
-                                    "\tNew aliases added to database: " + String.valueOf(geneAliasesAdded)});
+            builder.append("Gene update results for database: ")
+                    .append(DATABASE_NAME)
+                    .append("\n\tNew genes added to database: ")
+                    .append(genesAdded)
+                    .append("\n\tTotal genes updated in database: ")
+                    .append(genesUpdated)
+                    .append("\n\tNew aliases added to database: ")
+                    .append(geneAliasesAdded);
         }
-        LOG.info("\n" + StringUtils.join(results, "\n"));
-        
+        builder.append("\n\n");
+        LOG.info(builder.toString());
+
+        // report ambiguous genes from database not found in NCBI human gene info file
+        Map<Integer, Gene> ambiguousGenesToReport = (Map<Integer, Gene>) stepExecution.getExecutionContext().get("ambiguousGenesToReport");
+
+        if (!ambiguousGenesToReport.isEmpty()) {
+            LOG.info("Found " + ambiguousGenesToReport.size() + " ambiguous genes to report.");
+            builder.append("Ambiguous genes report: ")
+                    .append(ambiguousGenesToReport.size())
+                    .append(" ambiguous genes found in ")
+                    .append(DATABASE_NAME)
+                    .append("\n\nAmbiguous genes were found in the database that no longer exist in the NCBI human gene info file. ")
+                    .append("These genes may have been discontinued and replaced with new entrez gene IDs and/or hugo gene symbols. ")
+                    .append("Please verify on NCBI (https://www.ncbi.nlm.nih.gov/gene/).\n\n");
+
+            builder.append("Hugo_Gene_Symbol\tEntrez_Gene_Id\n");
+            for (Integer entrezGeneId : ambiguousGenesToReport.keySet()) {
+                builder.append(ambiguousGenesToReport.get(entrezGeneId).getHugoGeneSymbol())
+                        .append("\t")
+                        .append(entrezGeneId)
+                        .append("\n");
+            }
+        }
+        else {
+            LOG.info("No ambiguous or discontinued genes to report.");
+            builder.append("No ambiguous or likely discontinued genes to report.");
+        }
+
         if (notificationFileName != null) {
             File notificationFile = new File(notificationFileName);
             try {
-                org.apache.commons.io.FileUtils.writeLines(notificationFile, results);
+                org.apache.commons.io.FileUtils.writeStringToFile(notificationFile, builder.toString());
             } catch (IOException ex) {
                 LOG.error("Error writing results to notification file!");
                 throw new ItemStreamException(ex);
             }
         }
-        
-         return ExitStatus.COMPLETED;   
+
+        return ExitStatus.COMPLETED;
     }
-    
+
 }

@@ -46,7 +46,7 @@ import org.springframework.stereotype.Repository;
  */
 @Repository
 public class GeneDataUtil {
-    
+
     @Autowired
     private DaoGeneJdbcImpl daoGeneJdbcImpl;
 
@@ -59,5 +59,13 @@ public class GeneDataUtil {
         }
         return entrezGeneIdMap;
     }
-    
+
+    @Bean(name="ambiguousGenesMap")
+    public Map<Integer, Gene> ambiguousGenesMap() {
+        Map<Integer, Gene> ambiguousGenesMap = new HashMap<>();
+        for (Gene gene : daoGeneJdbcImpl.getAllAmbiguousGenes()) {
+            ambiguousGenesMap.put(gene.getEntrezGeneId(), gene);
+        }
+        return ambiguousGenesMap;
+    }
 }
