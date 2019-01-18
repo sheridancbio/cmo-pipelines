@@ -42,27 +42,17 @@ import java.util.*;
  * @author ochoaa
  */
 public interface DaoGeneJdbc {
-    
     Gene addGene(Gene gene);
-    
     void addGeneAliases(Gene gene);
-    
     Integer addGeneGeneticEntity();
-    
     void updateGene(Gene gene);
-        
     Gene getGene(Integer entrezGeneId);
-    
     Set<GeneAlias> getGeneAliases(Integer entrezGeneId);
-        
     List<Gene> getAllGenes();
-    
+    List<String> getAllAmbiguousHugoGeneSymbols();
+    List<Gene> getAllAmbiguousGenes();
     void deleteGeneGeneticEntity(Integer geneticEntityId);
-    
     Integer batchInsertGene(List<Gene> genes) throws Exception;
-    
     Integer batchUpdateGene(List<Gene> genes) throws Exception;
-    
     Integer batchInsertGeneAlias(List<GeneAlias> geneAliases) throws Exception;
-    
 }

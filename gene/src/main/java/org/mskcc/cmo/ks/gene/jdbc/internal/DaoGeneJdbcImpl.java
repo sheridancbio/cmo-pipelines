@@ -55,12 +55,12 @@ import org.springframework.stereotype.Repository;
  */
 @Repository
 public class DaoGeneJdbcImpl implements DaoGeneJdbc {
-    
+
     @Resource(name="namedParameterJdbcTemplate")
     private final NamedParameterJdbcTemplate namedParameterJdbcTemplate;
-    
+
     private static final Log LOG = LogFactory.getLog(DaoGeneJdbc.class);
-    
+
     @Autowired
     public DaoGeneJdbcImpl(NamedParameterJdbcTemplate namedParameterJdbcTemplate) {
         this.namedParameterJdbcTemplate = namedParameterJdbcTemplate;
@@ -69,7 +69,7 @@ public class DaoGeneJdbcImpl implements DaoGeneJdbc {
     @Override
     public Gene addGene(Gene gene) throws DataAccessException {
         String SQL = "INSERT INTO gene " +
-                "(entrez_gene_id, hugo_gene_symbol, genetic_entity_id, type, cytoband, length) " + 
+                "(entrez_gene_id, hugo_gene_symbol, genetic_entity_id, type, cytoband, length) " +
                 "VALUES(:entrez_gene_id, :hugo_gene_symbol, :genetic_entity_id, :type, :cytoband, :length)";
         MapSqlParameterSource paramMap = new MapSqlParameterSource();
         paramMap.addValue("entrez_gene_id", gene.getEntrezGeneId());
@@ -79,7 +79,7 @@ public class DaoGeneJdbcImpl implements DaoGeneJdbc {
         paramMap.addValue("cytoband", gene.getCytoband());
         paramMap.addValue("length", gene.getLength());
         namedParameterJdbcTemplate.update(SQL, paramMap);
-        
+
         // add gene aliases if not empty
         if (!gene.getAliases().isEmpty()) {
             addGeneAliases(gene);
@@ -106,25 +106,25 @@ public class DaoGeneJdbcImpl implements DaoGeneJdbc {
     public Integer addGeneGeneticEntity() throws DataAccessException {
         String SQL = "INSERT INTO genetic_entity (entity_type) VALUES(:val)";
         SqlParameterSource paramMap = new MapSqlParameterSource("val", "GENE");
-        KeyHolder keyHolder = new GeneratedKeyHolder();        
+        KeyHolder keyHolder = new GeneratedKeyHolder();
         namedParameterJdbcTemplate.update(SQL, paramMap, keyHolder, new String[] {"ID"});
         Integer geneticEntityId =Integer.valueOf( keyHolder.getKeyList().get(0).get("GENERATED_KEY").toString());
         return geneticEntityId;
     }
-    
+
     @Override
     public void updateGene(Gene gene) throws DataAccessException {
-        String SQL = "UPDATE gene " + 
-                "SET hugo_gene_symbol = :hugo_gene_symbol, type = :type, cytoband = :cytoband, length = :length " + 
+        String SQL = "UPDATE gene " +
+                "SET hugo_gene_symbol = :hugo_gene_symbol, type = :type, cytoband = :cytoband, length = :length " +
                 "WHERE entrez_gene_id = :entrez_gene_id";
         MapSqlParameterSource paramMap = new MapSqlParameterSource();
         paramMap.addValue("hugo_gene_symbol", gene.getHugoGeneSymbol());
         paramMap.addValue("type", gene.getType());
         paramMap.addValue("cytoband", gene.getCytoband());
         paramMap.addValue("length", gene.getLength());
-        paramMap.addValue("entrez_gene_id", gene.getEntrezGeneId());        
+        paramMap.addValue("entrez_gene_id", gene.getEntrezGeneId());
         namedParameterJdbcTemplate.update(SQL, paramMap);
-        
+
         // only new gene aliases should be in list, shouldn't have duplicates after executing insert into 'gene_alias' table
         if (!gene.getAliases().isEmpty()) {
             addGeneAliases(gene);
@@ -143,22 +143,22 @@ public class DaoGeneJdbcImpl implements DaoGeneJdbc {
                     "FROM gene " +
                     "WHERE gene.entrez_gene_id = :entrez_gene_id ";
         SqlParameterSource paramMap = new MapSqlParameterSource("entrez_gene_id", entrezGeneId);
-        
+
         Gene gene = null;
         try {
             gene = (Gene) namedParameterJdbcTemplate.queryForObject(SQL, paramMap, geneRowMapper());
         }
         catch (EmptyResultDataAccessException ex) {}
-        
+
         return gene;
     }
-    
+
     @Override
     public Set<GeneAlias> getGeneAliases(Integer entrezGeneId) throws DataAccessException {
         String SQL = "SELECT DISTINCT gene_alias from gene_alias WHERE entrez_gene_id = :entrez_gene_id";
         SqlParameterSource paramMap = new MapSqlParameterSource("entrez_gene_id", entrezGeneId);
         List<String> aliases = namedParameterJdbcTemplate.queryForList(SQL, paramMap, String.class);
-        
+
         Set<GeneAlias> geneAliases = new HashSet<>();
         for (String alias : aliases) {
             if (alias.contains(";")) {
@@ -180,7 +180,7 @@ public class DaoGeneJdbcImpl implements DaoGeneJdbc {
                     "gene.length AS 'gene.length' " +
                     "FROM gene " +
                     "GROUP BY gene.entrez_gene_id";
-        
+
         List<Gene> genes = new ArrayList();
         try {
             genes = (List<Gene>) namedParameterJdbcTemplate.query(SQL, geneRowMapper());
@@ -188,6 +188,35 @@ public class DaoGeneJdbcImpl implements DaoGeneJdbc {
         catch (EmptyResultDataAccessException ex) {}
 
         return genes;
+    }
+
+    @Override
+    public List<String> getAllAmbiguousHugoGeneSymbols() {
+        String SQL = "SELECT DISTINCT gene.hugo_gene_symbol FROM gene GROUP BY gene.hugo_gene_symbol HAVING COUNT(*) > 1";
+        List<String> ambiguousGeneSymbols = namedParameterJdbcTemplate.query(SQL, (ResultSet rs, int i) -> rs.getString(1));
+        return ambiguousGeneSymbols;
+    }
+
+    @Override
+    public List<Gene> getAllAmbiguousGenes() {
+        String SQL = "SELECT " +
+                    "gene.entrez_gene_id AS 'gene.entrezGeneId', " +
+                    "gene.hugo_gene_symbol AS 'gene.hugoGeneSymbol', " +
+                    "gene.genetic_entity_id AS 'gene.geneticEntityId', " +
+                    "gene.type AS 'gene.type', " +
+                    "gene.cytoband AS 'gene.cytoband', " +
+                    "gene.length AS 'gene.length' " +
+                    "FROM gene " +
+                    "WHERE gene.hugo_gene_symbol IN (:ambiguous_genes_list)";
+        SqlParameterSource paramMap = new MapSqlParameterSource("ambiguous_genes_list", getAllAmbiguousHugoGeneSymbols());
+
+        List<Gene> ambiguousGenes = new ArrayList();
+        try {
+            ambiguousGenes = (List<Gene>) namedParameterJdbcTemplate.query(SQL, paramMap, geneRowMapper());
+        }
+        catch (EmptyResultDataAccessException ex) {}
+
+        return ambiguousGenes;
     }
 
     @Override
@@ -200,7 +229,7 @@ public class DaoGeneJdbcImpl implements DaoGeneJdbc {
     @Override
     public Integer batchInsertGene(List<Gene> genes) throws Exception {
         String SQL = "INSERT INTO gene " +
-                "(entrez_gene_id, hugo_gene_symbol, genetic_entity_id, type, cytoband, length) " + 
+                "(entrez_gene_id, hugo_gene_symbol, genetic_entity_id, type, cytoband, length) " +
                 "VALUES(:entrezGeneId, :hugoGeneSymbol, :geneticEntityId, :type, :cytoband, :length)";
         int[] rows = namedParameterJdbcTemplate.batchUpdate(SQL, SqlParameterSourceUtils.createBatch(genes.toArray(new Gene[genes.size()])));
         return rows != null ? Arrays.stream(rows).sum() : 0;
@@ -217,8 +246,8 @@ public class DaoGeneJdbcImpl implements DaoGeneJdbc {
 
     @Override
     public Integer batchInsertGeneAlias(List<GeneAlias> geneAliases) throws Exception {
-        String SQL = "INSERT INTO gene_alias " + 
-                "(entrez_gene_id, gene_alias) " + 
+        String SQL = "INSERT INTO gene_alias " +
+                "(entrez_gene_id, gene_alias) " +
                 "VALUES(:entrezGeneId, :geneAlias)";
         int[] rows = namedParameterJdbcTemplate.batchUpdate(SQL, SqlParameterSourceUtils.createBatch(geneAliases.toArray(new GeneAlias[geneAliases.size()])));
         return rows != null ? Arrays.stream(rows).sum() : 0;
@@ -226,7 +255,7 @@ public class DaoGeneJdbcImpl implements DaoGeneJdbc {
 
     /**
      * Gene row mapper.
-     * @return 
+     * @return
      */
     private RowMapper geneRowMapper() {
         return (RowMapper) (ResultSet rs, int i) -> {
@@ -239,7 +268,7 @@ public class DaoGeneJdbcImpl implements DaoGeneJdbc {
                 // get the table name and the field name for the bean
                 String table = resultSetMetaData.getColumnLabel(index).split("\\.")[0];
                 String field = resultSetMetaData.getColumnLabel(index).split("\\.")[1];
-                
+
                 BeanMap beanMap = beans_by_name.get(table);
                 if (rs.getObject(index) != null) {
                     beanMap.put(field, rs.getObject(index));

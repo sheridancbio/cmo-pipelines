@@ -38,6 +38,7 @@ import org.mskcc.cmo.ks.gene.model.GeneAlias;
 import java.io.*;
 import java.util.*;
 import java.util.regex.*;
+import javax.annotation.Resource;
 import org.apache.commons.logging.*;
 
 import org.springframework.batch.item.*;
@@ -52,7 +53,7 @@ import org.springframework.core.io.FileSystemResource;
  * @author ochoaa
  */
 public class GeneDataReader implements ItemStreamReader<Gene> {
-    
+
     private final String GENE_ID_COLUMN = "GeneID";
     private final String SYMBOL_COLUMN = "Symbol";
     private final String MAIN_SYMBOL_COLUMN = "Symbol_from_nomenclature_authority"; // default to this value if not '-'
@@ -67,21 +68,24 @@ public class GeneDataReader implements ItemStreamReader<Gene> {
     private final Integer GENETIC_INFORMATION_INDEX = 8;
     private final Integer GENE_START_POS_INDEX = 3;
     private final Integer GENE_END_POS_INDEX = 4;
-    
-    
+
+
     private final Pattern ENTREZ_ID_PATTERN = Pattern.compile(".*GeneID:([0-9]*).*");
-   
+
     @Value("#{jobParameters[geneDataFileName]}")
     private String geneDataFileName;
-    
+
     @Value("#{jobParameters[geneLengthDataFileName]}")
     private String geneLengthDataFileName;
-    
+
+    @Resource(name="ambiguousGenesMap")
+    private Map<Integer, Gene> ambiguousGenesMap;
+
     private  Map<Integer, Integer> geneLengthDataMap = new HashMap<>();
     private List<Gene> geneRecords = new ArrayList();
 
     private final static Log LOG = LogFactory.getLog(GeneDataReader.class);
-    
+
     @Override
     public void open(ExecutionContext executionContext) throws ItemStreamException {
         try {
@@ -92,27 +96,29 @@ public class GeneDataReader implements ItemStreamReader<Gene> {
         }
         try {
             this.geneRecords = loadHumanGeneData();
-        } catch (FileNotFoundException | ItemStreamException ex) {
+        } catch (Exception ex) {
+            LOG.error("Error loading data from: " + geneDataFileName);
             throw new ItemStreamException(ex);
         }
+        executionContext.put("ambiguousGenesToReport", ambiguousGenesMap);
     }
 
     /**
      * Loads human gene data from Homo_sapiens.gene_info.
-     * 
+     *
      * @return List<Gene>
      * @throws FileNotFoundException
-     * @throws ItemStreamException 
+     * @throws ItemStreamException
      */
-    private List<Gene> loadHumanGeneData() throws FileNotFoundException, ItemStreamException {
-        LOG.info("Loading data from " + geneDataFileName);
+    private List<Gene> loadHumanGeneData() throws Exception {
+        LOG.info("Loading data from: " + geneDataFileName);
         File geneInfoFile = new File(geneDataFileName);
         // init line mapper and field tokenizer
         final DelimitedLineTokenizer tokenizer = new DelimitedLineTokenizer(DelimitedLineTokenizer.DELIMITER_TAB);
         DefaultLineMapper<Properties> lineMapper = new DefaultLineMapper();
         lineMapper.setLineTokenizer(tokenizer);
         lineMapper.setFieldSetMapper((FieldSet fs) -> fs.getProperties());
-        
+
         // set reader resources and load data
         FlatFileItemReader<Properties> reader = new FlatFileItemReader();
         reader.setResource(new FileSystemResource(geneInfoFile));
@@ -122,49 +128,47 @@ public class GeneDataReader implements ItemStreamReader<Gene> {
             tokenizer.setNames(line.split(DelimitedLineTokenizer.DELIMITER_TAB));
         });
         reader.open(new ExecutionContext());
-        
-        List<Gene> geneRecords = new ArrayList();
-        try {
-            Properties record;
-            while ((record = reader.read()) != null) {
-                Integer entrezGeneId = Integer.valueOf(record.getProperty(GENE_ID_COLUMN));
-                String hugoGeneSymbol = record.getProperty(MAIN_SYMBOL_COLUMN).equals("-") ? record.getProperty(SYMBOL_COLUMN) : record.getProperty(MAIN_SYMBOL_COLUMN);
-                String type = record.getProperty(TYPE_OF_GENE_COLUMN);
-                String cytoband = record.getProperty(CYTOBAND_COLUMN);
-                
-                // get synonyms from 'synonyms' column and 'locus tag' column, then construct list of GeneAlias objects
-                List<String> synonyms = new ArrayList();
-                if (!record.getProperty(SYNONYMS_COLUMN).equals("-")) {
-                    synonyms.addAll(Arrays.asList(record.getProperty(SYNONYMS_COLUMN).split("[\\|\\;]")));
-                }
-                if (!record.getProperty(LOCUS_TAG_COLUMN).equals("-")) {
-                    synonyms.add(record.getProperty(LOCUS_TAG_COLUMN));
-                }
-                // skip record if gene is a microRNA
-                if (isMirGeneRecord(hugoGeneSymbol, synonyms, type)) {
-                    continue;
-                }
-                Set<GeneAlias> aliases = new HashSet<>();
-                for (String alias : synonyms) {
-                    aliases.add(new GeneAlias(entrezGeneId, alias.trim().toUpperCase()));
-                }
-                geneRecords.add(new Gene(entrezGeneId, hugoGeneSymbol.toUpperCase(), type, cytoband, geneLengthDataMap.get(entrezGeneId), aliases));
+
+        List<Gene> geneFileRecords = new ArrayList();
+        Properties record;
+        while ((record = reader.read()) != null) {
+            Integer entrezGeneId = Integer.valueOf(record.getProperty(GENE_ID_COLUMN));
+            String hugoGeneSymbol = record.getProperty(MAIN_SYMBOL_COLUMN).equals("-") ? record.getProperty(SYMBOL_COLUMN) : record.getProperty(MAIN_SYMBOL_COLUMN);
+            String type = record.getProperty(TYPE_OF_GENE_COLUMN);
+            String cytoband = record.getProperty(CYTOBAND_COLUMN);
+
+            // get synonyms from 'synonyms' column and 'locus tag' column, then construct list of GeneAlias objects
+            List<String> synonyms = new ArrayList();
+            if (!record.getProperty(SYNONYMS_COLUMN).equals("-")) {
+                synonyms.addAll(Arrays.asList(record.getProperty(SYNONYMS_COLUMN).split("[\\|\\;]")));
             }
+            if (!record.getProperty(LOCUS_TAG_COLUMN).equals("-")) {
+                synonyms.add(record.getProperty(LOCUS_TAG_COLUMN));
+            }
+            // skip record if gene is a microRNA
+            if (isMirGeneRecord(hugoGeneSymbol, synonyms, type)) {
+                continue;
+            }
+            Set<GeneAlias> aliases = new HashSet<>();
+            for (String alias : synonyms) {
+                aliases.add(new GeneAlias(entrezGeneId, alias.trim().toUpperCase()));
+            }
+            geneFileRecords.add(new Gene(entrezGeneId, hugoGeneSymbol.toUpperCase(), type, cytoband, geneLengthDataMap.get(entrezGeneId), aliases));
+            // remove gene record from ambiguous gene map if exists (indicating that it's a valid record in NCBI gene file)
+            // remaining ambiguous genes in this map will be reported to data curation team as likely discontinued records
+            // that should be removed from the database
+            ambiguousGenesMap.remove(entrezGeneId);
         }
-        catch (Exception ex) {
-            LOG.error("Error loading data from: " + geneDataFileName);
-            throw new ItemStreamException(ex);
-        }        
         reader.close();
-        
-        return geneRecords;
+
+        return geneFileRecords;
     }
 
     /**
      * Checks whether record is a microRNA based on primary hugo symbol and gene synonyms.
      * @param hugoGeneSymbol
      * @param synonyms
-     * @return 
+     * @return
      */
     private boolean isMirGeneRecord(String hugoGeneSymbol, List<String> synonyms, String type) {
         // don't filter out records where gene type is "protein-coding",
@@ -191,17 +195,17 @@ public class GeneDataReader implements ItemStreamReader<Gene> {
      *      col 4: gene start position
      *      col 5: gene end position
      *      col 9: ';'-delimited genetic information, only the 'GeneID' (entrez gene id) will be extracted
-     *          ex: 
+     *          ex:
      *              ID=id1;Parent=rna0;Dbxref=GeneID:100287102,Genbank:NR_046018.2,HGNC:HGNC:37102;gbkey=misc_RNA;gene=DDX11L1;product=DEAD/H-box helicase 11 like 1;transcript_id=NR_046018.2
-     * 
+     *
      * The gene length is calculated by calculating the difference between the max gene position found and min gene position found.
-     * 
+     *
      * @return Map<Integer, Integer>
      * @throws FileNotFoundException
-     * @throws IOException 
+     * @throws IOException
      */
     private Map<Integer, Integer> loadGeneLengthData() throws Exception {
-        LOG.info("Loading data from " + geneLengthDataFileName);
+        LOG.info("Loading data from: " + geneLengthDataFileName);
         Map<Integer, Set<Integer>> genePositionData = new HashMap<>();
         BufferedReader buf = new BufferedReader(new FileReader(new File(geneLengthDataFileName)));
         String line;
@@ -216,7 +220,7 @@ public class GeneDataReader implements ItemStreamReader<Gene> {
             // extract entrez gene id from genetic information
             Matcher matcher = ENTREZ_ID_PATTERN.matcher(parts[GENETIC_INFORMATION_INDEX]);
             Integer entrezGeneId = matcher.find() ? Integer.valueOf(matcher.group(1)) : null;
-            
+
             // make sure entrez gene id was extracted successfully, throw exception if value couldn't be parsed
             if (entrezGeneId == null) {
                 LOG.error("Could not extract entrez gene id from row: \n\t" + line);
@@ -228,7 +232,7 @@ public class GeneDataReader implements ItemStreamReader<Gene> {
             genePositionData.put(entrezGeneId, positions);
         }
         buf.close();
-        
+
         // get the gene length by calculating the difference between the max gene position and min gene position
         Map<Integer, Integer> geneLengthDataMap = new HashMap<>();
         for (Integer entrezGeneId : genePositionData.keySet()) {
@@ -251,5 +255,5 @@ public class GeneDataReader implements ItemStreamReader<Gene> {
         }
         return null;
     }
-    
+
 }
