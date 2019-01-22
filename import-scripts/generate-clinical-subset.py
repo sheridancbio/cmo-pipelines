@@ -13,8 +13,9 @@ SUPPLEMENTAL_SAMPLE_CLINICAL_DATA = {}
 FILTERED_SAMPLE_IDS = set()
 FILTERED_PATIENT_IDS = set()
 IMPACT_SAMPLE_PATTERN = re.compile('P-\d*-T\d\d-IM\d*')
+HEME_SAMPLE_PATTERN = re.compile('P-\d*-T\d\d-IH\d*')
 
-def filter_samples_by_clinical_attributes(clinical_filename, impact_data_only):
+def filter_samples_by_clinical_attributes(clinical_filename, impact_heme_data_only):
 	""" Filters samples by clinical attribute and values. """
 	header = get_file_header(clinical_filename)
 	data_file = open(clinical_filename)
@@ -24,7 +25,7 @@ def filter_samples_by_clinical_attributes(clinical_filename, impact_data_only):
 		data = dict(zip(header, map(str.strip, line.split('\t'))))
 		if not keep_sample(data):
 			continue
-		if impact_data_only and not is_impact_sample(data['SAMPLE_ID'].strip()):
+		if impact_heme_data_only and not is_impact_heme_sample(data['SAMPLE_ID'].strip()):
 			continue
 		if 'SAMPLE_ID' in header:
 			FILTERED_SAMPLE_IDS.add(data['SAMPLE_ID'].strip())
@@ -69,7 +70,7 @@ def update_data_with_sequencing_date(study_id, clinical_filename):
 	output_file.close()
 	print >> OUTPUT_FILE, 'Input clinical data updated with sequencing date for study: ' + study_id
 
-def filter_samples_by_sequencing_date(clinical_supp_filename, sequencing_date_limit, anonymize_date, impact_data_only):
+def filter_samples_by_sequencing_date(clinical_supp_filename, sequencing_date_limit, anonymize_date, impact_heme_data_only):
 	""" Generates list of sample IDs from sequencing date file meeting the sequencing date limit criteria. """
 	seq_date_limit = datetime.strptime(sequencing_date_limit, '%Y/%m/%d %H:%M:%S')
 
@@ -84,7 +85,7 @@ def filter_samples_by_sequencing_date(clinical_supp_filename, sequencing_date_li
 			sample_id = data['DMP_ASSAY_ID'].strip()
 
 		# skip if not impact sample if only looking for impact data only
-		if impact_data_only and not is_impact_sample(sample_id):
+		if impact_heme_data_only and not is_impact_heme_sample(sample_id):
 			continue
 
 		seq_date_val = data['SEQ_DATE']
@@ -155,9 +156,9 @@ def is_valid_sequencing_date(sequencing_date_limit):
 			return False
 	return True
 
-def is_impact_sample(sample_id):
+def is_impact_heme_sample(sample_id):
 	""" Determine whether sample id is from IMPACT """
-	if IMPACT_SAMPLE_PATTERN.match(sample_id):
+	if IMPACT_SAMPLE_PATTERN.match(sample_id) or HEME_SAMPLE_PATTERN.match(sample_id):
 		return True
 	return False
 
@@ -254,18 +255,18 @@ def main():
 		anonymize_date = True
 
 	# generate subset of impact id's if study id is genie
-	impact_data_only = False
+	impact_heme_data_only = False
 	if study_id == 'genie':
-		impact_data_only = True
+		impact_heme_data_only = True
 
 	# parse the filtering criteria
 	parse_filter_criteria(filter_criteria)
 	if 'SEQ_DATE' in FILTERING_CRITERIA.keys():
 		# if no supp file provided then check clin file for
 		if not clin_supp_file and is_valid_clin_header(clin_file, True):
-			filter_samples_by_sequencing_date(clin_file, FILTERING_CRITERIA['SEQ_DATE'], anonymize_date, impact_data_only)
+			filter_samples_by_sequencing_date(clin_file, FILTERING_CRITERIA['SEQ_DATE'], anonymize_date, impact_heme_data_only)
 		elif clin_supp_file and is_valid_clin_header(clin_supp_file, True):
-			filter_samples_by_sequencing_date(clin_supp_file, FILTERING_CRITERIA['SEQ_DATE'], anonymize_date, impact_data_only)
+			filter_samples_by_sequencing_date(clin_supp_file, FILTERING_CRITERIA['SEQ_DATE'], anonymize_date, impact_heme_data_only)
 			update_data_with_sequencing_date(study_id, clin_file)
 		else:
 			if clin_supp_file:
@@ -275,9 +276,9 @@ def main():
 			sys.exit(2)
 	else:
 		if not clin_supp_file and is_valid_clin_header(clin_file, False):
-			filter_samples_by_clinical_attributes(clin_file, impact_data_only)
+			filter_samples_by_clinical_attributes(clin_file, impact_heme_data_only)
 		elif clin_supp_file and is_valid_clin_header(clin_supp_file, False):
-			filter_samples_by_clinical_attributes(clin_supp_file, impact_data_only)
+			filter_samples_by_clinical_attributes(clin_supp_file, impact_heme_data_only)
 	# generate file with subset of ids
 	generate_sample_subset_file(subset_filename)
 
