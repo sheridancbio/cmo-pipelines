@@ -313,6 +313,9 @@ def get_new_user_map(spreadsheet, worksheet_feed, current_user_map, portal_name,
                 authorities = entry.custom[AUTHORITIES_KEY].text.strip()
             else:
                 authorities = ''
+            if '\'' in google_email:
+                # skip over detection of users with apostrophe in name (temporary fix)
+                continue
             # do not add entry if this entry is a current user
             # we lowercase google account because entries added to mysql are lowercased.
             if google_email.lower() not in current_user_map and google_email != '':
