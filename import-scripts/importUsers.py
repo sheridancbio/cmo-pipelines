@@ -231,10 +231,11 @@ def insert_new_users(cursor, new_user_list):
             user_name = user.name
             if isinstance(user_name, unicode):
                 user_name = user_name.encode('utf-8')
-            cursor.execute("insert into users values('%s', '%s', '%s')" % (user.google_email.lower(), user_name, user.enabled))
+            user_email_escaped=user.google_email.lower().replace('\'', '\\\'')
+            cursor.execute("insert into users values('%s', '%s', '%s')" % (user_email_escaped, user_name, user.enabled))
             # authorities is semicolon delimited
             authorities = user.authorities
-            cursor.executemany("insert into authorities values(%s, %s)", [(user.google_email.lower(), authority) for authority in authorities])
+            cursor.executemany("insert into authorities values(%s, %s)", [(user_email_escaped, authority) for authority in authorities])
         except MySQLdb.Error, msg:
             print >> OUTPUT_FILE, msg
             print >> OUTPUT_FILE, "Removing user: %s" % user_name
@@ -313,9 +314,6 @@ def get_new_user_map(spreadsheet, worksheet_feed, current_user_map, portal_name,
                 authorities = entry.custom[AUTHORITIES_KEY].text.strip()
             else:
                 authorities = ''
-            if '\'' in google_email:
-                # skip over detection of users with apostrophe in name (temporary fix)
-                continue
             # do not add entry if this entry is a current user
             # we lowercase google account because entries added to mysql are lowercased.
             if google_email.lower() not in current_user_map and google_email != '':
