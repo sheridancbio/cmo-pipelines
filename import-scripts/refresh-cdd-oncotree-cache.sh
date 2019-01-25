@@ -60,6 +60,27 @@ function sendSuccessMessageSlackEmail {
     echo -e "$MESSAGE_BODY" | mail -s "$SUBJECT_MESSAGE" $EMAIL_LIST
 }
 
+function checkServerHttpStatusCode {
+    # CHECK SERVER STATUS
+    # (1): SERVICE_NAME:    name of service [CDD, ONCOTREE]
+    # (2): SERVER URL:      server url
+    SERVICE_NAME=$1
+    SERVER_URL=$2
+
+    echo -e "\nChecking $SERVICE_NAME server HTTP status..."
+    HTTP_STATUS_CODE=$(curl -s -o /dev/null -I -w "%{http_code}" $SERVER_URL/)
+    # if empty string then set to default value (0)
+    if [ -z "$HTTP_STATUS_CODE" ] ; then
+        echo -e "\nERROR, checkServerHttpStatusCode(): Error while executing HTTP status check curl command. Setting status code to default value (0)..."
+        HTTP_STATUS_CODE=0
+    fi
+    if [ $HTTP_STATUS_CODE -ne 200 ] ; then
+        # send alert for service server status if not 200
+        sendFailureMessageSlackEmail "$SERVICE_NAME server HTTP status = $HTTP_STATUS_CODE. Server might be down - please check ASAP." "$SERVICE_NAME server status issue"
+    fi
+    return $HTTP_STATUS_CODE
+}
+
 function checkServerEndpointResponse {
     # CHECK SERVER ENDPOINT RESPONSE
     # (1): SERVICE_NAME:  name of service [CDD, ONCOTREE]
@@ -70,14 +91,21 @@ function checkServerEndpointResponse {
     server_args=("$@") # extract server list from server args
     SERVER_LIST="${server_args[@]:2}"
 
-    CURL_RESPONSES=""
-    return_value=0
+    return_value=1
     for server in ${SERVER_LIST[@]} ; do
-        URL="$server/$ENDPOINT"
-        echo "Checking $SERVICE_NAME endpoint $ENDPOINT ($URL)..."
-        curl --fail -X GET --header 'Accept: */*' $URL
-        if [ $? -gt 0 ] ; then
-            return_value=1
+        # check server http status code
+        checkServerHttpStatusCode $SERVICE_NAME $server ; http_status_code=$?
+
+        # if server is up then check endpoint response
+        if [ $http_status_code -eq 200 ] ; then
+            # check endpoint response
+            URL="$server/$ENDPOINT"
+            echo -e "\nChecking $SERVICE_NAME endpoint $ENDPOINT ($URL)..."
+            curl --fail -X GET --header 'Accept: */*' $URL ; endpoint_response=$?
+            if [ $endpoint_response -eq 0 ] ; then
+                # at least one server and endpoint response succeeded, update return_value
+                return_value=0
+            fi
         fi
     done
     return $return_value
@@ -103,7 +131,7 @@ function refreshCache {
             REATTEMPTS_LEFT=$(($REATTEMPT - 1))
             CURRENT_ATTEMPT=$(($MAX_ATTEMPTS - $REATTEMPTS_LEFT))
 
-            echo "Reattempting to refresh $SERVICE_NAME cache (reattempt # $CURRENT_ATTEMPT of $MAX_ATTEMPTS)..."
+            echo -e "\nReattempting to refresh $SERVICE_NAME cache (reattempt # $CURRENT_ATTEMPT of $MAX_ATTEMPTS)..."
             sleep 5; refreshCache "$SERVICE_NAME" $REATTEMPTS_LEFT $ENDPOINT ${SERVER_LIST[@]}; return_value=$?
         else
             FAILURE_MESSAGE="Failed to refresh $SERVICE_NAME cache:\n\tendpoint=$ENDPOINT\n\tservers=${SERVER_LIST[@]}"
@@ -111,7 +139,7 @@ function refreshCache {
             sendFailureMessageSlackEmail "$FAILURE_MESSAGE" "$SUBJECT_MESSAGE"
         fi
     else
-        echo "$SERVICE_NAME cache refresh successful!"
+        echo -e "\n$SERVICE_NAME cache refresh successful!"
     fi
     return $return_value
 }
@@ -154,8 +182,8 @@ function refreshCddCache {
     if [ $return_value -gt 0 ] ; then
         # query cdd for known clinical attribute and check response - if still failed then alert pipelines team
         # that subsequent imports will fail if they require new attributes not stored in cache
-        echo "Recache of CDD attempt failed!"
-        echo "Checking for valid stale cache to fallback on for CDD"
+        echo -e "\nRecache of CDD attempt failed!"
+        echo -e "\nChecking for valid stale cache to fallback on for CDD"
         KNOWN_WORKING_ENDPOINT="SAMPLE_ID"
         checkForValidStaleCache "CDD" $KNOWN_WORKING_ENDPOINT ${CDD_SERVER_LIST[@]}; return_value=$?
     fi
@@ -164,17 +192,17 @@ function refreshCddCache {
 
 function refreshOncotreeCache {
     # attempt to recache ONCOTREE
-    ENDPOINT="refreshCache"
-    ONCOTREE_SERVER1="http://dashi.cbio.mskcc.org:8280/api"
-    ONCOTREE_SERVER2="http://dashi2.cbio.mskcc.org:8280/api"
+    ENDPOINT="api/refreshCache"
+    ONCOTREE_SERVER1="http://dashi.cbio.mskcc.org:8280"
+    ONCOTREE_SERVER2="http://dashi2.cbio.mskcc.org:8280"
     ONCOTREE_SERVER_LIST=($ONCOTREE_SERVER1 $ONCOTREE_SERVER2)
     refreshCache "ONCOTREE" $MAX_ATTEMPTS $ENDPOINT ${ONCOTREE_SERVER_LIST[@]}; return_value=$?
     if [ $return_value -gt 0 ] ; then
         # query oncotree for known oncotree code and check response - if still failed then alert pipelines team
         # that subsequent imports might fail if importer also fails to query oncotree service when
         # generating oncotree code cache
-        echo "Recache of ONCOTREE attempt failed!"
-        echo "Checking for valid stale cache to fallback on for ONCOTREE"
+        echo -e "\nRecache of ONCOTREE attempt failed!"
+        echo -e "\nChecking for valid stale cache to fallback on for ONCOTREE"
         KNOWN_WORKING_ENDPOINT="tumorTypes/search/code/TISSUE?exactMatch=true&levels=0,1"
         checkForValidStaleCache "ONCOTREE" $KNOWN_WORKING_ENDPOINT ${ONCOTREE_SERVER_LIST[@]}; return_value=$?
     fi
