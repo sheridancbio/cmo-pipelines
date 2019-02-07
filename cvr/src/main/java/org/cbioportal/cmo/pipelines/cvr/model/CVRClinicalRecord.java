@@ -68,7 +68,7 @@ public class CVRClinicalRecord {
     private String cvrTmbCohortPercentile;
     private String cvrTmbScore;
     private String cvrTmbTtPercentile;
-    private String wholeSlideViewerURL;
+    private String pathSlideExists;
     private String mskSlideID;
 
     private final String DEFAULT_SAMPLE_CLASS = "Tumor";
@@ -101,8 +101,8 @@ public class CVRClinicalRecord {
         this.cvrTmbCohortPercentile = (metaData.getTmbCohortPercentile()!= null) ? String.valueOf(metaData.getTmbCohortPercentile()) : "NA";
         this.cvrTmbScore = (metaData.getTmbScore()!= null) ? String.valueOf(metaData.getTmbScore()) : "NA";
         this.cvrTmbTtPercentile = (metaData.getTmbTtPercentile()!= null) ? String.valueOf(metaData.getTmbTtPercentile()) : "NA";
-        this.wholeSlideViewerURL = resolveWholeSlideViewerURL(wholeSlideViewerBaseURL, metaData.getWholeSlideViewerId());
-        this.mskSlideID = (!StringUtils.isNullOrEmpty(metaData.getWholeSlideViewerId())) ? metaData.getWholeSlideViewerId() : "NA";
+        this.pathSlideExists = (wholeSlideViewerIdIsValid(metaData.getWholeSlideViewerId())) ? "YES" : "NO";
+        this.mskSlideID = (wholeSlideViewerIdIsValid(metaData.getWholeSlideViewerId())) ? metaData.getWholeSlideViewerId() : "NA";
     }
 
     public CVRClinicalRecord(GMLMetaData metaData) {
@@ -351,16 +351,16 @@ public class CVRClinicalRecord {
         this.cvrTmbTtPercentile = tmbTtPercentile;
     }
 
-    public String getCOMP_PATH_WSV_URL() {
-        return this.wholeSlideViewerURL != null ? this.wholeSlideViewerURL : "NA";
+    public String getPATH_SLIDE_EXISTS() {
+        return !StringUtils.isNullOrEmpty(this.pathSlideExists) ? this.pathSlideExists : "NO";
     }
 
-    public void setCOMP_PATH_WSV_URL(String wholeSlideViewerURL) {
-        this.wholeSlideViewerURL = wholeSlideViewerURL;
+    public void setPATH_SLIDE_EXISTS(String pathSlideExists) {
+        this.pathSlideExists = pathSlideExists;
     }
 
     public String getMSK_SLIDE_ID() {
-        return this.mskSlideID != null ? this.mskSlideID : "NA";
+        return !StringUtils.isNullOrEmpty(this.mskSlideID) ? this.mskSlideID : "NA";
     }
 
     public void setMSK_SLIDE_ID(String mskSlideID) {
@@ -374,11 +374,8 @@ public class CVRClinicalRecord {
 
     }
 
-    private String resolveWholeSlideViewerURL(String wholeSlideViewerBaseURL, String wholeSlideViewerId) {
-        if (!StringUtils.isNullOrEmpty(wholeSlideViewerId) && !wholeSlideViewerId.equalsIgnoreCase("NA")) {
-            return wholeSlideViewerBaseURL.replace("IMAGE_ID", wholeSlideViewerId);
-        }
-        return "NA";
+    private boolean wholeSlideViewerIdIsValid(String wholeSlideViewerId) {
+            return (!StringUtils.isNullOrEmpty(wholeSlideViewerId) && !wholeSlideViewerId.equalsIgnoreCase("NA"));
     }
 
     public static List<String> getFieldNames() {
@@ -409,7 +406,7 @@ public class CVRClinicalRecord {
         fieldNames.add("CVR_TMB_COHORT_PERCENTILE");
         fieldNames.add("CVR_TMB_SCORE");
         fieldNames.add("CVR_TMB_TT_COHORT_PERCENTILE");
-        fieldNames.add("COMP_PATH_WSV_URL");
+        fieldNames.add("PATH_SLIDE_EXISTS");
         fieldNames.add("MSK_SLIDE_ID");
         return fieldNames;
     }
