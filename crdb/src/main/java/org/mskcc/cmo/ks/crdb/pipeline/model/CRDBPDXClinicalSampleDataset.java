@@ -59,7 +59,7 @@ public class CRDBPDXClinicalSampleDataset {
     private String SAMPLE_CLASS;
     private String PROCEDURE_TYPE;
     private String PRETREATED;
-    private String TREATED;
+    private String PDX_TREATED;
     private String ER_POSITIVE;
     private String ER_NEGATIVE;
     private String HER2_POSITIVE;
@@ -103,7 +103,7 @@ public class CRDBPDXClinicalSampleDataset {
                                         String COLLAB_ID, String AGE_AT_INITIAL_DIAGNOSIS, String PASSAGE_ID, String ONCOTREE_CODE,
                                         String STAGE_CODE, String T_STAGE, String N_STAGE, String M_STAGE, String GRADE,
                                         String SAMPLE_TYPE, String PRIMARY_SITE, String SAMPLE_CLASS, String PROCEDURE_TYPE,
-                                        String PRETREATED, String TREATED, String ER_POSITIVE, String ER_NEGATIVE,
+                                        String PRETREATED, String PDX_TREATED, String ER_POSITIVE, String ER_NEGATIVE,
                                         String HER2_POSITIVE, String HER2_NEGATIVE, String HPV_POSITIVE, String HPV_NEGATIVE,
                                         String P16_POSITIVE, String P16_NEGATIVE, String PR_POSITIVE, String PR_NEGATIVE,
                                         String IDH1_POSITIVE, String IDH1_NEGATIVE, String IDH2_POSITIVE, String IDH2_NEGATIVE,
@@ -128,7 +128,7 @@ public class CRDBPDXClinicalSampleDataset {
         this.SAMPLE_CLASS = SAMPLE_CLASS == null ? "NA" : SAMPLE_CLASS;
         this.PROCEDURE_TYPE = PROCEDURE_TYPE == null ? "NA" : PROCEDURE_TYPE;
         this.PRETREATED = PRETREATED == null ? "NA" : PRETREATED;
-        this.TREATED = TREATED == null ? "NA" : TREATED;
+        this.PDX_TREATED = PDX_TREATED == null ? "NA" : PDX_TREATED;
         this.ER_POSITIVE = ER_POSITIVE == null ? "NA" : ER_POSITIVE;
         this.ER_NEGATIVE = ER_NEGATIVE == null ? "NA" : ER_NEGATIVE;
         this.HER2_POSITIVE = HER2_POSITIVE == null ? "NA" : HER2_POSITIVE;
@@ -346,15 +346,15 @@ public class CRDBPDXClinicalSampleDataset {
         this.PRETREATED = PRETREATED;
     }
 
-    public String getTREATED() {
-        return TREATED;
+    public String getPDX_TREATED() {
+        return PDX_TREATED;
     }
 
     /**
-     * @param TREATED
+     * @param PDX_TREATED
      */
-    public void setTREATED(String TREATED) {
-        this.TREATED = TREATED;
+    public void setPDX_TREATED(String PDX_TREATED) {
+        this.PDX_TREATED = PDX_TREATED;
     }
 
     public String getER_POSITIVE() {
@@ -612,7 +612,7 @@ public class CRDBPDXClinicalSampleDataset {
         fieldNameList.add("SAMPLE_CLASS");
         fieldNameList.add("PROCEDURE_TYPE");
         fieldNameList.add("PRETREATED");
-        fieldNameList.add("TREATED");
+        fieldNameList.add("PDX_TREATED");
         fieldNameList.add("ER_POSITIVE");
         fieldNameList.add("ER_NEGATIVE");
         fieldNameList.add("HER2_POSITIVE");

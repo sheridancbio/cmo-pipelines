@@ -85,7 +85,7 @@ public class CRDBPDXClinicalSampleReader implements ItemStreamReader<CRDBPDXClin
                                         $(qCRDBD.getCOLLAB_ID()), $(qCRDBD.getAGE_AT_INITIAL_DIAGNOSIS()), $(qCRDBD.getPASSAGE_ID()),
                                         $(qCRDBD.getONCOTREE_CODE()), $(qCRDBD.getSTAGE_CODE()), $(qCRDBD.getT_STAGE()), $(qCRDBD.getN_STAGE()),
                                         $(qCRDBD.getM_STAGE()), $(qCRDBD.getGRADE()), $(qCRDBD.getSAMPLE_TYPE()), $(qCRDBD.getPRIMARY_SITE()),
-                                        $(qCRDBD.getSAMPLE_CLASS()), $(qCRDBD.getPROCEDURE_TYPE()), $(qCRDBD.getPRETREATED()), $(qCRDBD.getTREATED()),
+                                        $(qCRDBD.getSAMPLE_CLASS()), $(qCRDBD.getPROCEDURE_TYPE()), $(qCRDBD.getPRETREATED()), $(qCRDBD.getPDX_TREATED()),
                                         $(qCRDBD.getER_POSITIVE()), $(qCRDBD.getER_NEGATIVE()), $(qCRDBD.getHER2_POSITIVE()), $(qCRDBD.getHER2_NEGATIVE()),
                                         $(qCRDBD.getHPV_POSITIVE()), $(qCRDBD.getHPV_NEGATIVE()), $(qCRDBD.getP16_POSITIVE()), $(qCRDBD.getP16_NEGATIVE()),
                                         $(qCRDBD.getPR_POSITIVE()), $(qCRDBD.getPR_NEGATIVE()), $(qCRDBD.getIDH1_POSITIVE()), $(qCRDBD.getIDH1_NEGATIVE()),

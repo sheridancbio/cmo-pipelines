@@ -94,8 +94,7 @@ public class CRDBPDXTimelineReader implements ItemStreamReader<CRDBPDXTimelineDa
                                         $(qCRDBD.getPROCEDURE_LOCATION_SPECIFY()), $(qCRDBD.getDIAGNOSTIC_TYPE()), $(qCRDBD.getDIAGNOSTIC_TYPE_SITE()),
                                         $(qCRDBD.getIMAGING()), $(qCRDBD.getSPECIMEN_TYPE()), $(qCRDBD.getSPECIMEN_SITE()), $(qCRDBD.getAGE_AT_PROCEDURE()),
                                         $(qCRDBD.getLATERALITY()), $(qCRDBD.getDISEASE_STATUS()), $(qCRDBD.getMETASTATIC_SITE()),
-                                        $(qCRDBD.getTIME_TO_METASTASIS_MONTHS()), $(qCRDBD.getSAMPLE_TYPE()), $(qCRDBD.getSITE_OF_RECURRENCE()),
-                                        $(qCRDBD.getTIME_TO_RECURRENCE())))
+                                        $(qCRDBD.getSAMPLE_TYPE()), $(qCRDBD.getSITE_OF_RECURRENCE()), $(qCRDBD.getTREATMENT_NOTES())))
                 .from($(qCRDBD))
                 .where($(qCRDBD.getPATIENT_ID()).ne("NA"))
                 .fetch();
