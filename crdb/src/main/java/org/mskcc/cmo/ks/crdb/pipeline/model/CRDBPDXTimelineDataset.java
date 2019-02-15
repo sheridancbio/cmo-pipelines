@@ -68,10 +68,9 @@ public class CRDBPDXTimelineDataset {
     private String LATERALITY;
     private String DISEASE_STATUS;
     private String METASTATIC_SITE;
-    private String TIME_TO_METASTASIS_MONTHS;
     private String SAMPLE_TYPE;
     private String SITE_OF_RECURRENCE;
-    private String TIME_TO_RECURRENCE;
+    private String TREATMENT_NOTES;
 
     private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
@@ -91,8 +90,7 @@ public class CRDBPDXTimelineDataset {
                                   String PROCEDURE_LOCATION_SPECIFY, String DIAGNOSTIC_TYPE, String DIAGNOSTIC_TYPE_SITE,
                                   String IMAGING, String SPECIMEN_TYPE, String SPECIMEN_SITE, String AGE_AT_PROCEDURE,
                                   String LATERALITY, String DISEASE_STATUS, String METASTATIC_SITE,
-                                  String TIME_TO_METASTASIS_MONTHS, String SAMPLE_TYPE, String SITE_OF_RECURRENCE,
-                                  String TIME_TO_RECURRENCE) {
+                                  String SAMPLE_TYPE, String SITE_OF_RECURRENCE, String TREATMENT_NOTES) {
         this.PATIENT_ID = PATIENT_ID == null ? "NA" : PATIENT_ID;
         this.SAMPLE_ID = SAMPLE_ID == null ? "NA" : SAMPLE_ID;
         this.PDX_ID = PDX_ID == null ? "NA" : PDX_ID;
@@ -119,10 +117,9 @@ public class CRDBPDXTimelineDataset {
         this.LATERALITY = LATERALITY == null ? "NA" : LATERALITY;
         this.DISEASE_STATUS = DISEASE_STATUS == null ? "NA" : DISEASE_STATUS;
         this.METASTATIC_SITE = METASTATIC_SITE == null ? "NA" : METASTATIC_SITE;
-        this.TIME_TO_METASTASIS_MONTHS = TIME_TO_METASTASIS_MONTHS == null ? "NA" : TIME_TO_METASTASIS_MONTHS;
         this.SAMPLE_TYPE = SAMPLE_TYPE == null ? "NA" : SAMPLE_TYPE;
         this.SITE_OF_RECURRENCE = SITE_OF_RECURRENCE == null ? "NA" : SITE_OF_RECURRENCE;
-        this.TIME_TO_RECURRENCE = TIME_TO_RECURRENCE == null ? "NA" : TIME_TO_RECURRENCE;
+        this.TREATMENT_NOTES = TREATMENT_NOTES == null ? "NA" : TREATMENT_NOTES;
     }
 
     public String getPATIENT_ID() {
@@ -333,14 +330,6 @@ public class CRDBPDXTimelineDataset {
         this.METASTATIC_SITE = METASTATIC_SITE;
     }
 
-    public String getTIME_TO_METASTASIS_MONTHS() {
-        return TIME_TO_METASTASIS_MONTHS;
-    }
-
-    public void setTIME_TO_METASTASIS_MONTHS(String TIME_TO_METASTASIS_MONTHS) {
-        this.TIME_TO_METASTASIS_MONTHS = TIME_TO_METASTASIS_MONTHS;
-    }
-
     public String getSAMPLE_TYPE() {
         return SAMPLE_TYPE;
     }
@@ -357,12 +346,12 @@ public class CRDBPDXTimelineDataset {
         this.SITE_OF_RECURRENCE = SITE_OF_RECURRENCE;
     }
 
-    public String getTIME_TO_RECURRENCE() {
-        return TIME_TO_RECURRENCE;
+    public String getTREATMENT_NOTES() {
+        return TREATMENT_NOTES;
     }
 
-    public void setTIME_TO_RECURRENCE(String TIME_TO_RECURRENCE) {
-        this.TIME_TO_RECURRENCE = TIME_TO_RECURRENCE;
+    public void setTREATMENT_NOTES(String TREATMENT_NOTES) {
+        this.TREATMENT_NOTES = TREATMENT_NOTES;
     }
 
     public Map<String, Object> getAdditionalProperties() {
@@ -409,10 +398,9 @@ public class CRDBPDXTimelineDataset {
         fieldNameList.add("LATERALITY");
         fieldNameList.add("DISEASE_STATUS");
         fieldNameList.add("METASTATIC_SITE");
-        fieldNameList.add("TIME_TO_METASTASIS_MONTHS");
         fieldNameList.add("SAMPLE_TYPE");
         fieldNameList.add("SITE_OF_RECURRENCE");
-        fieldNameList.add("TIME_TO_RECURRENCE");
+        fieldNameList.add("TREATMENT_NOTES");
         return Collections.unmodifiableList(fieldNameList);
     }
 }
