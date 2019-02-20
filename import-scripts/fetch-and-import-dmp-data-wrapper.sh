@@ -10,4 +10,7 @@ date
 echo executing import-pdx-data.sh
 /data/portal-cron/scripts/import-pdx-data.sh
 date
+echo executing import-aws-gdac-data.sh
+/data/portal-cron/scripts/import-aws-gdac-data.sh
+date
 echo wrapper complete
