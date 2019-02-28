@@ -31,7 +31,7 @@ export ONCO_HOME=$PORTAL_GIT_HOME/oncotree
 export CDD_HOME=$PORTAL_GIT_HOME/clinical-data-dictionary
 export DDP_CREDENTIALS_FILE=$PORTAL_HOME/pipelines-credentials/application-secure.properties
 export AWS_GDAC_SSL_TRUSTSTORE=$PORTAL_HOME/pipelines-credentials/PipelinesGdacDbAwsBackup.truststore
-export AWS_GDAC_SSL_TRUSTSTORE_PASSWORD_FILE=$PORTAL_HOME/pipelines-credentials/PipelinesGdacDbAwsBackup.trustore.password
+export AWS_GDAC_SSL_TRUSTSTORE_PASSWORD_FILE=$PORTAL_HOME/pipelines-credentials/PipelinesGdacDbAwsBackup.truststore.password
 
 #######################
 # environment variables for configuration / properties files
