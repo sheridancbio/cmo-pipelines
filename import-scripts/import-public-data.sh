@@ -13,21 +13,29 @@ fi
 email_list="cbioportal-pipelines@cbio.mskcc.org"
 now=$(date "+%Y-%m-%d-%H-%M-%S")
 IMPORTER_JAR_FILENAME="$PORTAL_HOME/lib/public-importer.jar"
-JAVA_DEBUG_ARGS="-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27185"
+JAVA_DEBUG_ARGS="-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182"
 JAVA_IMPORTER_ARGS="$JAVA_PROXY_ARGS $JAVA_DEBUG_ARGS -Dspring.profiles.active=dbcp -Djava.io.tmpdir=$tmp -ea -cp $IMPORTER_JAR_FILENAME org.mskcc.cbio.importer.Admin"
 public_portal_notification_file=$(mktemp $tmp/public-portal-update-notification.$now.XXXXXX)
 ONCOTREE_VERSION_TO_USE=oncotree_latest_stable
 
+# wait for the local import of public data to complete before running the import to AWS database host
+SECONDS_BETWEEN_PUBLIC_IMPORTER_CHECKS=15
+local_import_public_data_still_running=1
+while [ $local_import_public_data_still_running -eq 1 ] ; do
+    hour=`date +%H`
+    if [ $hour -gt 22 ] ; then
+        echo terminating script now .. waiting for import-public-aws-data.sh to end, but 11pm reached
+        exit 3
+    fi
+    if ps aux | grep "import-public-aws-data.sh" | grep "Failure in crontab" ; then
+        sleep $SECONDS_BETWEEN_PUBLIC_IMPORTER_CHECKS
+    else
+        local_import_public_data_still_running=0
+    fi
+done
 
 # refresh cdd and oncotree cache
-CDD_ONCOTREE_RECACHE_FAIL=0
-bash $PORTAL_HOME/scripts/refresh-cdd-oncotree-cache.sh
-if [ $? -gt 0 ]; then
-    CDD_ONCOTREE_RECACHE_FAIL=1
-    message="Failed to refresh CDD and/or ONCOTREE cache during TRIAGE import!"
-    echo $message
-    echo -e "$message" | mail -s "CDD and/or ONCOTREE cache failed to refresh" $email_list
-fi
+# use the same cdd and oncotree version as was running during the import to the internal database (no update)
 
 DB_VERSION_FAIL=0
 # check database version before importing anything
@@ -38,54 +46,9 @@ if [ $? -gt 0 ]; then
     DB_VERSION_FAIL=1
 fi
 
-# fetch updates in studies repository
-echo "fetching updates from cbio-portal-data..."
-CBIO_PORTAL_DATA_FETCH_FAIL=0
-$JAVA_BINARY $JAVA_IMPORTER_ARGS --fetch-data --data-source knowledge-systems-curated-studies --run-date latest
-if [ $? -gt 0 ]; then
-    echo "cbio-portal-data fetch failed!"
-    CBIO_PORTAL_DATA_FETCH_FAIL=1
-    EMAIL_BODY="The cbio-portal-data data fetch failed."
-    echo -e "Sending email $EMAIL_BODY"
-    echo -e "$EMAIL_BODY" | mail -s "Data fetch failure: cbio-portal-data" $email_list
-fi
+# all data fetches are ignored because we are using same data from the previous night's import
 
-# fetch updates in CMO impact
-echo "fetching updates from impact..."
-CMO_IMPACT_FETCH_FAIL=0
-$JAVA_BINARY $JAVA_IMPORTER_ARGS --fetch-data --data-source impact --run-date latest
-if [ $? -gt 0 ]; then
-    echo "impact fetch failed!"
-    CMO_IMPACT_FETCH_FAIL=1
-    EMAIL_BODY="The impact data fetch failed."
-    echo -e "Sending email $EMAIL_BODY"
-    echo -e "$EMAIL_BODY" | mail -s "Data fetch failure: impact" $email_list
-fi
-
-# fetch updates in private repository
-echo "fetching updates from private..."
-PRIVATE_FETCH_FAIL=0
-$JAVA_BINARY $JAVA_IMPORTER_ARGS --fetch-data --data-source private --run-date latest
-if [ $? -gt 0 ]; then
-    echo "private fetch failed!"
-    PRIVATE_FETCH_FAIL=1
-    EMAIL_BODY="The private data fetch failed."
-    echo -e "Sending email $EMAIL_BODY"
-    echo -e "$EMAIL_BODY" | mail -s "Data fetch failure: private" $email_list
-fi
-
-echo "fetching updates from datahub..."
-DATAHUB_FETCH_FAIL=0
-$JAVA_BINARY $JAVA_IMPORTER_ARGS --fetch-data --data-source datahub --run-date latest
-if [ $? -gt 0 ]; then
-    echo "datahub fetch failed!"
-    DATAHUB_FETCH_FAIL=1
-    EMAIL_BODY="The datahub data fetch failed."
-    echo -e "Sending email $EMAIL_BODY"
-    echo -e "$EMAIL_BODY" | mail -s "Data fetch failure: datahub" $pipeline_email_list
-fi
-
-if [[ $DB_VERSION_FAIL -eq 0 && $PRIVATE_FETCH_FAIL -eq 0 && $CMO_IMPACT_FETCH_FAIL -eq 0 && $CBIO_PORTAL_DATA_FETCH_FAIL -eq 0 && $DATAHUB_FETCH_FAIL -eq 0 && $CDD_ONCOTREE_RECACHE_FAIL -eq 0 ]]; then
+if [[ $DB_VERSION_FAIL -eq 0 ]]; then
     # import public studies into public portal
     echo "importing cancer type updates into public portal database..."
     $JAVA_BINARY -Xmx16g $JAVA_IMPORTER_ARGS --import-types-of-cancer --oncotree-version ${ONCOTREE_VERSION_TO_USE}
@@ -103,7 +66,7 @@ if [[ $DB_VERSION_FAIL -eq 0 && $PRIVATE_FETCH_FAIL -eq 0 && $CMO_IMPACT_FETCH_F
     echo "'$num_studies_updated' studies have been updated"
 fi
 
-echo "requesting redeployment of public portal war..."
+echo "requesting redeployment of public aws portal war..."
 TOMCAT_HOST_LIST=(dashi.cbio.mskcc.org dashi2.cbio.mskcc.org)
 TOMCAT_HOST_USERNAME=cbioportal_importer
 TOMCAT_HOST_SSH_KEY_FILE=${HOME}/.ssh/id_rsa_public_tomcat_restarts_key
@@ -128,11 +91,21 @@ if [ $DB_VERSION_FAIL -gt 0 ]; then
     echo -e "$EMAIL_BODY" | mail -s "Public Update Failure: DB version is incompatible" $email_list
 fi
 
-$JAVA_BINARY $JAVA_IMPORTER_ARGS --send-update-notification --portal public-portal --notification-file "$public_portal_notification_file"
+if [ $IMPORT_FAIL -eq 0 ] ; then
+    if [ -f "$public_portal_notification_file" ] ; then
+        line_count=`wc -l $public_portal_notification_file`
+        if [ "$line_count" != 0 ] ; then
+            email_filename=${public_portal_notification_file}_emailtext
+            echo The import of Public studies completed successfully. > $email_filename
+            echo >> $email_filename
+            echo Output generated by the cBioPortal importer: >> $email_filename
+            echo -------------------------------------------- >> $email_filename
+            cat $public_portal_notification_file >> $email_filename
+            cat $email_filename | mail -s "Public cBioPortal import success" $email_list
+            rm -f $email_filename
+        fi
+    fi
+fi
 
 echo "Cleaning up any untracked files from CBIO-PUBLIC import..."
 bash $PORTAL_HOME/scripts/datasource-repo-cleanup.sh $PORTAL_DATA_HOME $PORTAL_DATA_HOME/impact $PORTAL_DATA_HOME/private $PORTAL_DATA_HOME/datahub
-
-if [[ -d "$tmp" && "$tmp" != "/" ]]; then
-    rm -rf "$tmp"/*
-fi
