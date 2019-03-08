@@ -957,7 +957,7 @@ def has_mirna_gene_symbol_pattern(hugo_gene_symbol):
         Checks if gene starts with any of the miRNA gene symbol patterns.
     '''
     for pattern in MIRNA_GENE_SYMBOL_PATTERNS:
-        if gene.hugo_gene_symbol.upper().startswith(pattern):
+        if hugo_gene_symbol.upper().startswith(pattern):
             return True
     return False
 
@@ -978,7 +978,7 @@ def is_mirna_gene_candidate(gene):
 
     # if gene does not start with any of the miRNA gene symbol patterns then
     # determine whether gene protein type is 'miRNA'
-    return (has_mirna_gene_symbol_pattern(hugo_gene_symbol) or gene.protein_type.lower() == 'mirna')
+    return (has_mirna_gene_symbol_pattern(gene.hugo_gene_symbol) or gene.protein_type.lower() == 'mirna')
 
 
 # calling this update functions makes calls to their corresponding "get" functions
