@@ -73,6 +73,8 @@ MIRNA_GENE_DB_REFERENCE_TYPES = [
     'SANGER_CANCER_CENSUSES'
 ]
 
+MIRNA_GENE_SYMBOL_PATTERNS = ['MIR', 'HSA-MIR', 'LET', 'HSA-LET']
+
 MIRNA_GENE_FILE_HEADER = ['HUGO_GENE_SYMBOL', 'ENTREZ_GENE_ID', 'IS_ALIAS', 'ROOT_HUGO_SYMBOL', 'PROTEIN_TYPE']
 
 # ------------------------------------------------------------------------------
@@ -354,7 +356,7 @@ def get_mirna_mutation_references(cursor, mutation_event_ids, entrez_gene_ids):
             # so there wouldn't be anything to fix or update for this record - skip such cases
             entrez_gene_id = int(row[1])
             main_gene_symbol = get_hugo_gene_symbol(cursor, entrez_gene_id)
-            if not main_gene_symbol.upper().startswith('MIR') and not main_gene_symbol.upper().startswith('HSA-MIR'):
+            if not has_mirna_gene_symbol_pattern(main_gene_symbol):
                 ignored_mutation_event_ids.add(int(row[0]))
                 continue
             mirna_mutation_events_map[int(row[0])].append(Mutation(int(row[0]), int(row[1]), int(row[2]), int(row[3]), int(row[4])))
@@ -404,7 +406,7 @@ def get_mirna_sample_cna_event_references(cursor, cna_event_ids, entrez_gene_ids
             # so there wouldn't be anything to fix or update for this record - skip such cases
             entrez_gene_id = int(row[1])
             main_gene_symbol = get_hugo_gene_symbol(cursor, entrez_gene_id)
-            if not main_gene_symbol.upper().startswith('MIR') and not main_gene_symbol.upper().startswith('HSA-MIR'):
+            if not has_mirna_gene_symbol_pattern(main_gene_symbol):
                 ignored_cna_event_ids.add(int(row[0]))
                 continue
             mirna_cna_events_map[int(row[0])].append(CNAEvent(int(row[0]), int(row[1]), int(row[2]), int(row[3]), int(row[4])))
@@ -450,7 +452,7 @@ def get_mirna_mutation_count_by_keyword_references(cursor, mirna_gene_map):
             # so there wouldn't be anything to fix or update for this record - skip such cases
             entrez_gene_id = int(row[1])
             main_gene_symbol = get_hugo_gene_symbol(cursor, entrez_gene_id)
-            if not main_gene_symbol.upper().startswith('MIR') and not main_gene_symbol.upper().startswith('HSA-MIR'):
+            if not has_mirna_gene_symbol_pattern(main_gene_symbol):
                 continue
             mutation_count_by_keyword_records.append(MutationCountByKeyword(int(row[0]), entrez_gene_id, row[2], int(row[3])))
     except MySQLdb.Error, msg:
@@ -473,7 +475,7 @@ def get_mirna_genetic_alteration_references(cursor, mirna_gene_map):
             # so there wouldn't be anything to fix or update for this record - skip such cases
             entrez_gene_id = int(row[1])
             main_gene_symbol = get_hugo_gene_symbol(cursor, entrez_gene_id)
-            if not main_gene_symbol.upper().startswith('MIR') and not main_gene_symbol.upper().startswith('HSA-MIR'):
+            if not has_mirna_gene_symbol_pattern(main_gene_symbol):
                 continue
             genetic_alteration_records.append(GeneticAlteration(int(row[0]), int(row[1]), int(row[2]), int(row[3]), row[4]))
     except MySQLdb.Error, msg:
@@ -516,7 +518,7 @@ def get_mirna_gistic_references(cursor, gistic_roi_ids, entrez_gene_ids):
             # so there wouldn't be anything to fix or update for this record - skip such cases
             entrez_gene_id = int(row[1])
             main_gene_symbol = get_hugo_gene_symbol(cursor, entrez_gene_id)
-            if not main_gene_symbol.upper().startswith('MIR') and not main_gene_symbol.upper().startswith('HSA-MIR'):
+            if not has_mirna_gene_symbol_pattern(main_gene_symbol):
                 ignored_gistic_to_gene_roi_ids.add(int(row[0]))
                 continue
             mirna_gistic_to_gene_records_map[int(row[0])].append(GisticToGene(int(row[0]), int(row[1]), int(row[2])))
@@ -546,7 +548,7 @@ def get_mirna_mut_sig_references(cursor, mirna_gene_map):
             # so there wouldn't be anything to fix or update for this record - skip such cases
             entrez_gene_id = int(row[0])
             main_gene_symbol = get_hugo_gene_symbol(cursor, entrez_gene_id)
-            if not main_gene_symbol.upper().startswith('MIR') and not main_gene_symbol.upper().startswith('HSA-MIR'):
+            if not has_mirna_gene_symbol_pattern(main_gene_symbol):
                 continue
             mut_sig_records.append(MutSig(int(row[0]), int(row[1])))
     except MySQLdb.Error, msg:
@@ -590,7 +592,7 @@ def get_mirna_protein_array_data_references(cursor, protein_array_ids, entrez_ge
             # so there wouldn't be anything to fix or update for this record - skip such cases
             entrez_gene_id = int(row[1])
             main_gene_symbol = get_hugo_gene_symbol(cursor, entrez_gene_id)
-            if not main_gene_symbol.upper().startswith('MIR') and not main_gene_symbol.upper().startswith('HSA-MIR'):
+            if not has_mirna_gene_symbol_pattern(main_gene_symbol):
                 ignored_protein_array_ids.add(int(row[0]))
                 continue
             mirna_protein_array_target_records_map[int(row[0])].append(ProteinArrayData(int(row[0]), int(row[1]), int(row[2]), int(row[3])))
@@ -640,7 +642,7 @@ def get_mirna_sample_profile_references(cursor, gene_panel_ids, entrez_gene_ids)
             # so there wouldn't be anything to fix or update for this record - skip such cases
             entrez_gene_id = int(row[1])
             main_gene_symbol = get_hugo_gene_symbol(cursor, entrez_gene_id)
-            if not main_gene_symbol.upper().startswith('MIR') and not main_gene_symbol.upper().startswith('HSA-MIR'):
+            if not has_mirna_gene_symbol_pattern(main_gene_symbol):
                 continue
             mirna_gene_panel_records_map[int(row[0])].append(GenePanel(int(row[0]), int(row[1]), int(row[2]), int(row[3]), int(row[4])))
     except MySQLdb.Error, msg:
@@ -682,7 +684,7 @@ def get_mirna_geneset_references(cursor, geneset_ids, entrez_gene_ids):
             # so there wouldn't be anything to fix or update for this record - skip such cases
             entrez_gene_id = int(row[1])
             main_gene_symbol = get_hugo_gene_symbol(cursor, entrez_gene_id)
-            if not main_gene_symbol.upper().startswith('MIR') and not main_gene_symbol.upper().startswith('HSA-MIR'):
+            if not has_mirna_gene_symbol_pattern(main_gene_symbol):
                 continue
             mirna_geneset_gene_records_map[int(row[0])].append(Geneset(int(row[0]), int(row[1]), int(row[2])))
     except MySQLdb.Error, msg:
@@ -708,7 +710,7 @@ def get_mirna_reference_genome_references(cursor, reference_genome_ids, entrez_g
             # so there wouldn't be anything to fix or update for this record - skip such cases
             entrez_gene_id = int(row[1])
             main_gene_symbol = get_hugo_gene_symbol(cursor, entrez_gene_id)
-            if not main_gene_symbol.upper().startswith('MIR') and not main_gene_symbol.upper().startswith('HSA-MIR'):
+            if not has_mirna_gene_symbol_pattern(main_gene_symbol):
                 continue
             mirna_reference_genome_record_map[int(row[0])].append(ReferenceGenome(int(row[0]), int(row[1])))
     except MySQLdb.Error, msg:
@@ -744,7 +746,7 @@ def get_mirna_cosmic_mutation_references(cursor, mirna_gene_map):
         for row in cursor.fetchall():
             entrez_gene_id = int(row[1])
             main_gene_symbol = get_hugo_gene_symbol(cursor, entrez_gene_id)
-            if not main_gene_symbol.upper().startswith('MIR') and not main_gene_symbol.upper().startswith('HSA-MIR'):
+            if not has_mirna_gene_symbol_pattern(main_gene_symbol):
                 continue
             cosmic_mutation_records.append(CosmicMutation(int(row[0]), int(row[1])))
     except MySQLdb.Error, msg:
@@ -764,7 +766,7 @@ def get_mirna_uniprot_id_mapping_references(cursor, mirna_gene_map):
         for row in cursor.fetchall():
             entrez_gene_id = int(row[1])
             main_gene_symbol = get_hugo_gene_symbol(cursor, entrez_gene_id)
-            if not main_gene_symbol.upper().startswith('MIR') and not main_gene_symbol.upper().startswith('HSA-MIR'):
+            if not has_mirna_gene_symbol_pattern(main_gene_symbol):
                 continue
             uniprot_id_mapping_records.append(UniprotIdMapping(row[0], int(row[1]), row[2]))
     except MySQLdb.Error, msg:
@@ -784,7 +786,7 @@ def get_mirna_sanger_cancer_census_references(cursor, mirna_gene_map):
         for row in cursor.fetchall():
             entrez_gene_id = int(row[0])
             main_gene_symbol = get_hugo_gene_symbol(cursor, entrez_gene_id)
-            if not main_gene_symbol.upper().startswith('MIR') and not main_gene_symbol.upper().startswith('HSA-MIR'):
+            if not has_mirna_gene_symbol_pattern(main_gene_symbol):
                 continue
             sanger_cancer_census_records.append(entrez_gene_id)
     except MySQLdb.Error, msg:
@@ -940,15 +942,43 @@ def get_hugo_gene_symbol(cursor, entrez_gene_id):
 
 def has_at_least_one_non_alias_non_mirna_gene(genes):
     for gene in genes:
-        if not gene.hugo_gene_symbol.upper().startswith('MIR') and not gene.hugo_gene_symbol.upper().startswith('HSA-MIR') and not gene.is_alias:
+        if not is_mirna_gene_candidate(gene) and not gene.is_alias:
             return True
     return False
 
 def has_at_least_one_mirna_deletion_candidate_gene(genes):
     for gene in genes:
-        if gene.entrez_gene_id > 0 and (gene.hugo_gene_symbol.upper().startswith('MIR') or gene.hugo_gene_symbol.upper().startswith('HSA-MIR')):
+        if is_mirna_gene_candidate(gene):
             return True
     return False
+
+def has_mirna_gene_symbol_pattern(hugo_gene_symbol):
+    '''
+        Checks if gene starts with any of the miRNA gene symbol patterns.
+    '''
+    for pattern in MIRNA_GENE_SYMBOL_PATTERNS:
+        if gene.hugo_gene_symbol.upper().startswith(pattern):
+            return True
+    return False
+
+def is_mirna_gene_candidate(gene):
+    '''
+        Determines whether gene is a miRNA gene candidate.
+
+        Candidates must meet these conditions:
+            1. gene symbol pattern starts with: MIR*, HSA-MIR*, LET*, HSA-LET*
+               and entrez gene id is positive ( > 0 )
+        OR
+            2. protein type is miRNA
+    '''
+    # if entrez gene id is negative then immediately return False - this is a miRNA
+    # gene record loaded from the cBioPortal miRNA gene mapping table
+    if gene.entrez_gene_id < 0:
+        return False
+
+    # if gene does not start with any of the miRNA gene symbol patterns then
+    # determine whether gene protein type is 'miRNA'
+    return (has_mirna_gene_symbol_pattern(hugo_gene_symbol) or gene.protein_type.lower() == 'mirna')
 
 
 # calling this update functions makes calls to their corresponding "get" functions
@@ -1641,7 +1671,7 @@ def find_mirna_gene_refs_in_gene_aliases(mirna_gene_map, enable_db_deletions):
         # may reference this entrez gene id
         if has_at_least_one_non_alias_non_mirna_gene(genes):
             for gene in genes:
-                if gene.is_alias and (gene.hugo_gene_symbol.upper().startswith('MIR') or gene.hugo_gene_symbol.upper().startswith('HSA-MIR')):
+                if is_mirna_gene_candidate(gene) and gene.is_alias:
                     MIRNA_GENE_ALIASES_OKAY_TO_REMOVE.add(gene)
 
 def report_mirna_gene_references_in_db(db_connection, mirna_gene_map):
@@ -1655,9 +1685,9 @@ def report_mirna_gene_references_in_db(db_connection, mirna_gene_map):
     for entrez_gene_id,genes in mirna_gene_map.items():
         # update lists of records in `gene` and `gene_alias` for removal
         for gene in genes:
-            if gene.is_alias and (gene.hugo_gene_symbol.upper().startswith('MIR') or gene.hugo_gene_symbol.upper().startswith('HSA-MIR')):
+            if is_mirna_gene_candidate(gene) and gene.is_alias:
                 MIRNA_GENE_ALIASES_OKAY_TO_REMOVE.add(gene)
-            elif not gene.is_alias and (gene.hugo_gene_symbol.upper().startswith('MIR') or gene.hugo_gene_symbol.upper().startswith('HSA-MIR')):
+            elif not is_mirna_gene_candidate(gene) and not gene.is_alias:
                 MIRNA_GENES_OKAY_TO_REMOVE.add(gene)
 
         # if there is at least one gene linked to entrez gene id that is not an alias and
