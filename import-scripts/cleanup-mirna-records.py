@@ -1685,10 +1685,11 @@ def report_mirna_gene_references_in_db(db_connection, mirna_gene_map):
     for entrez_gene_id,genes in mirna_gene_map.items():
         # update lists of records in `gene` and `gene_alias` for removal
         for gene in genes:
-            if is_mirna_gene_candidate(gene) and gene.is_alias:
-                MIRNA_GENE_ALIASES_OKAY_TO_REMOVE.add(gene)
-            elif not is_mirna_gene_candidate(gene) and not gene.is_alias:
-                MIRNA_GENES_OKAY_TO_REMOVE.add(gene)
+            if is_mirna_gene_candidate(gene):
+                if gene.is_alias:
+                    MIRNA_GENE_ALIASES_OKAY_TO_REMOVE.add(gene)
+                else:
+                    MIRNA_GENES_OKAY_TO_REMOVE.add(gene)
 
         # if there is at least one gene linked to entrez gene id that is not an alias and
         # is not a miRNA gene then removal if the alias miRNA gene(s) will not affect
