@@ -229,7 +229,7 @@ def get_mirna_gene_records(cursor):
     '''
         Find records in `gene` where entrez gene id is > 0 and hugo gene symbol like 'MIR*'.
     '''
-    sql_statement = 'SELECT hugo_gene_symbol, entrez_gene_id, genetic_entity_id, type FROM gene WHERE (hugo_gene_symbol LIKE "MIR%" OR hugo_gene_symbol LIKE "HSA-MIR%") AND entrez_gene_id > 0'
+    sql_statement = 'SELECT hugo_gene_symbol, entrez_gene_id, genetic_entity_id, type FROM gene WHERE (hugo_gene_symbol LIKE "MIR%" OR hugo_gene_symbol LIKE "HSA-MIR%" OR hugo_gene_symbol LIKE "HSA-LET%" OR hugo_gene_symbol LIKE "LET%") AND entrez_gene_id > 0'
 
     mirna_genes = []
     try:
@@ -268,7 +268,7 @@ def get_mirna_gene_alias_records(cursor):
         Find records in `gene_alias` where entrez gene id is not in the
         set of miRNA records found in primary gene table `gene`.
     '''
-    sql_statement = 'SELECT gene_alias.gene_alias, gene_alias.entrez_gene_id, gene.genetic_entity_id, gene.type FROM gene_alias JOIN gene ON gene.entrez_gene_id = gene_alias.entrez_gene_id WHERE (gene_alias.gene_alias LIKE "MIR%" OR gene_alias.gene_alias LIKE "HSA-MIR%") AND gene_alias.entrez_gene_id > 0 AND gene_alias.entrez_gene_id NOT IN (SELECT entrez_gene_id FROM gene WHERE entrez_gene_id > 0 AND (hugo_gene_symbol LIKE "MIR%" OR hugo_gene_symbol LIKE "HSA-MIR%"))'
+    sql_statement = 'SELECT gene_alias.gene_alias, gene_alias.entrez_gene_id, gene.genetic_entity_id, gene.type FROM gene_alias JOIN gene ON gene.entrez_gene_id = gene_alias.entrez_gene_id WHERE (gene_alias.gene_alias LIKE "MIR%" OR gene_alias.gene_alias LIKE "HSA-MIR%" OR gene_alias.gene_alias LIKE "HSA-LET%" OR gene_alias.gene_alias LIKE "LET%") AND gene_alias.entrez_gene_id > 0 AND gene_alias.entrez_gene_id NOT IN (SELECT entrez_gene_id FROM gene WHERE entrez_gene_id > 0 AND (hugo_gene_symbol LIKE "MIR%" OR hugo_gene_symbol LIKE "HSA-MIR%"))'
     mirna_genes = []
     try:
         cursor.execute(sql_statement)
@@ -294,7 +294,7 @@ def get_mirna_gene_alias_records_by_entrez_gene_ids(cursor, entrez_gene_ids):
         a set of genes would have already been fetched from `gene` for given set of entrez gene ids supplied.
     '''
     entrez_gene_ids_string = '(' + ','.join(map(str, entrez_gene_ids)) + ')'
-    sql_statement = 'SELECT gene_alias.gene_alias, gene_alias.entrez_gene_id, gene.genetic_entity_id, gene.type FROM gene_alias JOIN gene ON gene.entrez_gene_id = gene_alias.entrez_gene_id WHERE (gene_alias.gene_alias LIKE "MIR%" OR gene_alias.gene_alias LIKE "HSA-MIR%") AND gene_alias.entrez_gene_id IN ' + entrez_gene_ids_string
+    sql_statement = 'SELECT gene_alias.gene_alias, gene_alias.entrez_gene_id, gene.genetic_entity_id, gene.type FROM gene_alias JOIN gene ON gene.entrez_gene_id = gene_alias.entrez_gene_id WHERE (gene_alias.gene_alias LIKE "MIR%" OR gene_alias.gene_alias LIKE "HSA-MIR%" OR gene_alias.gene_alias LIKE "HSA-LET%" OR gene_alias.gene_alias LIKE "LET%") AND gene_alias.entrez_gene_id IN ' + entrez_gene_ids_string
 
     mirna_genes = []
     try:
@@ -324,6 +324,22 @@ def get_mirna_gene_alias_parent_records(cursor, mirna_gene_aliases):
         sys.exit(2)
     print >> OUTPUT_FILE, 'Found ' + str(len(mirna_genes)) + ' gene alias parent `gene` records'
     return mirna_genes
+
+def get_all_gene_aliases_by_entrez_gene_id(cursor, entrez_gene_id):
+    '''
+        Get all aliases linked to given entrez gene id.
+    '''
+    sql_statement = 'SELECT gene_alias.gene_alias, gene_alias.entrez_gene_id, gene.genetic_entity_id, gene.type FROM gene_alias JOIN gene ON gene.entrez_gene_id = gene_alias.entrez_gene_id WHERE gene_alias.entrez_gene_id = %s' % (entrez_gene_id)
+
+    gene_aliases = []
+    try:
+        cursor.execute(sql_statement)
+        for row in cursor.fetchall():
+            gene_aliases.append(Gene(row[0].upper(), int(row[1]), int(row[2]), row[3].lower(), True))
+    except MySQLdb.Error, msg:
+        print >> ERROR_FILE, msg
+        sys.exit(2)
+    return gene_aliases
 
 def get_field_value_from_table(cursor, table_name, id_col_name, query_field_name, internal_id):
     '''
@@ -862,7 +878,16 @@ def generate_mirna_gene_record_map(cursor, genes, gene_aliases):
     for gene in genes:
         # update GENES global map
         update_genes_map(cursor, gene.entrez_gene_id)
-        mirna_gene_map[gene.entrez_gene_id] = [gene]
+        gene_list = [gene]
+
+        # add all aliases for `gene` records - this is to keep track
+        # of any records in `gene_alias` that would also be deleted
+        # due to FKC / deletion cascade relationship of `gene_alias`
+        # on table `gene`
+        gene_aliases = get_all_gene_aliases_by_entrez_gene_id(cursor, gene.entrez_gene_id)
+        if len(gene_aliases) > 0:
+            gene_list.extend(gene_aliases)
+        mirna_gene_map[gene.entrez_gene_id] = gene_list
 
     # add genes from `gene_alias` list - check that no duplicates are added
     # to list of genes for each entrez gene id
@@ -1013,7 +1038,7 @@ def format_mirna_db_references_report(db_connection, compiled_mirna_db_reference
           - SANGER_CANCER_CENSUSES
     '''
     cursor = get_db_cursor(db_connection)
-    print >> OUTPUT_FILE, '\n\n ---------------------------------------------\n miRNA GENE REFERENCES REPORT'
+    print >> OUTPUT_FILE, '\n\n ---------------------------------------------\nmiRNA GENE REFERENCES REPORT\n'
     for ref_type in MIRNA_GENE_DB_REFERENCE_TYPES:
         ref_set = compiled_mirna_db_reference_sets.get(ref_type, set())
         if len(ref_set) == 0:
@@ -1683,6 +1708,7 @@ def report_mirna_gene_references_in_db(db_connection, mirna_gene_map):
     compiled_mirna_db_reference_sets = {}
     orphan_records_count = 0
     for entrez_gene_id,genes in mirna_gene_map.items():
+        parent_gene = [gene for gene in genes if not gene.is_alias][0]
         # update lists of records in `gene` and `gene_alias` for removal
         for gene in genes:
             if is_mirna_gene_candidate(gene):
@@ -1690,9 +1716,14 @@ def report_mirna_gene_references_in_db(db_connection, mirna_gene_map):
                     MIRNA_GENE_ALIASES_OKAY_TO_REMOVE.add(gene)
                 else:
                     MIRNA_GENES_OKAY_TO_REMOVE.add(gene)
+            else:
+                # if not a miRNA gene candidate then current gene might be an alias
+                # for a record in table `gene` that was identified as a miRNA gene
+                if is_mirna_gene_candidate(parent_gene) and gene.is_alias:
+                    MIRNA_GENE_ALIASES_OKAY_TO_REMOVE.add(gene)
 
         # if there is at least one gene linked to entrez gene id that is not an alias and
-        # is not a miRNA gene then removal if the alias miRNA gene(s) will not affect
+        # is not a miRNA gene then removal of the alias miRNA gene(s) will not affect
         # any studies or reference data sets
         if has_at_least_one_non_alias_non_mirna_gene(genes):
             continue
