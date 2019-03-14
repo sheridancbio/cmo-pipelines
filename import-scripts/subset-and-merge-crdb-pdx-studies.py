@@ -13,6 +13,7 @@ SOURCE_STUDY_ID_KEY = "SOURCE_STUDY_ID"
 DESTINATION_STUDY_ID_KEY = "DESTINATION_STUDY_ID"
 DESTINATION_PATIENT_ID_KEY = "DESTINATION_PATIENT_ID"
 CMO_ROOT_DIRECTORY = "/data/portal-cron/cbio-portal-data/bic-mskcc/"
+DATAHUB_NAME = "datahub"
 
 MERGE_GENOMIC_FILES_SUCCESS = "MERGE_GENOMIC_FILES_SUCCESS"
 SUBSET_CLINICAL_FILES_SUCCESS = "SUBSET_CLINICAL_FILES_SUCCESS"
@@ -178,7 +179,10 @@ def resolve_source_study_path(source_id, data_source_directories):
     if len(source_paths) == 1:
         return source_paths[0]
     # multiple paths found, source id is non-unique. Report error for warning file
-    if len(source_paths) > 1:
+    if len(source_paths) == 2 and any([True for source_path in source_paths if DATAHUB_NAME in source_path]):
+        print "Datahub and one other source directory resolved for source id: " + source_id + ", using datahub source directory."
+        return [source_path for source_path in source_paths if DATAHUB_NAME in path][0]
+    elif len(source_paths) >= 2:
         print "Multiple directories resolved for source id: " + source_id
         MULTIPLE_RESOLVED_STUDY_PATHS[source_id] = source_paths
     else:
@@ -412,7 +416,7 @@ def generate_warning_file(temp_directory, warning_file):
             warning_file.write("CRDB PDX mapping file contained the following source studies which could not be processed - most likely due to an unknown patient id in a source study:\n ")
             warning_file.write("\n ".join(set([source_study for skipped_source_studies in SKIPPED_SOURCE_STUDIES.values() for source_study in skipped_source_studies])))
             warning_file.write("\n\n")
-        if len(MULTIPLE_RESOLVED_STUDY_PATHS) > 1:
+        if len(MULTIPLE_RESOLVED_STUDY_PATHS) > 0:
             warning_file.write("CRDB PDX mapping file contained source studies which mapped to multiple data source directories:\n")
             for source_id,source_paths in MULTIPLE_RESOLVED_STUDY_PATHS.items():
                 warning_file.write("\t" + source_id + ": " + ','.join(source_paths) + "\n")
