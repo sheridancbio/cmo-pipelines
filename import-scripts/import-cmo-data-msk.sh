@@ -101,9 +101,6 @@ echo "Cleaning up any untracked files from MSK-CMO import..."
 bash $PORTAL_HOME/scripts/datasource-repo-cleanup.sh $PORTAL_DATA_HOME $PORTAL_DATA_HOME/bic-mskcc $PORTAL_DATA_HOME/private
 
 $JAVA_BINARY $JAVA_IMPORTER_ARGS --send-update-notification --portal msk-automation-portal --notification-file "$msk_automation_notification_file"
-if [[ -d "$tmp" && "$tmp" != "/" ]]; then
-    rm -rf "$tmp"/*
-fi
 
 echo "### Starting import" >> "$CANCERSTUDIESLOGFILENAME"
 date >> "$CANCERSTUDIESLOGFILENAME"
