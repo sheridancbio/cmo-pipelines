@@ -121,6 +121,18 @@ if [ $? -gt 0 ]; then
     echo -e "$EMAIL_BODY" | mail -s "Data fetch failure: datahub" $pipeline_email_list
 fi
 
+# fetch updates in shah-lab repository
+echo "fetching updates from shah-lab..."
+SHAH_LAB_FETCH_FAIL=0
+$JAVA_BINARY $JAVA_IMPORTER_ARGS --fetch-data --data-source shah-lab --run-date latest
+if [ $? -gt 0 ]; then
+    echo "shah-lab fetch failed!"
+    SHAH_LAB_FETCH_FAIL=1
+    EMAIL_BODY="The shah-lab data fetch failed."
+    echo -e "Sending email $EMAIL_BODY"
+    echo -e "$EMAIL_BODY" | mail -s "Data fetch failure: shah-lab" $pipeline_email_list
+fi
+
 
 # import data that requires QC into triage portal
 echo "importing cancer type updates into triage portal database..."
@@ -139,7 +151,7 @@ then
 fi
 
 # if the database version is correct and ALL fetches succeed, then import
-if [[ $DB_VERSION_FAIL -eq 0 && $CMO_FETCH_FAIL -eq 0 && $PRIVATE_FETCH_FAIL -eq 0 && $GENIE_FETCH_FAIL -eq 0 && $CMO_IMPACT_FETCH_FAIL -eq 0 && $IMPACT_MERGED_FETCH_FAIL -eq 0 && $CBIO_PORTAL_DATA_FETCH_FAIL -eq 0 && $IMMUNOTHERAPY_FETCH_FAIL -eq 0 && $DATAHUB_FETCH_FAIL -eq 0 && $CDD_ONCOTREE_RECACHE_FAIL -eq 0 ]] ; then
+if [[ $DB_VERSION_FAIL -eq 0 && $CMO_FETCH_FAIL -eq 0 && $PRIVATE_FETCH_FAIL -eq 0 && $GENIE_FETCH_FAIL -eq 0 && $CMO_IMPACT_FETCH_FAIL -eq 0 && $IMPACT_MERGED_FETCH_FAIL -eq 0 && $CBIO_PORTAL_DATA_FETCH_FAIL -eq 0 && $IMMUNOTHERAPY_FETCH_FAIL -eq 0 && $DATAHUB_FETCH_FAIL -eq 0 && $SHAH_LAB_FETCH_FAIL -eq 0 && $CDD_ONCOTREE_RECACHE_FAIL -eq 0 ]] ; then
     echo "importing study data into triage portal database..."
     IMPORT_FAIL=0
     $JAVA_BINARY -Xmx32G $JAVA_IMPORTER_ARGS --update-study-data --portal triage-portal --use-never-import --update-worksheet --notification-file "$triage_notification_file" --oncotree-version ${ONCOTREE_VERSION_TO_USE} --transcript-overrides-source mskcc
@@ -182,4 +194,5 @@ then
 fi
 
 echo "Cleaning up any untracked files from MSK-TRIAGE import..."
-bash $PORTAL_HOME/scripts/datasource-repo-cleanup.sh $PORTAL_DATA_HOME $PORTAL_DATA_HOME/bic-mskcc $PORTAL_DATA_HOME/private $PORTAL_DATA_HOME/genie $PORTAL_DATA_HOME/impact $PORTAL_DATA_HOME/immunotherapy $PORTAL_DATA_HOME/datahub
+bash $PORTAL_HOME/scripts/datasource-repo-cleanup.sh $PORTAL_DATA_HOME $PORTAL_DATA_HOME/bic-mskcc $PORTAL_DATA_HOME/private $PORTAL_DATA_HOME/genie $PORTAL_DATA_HOME/impact $PORTAL_DATA_HOME/immunotherapy $PORTAL_DATA_HOME/datahub $PORTAL_DATA_HOME/shah-lab
+

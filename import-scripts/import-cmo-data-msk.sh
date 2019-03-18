@@ -54,6 +54,18 @@ if [ $? -gt 0 ]; then
     echo -e "$EMAIL_BODY" | mail -s "Data fetch failure: CMO (private)" $email_list
 fi
 
+# fetch updates in shah-lab repository
+echo "fetching updates from shah-lab..."
+SHAH_LAB_FETCH_FAIL=0
+$JAVA_BINARY $JAVA_IMPORTER_ARGS --fetch-data --data-source shah-lab --run-date latest
+if [ $? -gt 0 ]; then
+    echo "CMO (shah-lab) fetch failed!"
+    SHAH_LAB_FETCH_FAIL=1
+    EMAIL_BODY="The CMO (shah-lab) data fetch failed. Imports into Triage and production WILL NOT HAVE UP-TO-DATE DATA until this is resolved.\n\n*** DO NOT MARK STUDIES FOR IMPORT INTO msk-automation-portal. ***\n\n*** DO NOT MERGE ANY STUDIES until this has been resolved. Please uncheck any merged studies in the cBio Portal Google document. ***\n\nYou may keep projects marked for import into Triage in the cBio Portal Google document. Triage studies will be reimported once there has been a successful data fetch.\n\nPlease don't hesitate to ask if you have any questions."
+    echo -e "Sending email $EMAIL_BODY"
+    echo -e "$EMAIL_BODY" | mail -s "Data fetch failure: CMO (shah-lab)" $email_list
+fi
+
 DB_VERSION_FAIL=0
 # check database version before importing anything
 echo "Checking if database version is compatible"
@@ -63,7 +75,7 @@ if [ $? -gt 0 ]; then
     DB_VERSION_FAIL=1
 fi
 
-if [[ $DB_VERSION_FAIL -eq 0 && $CMO_FETCH_FAIL -eq 0 && $PRIVATE_FETCH_FAIL -eq 0 && $CDD_ONCOTREE_RECACHE_FAIL -eq 0 ]]; then
+if [[ $DB_VERSION_FAIL -eq 0 && $CMO_FETCH_FAIL -eq 0 && $PRIVATE_FETCH_FAIL -eq 0 && $SHAH_LAB_FETCH_FAIL -eq 0 && $CDD_ONCOTREE_RECACHE_FAIL -eq 0 ]]; then
     # import vetted studies into MSK portal
     echo "importing cancer type updates into msk portal database..."
     $JAVA_BINARY -Xmx16g $JAVA_IMPORTER_ARGS --import-types-of-cancer --oncotree-version ${ONCOTREE_VERSION_TO_USE}
@@ -98,7 +110,7 @@ if [ $DB_VERSION_FAIL -gt 0 ]; then
 fi
 
 echo "Cleaning up any untracked files from MSK-CMO import..."
-bash $PORTAL_HOME/scripts/datasource-repo-cleanup.sh $PORTAL_DATA_HOME $PORTAL_DATA_HOME/bic-mskcc $PORTAL_DATA_HOME/private
+bash $PORTAL_HOME/scripts/datasource-repo-cleanup.sh $PORTAL_DATA_HOME $PORTAL_DATA_HOME/bic-mskcc $PORTAL_DATA_HOME/private $PORTAL_DATA_HOME/shah-lab
 
 $JAVA_BINARY $JAVA_IMPORTER_ARGS --send-update-notification --portal msk-automation-portal --notification-file "$msk_automation_notification_file"
 
