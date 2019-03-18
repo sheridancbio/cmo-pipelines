@@ -136,7 +136,3 @@ $JAVA_BINARY $JAVA_IMPORTER_ARGS --send-update-notification --portal public-aws-
 
 echo "Cleaning up any untracked files from CBIO-PUBLIC AWS import..."
 bash $PORTAL_HOME/scripts/datasource-repo-cleanup.sh $PORTAL_DATA_HOME $PORTAL_DATA_HOME/impact $PORTAL_DATA_HOME/private $PORTAL_DATA_HOME/datahub
-
-if [[ -d "$tmp" && "$tmp" != "/" ]]; then
-    rm -rf "$tmp"/*
-fi
