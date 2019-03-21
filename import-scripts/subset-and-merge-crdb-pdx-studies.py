@@ -255,10 +255,10 @@ def subset_genomic_files(destination_to_source_mapping, source_id_to_path_mappin
                 os.makedirs(destination_directory)
             if source_directory:
                 patient_list = ','.join([patient.cmo_pid for patient in patients])
-                if source == IMPACT_STUDY_ID:
-                    subset_genomic_files_call = generate_bash_subset_call(lib, destination, destination_directory, source_directory, patient_list, "data_clinical_sample.txt")
+                if os.path.isfile(os.path.join(source_directory, CLINICAL_SAMPLE_FILE_PATTERN)):
+                    subset_genomic_files_call = generate_bash_subset_call(lib, destination, destination_directory, source_directory, patient_list, CLINICAL_SAMPLE_FILE_PATTERN)
                 else:    
-                    subset_genomic_files_call = generate_bash_subset_call(lib, destination, destination_directory, source_directory, patient_list, "data_clinical.txt")
+                    subset_genomic_files_call = generate_bash_subset_call(lib, destination, destination_directory, source_directory, patient_list, CLINICAL_FILE_PATTERN)
                 subset_genomic_files_status = subprocess.call(subset_genomic_files_call, shell = True)
                 # studies which cannot be subsetted are marked to be skipped when mergin
                 if subset_genomic_files_status != 0:
@@ -305,7 +305,7 @@ def remove_source_subdirectories(destination_to_source_mapping, root_directory):
 def remove_hgvsp_short_column(destination_to_source_mapping, root_directory):
     for destination in destination_to_source_mapping:
         destination_directory = os.path.join(root_directory, destination)
-        maf = os.path.join(destination_directory, "data_mutations_extended.txt")
+        maf = os.path.join(destination_directory, MUTATION_FILE_PATTERN)
         if "HGVSp_Short" in get_header(maf):
             hgvsp_short_index = get_header(maf).index("HGVSp_Short")
             maf_to_write = []
@@ -325,8 +325,8 @@ def remove_hgvsp_short_column(destination_to_source_mapping, root_directory):
 def remove_merged_clinical_timeline_files(destination_to_source_mapping, root_directory):
     for destination in destination_to_source_mapping:
         destination_directory = os.path.join(root_directory, destination)
-        remove_file_if_exists(destination_directory, "data_clinical.txt")
-        remove_file_if_exists(destination_directory, "data_timeline.txt")
+        remove_file_if_exists(destination_directory, CLINICAL_FILE_PATTERN)
+        remove_file_if_exists(destination_directory, TIMELINE_FILE_PATTERN)
 
 def remove_file_if_exists(destination_directory, filename):
     file_to_remove = os.path.join(destination_directory, filename)
@@ -366,7 +366,7 @@ def subset_clinical_timeline_files(destination_to_source_mapping, source_id_to_p
         patient_list = ','.join([patient.dmp_pid for patients in source_to_patients_map.values() for patient in patients])
         # destination directory is main study directory
         destination_directory = os.path.join(root_directory, destination)
-        subset_clinical_files_call = generate_bash_subset_call(lib, destination, destination_directory, crdb_fetch_directory, patient_list, "data_clinical_sample.txt")
+        subset_clinical_files_call = generate_bash_subset_call(lib, destination, destination_directory, crdb_fetch_directory, patient_list, CLINICAL_SAMPLE_FILE_PATTERN)
         subset_clinical_files_status = subprocess.call(subset_clinical_files_call, shell = True)
         if subset_clinical_files_status == 0:
             DESTINATION_STUDY_STATUS_FLAGS[destination][SUBSET_CLINICAL_FILES_SUCCESS] = True
