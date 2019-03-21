@@ -28,8 +28,8 @@ function attempt_gunzip_file {
     fi
 }
 
-echo "Updating portal configuration repository..."
-cd $PORTAL_CONFIG_HOME; $HG_BINARY pull -u
+echo "Updating pipelines configuration repository..."
+cd $PIPELINES_CONFIG_HOME; git reset --hard ; git checkout master ; git fetch origin master ; git pull origin master
 
 if [ -d $tmp ] ; then
     cd $tmp
@@ -82,12 +82,20 @@ function runGeneUpdatePipeline {
     fi
 }
 
-# run gene update pipeline for each database
-export SPRING_CONFIG_LOCATION=$PORTAL_CONFIG_HOME/properties/update-gene/application.properties
+# run gene update pipeline for each MSK pipelines database
+export SPRING_CONFIG_LOCATION=$PIPELINES_CONFIG_HOME/properties/update-gene/application.properties
 runGeneUpdatePipeline "cgds_gdac"
 runGeneUpdatePipeline "cgds_public"
 runGeneUpdatePipeline "cgds_triage"
 runGeneUpdatePipeline "cgds_genie"
+
+# run gene update for AWS gdac database
+export SPRING_CONFIG_LOCATION=$PIPELINES_CONFIG_HOME/properties/update-gene/application-aws-gdac.properties
+runGeneUpdatePipeline "cgds_gdac"
+
+# run gene update for AWS public database
+export SPRING_CONFIG_LOCATION=$PIPELINES_CONFIG_HOME/properties/update-gene/application-aws-public.properties
+runGeneUpdatePipeline "public_test"
 
 echo "Restarting triage-tomcat server..."
 TOMCAT_SERVER_PRETTY_DISPLAY_NAME="Triage Tomcat 7"
