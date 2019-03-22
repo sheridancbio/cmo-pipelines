@@ -43,10 +43,25 @@
       <artifactId>commons-collections</artifactId>
       <version>3.2.2</version>
     </dependency>
+    <!-- Genome Nexus (and cBioPortal 'core') -->
+    <!-- The cBioPortal 'core' dependency will now be pulled in by the
+    Genome Nexus annotation pipeline dependency, which pulls
+    the cBioPortal 'core' with jitpack.
+
+    Explicitly pulling in the cBioPortal 'core' dependency was prone to issues
+    with being out of sync with the version pulled in by the Genome Nexus annotation
+    pipeline. This caused one version to overwrite the other version leading such
+    that either the pipelines importer or the Genome Nexus annotator was using
+    the wrong version of cBioPortal 'core' than what was desired.
+
+    Allowing the cBioPortal 'core' dependency to be pulled in as part of the
+    Genome Nexus annotation pipeline ensures that the version of cBioPortal 'core'
+    used in the pipelines importer always matches the version used by the Genome
+    Nexus annotation pipeline. -->
     <dependency>
       <groupId>com.github.genome-nexus</groupId>
       <artifactId>genome-nexus-annotation-pipeline</artifactId>
-      <version>b97fa34b24dd5083f055cafa31867e69e0bcfb7c</version>
+      <version>d0a0193c8b97afc9e348b7ff5a46146d0ab5ab26</version>
     </dependency>
     <dependency>
       <groupId>javax.mail</groupId>
@@ -69,12 +84,6 @@
       <artifactId>guava</artifactId>
       <version>19.0</version>
       <type>jar</type>
-    </dependency>
-    <!-- cbioportal -->
-    <dependency>
-      <groupId>com.github.cbioportal</groupId>
-      <artifactId>cbioportal</artifactId>
-      <version>b6b7b3f8332b94f01adc9e9263af8f2fe2b4e09a</version>
     </dependency>
   </dependencies>
 
