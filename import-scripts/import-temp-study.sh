@@ -147,7 +147,7 @@ $JAVA_BINARY -Xmx64g $JAVA_IMPORTER_ARGS --update-study-data --portal $PORTAL_NA
 # we do not have to check the exit status here because if num_studies_updated != 1 we consider the import to have failed (we check num_studies_updated next)
 
 # check number of studies updated before continuing
-if [ -f "$TMP_DIRECTORY/num_studies_updated.txt" ]; then
+if [[ $? -eq 0 && -f "$TMP_DIRECTORY/num_studies_updated.txt" ]]; then
     num_studies_updated=`cat $TMP_DIRECTORY/num_studies_updated.txt`
 else
     num_studies_updated=0
