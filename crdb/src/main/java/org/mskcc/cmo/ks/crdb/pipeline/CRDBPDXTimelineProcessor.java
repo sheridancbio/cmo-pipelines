@@ -55,6 +55,10 @@ public class CRDBPDXTimelineProcessor implements ItemProcessor<CRDBPDXTimelineDa
 
     @Override
     public String process(final CRDBPDXTimelineDataset crdbPDXTimelineDataset) throws Exception {
+        return getFormattedRecord(crdbPDXTimelineDataset);
+    }
+
+    public String getFormattedRecord(CRDBPDXTimelineDataset crdbPDXTimelineDataset) throws Exception {
         List<String> record = new ArrayList<>();
         for (String field : crdbPdxTimelineFieldOrder) {
             String value = crdbPDXTimelineDataset.getClass().getMethod("get" + field).invoke(crdbPDXTimelineDataset).toString();
@@ -62,5 +66,4 @@ public class CRDBPDXTimelineProcessor implements ItemProcessor<CRDBPDXTimelineDa
         }
         return String.join("\t", record);
     }
-
 }

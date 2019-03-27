@@ -15,3 +15,12 @@ crdb.dataset_filename=
 crdb.username=
 crdb.password=
 crdb.connection_string=
+
+# email properties
+email.server=localhost
+email.sender=
+email.recipient=
+email.subject=Errors during CRDB PDX Data Fetch
+# for emails that crdb pdx team should be included on
+crdb.pdx.email.recipient=
+crdb.pdx.email.sender=
