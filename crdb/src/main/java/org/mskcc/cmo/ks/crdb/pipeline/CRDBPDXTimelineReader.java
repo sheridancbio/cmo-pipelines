@@ -32,6 +32,7 @@
 
 package org.mskcc.cmo.ks.crdb.pipeline;
 
+import com.google.common.base.Strings;
 import static com.querydsl.core.alias.Alias.$;
 import static com.querydsl.core.alias.Alias.alias;
 import com.querydsl.core.types.Projections;
@@ -63,6 +64,7 @@ public class CRDBPDXTimelineReader implements ItemStreamReader<CRDBPDXTimelineDa
     private CRDBUtils crdbUtils;
 
     private List<CRDBPDXTimelineDataset> crdbTimelineDatasetResults;
+    private List<CRDBPDXTimelineDataset> nullStartDateTimelinePatients = new ArrayList<>();
     private final Logger LOG = Logger.getLogger(CRDBPDXTimelineReader.class);
 
     @Override
@@ -72,6 +74,7 @@ public class CRDBPDXTimelineReader implements ItemStreamReader<CRDBPDXTimelineDa
             throw new ItemStreamException("Error fetching records from CRDB PDX Timeline Dataset View");
         }
         executionContext.put("crdbPdxFieldOrder", crdbUtils.standardizeTimelineFieldOrder(CRDBPDXTimelineDataset.getFieldNames()));
+        executionContext.put("nullStartDateTimelinePatients", nullStartDateTimelinePatients);
     }
 
     /**
@@ -96,11 +99,23 @@ public class CRDBPDXTimelineReader implements ItemStreamReader<CRDBPDXTimelineDa
                                         $(qCRDBD.getLATERALITY()), $(qCRDBD.getDISEASE_STATUS()), $(qCRDBD.getMETASTATIC_SITE()),
                                         $(qCRDBD.getSAMPLE_TYPE()), $(qCRDBD.getSITE_OF_RECURRENCE()), $(qCRDBD.getTREATMENT_NOTES())))
                 .from($(qCRDBD))
-                .where($(qCRDBD.getPATIENT_ID()).ne("NA")
-                .and($(qCRDBD.getSTART_DATE()).isNotNull()))
+                .where($(qCRDBD.getPATIENT_ID()).ne("NA"))
                 .fetch();
-        LOG.info("Imported " + crdbTimelineDatasetResults.size() + " records from CRDB PDX Timeline Dataset View.");
-        return crdbTimelineDatasetResults;
+        LOG.info("Fetched " + crdbTimelineDatasetResults.size() + " records from CRDB PDX Timeline Dataset View.");
+
+        List<CRDBPDXTimelineDataset> filteredCrdbTimelineDatasetResults = new ArrayList<>();
+        for (CRDBPDXTimelineDataset record : crdbTimelineDatasetResults) {
+            if (Strings.isNullOrEmpty(record.getSTART_DATE()) || record.getSTART_DATE().equals("NA")) {
+                nullStartDateTimelinePatients.add(record);
+            } else {
+                filteredCrdbTimelineDatasetResults.add(record);
+            }
+        }
+        if (nullStartDateTimelinePatients.size() > 0) {
+            LOG.warn("Found " + String.valueOf(nullStartDateTimelinePatients.size()) + " CRDB PDX timeline records with null 'START_DATE' - these records will be filtered from restults.");
+        }
+
+        return filteredCrdbTimelineDatasetResults;
     }
 
     @Override

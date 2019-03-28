@@ -78,6 +78,12 @@
       <artifactId>ojdbc7</artifactId>
       <version>12.1.0.2</version>
     </dependency>
+    <dependency>
+      <groupId>org.mskcc.cmo.ks</groupId>
+      <artifactId>common</artifactId>
+      <version>0.1.0</version>
+      <type>jar</type>
+    </dependency>
   </dependencies>
 
   <!-- Maven repo for QueryDSL -->
