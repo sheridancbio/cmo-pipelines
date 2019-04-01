@@ -37,8 +37,8 @@ SAMPLE_SUBSET_OUTPUT_DIR = 'temp_sample_subset'
 SAMPLE_EXCLUDE_OUTPUT_DIR = 'temp_sample_exclude'
 
 EXPECTED_ROW_COUNT = {'./test/resources/merge_studies/temp_standard_merge/data_CNA.txt': 576,
-                    './test/resources/merge_studies/temp_standard_merge/data_clinical_patient.txt': 10,
-                    './test/resources/merge_studies/temp_standard_merge/data_clinical_sample.txt': 11,
+                    './test/resources/merge_studies/temp_standard_merge/data_clinical_patient.txt': 11,
+                    './test/resources/merge_studies/temp_standard_merge/data_clinical_sample.txt': 12,
                     './test/resources/merge_studies/temp_standard_merge/data_mutations_extended.txt': 70,
                     './test/resources/merge_studies/temp_patient_subset/data_CNA.txt':576,
                     './test/resources/merge_studies/temp_patient_subset/data_clinical_patient.txt':4,
