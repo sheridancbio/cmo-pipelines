@@ -84,6 +84,7 @@ public class TimelineChemoProcessor implements ItemProcessor<DDPCompositeRecord,
 
     /**
      * Converts chemo procedures into timeline chemo records.
+     * Returns empty (non-null) List if there are no records.
      *
      * @param dmpPatientId
      * @param referenceDate - the date of birth

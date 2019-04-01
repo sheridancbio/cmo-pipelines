@@ -66,6 +66,14 @@ public class DDPSortTasklet implements Tasklet {
     private String timelineRadiationFilename;
     @Value("${ddp.timeline_surgery_filename}")
     private String timelineSurgeryFilename;
+    @Value("#{jobParameters[includeDiagnosis]}")
+    private Boolean includeDiagnosis;
+    @Value("#{jobParameters[includeRadiation]}")
+    private Boolean includeRadiation;
+    @Value("#{jobParameters[includeChemotherapy]}")
+    private Boolean includeChemotherapy;
+    @Value("#{jobParameters[includeSurgery]}")
+    private Boolean includeSurgery;
 
     @Override
     public RepeatStatus execute(StepContribution stepContribution, ChunkContext chunkContext) throws Exception {
@@ -75,20 +83,26 @@ public class DDPSortTasklet implements Tasklet {
         log.info("Sorting and overwriting " + clinicalFilePath);
         DDPUtils.sortAndWrite(clinicalFilePath, clinicalHeader);
 
-        String timelineChemotherapyFilePath = Paths.get(outputDirectory, timelineChemotherapyFilename).toString();
-        String timelineChemotherapyHeader = StringUtils.join(TimelineChemoRecord.getFieldNames(), "\t");
-        log.info("Sorting and overwriting " + timelineChemotherapyFilePath);
-        DDPUtils.sortAndWrite(timelineChemotherapyFilePath, timelineChemotherapyHeader);
+        if (includeChemotherapy) {
+            String timelineChemotherapyFilePath = Paths.get(outputDirectory, timelineChemotherapyFilename).toString();
+            String timelineChemotherapyHeader = StringUtils.join(TimelineChemoRecord.getFieldNames(), "\t");
+            log.info("Sorting and overwriting " + timelineChemotherapyFilePath);
+            DDPUtils.sortAndWrite(timelineChemotherapyFilePath, timelineChemotherapyHeader);
+        }
 
-        String timelineRadiationFilePath = Paths.get(outputDirectory, timelineRadiationFilename).toString();
-        String timelineRadiationHeader = StringUtils.join(TimelineRadiationRecord.getFieldNames(), "\t");
-        log.info("Sorting and overwriting " + timelineRadiationFilePath);
-        DDPUtils.sortAndWrite(timelineRadiationFilePath, timelineRadiationHeader);
+        if (includeRadiation) {
+            String timelineRadiationFilePath = Paths.get(outputDirectory, timelineRadiationFilename).toString();
+            String timelineRadiationHeader = StringUtils.join(TimelineRadiationRecord.getFieldNames(), "\t");
+            log.info("Sorting and overwriting " + timelineRadiationFilePath);
+            DDPUtils.sortAndWrite(timelineRadiationFilePath, timelineRadiationHeader);
+        }
 
-        String timelineSurgeryFilePath = Paths.get(outputDirectory, timelineSurgeryFilename).toString();
-        String timelineSurgeryHeader = StringUtils.join(TimelineSurgeryRecord.getFieldNames(), "\t");
-        log.info("Sorting and overwriting " + timelineSurgeryFilePath);
-        DDPUtils.sortAndWrite(timelineSurgeryFilePath, timelineSurgeryHeader);
+        if (includeSurgery) {
+            String timelineSurgeryFilePath = Paths.get(outputDirectory, timelineSurgeryFilename).toString();
+            String timelineSurgeryHeader = StringUtils.join(TimelineSurgeryRecord.getFieldNames(), "\t");
+            log.info("Sorting and overwriting " + timelineSurgeryFilePath);
+            DDPUtils.sortAndWrite(timelineSurgeryFilePath, timelineSurgeryHeader);
+        }
 
         return RepeatStatus.FINISHED;
     }

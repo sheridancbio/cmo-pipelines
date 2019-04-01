@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Memorial Sloan-Kettering Cancer Center.
+ * Copyright (c) 2018-2019 Memorial Sloan-Kettering Cancer Center.
  *
  * This library is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS
@@ -58,6 +58,7 @@ public class DDPPipeline {
     private static Options getOptions(String[] args) {
         Options options = new Options();
         options.addOption("h", "help", false, "Shows this help document and quits.")
+                .addOption("f", "fetch_data", true, "List of comma delimited additional data to fetch [diagnosis,radiation,chemotherapy,surgery] (demographics is always included)") // TODO do not hard code this
                 .addOption("o", "output_directory", true, "Output directory")
                 .addOption("c", "cohort_name", true, "Cohort name [" + StringUtils.join(CohortConfiguration.cohortMapping().keySet(), " | ") + "]")
                 .addOption("s", "subset_file", true, "File containing patient ID's to subset by")
@@ -72,7 +73,16 @@ public class DDPPipeline {
         System.exit(exitStatus);
     }
 
-    private static void launchJob(String[] args, String cohortName, String subsetFilename, String excludedPatientsFilename, String outputDirectory, Boolean testMode) throws Exception {
+    private static void launchJob(String[] args,
+                String cohortName,
+                String subsetFilename,
+                String excludedPatientsFilename,
+                String outputDirectory,
+                Boolean testMode,
+                Boolean includeDiagnosis,
+                Boolean includeRadiation,
+                Boolean includeChemotherapy,
+                Boolean includeSurgery) throws Exception {
         // TO-DO: Set up job that generates file containing line-delimited list of patient IDs
         // by calling cohort endpoint with user-specified cohort name
         // NOTE:  the use-case of this is meant to generate list of patient IDs in DDP pediatric cohort
@@ -86,6 +96,10 @@ public class DDPPipeline {
                 .addString("excludedPatientsFilename", excludedPatientsFilename)
                 .addString("outputDirectory", outputDirectory)
                 .addString("testMode", String.valueOf(testMode))
+                .addString("includeDiagnosis", String.valueOf(includeDiagnosis))
+                .addString("includeRadiation", String.valueOf(includeRadiation))
+                .addString("includeChemotherapy", String.valueOf(includeChemotherapy))
+                .addString("includeSurgery", String.valueOf(includeSurgery))
                 .toJobParameters();
         Job job = ctx.getBean(BatchConfiguration.DDP_COHORT_JOB, Job.class);
         JobExecution jobExecution = jobLauncher.run(job, jobParameters);
@@ -120,10 +134,37 @@ public class DDPPipeline {
             help(options, 1);
         }
         // parse input arguments
+        String[] fetchOptions = {};
+        if (commandLine.hasOption("f")) {
+            fetchOptions = commandLine.getOptionValue("f").split(",");
+        }
         String cohortName = commandLine.hasOption("c") ? commandLine.getOptionValue("c") : "";
         String subsetFilename = commandLine.hasOption("s") ? commandLine.getOptionValue("s") : "";
         String excludedPatientsFilename = commandLine.hasOption("e") ? commandLine.getOptionValue("e") : "";
         String outputDirectory = commandLine.getOptionValue("o");
+        boolean foundInvalidFetchOption = false;
+        boolean includeDiagnosis = false;
+        boolean includeRadiation = false;
+        boolean includeChemotherapy = false;
+        boolean includeSurgery = false;
+        // note we will have at least one data set to fetch because this is a required argument
+        for (String fetchOption : fetchOptions) {
+            if ("diagnosis".equals(fetchOption)) {
+                includeDiagnosis = true;
+            } else if ("radiation".equals(fetchOption)) {
+                includeRadiation = true;
+            } else if ("chemotherapy".equals(fetchOption)) {
+                includeChemotherapy = true;
+            } else if ("surgery".equals(fetchOption)) {
+                includeSurgery = true;
+            } else {
+                System.out.println("Fetch option '" + fetchOption + "' is unknown - please provide valid fetch option!");
+                foundInvalidFetchOption = true;
+            }
+        }
+        if (foundInvalidFetchOption) {
+            help(options, 2);
+        }
         if (!Strings.isNullOrEmpty(cohortName) && !isValidCohort(cohortName)) {
             System.out.println("Cohort name provided is unknown - please provide valid cohort name!");
             help(options,2);
@@ -140,6 +181,7 @@ public class DDPPipeline {
             System.out.println("No such directory: " + outputDirectory);
             help(options,2);
         }
-        launchJob(args, cohortName, subsetFilename, excludedPatientsFilename, outputDirectory, commandLine.hasOption("t"));
+        launchJob(args, cohortName, subsetFilename, excludedPatientsFilename, outputDirectory, commandLine.hasOption("t"),
+            includeDiagnosis, includeRadiation, includeChemotherapy, includeSurgery);
     }
 }

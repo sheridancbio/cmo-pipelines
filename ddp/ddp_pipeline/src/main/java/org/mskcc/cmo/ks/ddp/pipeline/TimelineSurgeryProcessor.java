@@ -83,6 +83,7 @@ public class TimelineSurgeryProcessor implements ItemProcessor<DDPCompositeRecor
 
     /**
      * Converts surgery procedures into timeline surgery records.
+     * Returns empty (non-null) List if there are no records.
      *
      * @param dmpPatientId
      * @param referenceDate - the date of birth

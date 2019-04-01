@@ -49,9 +49,9 @@ public class ClinicalRecord {
     private String SEX;
     private String OS_STATUS;
     private String OS_MONTHS;
-    private String RADIATION_THERAPY;
-    private String CHEMOTHERAPY;
-    private String SURGERY;
+    private String RADIATION_THERAPY = "NA"; // default
+    private String CHEMOTHERAPY = "NA"; // default
+    private String SURGERY = "NA";  // default
 
     public ClinicalRecord(){}
 
@@ -61,9 +61,15 @@ public class ClinicalRecord {
         this.SEX = DDPUtils.resolvePatientSex(compositeRecord);
         this.OS_STATUS = DDPUtils.resolveOsStatus(compositeRecord);
         this.OS_MONTHS = DDPUtils.resolveOsMonths(OS_STATUS, compositeRecord);
-        this.RADIATION_THERAPY = compositeRecord.hasReceivedRadiation() ? "Yes" : "No";
-        this.CHEMOTHERAPY = compositeRecord.hasReceivedChemo() ? "Yes" : "No";
-        this.SURGERY = compositeRecord.hasReceivedSurgery() ? "Yes" : "No";
+        if (compositeRecord.hasReceivedRadiation() != null) {
+            this.RADIATION_THERAPY = compositeRecord.hasReceivedRadiation() ? "Yes" : "No";
+        }
+        if (compositeRecord.hasReceivedChemo() != null) {
+            this.CHEMOTHERAPY = compositeRecord.hasReceivedChemo() ? "Yes" : "No";
+        }
+        if (compositeRecord.hasReceivedSurgery() != null) {
+            this.SURGERY = compositeRecord.hasReceivedSurgery() ? "Yes" : "No";
+        }
     }
 
     /**
