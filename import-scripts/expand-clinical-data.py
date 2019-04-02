@@ -22,9 +22,10 @@ def expand_clinical_data_main(clinical_filename, fields, impact_data_only, ident
 
 	# load data from clinical_filename and write data to output directory
 	data_file = open(clinical_filename, 'rU')
-	data_reader = csv.DictReader(data_file, dialect = 'excel-tab')
+	data_reader = [line for line in data_file.readlines() if not line.startswith('#')][1:]
 	output_data = ['\t'.join(header)]
 	for line in data_reader:
+		line = dict(zip(header, map(str.strip, line.split('\t'))))
 		if impact_data_only and not is_impact_sample_or_patient(line[identifier_column_name].strip()):
 			continue
 		# update line with supplemental sample clinical data and format data as string for output file
@@ -43,7 +44,7 @@ def load_supplemental_clinical_data(supplemental_clinical_filename, supplemental
 	""" Loads supplemental clinical data from supplemental_clinical_filename into SUPPLEMENTAL_CLINICAL_DATA. """
 	header = get_file_header(supplemental_clinical_filename)
 	data_file = open(supplemental_clinical_filename, 'rU')
-	data_reader = [line for line in data_file.readlines() if not line.startswith('#')]
+	data_reader = [line for line in data_file.readlines() if not line.startswith('#')][1:]
 	for line in data_reader:
 		line = dict(zip(header, map(str.strip, line.split('\t'))))
 		if study_id == 'genie' and identifier_column_name == 'SAMPLE_ID':
