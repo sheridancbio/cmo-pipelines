@@ -79,7 +79,7 @@ public class DDPSortTasklet implements Tasklet {
     public RepeatStatus execute(StepContribution stepContribution, ChunkContext chunkContext) throws Exception {
 
         String clinicalFilePath = Paths.get(outputDirectory, clinicalFilename).toString();
-        String clinicalHeader = StringUtils.join(ClinicalRecord.getFieldNames(), "\t");
+        String clinicalHeader = StringUtils.join(ClinicalRecord.getFieldNames(includeDiagnosis, includeRadiation, includeChemotherapy, includeSurgery), "\t");
         log.info("Sorting and overwriting " + clinicalFilePath);
         DDPUtils.sortAndWrite(clinicalFilePath, clinicalHeader);
 

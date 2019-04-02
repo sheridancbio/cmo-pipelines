@@ -38,15 +38,22 @@ import org.mskcc.cmo.ks.ddp.source.composite.DDPCompositeRecord;
 
 import org.apache.log4j.Logger;
 import org.springframework.batch.item.ItemProcessor;
-import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Value;
 
 /**
  *
  * @author ochoaa
  */
-@Component
 public class ClinicalProcessor implements ItemProcessor<DDPCompositeRecord, String> {
 
+    @Value("#{jobParameters[includeDiagnosis]}")
+    private Boolean includeDiagnosis;
+    @Value("#{jobParameters[includeRadiation]}")
+    private Boolean includeRadiation;
+    @Value("#{jobParameters[includeChemotherapy]}")
+    private Boolean includeChemotherapy;
+    @Value("#{jobParameters[includeSurgery]}")
+    private Boolean includeSurgery;
     private final Logger LOG = Logger.getLogger(ClinicalProcessor.class);
 
     @Override
@@ -54,7 +61,7 @@ public class ClinicalProcessor implements ItemProcessor<DDPCompositeRecord, Stri
         String record = null;
         ClinicalRecord clinicalRecord = new ClinicalRecord(compositeRecord);
         try {
-            record = DDPUtils.constructRecord(clinicalRecord);
+            record = DDPUtils.constructRecord(clinicalRecord, includeDiagnosis, includeRadiation, includeChemotherapy, includeSurgery);
         }
         catch (NullPointerException e) {
             LOG.error("Error converting clinical record to string: " + clinicalRecord.toString());

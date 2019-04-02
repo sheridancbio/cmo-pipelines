@@ -84,7 +84,6 @@ public class TimelineRadiationProcessor implements ItemProcessor<DDPCompositeRec
 
     /**
      * Converts radiation procedures into timeline radiation records.
-     * Returns empty (non-null) List if there are no records.
      *
      * @param dmpPatientId
      * @param referenceDate - the date of birth

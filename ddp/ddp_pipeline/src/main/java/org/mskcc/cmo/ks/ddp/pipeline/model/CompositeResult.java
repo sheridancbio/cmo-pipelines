@@ -40,9 +40,6 @@ import java.util.List;
  */
 public class CompositeResult {
     private String clinicalResult;
-    // timelineRadiationResults, timelineChemoResults, and timelineSurgeryResults must
-    // be null if we didn't retrieve the results, this is different from empty
-    // where we did try to get the results but there weren't any
     private List<String> timelineRadiationResults;
     private List<String> timelineChemoResults;
     private List<String> timelineSurgeryResults;

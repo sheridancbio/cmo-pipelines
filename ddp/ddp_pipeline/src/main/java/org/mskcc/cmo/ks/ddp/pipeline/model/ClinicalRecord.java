@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Memorial Sloan-Kettering Cancer Center.
+ * Copyright (c) 2018-2019 Memorial Sloan-Kettering Cancer Center.
  *
  * This library is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS
@@ -49,9 +49,9 @@ public class ClinicalRecord {
     private String SEX;
     private String OS_STATUS;
     private String OS_MONTHS;
-    private String RADIATION_THERAPY = "NA"; // default
-    private String CHEMOTHERAPY = "NA"; // default
-    private String SURGERY = "NA";  // default
+    private String RADIATION_THERAPY;
+    private String CHEMOTHERAPY;
+    private String SURGERY;
 
     public ClinicalRecord(){}
 
@@ -61,15 +61,9 @@ public class ClinicalRecord {
         this.SEX = DDPUtils.resolvePatientSex(compositeRecord);
         this.OS_STATUS = DDPUtils.resolveOsStatus(compositeRecord);
         this.OS_MONTHS = DDPUtils.resolveOsMonths(OS_STATUS, compositeRecord);
-        if (compositeRecord.hasReceivedRadiation() != null) {
-            this.RADIATION_THERAPY = compositeRecord.hasReceivedRadiation() ? "Yes" : "No";
-        }
-        if (compositeRecord.hasReceivedChemo() != null) {
-            this.CHEMOTHERAPY = compositeRecord.hasReceivedChemo() ? "Yes" : "No";
-        }
-        if (compositeRecord.hasReceivedSurgery() != null) {
-            this.SURGERY = compositeRecord.hasReceivedSurgery() ? "Yes" : "No";
-        }
+        this.RADIATION_THERAPY = compositeRecord.hasReceivedRadiation() ? "Yes" : "No";
+        this.CHEMOTHERAPY = compositeRecord.hasReceivedChemo() ? "Yes" : "No";
+        this.SURGERY = compositeRecord.hasReceivedSurgery() ? "Yes" : "No";
     }
 
     /**
@@ -194,16 +188,24 @@ public class ClinicalRecord {
      *
      * @return
      */
-    public static List<String> getFieldNames() {
+    public static List<String> getFieldNames(Boolean includeDiagnosis, Boolean includeRadiation, Boolean includeChemotherapy, Boolean includeSurgery) {
         List<String> fieldNames = new ArrayList<>();
         fieldNames.add("PATIENT_ID");
         fieldNames.add("AGE_CURRENT");
         fieldNames.add("SEX");
         fieldNames.add("OS_STATUS");
-        fieldNames.add("OS_MONTHS");
-        fieldNames.add("RADIATION_THERAPY");
-        fieldNames.add("CHEMOTHERAPY");
-        fieldNames.add("SURGERY");
+        if (includeDiagnosis) { // this depends on fields from the diagnosis query
+            fieldNames.add("OS_MONTHS");
+        }
+        if (includeRadiation) {
+            fieldNames.add("RADIATION_THERAPY");
+        }
+        if (includeChemotherapy) {
+            fieldNames.add("CHEMOTHERAPY");
+        }
+        if (includeSurgery) {
+            fieldNames.add("SURGERY");
+        }
         return fieldNames;
     }
 }

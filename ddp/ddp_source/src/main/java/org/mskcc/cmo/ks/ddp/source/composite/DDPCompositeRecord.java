@@ -218,17 +218,11 @@ public class DDPCompositeRecord {
     }
 
     public Boolean hasReceivedRadiation() {
-        if (radiationProcedures == null) {
-            return null; // indicates we did not check
-        }
-        return !radiationProcedures.isEmpty();
+        return (radiationProcedures != null && !radiationProcedures.isEmpty());
     }
 
     public Boolean hasReceivedRadiation(String radiationType) {
-        if (radiationProcedures == null) {
-            return null; // indicates we did not check
-        }
-        if (!radiationProcedures.isEmpty()) {
+        if (radiationProcedures != null && !radiationProcedures.isEmpty()) {
             for (Radiation procedure : radiationProcedures) {
                 if (procedure.getPlanName().equalsIgnoreCase(radiationType)) {
                     return Boolean.TRUE;
@@ -239,17 +233,11 @@ public class DDPCompositeRecord {
     }
 
     public Boolean hasReceivedChemo() {
-        if (chemoProcedures == null) {
-            return null; // indicates we did not check
-        }
-        return !chemoProcedures.isEmpty();
+        return (chemoProcedures != null && !chemoProcedures.isEmpty());
     }
 
     public Boolean hasReceivedChemo(String chemoType) {
-        if (chemoProcedures == null) {
-            return null; // indicates we did not check
-        }
-        if (!chemoProcedures.isEmpty()) {
+        if (chemoProcedures != null && !chemoProcedures.isEmpty()) {
             for (Chemotherapy procedure : chemoProcedures) {
                 if (procedure.getORDNAME().equalsIgnoreCase(chemoType)) {
                     return Boolean.TRUE;
@@ -260,17 +248,11 @@ public class DDPCompositeRecord {
     }
 
     public Boolean hasReceivedSurgery() {
-        if (surgicalProcedures == null) {
-            return null;
-        }
-        return !surgicalProcedures.isEmpty();
+        return (surgicalProcedures != null && !surgicalProcedures.isEmpty());
     }
 
     public Boolean hasReceivedSurgery(String surgeryType) {
-        if (surgicalProcedures == null) {
-            return null;
-        }
-        if (!surgicalProcedures.isEmpty()) {
+        if (surgicalProcedures != null && !surgicalProcedures.isEmpty()) {
             for (Surgery procedure : surgicalProcedures) {
                 if (procedure.getProcedureDescription().equalsIgnoreCase(surgeryType)) {
                     return Boolean.TRUE;
