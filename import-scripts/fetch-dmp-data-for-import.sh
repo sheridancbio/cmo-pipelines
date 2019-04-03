@@ -467,11 +467,17 @@ fi
 
 # -----------------------------------------------------------------------------------------------------------
 # GENERATE CANCER TYPE CASE LISTS AND SUPP DATE ADDED FILES
-# NOTE: Cancer type case lists MSKIMPACT, HEMEPACT, or ARCHER_UNFILTERED are not needed. These case lists will
+# NOTE: Cancer type case lists ARCHER_UNFILTERED are not needed. These case lists will
 # be generated for MSKSOLIDHEME and the UNLINKED ARCHER study after merging/subsetting.
+# NOTE2: Even though cancer type case lists are not needed for MSKIMPACT, HEMEPACT for the portal
+# since they are imported as part of MSKSOLIDHEME - the LYMPHOMASUPERCOHORT subsets these source
+# studies by CANCER_TYPE and ONCOTREE_CODE so we want to keep these fields up-to-date which is
+# accomplished by running the 'addCancerTypeCaseLists' function
 
 # add "DATE ADDED" info to clinical data for MSK-IMPACT
 if [ $IMPORT_STATUS_IMPACT -eq 0 ] && [ $FETCH_CVR_IMPACT_FAIL -eq 0 ] ; then
+    addCancerTypeCaseLists $MSK_IMPACT_DATA_HOME "mskimpact" "data_clinical_mskimpact_data_clinical_cvr.txt"
+    cd $MSK_IMPACT_DATA_HOME ; find . -name "*.orig" -delete ; $HG_BINARY add * ; $HG_BINARY revert data_clinical* data_timeline* --no-backup ; $HG_BINARY commit -m "Latest MSKIMPACT Dataset: Case Lists"
     if [ $EXPORT_SUPP_DATE_IMPACT_FAIL -eq 0 ] ; then
         addDateAddedData $MSK_IMPACT_DATA_HOME "data_clinical_mskimpact_data_clinical_cvr.txt" "data_clinical_mskimpact_supp_date_cbioportal_added.txt"
     fi
@@ -479,6 +485,8 @@ fi
 
 # add "DATE ADDED" info to clinical data for HEMEPACT
 if [ $IMPORT_STATUS_HEME -eq 0 ] && [ $FETCH_CVR_HEME_FAIL -eq 0 ] ; then
+    addCancerTypeCaseLists $MSK_HEMEPACT_DATA_HOME "mskimpact_heme" "data_clinical_hemepact_data_clinical.txt"
+    cd $MSK_HEMEPACT_DATA_HOME ; find . -name "*.orig" -delete ; $HG_BINARY add * ; $HG_BINARY revert data_clinical* data_timeline* --no-backup ; $HG_BINARY commit -m "Latest HEMEPACT Dataset: Case Lists"
     if [ $EXPORT_SUPP_DATE_HEME_FAIL -eq 0 ] ; then
         addDateAddedData $MSK_HEMEPACT_DATA_HOME "data_clinical_hemepact_data_clinical.txt" "data_clinical_hemepact_data_clinical_supp_date.txt"
     fi
