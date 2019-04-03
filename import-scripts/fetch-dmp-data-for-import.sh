@@ -45,7 +45,7 @@ MSK_LEHIGH_SUBSET_FAIL=0
 MSK_MCI_SUBSET_FAIL=0
 MSK_HARTFORD_SUBSET_FAIL=0
 MSK_RALPHLAUREN_SUBSET_FAIL=0
-MSK_TAILORMEDJAPAN_SUBSET_FAIL=0
+MSK_RIKENGENESISJAPAN_SUBSET_FAIL=0
 MSKIMPACT_PED_SUBSET_FAIL=0
 SCLC_MSKIMPACT_SUBSET_FAIL=0
 LYMPHOMA_SUPER_COHORT_SUBSET_FAIL=0
@@ -1076,31 +1076,31 @@ else
     cd $MSK_RALPHLAUREN_DATA_HOME ; find . -name "*.orig" -delete ; $HG_BINARY add * ; $HG_BINARY commit -m "Latest RALPHLAUREN dataset"
 fi
 
-# TAILORMEDJAPAN subset
-bash $PORTAL_HOME/scripts/subset-impact-data.sh -i=msk_tailormedjapan -o=$MSK_TAILORMEDJAPAN_DATA_HOME -d=$MSK_MIXEDPACT_DATA_HOME -f="INSTITUTE=Tailor Med Japan" -s=$MSK_DMP_TMPDIR/tailormedjapan_subset.txt -c=$MSK_MIXEDPACT_DATA_HOME/data_clinical_sample.txt
+# RIKENGENESISJAPAN subset
+bash $PORTAL_HOME/scripts/subset-impact-data.sh -i=msk_rikengenesisjapan -o=$MSK_RIKENGENESISJAPAN_DATA_HOME -d=$MSK_MIXEDPACT_DATA_HOME -f="INSTITUTE=Tailor Med Japan" -s=$MSK_DMP_TMPDIR/rikengenesisjapan_subset.txt -c=$MSK_MIXEDPACT_DATA_HOME/data_clinical_sample.txt
 if [ $? -gt 0 ] ; then
     echo "MSK Tailor Med Japan subset failed! Study will not be updated in the portal."
-    MSK_TAILORMEDJAPAN_SUBSET_FAIL=1
+    MSK_RIKENGENESISJAPAN_SUBSET_FAIL=1
 else
-    filter_derived_clinical_data $MSK_TAILORMEDJAPAN_DATA_HOME
+    filter_derived_clinical_data $MSK_RIKENGENESISJAPAN_DATA_HOME
     if [ $? -gt 0 ] ; then
         echo "MSK Tailor Med Japan subset clinical attribute filtering step failed! Study will not be updated in the portal."
-        MSK_TAILORMEDJAPAN_SUBSET_FAIL=1
+        MSK_RIKENGENESISJAPAN_SUBSET_FAIL=1
     else
         echo "MSK Tailor Med Japan subset successful!"
-        addCancerTypeCaseLists $MSK_TAILORMEDJAPAN_DATA_HOME "msk_tailormedjapan" "data_clinical_sample.txt" "data_clinical_patient.txt"
-        touch $MSK_TAILORMEDJAPAN_IMPORT_TRIGGER
+        addCancerTypeCaseLists $MSK_RIKENGENESISJAPAN_DATA_HOME "msk_rikengenesisjapan" "data_clinical_sample.txt" "data_clinical_patient.txt"
+        touch $MSK_RIKENGENESISJAPAN_IMPORT_TRIGGER
     fi
 fi
 
-# commit or revert changes for TAILORMEDJAPAN
-if [ $MSK_TAILORMEDJAPAN_SUBSET_FAIL -gt 0 ] ; then
-    sendPreImportFailureMessageMskPipelineLogsSlack "TAILORMEDJAPAN subset"
-    echo "TAILORMEDJAPAN subset and/or updates failed! Reverting data to last commit."
-    cd $MSK_TAILORMEDJAPAN_DATA_HOME ; $HG_BINARY update -C ; find . -name "*.orig" -delete
+# commit or revert changes for RIKENGENESISJAPAN
+if [ $MSK_RIKENGENESISJAPAN_SUBSET_FAIL -gt 0 ] ; then
+    sendPreImportFailureMessageMskPipelineLogsSlack "RIKENGENESISJAPAN subset"
+    echo "RIKENGENESISJAPAN subset and/or updates failed! Reverting data to last commit."
+    cd $MSK_RIKENGENESISJAPAN_DATA_HOME ; $HG_BINARY update -C ; find . -name "*.orig" -delete
 else
-    echo "Committing TAILORMEDJAPAN data"
-    cd $MSK_TAILORMEDJAPAN_DATA_HOME ; find . -name "*.orig" -delete ; $HG_BINARY add * ; $HG_BINARY commit -m "Latest TAILORMEDJAPAN dataset"
+    echo "Committing RIKENGENESISJAPAN data"
+    cd $MSK_RIKENGENESISJAPAN_DATA_HOME ; find . -name "*.orig" -delete ; $HG_BINARY add * ; $HG_BINARY commit -m "Latest RIKENGENESISJAPAN dataset"
 fi
 
 #--------------------------------------------------------------
@@ -1391,9 +1391,9 @@ if [ $MSK_RALPHLAUREN_SUBSET_FAIL -gt 0 ] ; then
 fi
 
 EMAIL_BODY="Failed to subset MSK Tailor Med Japan data. Subset study will not be updated."
-if [ $MSK_TAILORMEDJAPAN_SUBSET_FAIL -gt 0 ] ; then
+if [ $MSK_RIKENGENESISJAPAN_SUBSET_FAIL -gt 0 ] ; then
     echo -e "Sending email $EMAIL_BODY"
-    echo -e "$EMAIL_BODY" |  mail -s "TAILORMEDJAPAN Subset Failure: Study will not be updated." $email_list
+    echo -e "$EMAIL_BODY" |  mail -s "RIKENGENESISJAPAN Subset Failure: Study will not be updated." $email_list
 fi
 
 EMAIL_BODY="Failed to subset MSKIMPACT_PED data. Subset study will not be updated."
