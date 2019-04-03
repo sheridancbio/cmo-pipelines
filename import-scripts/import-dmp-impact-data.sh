@@ -57,7 +57,7 @@ queenscancercenter_notification_file=$(mktemp $MSK_DMP_TMPDIR/queenscancercenter
 miamicancerinstitute_notification_file=$(mktemp $MSK_DMP_TMPDIR/miamicancerinstitute-portal-update-notification.$now.XXXXXX)
 hartfordhealthcare_notification_file=$(mktemp $MSK_DMP_TMPDIR/hartfordhealthcare-portal-update-notification.$now.XXXXXX)
 ralphlauren_notification_file=$(mktemp $MSK_DMP_TMPDIR/ralphlauren-portal-update-notification.$now.XXXXXX)
-tailormedjapan_notification_file=$(mktemp $MSK_DMP_TMPDIR/msk-tailormedjapan-portal-update-notification.$now.XXXXXX)
+rikengenesisjapan_notification_file=$(mktemp $MSK_DMP_TMPDIR/msk-rikengenesisjapan-portal-update-notification.$now.XXXXXX)
 lymphoma_super_cohort_notification_file=$(mktemp $MSK_DMP_TMPDIR/lymphoma-super-cohort-portal-update-notification.$now.XXXXXX)
 sclc_mskimpact_notification_file=$(mktemp $MSK_DMP_TMPDIR/sclc-mskimpact-portal-update-notification.$now.XXXXXX)
 mskimpact_ped_notification_file=$(mktemp $MSK_DMP_TMPDIR/mskimpact-ped-update-notification.$now.XXXXXX)
@@ -79,7 +79,7 @@ IMPORT_FAIL_QUEENS=1
 IMPORT_FAIL_MCI=1
 IMPORT_FAIL_HARTFORD=1
 IMPORT_FAIL_RALPHLAUREN=1
-IMPORT_FAIL_TAILORMEDJAPAN=1
+IMPORT_FAIL_RIKENGENESISJAPAN=1
 IMPORT_FAIL_MSKIMPACT_PED=1
 IMPORT_FAIL_SCLC_MSKIMPACT=1
 IMPORT_FAIL_LYMPHOMA=1
@@ -107,12 +107,12 @@ if [ $DB_VERSION_FAIL -eq 0 ] ; then
 fi
 
 # Temp study importer arguments
-# (1): cancer study id [ mskimpact | mskimpact_heme | mskraindance | mskarcher | mixedpact | msk_solid_heme | msk_kingscounty | msk_lehighvalley | msk_queenscancercenter | msk_miamicancerinstitute | msk_hartfordhealthcare | msk_ralphlauren | msk_tailormedjapan | mskimpact_ped | sclc_mskimpact_2017 | lymphoma_super_cohort_fmi_msk ]
-# (2): temp study id [ temporary_mskimpact | temporary_mskimpact_heme | temporary_mskraindance | temporary_mskarcher | temporary_mixedpact | temporary_msk_solid_heme | temporary_msk_kingscounty | temporary_msk_lehighvalley | temporary_msk_queenscancercenter | temporary_msk_miamicancerinstitute | temporary_msk_hartfordhealthcare | temporary_msk_ralphlauren | temporary_msk_tailormedjapan | temporary_mskimpact_ped | temporary_sclc_mskimpact_2017 | temporary_lymphoma_super_cohort_fmi_msk]
-# (3): backup study id [ yesterday_mskimpact | yesterday_mskimpact_heme | yesterday_mskraindance | yesterday_mskarcher | yesterday_mixedpact | yesterday_msk_solid_heme | yesterday_msk_kingscounty | yesterday_msk_lehighvalley | yesterday_msk_queenscancercenter | yesterday_msk_miamicancerinstitute | yesterday_msk_hartfordhealthcare | yesterday_msk_ralphlauren | yesterday_msk_tailormedjapan | yesterday_mskimpact_ped | yesterday_sclc_mskimpact_2017 | yesterday_lymphoma_super_cohort_fmi_msk]
+# (1): cancer study id [ mskimpact | mskimpact_heme | mskraindance | mskarcher | mixedpact | msk_solid_heme | msk_kingscounty | msk_lehighvalley | msk_queenscancercenter | msk_miamicancerinstitute | msk_hartfordhealthcare | msk_ralphlauren | msk_rikengenesisjapan | mskimpact_ped | sclc_mskimpact_2017 | lymphoma_super_cohort_fmi_msk ]
+# (2): temp study id [ temporary_mskimpact | temporary_mskimpact_heme | temporary_mskraindance | temporary_mskarcher | temporary_mixedpact | temporary_msk_solid_heme | temporary_msk_kingscounty | temporary_msk_lehighvalley | temporary_msk_queenscancercenter | temporary_msk_miamicancerinstitute | temporary_msk_hartfordhealthcare | temporary_msk_ralphlauren | temporary_msk_rikengenesisjapan | temporary_mskimpact_ped | temporary_sclc_mskimpact_2017 | temporary_lymphoma_super_cohort_fmi_msk]
+# (3): backup study id [ yesterday_mskimpact | yesterday_mskimpact_heme | yesterday_mskraindance | yesterday_mskarcher | yesterday_mixedpact | yesterday_msk_solid_heme | yesterday_msk_kingscounty | yesterday_msk_lehighvalley | yesterday_msk_queenscancercenter | yesterday_msk_miamicancerinstitute | yesterday_msk_hartfordhealthcare | yesterday_msk_ralphlauren | yesterday_msk_rikengenesisjapan | yesterday_mskimpact_ped | yesterday_sclc_mskimpact_2017 | yesterday_lymphoma_super_cohort_fmi_msk]
 # (4): portal name [ mskimpact-portal | mskheme-portal | mskraindance-portal | mskarcher-portal | mixedpact-portal | msk-solid-heme-portal |  msk-kingscounty-portal | msk-lehighvalley-portal | msk-queenscancercenter-portal | msk-mci-portal | msk-hartford-portal | msk-ralphlauren-portal | msk-tailormedjapan-portal | msk-ped-portal | msk-sclc-portal | msk-fmi-lymphoma-portal ]
-# (5): study path [ $MSK_IMPACT_DATA_HOME | $MSK_HEMEPACT_DATA_HOME | $MSK_RAINDANCE_DATA_HOME | $MSK_ARCHER_DATA_HOME | $MSK_MIXEDPACT_DATA_HOME | $MSK_SOLID_HEME_DATA_HOME | $MSK_KINGS_DATA_HOME | $MSK_LEHIGH_DATA_HOME | $MSK_QUEENS_DATA_HOME | $MSK_MCI_DATA_HOME | $MSK_HARTFORD_DATA_HOME | $MSK_RALPHLAUREN_DATA_HOME | $MSK_TAILORMEDJAPAN_DATA_HOME | $MSKIMPACT_PED_DATA_HOME | $MSK_SCLC_DATA_HOME | $LYMPHOMA_SUPER_COHORT_DATA_HOME ]
-# (6): notification file [ $mskimpact_notification_file | $mskheme_notification_file | $mskraindance_notification_file | $mixedpact_notification_file | $msk_solid_heme_notification_file | $kingscounty_notification_file | $lehighvalley_notification_file | $queenscancercenter_notification_file | $miamicancerinstitute_notification_file | $hartfordhealthcare_notification_file | $ralphlauren_notification_file | $tailormedjapan_notification_file | $mskimpact_ped_notification_file | $sclc_mskimpact_notification_file | $lymphoma_super_cohort_notification_file ]
+# (5): study path [ $MSK_IMPACT_DATA_HOME | $MSK_HEMEPACT_DATA_HOME | $MSK_RAINDANCE_DATA_HOME | $MSK_ARCHER_DATA_HOME | $MSK_MIXEDPACT_DATA_HOME | $MSK_SOLID_HEME_DATA_HOME | $MSK_KINGS_DATA_HOME | $MSK_LEHIGH_DATA_HOME | $MSK_QUEENS_DATA_HOME | $MSK_MCI_DATA_HOME | $MSK_HARTFORD_DATA_HOME | $MSK_RALPHLAUREN_DATA_HOME | $MSK_RIKENGENESISJAPAN_DATA_HOME | $MSKIMPACT_PED_DATA_HOME | $MSK_SCLC_DATA_HOME | $LYMPHOMA_SUPER_COHORT_DATA_HOME ]
+# (6): notification file [ $mskimpact_notification_file | $mskheme_notification_file | $mskraindance_notification_file | $mixedpact_notification_file | $msk_solid_heme_notification_file | $kingscounty_notification_file | $lehighvalley_notification_file | $queenscancercenter_notification_file | $miamicancerinstitute_notification_file | $hartfordhealthcare_notification_file | $ralphlauren_notification_file | $rikengenesisjapan_notification_file | $mskimpact_ped_notification_file | $sclc_mskimpact_notification_file | $lymphoma_super_cohort_notification_file ]
 # (7): tmp directory
 # (8): email list
 # (9): oncotree version [ oncotree_candidate_release | oncotree_latest_stable ]
@@ -360,27 +360,27 @@ else
     sendImportSuccessMessageMskPipelineLogsSlack "RALPHLAUREN"
 fi
 
-# TEMP STUDY IMPORT: TAILORMEDJAPAN
-if [ $DB_VERSION_FAIL -eq 0 ] && [ -f $MSK_TAILORMEDJAPAN_IMPORT_TRIGGER ] ; then
-    echo "Importing msk_tailormedjapan study..."
+# TEMP STUDY IMPORT: RIKENGENESISJAPAN
+if [ $DB_VERSION_FAIL -eq 0 ] && [ -f $MSK_RIKENGENESISJAPAN_IMPORT_TRIGGER ] ; then
+    echo "Importing msk_rikengenesisjapan study..."
     echo $(date)
-    bash $PORTAL_HOME/scripts/import-temp-study.sh --study-id="msk_tailormedjapan" --temp-study-id="temporary_msk_tailormedjapan" --backup-study-id="yesterday_msk_tailormedjapan" --portal-name="msk-tailormedjapan-portal" --study-path="$MSK_TAILORMEDJAPAN_DATA_HOME" --notification-file="$tailormedjapan_notification_file" --tmp-directory="$MSK_DMP_TMPDIR" --email-list="$email_list" --oncotree-version="${ONCOTREE_VERSION_TO_USE}" --importer-jar="$PORTAL_HOME/lib/msk-dmp-importer.jar" --transcript-overrides-source="mskcc"
+    bash $PORTAL_HOME/scripts/import-temp-study.sh --study-id="msk_rikengenesisjapan" --temp-study-id="temporary_msk_rikengenesisjapan" --backup-study-id="yesterday_msk_rikengenesisjapan" --portal-name="msk-tailormedjapan-portal" --study-path="$MSK_RIKENGENESISJAPAN_DATA_HOME" --notification-file="$rikengenesisjapan_notification_file" --tmp-directory="$MSK_DMP_TMPDIR" --email-list="$email_list" --oncotree-version="${ONCOTREE_VERSION_TO_USE}" --importer-jar="$PORTAL_HOME/lib/msk-dmp-importer.jar" --transcript-overrides-source="mskcc"
     if [ $? -eq 0 ] ; then
         RESTART_AFTER_MSK_AFFILIATE_IMPORT=1
-        IMPORT_FAIL_TAILORMEDJAPAN=0
+        IMPORT_FAIL_RIKENGENESISJAPAN=0
     fi
-    rm $MSK_TAILORMEDJAPAN_IMPORT_TRIGGER
+    rm $MSK_RIKENGENESISJAPAN_IMPORT_TRIGGER
 else
     if [ $DB_VERSION_FAIL -gt 0 ] ; then
-        echo "Not importing TAILORMEDJAPAN - database version is not compatible"
+        echo "Not importing RIKENGENESISJAPAN - database version is not compatible"
     else
-        echo "Not importing TAILORMEDJAPAN - something went wrong with subsetting clinical studies for TAILORMEDJAPAN."
+        echo "Not importing RIKENGENESISJAPAN - something went wrong with subsetting clinical studies for RIKENGENESISJAPAN."
     fi
 fi
-if [ $IMPORT_FAIL_TAILORMEDJAPAN -gt 0 ] ; then
-    sendImportFailureMessageMskPipelineLogsSlack "TAILORMEDJAPAN import"
+if [ $IMPORT_FAIL_RIKENGENESISJAPAN -gt 0 ] ; then
+    sendImportFailureMessageMskPipelineLogsSlack "RIKENGENESISJAPAN import"
 else
-    sendImportSuccessMessageMskPipelineLogsSlack "TAILORMEDJAPAN"
+    sendImportSuccessMessageMskPipelineLogsSlack "RIKENGENESISJAPAN"
 fi
 
 ## END Institute affiliate imports
