@@ -246,8 +246,8 @@ def merge_files(data_filenames, file_type, reference_set, keep_match, output_dir
     gene_sample_dict = {}
     is_first_profile_datafile = True
     rows = []
-    patient_id_to_row_index = {} # only used for CLINICAL_PATIENT_FILE_PATTERN files
-    replicated_patient_id_row_count = 0
+    id_to_row_index = {} # use for CLINICAL files
+    replicated_id_row_count = 0
 
     for f in data_filenames:
         # update sequenced samples tag if data_mutations* file
@@ -272,14 +272,14 @@ def merge_files(data_filenames, file_type, reference_set, keep_match, output_dir
             elif merge_style is MERGE_STYLES[NORMAL]:
                 data_values = map(lambda x: data.get(x, ''), file_header)
                 if data_okay_to_add(is_clinical_or_timeline_file, file_header, reference_set, data_values, keep_match):
-                    if file_type == CLINICAL_PATIENT_META_PATTERN:
-                        patient_id = data['PATIENT_ID']
-                        if patient_id in patient_id_to_row_index:
-                            previous_record = rows[patient_id_to_row_index[patient_id]]
-                            replicated_patient_id_row_count += 1
-                            merge_rows(previous_record, data, new_header, patient_id)
+                    if file_type in [CLINICAL_PATIENT_META_PATTERN, CLINICAL_SAMPLE_META_PATTERN, CLINICAL_META_PATTERN]:
+                        indexed_id = data['PATIENT_ID'] if file_type == CLINICAL_PATIENT_META_PATTERN else data['SAMPLE_ID']
+                        if indexed_id in id_to_row_index:
+                            previous_record = rows[id_to_row_index[indexed_id]]
+                            replicated_id_row_count += 1
+                            merge_rows(previous_record, data, new_header, indexed_id)
                         else:
-                            patient_id_to_row_index[patient_id] = len(rows)
+                            id_to_row_index[indexed_id] = len(rows)
                             rows.append(normal_row(data, new_header))
                     else:
                         rows.append(normal_row(data, new_header))
@@ -298,7 +298,7 @@ def merge_files(data_filenames, file_type, reference_set, keep_match, output_dir
         write_normal(rows, output_filename, new_header)
 
     print >> OUTPUT_FILE, 'Validating merge for: ' + output_filename
-    validate_merge(file_type, data_filenames, output_filename, reference_set, keep_match, merge_style, replicated_patient_id_row_count)
+    validate_merge(file_type, data_filenames, output_filename, reference_set, keep_match, merge_style, replicated_id_row_count)
 
 def validate_merge(file_type, data_filenames, merged_filename, reference_set, keep_match, merge_style, skipped_row_count):
     merged_file_summary = get_datafile_counts_summary(file_type, merged_filename, reference_set, keep_match, merge_style)
