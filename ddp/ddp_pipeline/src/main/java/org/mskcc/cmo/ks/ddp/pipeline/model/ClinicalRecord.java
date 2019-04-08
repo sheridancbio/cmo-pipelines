@@ -194,9 +194,9 @@ public class ClinicalRecord {
         fieldNames.add("AGE_CURRENT");
         fieldNames.add("SEX");
         fieldNames.add("OS_STATUS");
-        if (includeDiagnosis) { // this depends on fields from the diagnosis query
-            fieldNames.add("OS_MONTHS");
-        }
+        // OS_MONTHS depends on fields from the diagnosis query
+        // so if querying diagnosis is turned off all fields will be NA 
+        fieldNames.add("OS_MONTHS");
         if (includeRadiation) {
             fieldNames.add("RADIATION_THERAPY");
         }
