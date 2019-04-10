@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Memorial Sloan-Kettering Cancer Center.
+ * Copyright (c) 2018-2019 Memorial Sloan-Kettering Cancer Center.
  *
  * This library is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS
@@ -46,7 +46,10 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class ClinicalRecord {
     private String PATIENT_ID;
     private String AGE_CURRENT;
+    private String RACE;
+    private String RELIGION;
     private String SEX;
+    private String ETHNICITY;
     private String OS_STATUS;
     private String OS_MONTHS;
     private String RADIATION_THERAPY;
@@ -58,7 +61,10 @@ public class ClinicalRecord {
     public ClinicalRecord(DDPCompositeRecord compositeRecord) throws ParseException {
         this.PATIENT_ID = compositeRecord.getDmpPatientId();
         this.AGE_CURRENT = DDPUtils.resolvePatientCurrentAge(compositeRecord);
+        this.RACE = compositeRecord.getPatientRace() == null ? "NA" : compositeRecord.getPatientRace();
+        this.RELIGION = compositeRecord.getPatientReligion() == null ? "NA" : compositeRecord.getPatientReligion();
         this.SEX = DDPUtils.resolvePatientSex(compositeRecord);
+        this.ETHNICITY = compositeRecord.getPatientEthnicity() == null ? "NA" : compositeRecord.getPatientEthnicity();;
         this.OS_STATUS = DDPUtils.resolveOsStatus(compositeRecord);
         this.OS_MONTHS = DDPUtils.resolveOsMonths(OS_STATUS, compositeRecord);
         this.RADIATION_THERAPY = compositeRecord.hasReceivedRadiation() ? "Yes" : "No";
@@ -95,6 +101,34 @@ public class ClinicalRecord {
     }
 
     /**
+     * @return the RACE
+     */
+    public String getRACE() {
+        return RACE;
+    }
+
+    /**
+     * @param RACE the RACE to set
+     */
+    public void setRACE(String RACE) {
+        this.RACE = RACE;
+    }
+
+    /**
+     * @return the RELIGION
+     */
+    public String getRELIGION() {
+        return RELIGION;
+    }
+
+    /**
+     * @param RELIGION the RELIGION to set
+     */
+    public void setRELIGION(String RELIGION) {
+        this.RELIGION = RELIGION;
+    }
+
+    /**
      * @return the SEX
      */
     public String getSEX() {
@@ -106,6 +140,20 @@ public class ClinicalRecord {
      */
     public void setSEX(String SEX) {
         this.SEX = SEX;
+    }
+
+    /**
+     * @return the ETHNICITY
+     */
+    public String getETHNICITY() {
+        return ETHNICITY;
+    }
+
+    /**
+     * @param ETHNICITY the ETHNICITY to set
+     */
+    public void setETHNICITY(String ETHNICITY) {
+        this.ETHNICITY = ETHNICITY;
     }
 
     /**
@@ -188,16 +236,29 @@ public class ClinicalRecord {
      *
      * @return
      */
-    public static List<String> getFieldNames() {
+    public static List<String> getFieldNames(Boolean includeDiagnosis, Boolean includeRadiation, Boolean includeChemotherapy, Boolean includeSurgery) {
         List<String> fieldNames = new ArrayList<>();
         fieldNames.add("PATIENT_ID");
         fieldNames.add("AGE_CURRENT");
+        fieldNames.add("RACE");
+        fieldNames.add("RELIGION");
         fieldNames.add("SEX");
+        fieldNames.add("ETHNICITY");
         fieldNames.add("OS_STATUS");
-        fieldNames.add("OS_MONTHS");
-        fieldNames.add("RADIATION_THERAPY");
-        fieldNames.add("CHEMOTHERAPY");
-        fieldNames.add("SURGERY");
+        // OS_MONTHS depends on fields from the diagnosis query
+        // so if querying diagnosis is turned off all fields will be NA
+        if (includeDiagnosis) {
+            fieldNames.add("OS_MONTHS");
+        }
+        if (includeRadiation) {
+            fieldNames.add("RADIATION_THERAPY");
+        }
+        if (includeChemotherapy) {
+            fieldNames.add("CHEMOTHERAPY");
+        }
+        if (includeSurgery) {
+            fieldNames.add("SURGERY");
+        }
         return fieldNames;
     }
 }

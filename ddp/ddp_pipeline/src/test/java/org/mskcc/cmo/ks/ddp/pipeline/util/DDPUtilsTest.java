@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Memorial Sloan-Kettering Cancer Center.
+ * Copyright (c) 2018-2019 Memorial Sloan-Kettering Cancer Center.
  *
  * This library is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS
@@ -40,6 +40,7 @@ import org.junit.Test;
 import java.text.ParseException;
 import org.mskcc.cmo.ks.ddp.source.composite.DDPCompositeRecord;
 import org.mskcc.cmo.ks.ddp.pipeline.model.ClinicalRecord;
+import org.mskcc.cmo.ks.ddp.pipeline.model.TimelineRadiationRecord;
 import org.mskcc.cmo.ks.ddp.source.model.CohortPatient;
 import org.mskcc.cmo.ks.ddp.source.model.PatientDemographics;
 import org.mskcc.cmo.ks.ddp.source.model.PatientDiagnosis;
@@ -338,7 +339,7 @@ public class DDPUtilsTest {
         Assert.assertEquals("-60", DDPUtils.resolveTimelineEventDateInDays("2018-04-20", "2018-02-19"));
     }
 
-    /* Tests for constructRecord()
+    /* Tests for constructRecord(Object) and constructRecord(Object, Boolean, Boolean, Boolean, Boolean)
     * exception thrown if "getFieldNames" method does not exist
     * exception thrown if one of the values are null
     */
@@ -348,24 +349,133 @@ public class DDPUtilsTest {
         DDPUtils.constructRecord(new Object());
     }
 
+    @Test(expected = NoSuchMethodException.class)
+    public void constructRecordOverloadedNoSuchMethodExceptionTest() throws Exception {
+        DDPUtils.constructRecord(new Object(), Boolean.FALSE, Boolean.FALSE, Boolean.FALSE, Boolean.FALSE);
+    }
+
     @Test(expected = NullPointerException.class)
     public void constructRecordNullPointerExceptionTest() throws Exception {
-        DDPUtils.constructRecord(new ClinicalRecord());
+        DDPUtils.constructRecord(new TimelineRadiationRecord());
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void constructRecordOverloadedNullPointerExceptionTest() throws Exception {
+        DDPUtils.constructRecord(new ClinicalRecord(), Boolean.TRUE, Boolean.TRUE, Boolean.TRUE, Boolean.TRUE);
     }
 
     @Test
     public void constructRecordTest() throws Exception {
+        TimelineRadiationRecord timelineRadiationRecord = new TimelineRadiationRecord();
+        timelineRadiationRecord.setPATIENT_ID("MY_PT_ID");
+        timelineRadiationRecord.setSTART_DATE("18732");
+        timelineRadiationRecord.setSTOP_DATE("18736");
+        timelineRadiationRecord.setEVENT_TYPE("TREATMENT");
+        timelineRadiationRecord.setTREATMENT_TYPE("Radiation Therapy");
+        timelineRadiationRecord.setSUBTYPE("R");
+        timelineRadiationRecord.setANATOMY("  BRAIN "); // it does a trim too
+        timelineRadiationRecord.setPLANNED_DOSE("1000.00");
+        timelineRadiationRecord.setDELIVERED_DOSE("1000.00");
+        timelineRadiationRecord.setPLANNED_FRACTIONS("4");
+        timelineRadiationRecord.setDELIVERED_FRACTIONS("4");
+        timelineRadiationRecord.setREF_POINT_SITE("PTV30");
+        String expectedValue = "MY_PT_ID\t18732\t18736\tTREATMENT\tRadiation Therapy\tR\tBRAIN\t1000.00\t1000.00\t4\t4\tPTV30";
+        String returnedValue = DDPUtils.constructRecord(timelineRadiationRecord);
+        Assert.assertEquals(expectedValue, returnedValue);
+    }
+
+    @Test
+    public void constructRecordOverloadedTest() throws Exception {
         ClinicalRecord clinicalRecord = new ClinicalRecord();
         clinicalRecord.setPATIENT_ID("MY_PT_ID");
         clinicalRecord.setAGE_CURRENT("20");
+        clinicalRecord.setRACE("MY_RACE");
+        clinicalRecord.setRELIGION("MY_RELIGION");
         clinicalRecord.setSEX("Female");
+        clinicalRecord.setETHNICITY("MY_ETHNICITY");
         clinicalRecord.setOS_STATUS("LIVING");
         clinicalRecord.setOS_MONTHS("3.123");
         clinicalRecord.setRADIATION_THERAPY("MY_RADIATION_THERAPY");
         clinicalRecord.setCHEMOTHERAPY("  MY_CHEMOTHERAPY  "); // it does a trim too
         clinicalRecord.setSURGERY("MY_SURGERY");
-        String expectedValue = "MY_PT_ID\t20\tFemale\tLIVING\t3.123\tMY_RADIATION_THERAPY\tMY_CHEMOTHERAPY\tMY_SURGERY";
-        String returnedValue = DDPUtils.constructRecord(clinicalRecord);
+        String expectedValue = "MY_PT_ID\t20\tMY_RACE\tMY_RELIGION\tFemale\tMY_ETHNICITY\tLIVING\t3.123\tMY_RADIATION_THERAPY\tMY_CHEMOTHERAPY\tMY_SURGERY";
+        String returnedValue = DDPUtils.constructRecord(clinicalRecord, Boolean.TRUE, Boolean.TRUE, Boolean.TRUE, Boolean.TRUE);
+        Assert.assertEquals(expectedValue, returnedValue);
+    }
+
+    @Test
+    public void constructRecordOverloadedNoDiagnosisTest() throws Exception {
+        ClinicalRecord clinicalRecord = new ClinicalRecord();
+        clinicalRecord.setPATIENT_ID("MY_PT_ID");
+        clinicalRecord.setAGE_CURRENT("20");
+        clinicalRecord.setRACE("MY_RACE");
+        clinicalRecord.setRELIGION("MY_RELIGION");
+        clinicalRecord.setSEX("Female");
+        clinicalRecord.setETHNICITY("MY_ETHNICITY");
+        clinicalRecord.setOS_STATUS("LIVING");
+        clinicalRecord.setOS_MONTHS("NA");
+        clinicalRecord.setRADIATION_THERAPY("MY_RADIATION_THERAPY");
+        clinicalRecord.setCHEMOTHERAPY("  MY_CHEMOTHERAPY  "); // it does a trim too
+        clinicalRecord.setSURGERY("MY_SURGERY");
+        String expectedValue = "MY_PT_ID\t20\tMY_RACE\tMY_RELIGION\tFemale\tMY_ETHNICITY\tLIVING\tMY_RADIATION_THERAPY\tMY_CHEMOTHERAPY\tMY_SURGERY";
+        String returnedValue = DDPUtils.constructRecord(clinicalRecord, Boolean.FALSE, Boolean.TRUE, Boolean.TRUE, Boolean.TRUE);
+        Assert.assertEquals(expectedValue, returnedValue);
+    }
+
+    @Test
+    public void constructRecordOverloadedNoRadTest() throws Exception {
+        ClinicalRecord clinicalRecord = new ClinicalRecord();
+        clinicalRecord.setPATIENT_ID("MY_PT_ID");
+        clinicalRecord.setAGE_CURRENT("20");
+        clinicalRecord.setRACE("MY_RACE");
+        clinicalRecord.setRELIGION("MY_RELIGION");
+        clinicalRecord.setSEX("Female");
+        clinicalRecord.setETHNICITY("MY_ETHNICITY");
+        clinicalRecord.setOS_STATUS("LIVING");
+        clinicalRecord.setOS_MONTHS("3.123");
+        clinicalRecord.setRADIATION_THERAPY("MY_RADIATION_THERAPY"); // doesn't matter if this was set
+        clinicalRecord.setCHEMOTHERAPY("  MY_CHEMOTHERAPY  "); // it does a trim too
+        clinicalRecord.setSURGERY("MY_SURGERY");
+        String expectedValue = "MY_PT_ID\t20\tMY_RACE\tMY_RELIGION\tFemale\tMY_ETHNICITY\tLIVING\t3.123\tMY_CHEMOTHERAPY\tMY_SURGERY";
+        String returnedValue = DDPUtils.constructRecord(clinicalRecord, Boolean.TRUE, Boolean.FALSE, Boolean.TRUE, Boolean.TRUE);
+        Assert.assertEquals(expectedValue, returnedValue);
+    }
+
+    @Test
+    public void constructRecordOverloadedNoChemoTest() throws Exception {
+        ClinicalRecord clinicalRecord = new ClinicalRecord();
+        clinicalRecord.setPATIENT_ID("MY_PT_ID");
+        clinicalRecord.setAGE_CURRENT("20");
+        clinicalRecord.setRACE("MY_RACE");
+        clinicalRecord.setRELIGION("MY_RELIGION");
+        clinicalRecord.setSEX("Female");
+        clinicalRecord.setETHNICITY("MY_ETHNICITY");
+        clinicalRecord.setOS_STATUS("LIVING");
+        clinicalRecord.setOS_MONTHS("3.123");
+        clinicalRecord.setRADIATION_THERAPY("MY_RADIATION_THERAPY");
+        clinicalRecord.setCHEMOTHERAPY("  MY_CHEMOTHERAPY  "); // doesn't matter if this was set
+        clinicalRecord.setSURGERY("MY_SURGERY");
+        String expectedValue = "MY_PT_ID\t20\tMY_RACE\tMY_RELIGION\tFemale\tMY_ETHNICITY\tLIVING\t3.123\tMY_RADIATION_THERAPY\tMY_SURGERY";
+        String returnedValue = DDPUtils.constructRecord(clinicalRecord, Boolean.TRUE, Boolean.TRUE, Boolean.FALSE, Boolean.TRUE);
+        Assert.assertEquals(expectedValue, returnedValue);
+    }
+
+    @Test
+    public void constructRecordOverloadedNoSurgeryTest() throws Exception {
+        ClinicalRecord clinicalRecord = new ClinicalRecord();
+        clinicalRecord.setPATIENT_ID("MY_PT_ID");
+        clinicalRecord.setAGE_CURRENT("20");
+        clinicalRecord.setRACE("MY_RACE");
+        clinicalRecord.setRELIGION("MY_RELIGION");
+        clinicalRecord.setSEX("Female");
+        clinicalRecord.setETHNICITY("MY_ETHNICITY");
+        clinicalRecord.setOS_STATUS("LIVING");
+        clinicalRecord.setOS_MONTHS("3.123");
+        clinicalRecord.setRADIATION_THERAPY("MY_RADIATION_THERAPY");
+        clinicalRecord.setCHEMOTHERAPY("  MY_CHEMOTHERAPY  "); // it does a trim too
+        clinicalRecord.setSURGERY("MY_SURGERY"); // doesn't matter if this was set
+        String expectedValue = "MY_PT_ID\t20\tMY_RACE\tMY_RELIGION\tFemale\tMY_ETHNICITY\tLIVING\t3.123\tMY_RADIATION_THERAPY\tMY_CHEMOTHERAPY";
+        String returnedValue = DDPUtils.constructRecord(clinicalRecord, Boolean.TRUE, Boolean.TRUE, Boolean.TRUE, Boolean.FALSE);
         Assert.assertEquals(expectedValue, returnedValue);
     }
 

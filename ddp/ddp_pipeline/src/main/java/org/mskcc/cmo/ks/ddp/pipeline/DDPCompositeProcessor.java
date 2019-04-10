@@ -43,6 +43,7 @@ import com.google.common.base.Strings;
 import org.apache.log4j.Logger;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.mskcc.cmo.ks.ddp.pipeline.model.CompositeResult;
 
 /**
@@ -50,6 +51,19 @@ import org.mskcc.cmo.ks.ddp.pipeline.model.CompositeResult;
  * @author ochoaa
  */
 public class DDPCompositeProcessor implements ItemProcessor<DDPCompositeRecord, CompositeResult> {
+
+    @Value("#{jobParameters[includeDiagnosis]}")
+    private Boolean includeDiagnosis;
+
+    @Value("#{jobParameters[includeRadiation]}")
+    private Boolean includeRadiation;
+
+    @Value("#{jobParameters[includeChemotherapy]}")
+    private Boolean includeChemotherapy;
+
+    @Value("#{jobParameters[includeSurgery]}")
+    private Boolean includeSurgery;
+
     @Autowired
     private DDPDataSource ddpDataSource;
 
@@ -74,10 +88,22 @@ public class DDPCompositeProcessor implements ItemProcessor<DDPCompositeRecord, 
     public CompositeResult process(DDPCompositeRecord compositeRecord) throws Exception {
         // all get methods are asynchrnous - won't wait for completion before completing
         CompletableFuture<PatientDemographics> futurePatientDemographics = ddpDataSource.getPatientDemographics(compositeRecord.getDmpPatientId());
-        CompletableFuture<List<PatientDiagnosis>> futurePatientDiagnosis = ddpDataSource.getPatientDiagnoses(compositeRecord.getDmpPatientId());
-        CompletableFuture<List<Radiation>> futureRadiation = ddpDataSource.getPatientRadiationProcedures(compositeRecord.getDmpPatientId());
-        CompletableFuture<List<Chemotherapy>> futureChemotherapy = ddpDataSource.getPatientChemoProcedures(compositeRecord.getDmpPatientId());
-        CompletableFuture<List<Surgery>> futureSurgery = ddpDataSource.getPatientSurgicalProcedures(compositeRecord.getDmpPatientId());
+        CompletableFuture<List<PatientDiagnosis>> futurePatientDiagnosis = null;
+        CompletableFuture<List<Radiation>> futureRadiation = null;
+        CompletableFuture<List<Chemotherapy>> futureChemotherapy = null;
+        CompletableFuture<List<Surgery>> futureSurgery = null;
+        if (includeDiagnosis) {
+            futurePatientDiagnosis = ddpDataSource.getPatientDiagnoses(compositeRecord.getDmpPatientId());
+        }
+        if (includeRadiation) {
+            futureRadiation = ddpDataSource.getPatientRadiationProcedures(compositeRecord.getDmpPatientId());
+        }
+        if (includeChemotherapy) {
+            futureChemotherapy = ddpDataSource.getPatientChemoProcedures(compositeRecord.getDmpPatientId());
+        }
+        if (includeSurgery) {
+            futureSurgery = ddpDataSource.getPatientSurgicalProcedures(compositeRecord.getDmpPatientId());
+        }
         // we don't have to check if ddpDataSource.getPatientDemographics or ddpDataSource.getPatientDiagnoses
         // are null because an exception will be thrown in that case too (by the repository)
         try {
@@ -90,16 +116,24 @@ public class DDPCompositeProcessor implements ItemProcessor<DDPCompositeRecord, 
             ddpPatientListUtil.addPatientsMissingDemographics(compositeRecord.getDmpPatientId());
             return null;
         }
-        try {
-            compositeRecord.setPatientDiagnosis(futurePatientDiagnosis.get());
-        } catch (Exception e) {
-            ddpPatientListUtil.addPatientsMissingDiagnoses(compositeRecord.getDmpPatientId());
+        if (includeDiagnosis) {
+            try {
+                compositeRecord.setPatientDiagnosis(futurePatientDiagnosis.get());
+            } catch (Exception e) {
+                ddpPatientListUtil.addPatientsMissingDiagnoses(compositeRecord.getDmpPatientId());
+            }
         }
 
         // get all available procedures for patient
-        compositeRecord.setRadiationProcedures(futureRadiation.get());
-        compositeRecord.setChemoProcedures(futureChemotherapy.get());
-        compositeRecord.setSurgicalProcedures(futureSurgery.get());
+        if (includeRadiation) {
+            compositeRecord.setRadiationProcedures(futureRadiation.get());
+        }
+        if (includeChemotherapy) {
+            compositeRecord.setChemoProcedures(futureChemotherapy.get());
+        }
+        if (includeSurgery) {
+            compositeRecord.setSurgicalProcedures(futureSurgery.get());
+        }
 
         // check that clinical result is valid - return null if not so that this record is skipped by writer
         String clinicalResult = null;

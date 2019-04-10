@@ -154,6 +154,12 @@ public class BatchConfiguration {
 
     @Bean
     @StepScope
+    public ClinicalProcessor clinicalProcessor() {
+        return new ClinicalProcessor();
+    }
+
+    @Bean
+    @StepScope
     public ItemStreamWriter<CompositeResult> clinicalWriter() {
         return new ClinicalWriter();
     }

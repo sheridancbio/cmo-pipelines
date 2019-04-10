@@ -217,6 +217,18 @@ public class DDPCompositeRecord {
                 patientDemographics.getPTDEATHDTE() : patientDemographics.getDeceasedDate();
     }
 
+    public String getPatientRace() {
+        return patientDemographics.getRace();
+    }
+
+    public String getPatientReligion() {
+        return patientDemographics.getReligion();
+    }
+
+    public String getPatientEthnicity() {
+        return patientDemographics.getEthnicity();
+    }
+
     public Boolean hasReceivedRadiation() {
         return (radiationProcedures != null && !radiationProcedures.isEmpty());
     }

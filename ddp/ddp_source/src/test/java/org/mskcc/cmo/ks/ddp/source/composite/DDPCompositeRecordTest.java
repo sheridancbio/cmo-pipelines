@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Memorial Sloan-Kettering Cancer Center.
+ * Copyright (c) 2018-2019 Memorial Sloan-Kettering Cancer Center.
  *
  * This library is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS
@@ -127,13 +127,13 @@ public class DDPCompositeRecordTest {
     private void makeRadiationProceduresAndAssert(String dateListString, String subTypeListString, Boolean expectedValue) {
         DDPCompositeRecord ddpCompositeRecord = makeRadiationProcedures(dateListString, subTypeListString);
         Boolean actualResult = ddpCompositeRecord.hasReceivedRadiation();
-        Assert.assertTrue(expectedValue.equals(actualResult));
+        Assert.assertEquals(expectedValue, actualResult);
     }
 
     private void makeRadiationProceduresAndAssertSubtype(String dateListString, String subTypeListString, String subTypeQueryString, Boolean expectedValue) {
         DDPCompositeRecord ddpCompositeRecord = makeRadiationProcedures(dateListString, subTypeListString);
         Boolean actualResult = ddpCompositeRecord.hasReceivedRadiation(subTypeQueryString);
-        Assert.assertTrue(expectedValue.equals(actualResult));
+        Assert.assertEquals(expectedValue, actualResult);
     }
 
     private DDPCompositeRecord makeRadiationProcedures(String dateListString, String subTypeListString) {
@@ -160,13 +160,13 @@ public class DDPCompositeRecordTest {
     private void makeChemotherapyProceduresAndAssert(String dateListString, String subTypeListString, Boolean expectedValue) {
         DDPCompositeRecord ddpCompositeRecord = makeChemotherapyProcedures(dateListString, subTypeListString);
         Boolean actualResult = ddpCompositeRecord.hasReceivedChemo();
-        Assert.assertTrue(expectedValue.equals(actualResult));
+        Assert.assertEquals(expectedValue, actualResult);
     }
 
     private void makeChemotherapyProceduresAndAssertSubtype(String dateListString, String subTypeListString, String subTypeQueryString, Boolean expectedValue) {
         DDPCompositeRecord ddpCompositeRecord = makeChemotherapyProcedures(dateListString, subTypeListString);
         Boolean actualResult = ddpCompositeRecord.hasReceivedChemo(subTypeQueryString);
-        Assert.assertTrue(expectedValue.equals(actualResult));
+        Assert.assertEquals(expectedValue, actualResult);
     }
 
     private DDPCompositeRecord makeChemotherapyProcedures(String dateListString, String subTypeListString) {
@@ -193,13 +193,13 @@ public class DDPCompositeRecordTest {
     private void makeSurgicalProceduresAndAssert(String dateListString, String subTypeListString, Boolean expectedValue) {
         DDPCompositeRecord ddpCompositeRecord = makeSurgicalProcedures(dateListString, subTypeListString);
         Boolean actualResult = ddpCompositeRecord.hasReceivedSurgery();
-        Assert.assertTrue(expectedValue.equals(actualResult));
+        Assert.assertEquals(expectedValue, actualResult);
     }
 
     private void makeSurgicalProceduresAndAssertSubtype(String dateListString, String subTypeListString, String subTypeQueryString, Boolean expectedValue) {
         DDPCompositeRecord ddpCompositeRecord = makeSurgicalProcedures(dateListString, subTypeListString);
         Boolean actualResult = ddpCompositeRecord.hasReceivedSurgery(subTypeQueryString);
-        Assert.assertTrue(expectedValue.equals(actualResult));
+        Assert.assertEquals(expectedValue, actualResult);
     }
 
     private DDPCompositeRecord makeSurgicalProcedures(String dateListString, String subTypeListString) {

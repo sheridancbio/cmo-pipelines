@@ -54,22 +54,26 @@ public class TimelineSurgeryWriter implements ItemStreamWriter<CompositeResult> 
     private String outputDirectory;
     @Value("${ddp.timeline_surgery_filename}")
     private String timelineSurgeryFilename;
+    @Value("#{jobParameters[includeSurgery]}")
+    private Boolean includeSurgery;
 
     private FlatFileItemWriter<String> flatFileItemWriter = new FlatFileItemWriter<>();
 
     @Override
     public void open(ExecutionContext ec) throws ItemStreamException {
-        File stagingFile = new File(outputDirectory, timelineSurgeryFilename);
-        LineAggregator<String> aggr = new PassThroughLineAggregator<>();
-        flatFileItemWriter.setLineAggregator(aggr);
-        flatFileItemWriter.setHeaderCallback(new FlatFileHeaderCallback() {
-            @Override
-            public void writeHeader(Writer writer) throws IOException {
-                writer.write(StringUtils.join(TimelineSurgeryRecord.getFieldNames(), "\t"));
-            }
-        });
-        flatFileItemWriter.setResource(new FileSystemResource(stagingFile));
-        flatFileItemWriter.open(ec);
+        if (includeSurgery) {
+            File stagingFile = new File(outputDirectory, timelineSurgeryFilename);
+            LineAggregator<String> aggr = new PassThroughLineAggregator<>();
+            flatFileItemWriter.setLineAggregator(aggr);
+            flatFileItemWriter.setHeaderCallback(new FlatFileHeaderCallback() {
+                @Override
+                public void writeHeader(Writer writer) throws IOException {
+                    writer.write(StringUtils.join(TimelineSurgeryRecord.getFieldNames(), "\t"));
+                }
+            });
+            flatFileItemWriter.setResource(new FileSystemResource(stagingFile));
+            flatFileItemWriter.open(ec);
+        }
     }
 
     @Override
@@ -77,18 +81,22 @@ public class TimelineSurgeryWriter implements ItemStreamWriter<CompositeResult> 
 
     @Override
     public void close() throws ItemStreamException {
-        flatFileItemWriter.close();
+        if (includeSurgery) {
+            flatFileItemWriter.close();
+        }
     }
 
     @Override
     public void write(List<? extends CompositeResult> compositeResults) throws Exception {
-        List<String> records = new ArrayList<>();
-        for (CompositeResult result : compositeResults) {
-            if (result.getTimelineSurgeryResults()== null || result.getTimelineSurgeryResults().isEmpty()) {
-                continue;
+        if (includeSurgery) {
+            List<String> records = new ArrayList<>();
+            for (CompositeResult result : compositeResults) {
+                if (result.getTimelineSurgeryResults()== null || result.getTimelineSurgeryResults().isEmpty()) {
+                    continue;
+                }
+                records.addAll(result.getTimelineSurgeryResults());
             }
-            records.addAll(result.getTimelineSurgeryResults());
+            flatFileItemWriter.write(records);
         }
-        flatFileItemWriter.write(records);
     }
 }

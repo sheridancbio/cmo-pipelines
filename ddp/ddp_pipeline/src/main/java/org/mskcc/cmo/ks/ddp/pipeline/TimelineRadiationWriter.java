@@ -54,22 +54,26 @@ public class TimelineRadiationWriter implements ItemStreamWriter<CompositeResult
     private String outputDirectory;
     @Value("${ddp.timeline_radiation_filename}")
     private String timelineRadiationFilename;
+    @Value("#{jobParameters[includeRadiation]}")
+    private Boolean includeRadiation;
 
     private FlatFileItemWriter<String> flatFileItemWriter = new FlatFileItemWriter<>();
 
     @Override
     public void open(ExecutionContext ec) throws ItemStreamException {
-        File stagingFile = new File(outputDirectory, timelineRadiationFilename);
-        LineAggregator<String> aggr = new PassThroughLineAggregator<>();
-        flatFileItemWriter.setLineAggregator(aggr);
-        flatFileItemWriter.setHeaderCallback(new FlatFileHeaderCallback() {
-            @Override
-            public void writeHeader(Writer writer) throws IOException {
-                writer.write(StringUtils.join(TimelineRadiationRecord.getFieldNames(), "\t"));
-            }
-        });
-        flatFileItemWriter.setResource(new FileSystemResource(stagingFile));
-        flatFileItemWriter.open(ec);
+        if (includeRadiation) {
+            File stagingFile = new File(outputDirectory, timelineRadiationFilename);
+            LineAggregator<String> aggr = new PassThroughLineAggregator<>();
+            flatFileItemWriter.setLineAggregator(aggr);
+            flatFileItemWriter.setHeaderCallback(new FlatFileHeaderCallback() {
+                @Override
+                public void writeHeader(Writer writer) throws IOException {
+                    writer.write(StringUtils.join(TimelineRadiationRecord.getFieldNames(), "\t"));
+                }
+            });
+            flatFileItemWriter.setResource(new FileSystemResource(stagingFile));
+            flatFileItemWriter.open(ec);
+        }
     }
 
     @Override
@@ -77,18 +81,22 @@ public class TimelineRadiationWriter implements ItemStreamWriter<CompositeResult
 
     @Override
     public void close() throws ItemStreamException {
-        flatFileItemWriter.close();
+        if (includeRadiation) {
+            flatFileItemWriter.close();
+        }
     }
 
     @Override
     public void write(List<? extends CompositeResult> compositeResults) throws Exception {
-        List<String> records = new ArrayList<>();
-        for (CompositeResult result : compositeResults) {
-            if (result.getTimelineRadiationResults() == null || result.getTimelineRadiationResults().isEmpty()) {
-                continue;
+        if (includeRadiation) {
+            List<String> records = new ArrayList<>();
+            for (CompositeResult result : compositeResults) {
+                if (result.getTimelineRadiationResults() == null || result.getTimelineRadiationResults().isEmpty()) {
+                    continue;
+                }
+                records.addAll(result.getTimelineRadiationResults());
             }
-            records.addAll(result.getTimelineRadiationResults());
+            flatFileItemWriter.write(records);
         }
-        flatFileItemWriter.write(records);
     }
 }

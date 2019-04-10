@@ -297,6 +297,28 @@ public class DDPUtils {
     }
 
     /**
+     * Converts record as tab-delimited string of values.
+     *
+     * @param object
+     * @return
+     * @throws Exception
+     */
+    @SuppressWarnings("unchecked")
+    public static String constructRecord(Object object, Boolean firstInclude, Boolean secondInclude, Boolean thirdInclude, Boolean fourthInclude) throws Exception {
+        // we probably should just call this method constructClinicalRecord, not sure keeping it general makes sense
+        List<String> fields = (List<String>) object
+                                    .getClass()
+                                    .getMethod("getFieldNames", Boolean.class, Boolean.class, Boolean.class, Boolean.class)
+                                    .invoke(object, firstInclude, secondInclude, thirdInclude, fourthInclude); // unchecked cast
+        List<String> record = new ArrayList<>();
+        for (String field : fields) {
+            String value = object.getClass().getMethod("get" + field).invoke(object).toString();
+            record.add(value.trim());
+        }
+        return StringUtils.join(record, "\t");
+    }
+
+    /**
      * Returns whether value is null/empty string.
      * @param value
      * @return

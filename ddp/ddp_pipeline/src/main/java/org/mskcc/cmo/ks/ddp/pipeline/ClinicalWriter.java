@@ -54,6 +54,14 @@ public class ClinicalWriter implements ItemStreamWriter<CompositeResult> {
     private String outputDirectory;
     @Value("${ddp.clinical_filename}")
     private String clinicalFilename;
+    @Value("#{jobParameters[includeDiagnosis]}")
+    private Boolean includeDiagnosis;
+    @Value("#{jobParameters[includeRadiation]}")
+    private Boolean includeRadiation;
+    @Value("#{jobParameters[includeChemotherapy]}")
+    private Boolean includeChemotherapy;
+    @Value("#{jobParameters[includeSurgery]}")
+    private Boolean includeSurgery;
 
     private FlatFileItemWriter<String> flatFileItemWriter = new FlatFileItemWriter<>();
 
@@ -65,7 +73,7 @@ public class ClinicalWriter implements ItemStreamWriter<CompositeResult> {
         flatFileItemWriter.setHeaderCallback(new FlatFileHeaderCallback() {
             @Override
             public void writeHeader(Writer writer) throws IOException {
-                writer.write(StringUtils.join(ClinicalRecord.getFieldNames(), "\t"));
+                writer.write(StringUtils.join(ClinicalRecord.getFieldNames(includeDiagnosis, includeRadiation, includeChemotherapy, includeSurgery), "\t"));
             }
         });
         flatFileItemWriter.setResource(new FileSystemResource(stagingFile));
