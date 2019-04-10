@@ -247,7 +247,9 @@ public class ClinicalRecord {
         fieldNames.add("OS_STATUS");
         // OS_MONTHS depends on fields from the diagnosis query
         // so if querying diagnosis is turned off all fields will be NA
-        fieldNames.add("OS_MONTHS");
+        if (includeDiagnosis) {
+            fieldNames.add("OS_MONTHS");
+        }
         if (includeRadiation) {
             fieldNames.add("RADIATION_THERAPY");
         }

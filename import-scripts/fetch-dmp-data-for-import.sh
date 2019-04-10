@@ -260,7 +260,7 @@ if [ $FETCH_DARWIN_IMPACT_FAIL -eq 0 ] ; then
     awk -F'\t' 'NR==1 { for (i=1; i<=NF; i++) { f[$i] = i } }{ if ($f["PED_IND"] == "Yes") { print $(f["PATIENT_ID"]) } }' $MSK_IMPACT_DATA_HOME/data_clinical_supp_darwin_demographics.txt | sort | uniq > $MSK_DMP_TMPDIR/mskimpact_ped_patient_list.txt
     # For future use: when we want to replace darwin demographics attributes with ddp-fetched attributes instead of just for ped-cohort
     #awk -F'\t' 'NR==1 { for (i=1; i<=NF; i++) { f[$i] = i } }{ if ($f["PATIENT_ID"] != "PATIENT_ID") { print $(f["PATIENT_ID"]) } }' $MSK_IMPACT_DATA_HOME/data_clinical_mskimpact_data_clinical_cvr.txt | sort | uniq > $MSK_DMP_TMPDIR/mskimpact_patient_list.txt
-    $JAVA_BINARY $JAVA_DDP_FETCHER_ARGS -o $MSK_IMPACT_DATA_HOME -s $MSK_DMP_TMPDIR/mskimpact_ped_patient_list.txt
+    $JAVA_BINARY $JAVA_DDP_FETCHER_ARGS -o $MSK_IMPACT_DATA_HOME -s $MSK_DMP_TMPDIR/mskimpact_ped_patient_list.txt -f diagnosis,radiation,chemotherapy,surgery
     if [ $? -gt 0 ] ; then
         cd $MSK_IMPACT_DATA_HOME ; $HG_BINARY update -C ; find . -name "*.orig" -delete
         sendPreImportFailureMessageMskPipelineLogsSlack "MSKIMPACT DDP Fetch"

@@ -413,11 +413,11 @@ public class DDPUtilsTest {
         clinicalRecord.setSEX("Female");
         clinicalRecord.setETHNICITY("MY_ETHNICITY");
         clinicalRecord.setOS_STATUS("LIVING");
-        clinicalRecord.setOS_MONTHS("NA"); // if any record is null we get null pointer exception from DDPUtils.constructRecord()
+        clinicalRecord.setOS_MONTHS("NA");
         clinicalRecord.setRADIATION_THERAPY("MY_RADIATION_THERAPY");
         clinicalRecord.setCHEMOTHERAPY("  MY_CHEMOTHERAPY  "); // it does a trim too
         clinicalRecord.setSURGERY("MY_SURGERY");
-        String expectedValue = "MY_PT_ID\t20\tMY_RACE\tMY_RELIGION\tFemale\tMY_ETHNICITY\tLIVING\tNA\tMY_RADIATION_THERAPY\tMY_CHEMOTHERAPY\tMY_SURGERY";
+        String expectedValue = "MY_PT_ID\t20\tMY_RACE\tMY_RELIGION\tFemale\tMY_ETHNICITY\tLIVING\tMY_RADIATION_THERAPY\tMY_CHEMOTHERAPY\tMY_SURGERY";
         String returnedValue = DDPUtils.constructRecord(clinicalRecord, Boolean.FALSE, Boolean.TRUE, Boolean.TRUE, Boolean.TRUE);
         Assert.assertEquals(expectedValue, returnedValue);
     }
