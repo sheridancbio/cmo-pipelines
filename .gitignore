@@ -10,3 +10,4 @@
 **/src/main/resources/logback.xml
 import-scripts/clinicalfile_utils.pyc
 target
+**/src/main/resources/naaccr*.json
