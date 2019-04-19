@@ -10,6 +10,6 @@ then
     (>&2 echo "GET '$URL' returned '$http_code' status code, expected '$OK'")
     if [ "$http_code" -eq $SERVICE_UNAVAILABLE ]
     then
-        (>&2 echo "The CDD cache is empty, attempts to refresh the cache from Google must have failed")
+        (>&2 echo "The CDD cache is empty, attempts to refresh the cache from TopBraid must have failed")
     fi
 fi
