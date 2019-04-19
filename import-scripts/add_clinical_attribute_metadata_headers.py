@@ -1,33 +1,23 @@
 #! /usr/bin/env python
 # ------------------------------------------------------------------------------
 # Utility script which adds metadata headers to specified file(s)
-# Metadata is pulled from google spreadsheets
+# Metadata is pulled from the clinical data dictionary web service (cdd)
 # Four lines added at the top (display name, dscriptions, datatype, priority)
-# Changes only made if all input  files are valid
-# The following properties must be specified in the a properties file:
-# google.id
-# google.pw
-# google.spreadsheet
-# google.clinical_attributes_worksheet
-# default properties file can be found at portal_configuration/properties/clinical-metadata
+# Changes are only made if all input files are valid
 # ------------------------------------------------------------------------------
+
+from clinicalfile_utils import write_data, write_header_line, get_header
 import argparse
-import httplib2
+import json
 import os
+import requests
 import shutil
 import sys
 import tempfile
-import time
-
-from clinicalfile_utils import write_data, write_header_line, get_header
-import requests
-import json
-# ------------------------------------------------------------------------------
 
 # globals
 ERROR_FILE = sys.stderr
 OUTPUT_FILE = sys.stdout
-# column constants on google spreadsheet
 DATATYPE_KEY = 'datatype'
 DESCRIPTION_KEY = 'description'
 DISPLAY_NAME_KEY = 'display_name'
@@ -59,7 +49,6 @@ def get_clinical_attribute_metadata_from_cdd(study_id, header, base_cdd_url):
     response = requests.post(base_cdd_url + "?cancerStudy=" + study_id if study_id else base_cdd_url, json=list(header))
     check_response_returned(response)
     response_as_json = json.loads(response.text)
-
     for entry in response_as_json:
         normalized_column_header =  entry[COLUMN_HEADER_KEY]
         display_name = entry[DISPLAY_NAME_KEY]
@@ -73,7 +62,6 @@ def get_clinical_attribute_metadata_from_cdd(study_id, header, base_cdd_url):
                 'DATATYPE' : datatype,
                 'ATTRIBUTE_TYPE' : attribute_type,
                 'PRIORITY' : priority}
-
     return metadata_mapping
 
 def write_headers(header, metadata_dictionary, output_file, is_mixed_attribute_types_format):
@@ -90,7 +78,7 @@ def write_headers(header, metadata_dictionary, output_file, is_mixed_attribute_t
             attribute_type_line.append(metadata_dictionary[attribute]['ATTRIBUTE_TYPE'])
             priority_line.append(metadata_dictionary[attribute]['PRIORITY'])
         else:
-            # if attribute not in google worksheet, use defaults
+            # if attribute is not defined in cdd, use defaults
             name_line.append(attribute.replace("_", " ").title())
             description_line.append(attribute.replace("_", " ").title())
             datatype_line.append('STRING')
@@ -103,31 +91,28 @@ def write_headers(header, metadata_dictionary, output_file, is_mixed_attribute_t
     if len(set(attribute_type_line)) > 0 and is_mixed_attribute_types_format:
         write_header_line(attribute_type_line, output_file)
     write_header_line(priority_line, output_file)
-# -----------------------------------------------------------------------------
-# determined by filename
+
 def check_if_mixed_attribute_types_format(filename):
+    # determined by filename
     base_filename = os.path.basename(filename)
     if base_filename in [PATIENT_CLINICAL_FILE_PATTERN, SAMPLE_CLINICAL_FILE_PATTERN]:
         return False
-    return True   
-# -----------------------------------------------------------------------------
+    return True
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("-f", "--files", nargs = "+", help = "file(s) to add metadata headers", required = True)
     parser.add_argument("-s", "--study-id", help = "study id for specific overrides", required = False)
     parser.add_argument("-c", "--cdd-url", help = "the url for the cdd web application, default is http://oncotree.mskcc.org/cdd/api/", required = False)
     args = parser.parse_args()
-
     clinical_files = args.files
     study_id = args.study_id
     cdd_url = args.cdd_url
-
     # change base url if specified (i.e for testing)
     if cdd_url:
         base_cdd_url = cdd_url
     else:
         base_cdd_url = DEFAULT_URL
-
     # check file (args) validity and return error if any file fails check
     missing_clinical_files = [clinical_file for clinical_file in clinical_files if not os.path.exists(clinical_file)]
     if len(missing_clinical_files) > 0:
@@ -137,23 +122,17 @@ def main():
     if len(not_writable_clinical_files) > 0:
         print >> ERROR_FILE, 'File(s) not writable: ' + ', '.join(not_writable_clinical_files)
         sys.exit(2)
-
     if (study_id):
         check_valid_studyid(study_id, base_cdd_url)
-
     metadata_dictionary = {}
     all_attributes = set()
-
     # get a set of attributes used across all input files
     for clinical_file in clinical_files:
         all_attributes = all_attributes.union(get_header(clinical_file))
-
     metadata_dictionary = get_clinical_attribute_metadata_from_cdd(study_id, all_attributes, base_cdd_url)
-
     # check metadata is defined for all attributes in CDD
     if len(metadata_dictionary.keys()) != len(all_attributes):
         print >> ERROR_FILE, 'Error, metadata not found for attribute(s): ' + ', '.join(all_attributes.difference(metadata_dictionary.keys()))
-
     for clinical_file in clinical_files:
         # create temp file to write to
         temp_file, temp_file_name = tempfile.mkstemp()
@@ -164,6 +143,6 @@ def main():
         os.close(temp_file)
         # replace original file with new file
         shutil.move(temp_file_name, clinical_file)
-# ------------------------------------------------------------------------------
+
 if __name__ == '__main__':
     main()
