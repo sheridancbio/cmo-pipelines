@@ -74,6 +74,7 @@ public class DDPSeqDateTaskletTest {
             .thenReturn("SAMPLE_8\tPATIENT_2\tMon, 01 Oct 2018 15:09:02 GMT")
             .thenReturn("SAMPLE_9\tPATIENT_4\tTes, 14 Feb 2014 17:21:03 GMT") // invalid date, this patient should not have a seq date in map
             .thenReturn("SAMPLE_9\tPATIENT_3\tFri, 14 Feb 2014 17:21:03 GMT")
+            .thenReturn("SAMPLE_10\tPATIENT_5\t") // no date provided, this patient should not have a seq date in map
             .thenReturn(null);
         DDPSeqDateTasklet tasklet = new DDPSeqDateTasklet();
         Map<String, Date> actualPatientFirstSeqDateMap = tasklet.getFirstSeqDatePerPatientFromFile("filename", mockBufferedReader);

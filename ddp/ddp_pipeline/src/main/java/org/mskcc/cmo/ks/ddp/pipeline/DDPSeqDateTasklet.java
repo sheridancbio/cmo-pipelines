@@ -99,7 +99,7 @@ public class DDPSeqDateTasklet implements Tasklet {
         String line;
         List<String> warnings = new ArrayList<String>();
         while ((line = reader.readLine()) != null) {
-            String[] record = line.split("\t");
+            String[] record = line.split("\t", -1);
             String dmpPatientId = record[dmpPatientIdColumnIndex];
             String seqDateString = record[seqDateColumnIndex];
             if (!StringUtils.isEmpty(seqDateString)) {
