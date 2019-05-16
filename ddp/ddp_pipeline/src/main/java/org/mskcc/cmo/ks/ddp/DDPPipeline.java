@@ -137,7 +137,7 @@ public class DDPPipeline {
         CommandLineParser parser = new DefaultParser();
         CommandLine commandLine = parser.parse(options, args);
         if (commandLine.hasOption("h") || !commandLine.hasOption("o") ||
-                (!commandLine.hasOption("c") && !commandLine.hasOption("s"))) {
+                (!commandLine.hasOption("c") && !commandLine.hasOption("p"))) {
             help(options, 1);
         }
         // parse input arguments

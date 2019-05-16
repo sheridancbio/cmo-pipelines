@@ -56,7 +56,6 @@ public class ClinicalRecord {
     private String RADIATION_THERAPY;
     private String CHEMOTHERAPY;
     private String SURGERY;
-    private Boolean includeSurvival;
 
     public ClinicalRecord(){}
 
@@ -69,7 +68,7 @@ public class ClinicalRecord {
         this.ETHNICITY = compositeRecord.getPatientEthnicity() == null ? "NA" : compositeRecord.getPatientEthnicity();;
         this.OS_STATUS = DDPUtils.resolveOsStatus(compositeRecord);
         this.PED_IND = DDPUtils.resolvePediatricCohortPatientStatus(compositeRecord.getPediatricPatientStatus());
-        this.OS_MONTHS = includeSurvival != null && includeSurvival ? DDPUtils.resolveOsMonths(OS_STATUS, compositeRecord) : "NA";
+        this.OS_MONTHS = includeSurvival ? DDPUtils.resolveOsMonths(OS_STATUS, compositeRecord) : "NA";
         this.RADIATION_THERAPY = compositeRecord.hasReceivedRadiation() ? "Yes" : "No";
         this.CHEMOTHERAPY = compositeRecord.hasReceivedChemo() ? "Yes" : "No";
         this.SURGERY = compositeRecord.hasReceivedSurgery() ? "Yes" : "No";

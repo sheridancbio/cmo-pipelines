@@ -41,7 +41,7 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.io.*;
 import org.apache.commons.lang.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.apache.log4j.Logger;
 
 /**
  *
@@ -60,6 +60,9 @@ public class DDPUtils {
     private static Map<String, Date> patientFirstSeqDateMap = new HashMap<String, Date>();
     private static Set<String> patientsMissingSurvival = new HashSet<>();
     private static Boolean useSeqDateOsMonthsMethod = Boolean.FALSE;
+    private static Set<String> patientsWithNegativeOsMonths = new HashSet<>();
+
+    private static final Logger LOG = Logger.getLogger(DDPUtils.class);
 
     public static void setNaaccrEthnicityMap(Map<String, String> naaccrEthnicityMap) {
         DDPUtils.naaccrEthnicityMap = naaccrEthnicityMap;
@@ -97,12 +100,16 @@ public class DDPUtils {
         return DDPUtils.patientsMissingSurvival;
     }
 
+    public static void setUseSeqDateOsMonthsMethod(Boolean useSeqDateOsMonthsMethod) {
+        DDPUtils.useSeqDateOsMonthsMethod = useSeqDateOsMonthsMethod;
+    }
+
     public static Boolean getUseSeqDateOsMonthsMethod() {
         return DDPUtils.useSeqDateOsMonthsMethod;
     }
 
-    public static void setUseSeqDateOsMonthsMethod(Boolean useSeqDateOsMonthsMethod) {
-        DDPUtils.useSeqDateOsMonthsMethod = useSeqDateOsMonthsMethod;
+    public static Set<String> getPatientsWithNegativeOsMonths() {
+        return DDPUtils.patientsWithNegativeOsMonths;
     }
 
     public static Boolean isMskimpactCohort(String cohortName) {
@@ -229,6 +236,14 @@ public class DDPUtils {
     /**
      * Calculate OS_MONTHS.
      *
+     * There are some special cases to handle if we are calculating OS_MONTHS from the first date of sequencing:
+     *
+     * 1. If a patient dies before the sequencing date, return 0
+     * 2. If a living patient has a last follow up date occurring before the date of sequencing, return NA
+     *
+     * If the calculated OS_MONTHS is negative after handling these special cases then log the operands
+     * and resulting OS_MONTHS for reference.
+     *
      * Note: In some cases, patients may not have any sequence date or tumor diagnoses in the system yet. These are NA.
      *
      * @param osStatus
@@ -243,20 +258,67 @@ public class DDPUtils {
                 getDateInDays(compositeRecord.getPatientDemographics().getDeceasedDate());
         List<PatientDiagnosis> patientDiagnosis = compositeRecord.getPatientDiagnosis();
         Long firstDateInDays = null;
-        // if we were given a seq_date.txt file, use that
-        // otherwise use diagnosis
-        if (DDPUtils.getUseSeqDateOsMonthsMethod()) { // here we want to read it from seq_date.txt
+        // if we were given a seq_date.txt file, use first tumor sequencing
+        // date in days, otherwise use first tumor diagnosis date
+        if (DDPUtils.useSeqDateOsMonthsMethod) {
             firstDateInDays = getFirstTumorSeqDateInDays(compositeRecord.getDmpPatientId());
+            // handle special cases when calculating OS_MONTHS from date of sequencing
+            // return 0 if patient dies before sequencing date or NA if patient is living
+            // and has a follow up date beore sequencing date, otherwise proceed as normal
+            if (patientDiedBeforeFirstTumorSequencingDate(osStatus, referenceInDays, firstDateInDays)) {
+                return String.valueOf(0);
+            } else if (lastFollowUpBeforeFirstTumorSequencingDate(osStatus, referenceInDays, firstDateInDays)) {
+                return "NA";
+            }
         } else if (patientDiagnosis != null && patientDiagnosis.size() > 0) {
             firstDateInDays = getFirstTumorDiagnosisDateInDays(patientDiagnosis);
         }
         if (referenceInDays != null && firstDateInDays != null) {
-            osMonths = String.format("%.3f", (referenceInDays - firstDateInDays) / DAYS_TO_MONTHS_CONVERSION);
+            double osMonthsValue = (referenceInDays - firstDateInDays) / DAYS_TO_MONTHS_CONVERSION;
+            if (osMonthsValue < 0) {
+                // log cases where OS_MONTHS is negative
+                StringBuilder builder = new StringBuilder();
+                builder.append("Patient '").append(compositeRecord.getDmpPatientId()).append("' found with negative OS_MONTHS:  ")
+                        .append("( OS_STATUS=").append(osStatus)
+                        .append(", OS_MONTHS=").append(osMonths)
+                        .append(", REFERENCE_DATE_DAYS=").append(referenceInDays)
+                        .append(", FIRST_DATE_days=").append(firstDateInDays)
+                        .append(" )");
+                LOG.warn(builder.toString());
+                patientsWithNegativeOsMonths.add(compositeRecord.getDmpPatientId());
+                return "NA";
+            } else {
+                osMonths = String.format("%.3f", osMonthsValue);
+            }
         }
-        if (osMonths == "NA") {
+        if (osMonths.equals("NA")) {
             patientsMissingSurvival.add(compositeRecord.getDmpPatientId());
         }
         return osMonths;
+    }
+
+    /**
+     * Determines whether patient died before their first date of tumor sequencing date.
+     *
+     * @param osStatus
+     * @param deceasedDate
+     * @param firstTumorSequencingDate
+     * @return
+     */
+    public static Boolean patientDiedBeforeFirstTumorSequencingDate(String osStatus, Long deceasedDate, Long firstTumorSequencingDate) {
+        return (!osStatus.equals("LIVING") && deceasedDate != null && deceasedDate < firstTumorSequencingDate);
+    }
+
+    /**
+     * Determines whether living patient had their last follow up before their first tumor sequencing date.
+     *
+     * @param osStatus
+     * @param dateLastActive
+     * @param firstTumorSequencingDate
+     * @return
+     */
+    public static Boolean lastFollowUpBeforeFirstTumorSequencingDate(String osStatus, Long dateLastActive, Long firstTumorSequencingDate) {
+        return (osStatus.equals("LIVING") && dateLastActive != null && dateLastActive < firstTumorSequencingDate);
     }
 
     /**

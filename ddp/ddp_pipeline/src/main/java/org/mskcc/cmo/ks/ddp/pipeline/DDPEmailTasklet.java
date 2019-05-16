@@ -46,6 +46,7 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+import org.apache.commons.lang.StringUtils;
 
 /**
  *
@@ -84,6 +85,13 @@ public class DDPEmailTasklet implements Tasklet {
         Set<String> patientsMissingSurvival = DDPUtils.getPatientsMissingSurvival();
         if (patientsMissingSurvival.size() > 0) { // size will be zero if we either did not include survival information or if every patient has it
             body.append(constructMissingPatientsText(patientsMissingSurvival, "patients that were included are missing survival information"));
+        }
+        Set<String> patientsWithNegativeOsMOnths = DDPUtils.getPatientsWithNegativeOsMonths();
+        if (patientsWithNegativeOsMOnths.size() > 0) { // size will be zero if we either did not include survival information or if every patient has it
+            body.append("Found ")
+                    .append(patientsWithNegativeOsMOnths.size())
+                    .append(" patients with negative OS_MONTHS - see DDP fetcher log for further details:\n")
+                    .append(StringUtils.join(patientsWithNegativeOsMOnths, "\n\t"));
         }
         if (!body.toString().isEmpty()) {
             emailUtil.sendEmailToDefaultRecipient(subject, body.toString());
