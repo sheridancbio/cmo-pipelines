@@ -125,23 +125,29 @@ def cvr_fetch(lib, fetch_directory):
 def ddp_fetch(lib, fetch_directory):
     with open(os.path.join(fetch_directory, "test_patient_list.txt"), "w") as f:
         f.write("P-0000001")
-    return "java -Demail.subject=\"[TEST] DDP Pipeline errors\" -jar " + os.path.join(lib, "ddp_fetcher.jar") + " -f diagnosis,radiation,chemotherapy,surgery -o " + fetch_directory + " -s " + os.path.join(fetch_directory, "test_patient_list.txt")
+    return "java -Demail.subject=\"[TEST] DDP Pipeline errors\" -jar " + os.path.join(lib, "ddp_fetcher.jar") + " -f survival,diagnosis -o " + fetch_directory + " -p " + os.path.join(fetch_directory, "test_patient_list.txt")
+
+def ddp_pediatrics_fetch(lib, fetch_directory):
+    with open(os.path.join(fetch_directory, "test_patient_list.txt"), "w") as f:
+        f.write("P-0000001")
+    return "java -Dddp.clinical_filename=data_clinical_ddp_pediatrics.txt -Demail.subject=\"[TEST] DDP Pipeline errors\" -jar " + os.path.join(lib, "ddp_fetcher.jar") + " -f survival,diagnosis,radiation,chemotherapy,surgery -o " + fetch_directory + " -p " + os.path.join(fetch_directory, "test_patient_list.txt")
 
 # dictionary/switch-like function that calls fetch-function based on which fetchers are included in github tags
 def fetch_data_source_files(fetchers_to_test, fetch_directory, lib):
     datasource_fetches = {
-        "crdb_fetcher" : crdb_fetch,
-        "cvr_fetcher" : cvr_fetch,
-        "darwin_fetcher" : darwin_fetch,
-        "ddp_fetcher" : ddp_fetch
+        "crdb_fetcher" : [crdb_fetch],
+        "cvr_fetcher" : [cvr_fetch],
+        "darwin_fetcher" : [darwin_fetch],
+        "ddp_fetcher" : [ddp_fetch, ddp_pediatrics_fetch]
     }
     for fetcher in fetchers_to_test:
-        fetcher_command = datasource_fetches.get(fetcher, lambda: "Invalid fetcher key: " + fetcher)(lib, fetch_directory)
-        print "calling: " +  fetcher_command
-        fetcher_status = subprocess.call(fetcher_command, shell = True)
-        if fetcher_status > 0:
-            print "Fetcher call: '" + fetcher_command + "' returned a non-zero exit status"
-            exit(1)
+        fetcher_commands = [fetcher_command(lib, fetch_directory) for fetcher_command in datasource_fetches.get(fetcher, lambda: "Invalid fetcher key: " + fetcher)]
+        for fetcher_command in fetcher_commands:
+            print "calling: " +  fetcher_command
+            fetcher_status = subprocess.call(fetcher_command, shell = True)
+            if fetcher_status > 0:
+                print "Fetcher call: '" + fetcher_command + "' returned a non-zero exit status"
+                exit(1)
 
 def verify_data_schema(fetchers_to_test, fetched_file_to_redcap_file_mappings):
     for fetcher in fetchers_to_test:

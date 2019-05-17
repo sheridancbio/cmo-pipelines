@@ -262,6 +262,10 @@ public class DDPUtilsTest {
         // the following has both diagnosis and seq date, seq date wins
         resolveOsMonthsAndAssert("LIVING", "2019-04-12", "ignore", "2018-02-19", "Fri, 13 Oct 2017 15:33:32 GMT",
             String.format("%.3f", 17.9506));
+        // deceased patient date of death is before first tumor sequencing date
+        resolveOsMonthsAndAssert("DECEASED", "ignore", "2015-05-10", "2014-01-20", "Fri, 20 Jan 2017 16:52:02 GMT", "0");
+        // living patient last follow up date is before first tumor sequencing date
+        resolveOsMonthsAndAssert("LIVING", "2013-07-19", "ignore", "2016-06-08", "Fri, 20 Jan 2017 16:52:02 GMT", "NA");
     }
 
     /**
@@ -525,7 +529,7 @@ public class DDPUtilsTest {
         patientFirstSeqDateMap.put(dmpPatientId, seqDate);
         DDPUtils.setPatientFirstSeqDateMap(patientFirstSeqDateMap);
         compositeRecord.setPatientDemographics(patientDemographics);
-        compositeRecord.setCohortPatient(cohortPatient); 
+        compositeRecord.setCohortPatient(cohortPatient);
         ClinicalRecord clinicalRecord = new ClinicalRecord(compositeRecord, Boolean.TRUE);
         String expectedValue = "MY_PT_ID\t75\tNA\tNA\tNA\tNA\tLIVING\tNA\t17.951";
         String returnedValue = DDPUtils.constructRecord(clinicalRecord, Boolean.TRUE, Boolean.FALSE, Boolean.FALSE, Boolean.FALSE);
