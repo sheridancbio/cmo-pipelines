@@ -306,7 +306,7 @@ public class DDPUtils {
      * @return
      */
     public static Boolean patientDiedBeforeFirstTumorSequencingDate(String osStatus, Long deceasedDate, Long firstTumorSequencingDate) {
-        return (!osStatus.equals("LIVING") && deceasedDate != null && deceasedDate < firstTumorSequencingDate);
+        return (!osStatus.equals("LIVING") && deceasedDate != null  && firstTumorSequencingDate != null && deceasedDate < firstTumorSequencingDate);
     }
 
     /**
@@ -318,7 +318,7 @@ public class DDPUtils {
      * @return
      */
     public static Boolean lastFollowUpBeforeFirstTumorSequencingDate(String osStatus, Long dateLastActive, Long firstTumorSequencingDate) {
-        return (osStatus.equals("LIVING") && dateLastActive != null && dateLastActive < firstTumorSequencingDate);
+        return (osStatus.equals("LIVING") && dateLastActive != null && firstTumorSequencingDate != null && dateLastActive < firstTumorSequencingDate);
     }
 
     /**
