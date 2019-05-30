@@ -76,6 +76,11 @@ public class DDPSortTasklet implements Tasklet {
     private Boolean includeChemotherapy;
     @Value("#{jobParameters[includeSurgery]}")
     private Boolean includeSurgery;
+    @Value("#{jobParameters[currentDemographicsRecCount]}")
+    private Integer currentDemographicsRecCount;
+
+    private final double DEMOGRAPHIC_RECORD_DROP_THRESHOLD = 0.9;
+    private int recordsWritten;
 
     private final Logger LOG = Logger.getLogger(DDPSortTasklet.class);
 
@@ -84,6 +89,7 @@ public class DDPSortTasklet implements Tasklet {
 
         // sort and overwrite demographics file
         Path clinicalFilePath = Paths.get(outputDirectory, clinicalFilename);
+        validateDemographicsRecordCount(clinicalFilePath.toString());
         sortAndOverwriteFile(clinicalFilePath, ClinicalRecord.getFieldNames(includeDiagnosis, includeRadiation, includeChemotherapy, includeSurgery));
 
         // sort and overwrite timeline files if applicable
@@ -106,6 +112,16 @@ public class DDPSortTasklet implements Tasklet {
 
         return RepeatStatus.FINISHED;
     }
+
+    private void validateDemographicsRecordCount(String demographicsFilePath) throws Exception {
+        List<String> demographicsRecords = DDPUtils.readRecordsFromFile(demographicsFilePath);
+        if (demographicsRecords.size() < (DEMOGRAPHIC_RECORD_DROP_THRESHOLD * currentDemographicsRecCount)) {
+            throw new RuntimeException("Number of records in latest demographics fetch (" + Integer.toString(demographicsRecords.size()) +
+                    ") dropped greater than 90% of current record count (" + currentDemographicsRecCount +
+                    ") in backup demographics file - exiting...");
+        }
+    }    
+
 
     private void sortAndOverwriteFile(Path filePath, List<String> fieldNames) throws IOException {
         LOG.info("Sorting and overwriting file:" + filePath.toString());
