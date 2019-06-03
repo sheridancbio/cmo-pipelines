@@ -19,7 +19,7 @@ JAVA_REDCAP_PIPELINE_ARGS="-jar $REDCAP_PIPELINE_JAR_FILENAME"
 JAVA_DEBUG_ARGS="-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182"
 JAVA_IMPORTER_ARGS="$JAVA_PROXY_ARGS $JAVA_DEBUG_ARGS -Dspring.profiles.active=dbcp -Djava.io.tmpdir=$MSK_DMP_TMPDIR -ea -cp $IMPORTER_JAR_FILENAME org.mskcc.cbio.importer.Admin"
 
-##TO-DO: ADD DEFAULT DDP DEMOGRAPHICS ROW COUNT
+DEFAULT_DDP_DEMOGRAPHICS_ROW_COUNT=2
 
 # Clinical attribute fields which should never be filtered because of empty content
 FILTER_EMPTY_COLUMNS_KEEP_COLUMN_LIST="PATIENT_ID,SAMPLE_ID,ONCOTREE_CODE,PARTA_CONSENTED_12_245,PARTC_CONSENTED_12_245"

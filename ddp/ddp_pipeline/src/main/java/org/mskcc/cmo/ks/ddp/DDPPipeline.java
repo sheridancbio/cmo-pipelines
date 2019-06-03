@@ -64,6 +64,7 @@ public class DDPPipeline {
                 .addOption("p", "patient_subset_file", true, "File containing patient ID's to subset by")
                 .addOption("s", "seq_date_file", true, "File containing patient sequence dates for OS_MONTHS")
                 .addOption("e", "excluded_patients_file", true, "File containg patient ID's to exclude")
+                .addOption("r", "current_demographics_rec_count", true, "Count of records in current demographics file. Used to sanity check num of records in latest demographics data fetch.")            
                 .addOption("t", "test", false, "Run pipeline in test mode");
         return options;
     }
@@ -80,6 +81,7 @@ public class DDPPipeline {
                 String seqDateFilename,
                 String excludedPatientsFilename,
                 String outputDirectory,
+                String currentDemographicsRecCount,
                 Boolean testMode,
                 Boolean includeDiagnosis,
                 Boolean includeRadiation,
@@ -97,6 +99,7 @@ public class DDPPipeline {
                 .addString("seqDateFilename", seqDateFilename)
                 .addString("excludedPatientsFilename", excludedPatientsFilename)
                 .addString("outputDirectory", outputDirectory)
+                .addString("currentDemographicsRecCount", currentDemographicsRecCount)
                 .addString("testMode", String.valueOf(testMode))
                 .addString("includeDiagnosis", String.valueOf(includeDiagnosis))
                 .addString("includeRadiation", String.valueOf(includeRadiation))
@@ -150,6 +153,7 @@ public class DDPPipeline {
         String seqDateFilename = commandLine.hasOption("s") ? commandLine.getOptionValue("s") : "";
         String excludedPatientsFilename = commandLine.hasOption("e") ? commandLine.getOptionValue("e") : "";
         String outputDirectory = commandLine.getOptionValue("o");
+        String currentDemographicsRecCount = commandLine.hasOption("r") ? commandLine.getOptionValue("r") : "0";
         boolean foundInvalidFetchOption = false;
         boolean includeDiagnosis = false;
         boolean includeRadiation = false;
@@ -203,7 +207,7 @@ public class DDPPipeline {
             System.out.println("No such directory: " + outputDirectory);
             help(options, 2);
         }
-        launchJob(ctx, args, cohortName, subsetFilename, seqDateFilename, excludedPatientsFilename, outputDirectory, commandLine.hasOption("t"),
-            includeDiagnosis, includeRadiation, includeChemotherapy, includeSurgery, includeSurvival);
+        launchJob(ctx, args, cohortName, subsetFilename, seqDateFilename, excludedPatientsFilename, outputDirectory, currentDemographicsRecCount, 
+            commandLine.hasOption("t"), includeDiagnosis, includeRadiation, includeChemotherapy, includeSurgery, includeSurvival);
     }
 }
