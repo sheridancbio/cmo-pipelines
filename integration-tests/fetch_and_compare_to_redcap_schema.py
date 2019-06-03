@@ -25,6 +25,7 @@ HEADERS = {"Accept": "application/vnd.github.v4.raw"}
 GITHUB_ISSUES_BASE_URL = "https://api.github.com/repos/knowledgesystems/cmo-pipelines/issues"
 GITHUB_LABELS_ENDPOINT = "/labels"
 LABELS_ID_KEY = "id"
+SKIP_INTEGRATION_TESTS_LABEL = "1383619983"
 
 LABEL_TO_TEST_MAPPING = {
     '984868388' : "crdb_fetcher",
@@ -199,8 +200,13 @@ def main():
     username,password = get_github_credentials(credentials_file)
     pull_request_labels = get_labels_on_pull_request(username, password, pull_request_number)
     # returned github pull requests filtered to only include integration test tags (ddp, cvr, crdb)
+
     fetchers_to_test = [LABEL_TO_TEST_MAPPING[label] for label in pull_request_labels if label in LABEL_TO_TEST_MAPPING]
-    if len(fetchers_to_test) > 0:
+    # add all integration tests if none were labeled
+    if len(fetchers_to_test) == 0:
+        fetchers_to_test = LABEL_TO_TEST_MAPPING.values()
+    # run tests if no skip-integration-tests label on PR
+    if len(fetchers_to_test) > 0 and SKIP_INTEGRATION_TESTS_LABEL not in pull_request_labels:
         export_redcap_projects(fetchers_to_test, fetched_file_to_redcap_file_mappings, redcap_file_to_redcap_project_mappings, redcap_directory, lib)
         fetch_data_source_files(fetchers_to_test, fetch_directory, lib)
         verify_data_schema(fetchers_to_test, fetched_file_to_redcap_file_mappings)
