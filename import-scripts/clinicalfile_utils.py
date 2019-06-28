@@ -256,3 +256,15 @@ def write_data_list_to_file(filename, data_list):
     """
     with open(filename, "w") as f:
             f.write('\n'.join(data_list) + "\n")
+
+def get_index_for_column(header, column_name):
+    """
+        Get index for an optional column (might be missing)
+        If column is not present, return -1 (similar to find() function)
+    """
+    column_index = -1
+    try:
+        column_index = header.index(column_name)
+    except ValueError:
+        pass
+    return column_index

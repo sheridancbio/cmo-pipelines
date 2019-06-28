@@ -80,8 +80,8 @@ def fill_in_blank_gene_panel_values(gene_matrix_file):
             else:
                 if not header_processed:
                     header = data
-                    mutations_gene_panel_index = header.index('mutations')
-                    cna_gene_panel_index = header.index('cna')
+                    mutations_gene_panel_index = clinicalfile_utils.get_index_for_column(header, 'mutations')
+                    cna_gene_panel_index = clinicalfile_utils.get_index_for_column(header, 'cna')
                     to_write.append(line.rstrip('\n'))
                     header_processed = True
                     continue
