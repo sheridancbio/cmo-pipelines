@@ -15,6 +15,12 @@
 
   <dependencies>
     <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-test</artifactId>
+      <scope>test</scope>
+      <version>${spring.version}</version>
+    </dependency>
+    <dependency>
       <groupId>org.mskcc.cmo.ks</groupId>
       <artifactId>common</artifactId>
       <version>0.1.0</version>
@@ -61,7 +67,7 @@
     <dependency>
       <groupId>com.github.genome-nexus</groupId>
       <artifactId>genome-nexus-annotation-pipeline</artifactId>
-      <version>d0a0193c8b97afc9e348b7ff5a46146d0ab5ab26</version>
+      <version>be36c6d1e66d31c1803ae6c6c2cf518c66165510</version>
     </dependency>
     <dependency>
       <groupId>javax.mail</groupId>
