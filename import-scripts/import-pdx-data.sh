@@ -11,10 +11,10 @@ TOMCAT_SERVER_RESTART_PATH=/srv/data/portal-cron/msk-tomcat-restart
 TOMCAT_SERVER_PRETTY_DISPLAY_NAME="MSK Tomcat" # e.g. Public Tomcat
 TOMCAT_SERVER_DISPLAY_NAME="msk-tomcat" # e.g. schultz-tomcat
 SSH_OPTIONS="-i ${TOMCAT_HOST_SSH_KEY_FILE} -o BATCHMODE=yes -o ConnectTimeout=3"
-# pipelines_email_list receives low level emails (fail to recache oncotree, fail to restart a tomcat, ...)
-pipelines_email_list="cbioportal-pipelines@cbio.mskcc.org"
-# pdx_email_list receives a daily summary email of import statistics and problems
-pdx_email_list="cbioportal-pdx-importer@cbio.mskcc.org"
+# PIPELINES_EMAIL_LIST receives low level emails (fail to recache oncotree, fail to restart a tomcat, ...)
+PIPELINES_EMAIL_LIST="cbioportal-pipelines@cbio.mskcc.org"
+# PDX_EMAIL_LIST receives a daily summary email of import statistics and problems
+PDX_EMAIL_LIST="cbioportal-pdx-importer@cbio.mskcc.org"
 CRDB_PDX_TMPDIR=/data/portal-cron/tmp/import-cron-pdx-msk
 ONCOTREE_VERSION_TO_USE=oncotree_candidate_release
 hg_rootdir="uninitialized"
@@ -141,7 +141,7 @@ function find_studies_to_be_reverted {
 if ! [ -f $PATH_TO_AUTOMATION_SCRIPT ] ; then
     message="automation-environment.sh could not be found, exiting..."
     echo ${message}
-    echo -e "${message}" |  mail -s "import-pdx-data failed to run." $pipelines_email_list
+    echo -e "${message}" |  mail -s "import-pdx-data failed to run." $PIPELINES_EMAIL_LIST
     sendFailureMessageMskPipelineLogsSlack "CRDB PDX Pipeline Failure"
     exit 2
 fi
@@ -151,7 +151,7 @@ fi
 if [ -z $BIC_DATA_HOME ] | [ -z $PRIVATE_DATA_HOME ] | [ -z $PDX_DATA_HOME ] | [ -z $HG_BINARY ] | [ -z $PYTHON_BINARY ] | [ -z $DATAHUB_DATA_HOME ] | [ -z $ANNOTATOR_JAR ] | [ -z $CASE_LIST_CONFIG_FILE  ]; then
     message="could not run import-pdx-data.sh: automation-environment.sh script must be run in order to set needed environment variables (like BIC_DATA_HOME, PDX_DATA_HOME, ANNOTATOR_JAR, CASE_LIST_CONFIG_FILE,...)"
     echo ${message}
-    echo -e "${message}" |  mail -s "import-pdx-data failed to run." $pipelines_email_list
+    echo -e "${message}" |  mail -s "import-pdx-data failed to run." $PIPELINES_EMAIL_LIST
     sendFailureMessageMskPipelineLogsSlack "CRDB PDX Pipeline Failure"
     exit 2
 fi
@@ -161,7 +161,7 @@ if [ ! -d $CRDB_PDX_TMPDIR ] ; then
     if [ $? -ne 0 ] ; then
         message="error : required temp directory does not exist and could not be created : $CRDB_PDX_TMPDIR"
         echo ${message}
-        echo -e "${message}" |  mail -s "import-pdx-data failed to run." $pipelines_email_list
+        echo -e "${message}" |  mail -s "import-pdx-data failed to run." $PIPELINES_EMAIL_LIST
         sendFailureMessageMskPipelineLogsSlack "CRDB PDX Pipeline Failure"
         exit 2
     fi
@@ -198,7 +198,7 @@ if ! [ -z $INHIBIT_RECACHING_FROM_TOPBRAID ] ; then
         CDD_ONCOTREE_RECACHE_FAIL=1
         message="Failed to refresh CDD and/or ONCOTREE cache during CRDB PDX import!"
         echo $message
-        echo -e "$message" | mail -s "CDD and/or ONCOTREE cache failed to refresh" $pipelines_email_list
+        echo -e "$message" | mail -s "CDD and/or ONCOTREE cache failed to refresh" $PIPELINES_EMAIL_LIST
     fi
 fi
 
@@ -312,7 +312,7 @@ if [ $CRDB_PDX_SUBSET_AND_MERGE_SUCCESS -ne 0 ] ; then
             echo "$IMPORTER_JAR_LABEL import failed!"
             EMAIL_BODY="$IMPORTER_JAR_LABEL import failed"
             echo -e "Sending email $EMAIL_BODY"
-            echo -e "$EMAIL_BODY" | mail -s "Import failure: $IMPORTER_JAR_LABEL" $pipelines_email_list
+            echo -e "$EMAIL_BODY" | mail -s "Import failure: $IMPORTER_JAR_LABEL" $PIPELINES_EMAIL_LIST
             sendFailureMessageMskPipelineLogsSlack "CRDB PDX Failure During Import"
         else
             IMPORT_SUCCESS=1
@@ -330,7 +330,7 @@ if [ $CRDB_PDX_SUBSET_AND_MERGE_SUCCESS -ne 0 ] ; then
             if [ ${#failed_restart_server_list[*]} -ne 0 ] ; then
                 EMAIL_BODY="Attempt to trigger a restart of the $TOMCAT_SERVER_DISPLAY_NAME server failed"
                 echo -e "Sending email $EMAIL_BODY"
-                echo -e "$EMAIL_BODY" | mail -s "$TOMCAT_SERVER_PRETTY_DISPLAY_NAME Restart Error : unable to trigger restart" $pipelines_email_list
+                echo -e "$EMAIL_BODY" | mail -s "$TOMCAT_SERVER_PRETTY_DISPLAY_NAME Restart Error : unable to trigger restart" $PIPELINES_EMAIL_LIST
                 sendFailureMessageMskPipelineLogsSlack "CRDB PDX Tomcat Restart Failure"
             else
                 TOMCAT_SERVER_RESTART_SUCCESS=1
@@ -394,7 +394,7 @@ done
 
 echo -e "Sending email:"
 cat "$EMAIL_MESSAGE_FILE"
-cat "$EMAIL_MESSAGE_FILE" | mailx -s "$EMAIL_SUBJECT" $validation_report_attachments $pdx_email_list
+cat "$EMAIL_MESSAGE_FILE" | mailx -s "$EMAIL_SUBJECT" $validation_report_attachments $PDX_EMAIL_LIST
 
 echo "Cleaning up any untracked files from MSK-PDX import..."
 bash $PORTAL_HOME/scripts/datasource-repo-cleanup.sh $PORTAL_DATA_HOME/bic-mskcc $PORTAL_DATA_HOME/private $PORTAL_DATA_HOME/datahub $PORTAL_DATA_HOME/crdb_pdx

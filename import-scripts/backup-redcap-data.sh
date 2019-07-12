@@ -2,7 +2,7 @@
 
 # take snapshot of REDCap projects for MSKIMPACT, RAINDANCE, HEMEPACT, ARCHER
 echo $(date)
-email_list="cbioportal-pipelines@cbio.mskcc.org"
+PIPELINES_EMAIL_LIST="cbioportal-pipelines@cbio.mskcc.org"
 
 # flags for REDCap export status
 MSKIMPACT_REDCAP_EXPORT_FAIL=0
@@ -199,25 +199,25 @@ fi
 EMAIL_BODY="Failed to backup MSKIMPACT REDCap data"
 if [ $MSKIMPACT_REDCAP_EXPORT_FAIL -gt 0 ]; then
     echo "Sending email $EMAIL_BODY"
-    echo $EMAIL_BODY | mail -s "[URGENT]: MSKIMPACT REDCap Backup Failure" $email_list
+    echo $EMAIL_BODY | mail -s "[URGENT]: MSKIMPACT REDCap Backup Failure" $PIPELINES_EMAIL_LIST
 fi
 
 EMAIL_BODY="Failed to backup RAINDANCE REDCap data"
 if [ $RAINDANCE_REDCAP_EXPORT_FAIL -gt 0 ]; then
     echo "Sending email $EMAIL_BODY"
-    echo $EMAIL_BODY | mail -s "[URGENT]: RAINDANCE REDCap Backup Failure" $email_list
+    echo $EMAIL_BODY | mail -s "[URGENT]: RAINDANCE REDCap Backup Failure" $PIPELINES_EMAIL_LIST
 fi
 
 EMAIL_BODY="Failed to backup HEMEPACT REDCap data"
 if [ $HEMEPACT_REDCAP_EXPORT_FAIL -gt 0 ]; then
     echo "Sending email $EMAIL_BODY"
-    echo $EMAIL_BODY | mail -s "[URGENT]: HEMEPACT REDCap Backup Failure" $email_list
+    echo $EMAIL_BODY | mail -s "[URGENT]: HEMEPACT REDCap Backup Failure" $PIPELINES_EMAIL_LIST
 fi
 
 EMAIL_BODY="Failed to backup ARCHER REDCap data"
 if [ $ARCHER_REDCAP_EXPORT_FAIL -gt 0 ]; then
     echo "Sending email $EMAIL_BODY"
-    echo $EMAIL_BODY | mail -s "[URGENT]: ARCHER REDCap Backup Failure" $email_list
+    echo $EMAIL_BODY | mail -s "[URGENT]: ARCHER REDCap Backup Failure" $PIPELINES_EMAIL_LIST
 fi
 
 EMAIL_BODY="Failed to backup ACCESS REDCap data"
@@ -230,25 +230,25 @@ fi
 EMAIL_BODY="Validation of MSKIMPACT REDCap data failed"
 if [ $MSKIMPACT_VALIDATION_FAIL -gt 0 ]; then
     echo "Sending email $EMAIL_BODY"
-    echo $EMAIL_BODY | mail -s "[URGENT]: MSKIMPACT REDCap Data Validation Failure" $email_list
+    echo $EMAIL_BODY | mail -s "[URGENT]: MSKIMPACT REDCap Data Validation Failure" $PIPELINES_EMAIL_LIST
 fi
 
 EMAIL_BODY="Validation of RAINDANCE REDCap data failed"
 if [ $RAINDANCE_VALIDATION_FAIL -gt 0 ]; then
     echo "Sending email $EMAIL_BODY"
-    echo $EMAIL_BODY | mail -s "[URGENT]: RAINDANCE REDCap Data Validation Failure" $email_list
+    echo $EMAIL_BODY | mail -s "[URGENT]: RAINDANCE REDCap Data Validation Failure" $PIPELINES_EMAIL_LIST
 fi
 
 EMAIL_BODY="Validation of HEMEPACT REDCap data failed"
 if [ $HEMEPACT_VALIDATION_FAIL -gt 0 ]; then
     echo "Sending email $EMAIL_BODY"
-    echo $EMAIL_BODY | mail -s "[URGENT]: HEMEPACT REDCap Data Validation Failure" $email_list
+    echo $EMAIL_BODY | mail -s "[URGENT]: HEMEPACT REDCap Data Validation Failure" $PIPELINES_EMAIL_LIST
 fi
 
 EMAIL_BODY="Validation of ARCHER REDCap data failed"
 if [ $ARCHER_VALIDATION_FAIL -gt 0 ]; then
     echo "Sending email $EMAIL_BODY"
-    echo $EMAIL_BODY | mail -s "[URGENT]: ARCHER REDCap Data Validation Failure" $email_list
+    echo $EMAIL_BODY | mail -s "[URGENT]: ARCHER REDCap Data Validation Failure" $PIPELINES_EMAIL_LIST
 fi
 
 EMAIL_BODY="Validation of ACCESS REDCap data failed"

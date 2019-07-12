@@ -5,12 +5,12 @@ HG_SUB_REPO_LIST=". bic-mouse bic-mskcc brlo_tcga gdac_provisional_tcga genie gr
 HG_ERROR_CODE=1
 NO_HEAD_FOUND_CODE=255
 
-email_list="cbioportal-pipelines@cbio.mskcc.org"
+PIPELINES_EMAIL_LIST="cbioportal-pipelines@cbio.mskcc.org"
 
 if [ -z ${PORTAL_DATA_HOME} ] || [ -z ${HG_BINARY} ] ; then
 	message="test could not run: automation-environment.sh script must be run in order to set PORTAL_DATA_HOME and HG_BINARY environment variables"
 	echo ${message}
-	echo ${message} | mail -s "Mercurial Repository Problem Report" $email_list
+	echo ${message} | mail -s "Mercurial Repository Problem Report" $PIPELINES_EMAIL_LIST
 	exit 250
 fi
 function repository_has_single_head () {
@@ -37,7 +37,7 @@ tempfilename=$(mktemp /tmp/test_for_multi_hg_heads_email.XXXXXX)
 if [ -z ${tempfilename} ] || ! [ -w ${tempfilename} ] ; then
 	message="test could not run: tempfile \"${tempfilename}\" could not be created/written"
 	echo ${message}
-	echo ${message} | mail -s "Mercurial Repository Problem Report" $email_list
+	echo ${message} | mail -s "Mercurial Repository Problem Report" $PIPELINES_EMAIL_LIST
 	exit 249
 fi
 
@@ -81,7 +81,7 @@ for subdir in ${HG_SUB_REPO_LIST} ; do
 done
 if [ ${sendemailflag} -ne 0 ] ; then
 	cat ${tempfilename}
-	cat ${tempfilename} | mail -s "Mercurial Repository Problem Report" $email_list
+	cat ${tempfilename} | mail -s "Mercurial Repository Problem Report" $PIPELINES_EMAIL_LIST
 fi
 rm -f ${tempfilename}
 exit ${sendemailflag}

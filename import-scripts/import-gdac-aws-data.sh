@@ -15,7 +15,7 @@ tmp=$PORTAL_HOME/tmp/import-cron-aws-gdac
 if [[ -d "$tmp" && "$tmp" != "/" ]]; then
     rm -rf "$tmp"/*
 fi
-email_list="cbioportal-pipelines@cbio.mskcc.org"
+PIPELINES_EMAIL_LIST="cbioportal-pipelines@cbio.mskcc.org"
 now=$(date "+%Y-%m-%d-%H-%M-%S")
 TRUSTSTORE_PASSWORD=`cat $AWS_GDAC_SSL_TRUSTSTORE_PASSWORD_FILE`
 ENABLE_DEBUGGING=0
@@ -55,7 +55,7 @@ if [[ $DB_VERSION_FAIL -eq 0 ]]; then
         GDAC_IMPORT_FAIL=1
         EMAIL_BODY="Import of gdac studes (cmo) into aws gdac failed"
         echo -e "Sending email $EMAIL_BODY"
-        echo -e "$EMAIL_BODY" | mail -s "Import failure: aws gdac" $email_list
+        echo -e "$EMAIL_BODY" | mail -s "Import failure: aws gdac" $PIPELINES_EMAIL_LIST
     fi
     num_studies_updated=`cat $tmp/num_studes_updated.txt`
     echo "`$num_studies_updated` studies have been updated"
@@ -69,7 +69,7 @@ if [[ $DB_VERSION_FAIL -eq 0 ]]; then
         STATIC_GDAC_IMPORT_FAIL=1
         EMAIL_BODY="Import of daily studies (dmp/pdx) into aws gdac failed"
         echo -e "Sending email $EMAIL_BODY"
-        echo -e "$EMAIL_BODY" | mail -s "Import failure: aws gdac" $email_list
+        echo -e "$EMAIL_BODY" | mail -s "Import failure: aws gdac" $PIPELINES_EMAIL_LIST
     fi
     num_studies_updated=`cat $tmp/num_studies_updated.txt`
     echo "'$num_studies_updated' studies have been updated"
@@ -81,7 +81,7 @@ EMAIL_BODY="The aws gdac database version is incompatible. Imports will be skipp
 # send email if db version isn't compatible
 if [ $DB_VERSION_FAIL -gt 0 ]; then
     echo -e "Sending email $EMAIL_BODY"
-    echo -e "$EMAIL_BODY" | mail -s "AWS GDAC Update Failure: DB version is incompatible" $email_list
+    echo -e "$EMAIL_BODY" | mail -s "AWS GDAC Update Failure: DB version is incompatible" $PIPELINES_EMAIL_LIST
 fi
 
 if [ $GDAC_IMPORT_FAIL -eq 0 ] ; then

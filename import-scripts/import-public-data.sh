@@ -50,7 +50,7 @@ FLOCK_FILEPATH="/data/portal-cron/cron-lock/import-public-data.lock"
     ONCOTREE_VERSION_TO_USE=oncotree_latest_stable
     TOMCAT_SERVER_SHOULD_BE_RESTARTED=0 # 0 = skip the restart, non-0 = do the restart
 
-    email_list="cbioportal-pipelines@cbio.mskcc.org"
+    PIPELINES_EMAIL_LIST="cbioportal-pipelines@cbio.mskcc.org"
     CDD_ONCOTREE_RECACHE_FAIL=0
     if ! [ -z $INHIBIT_RECACHING_FROM_TOPBRAID ] ; then
         # refresh cdd and oncotree cache
@@ -59,7 +59,7 @@ FLOCK_FILEPATH="/data/portal-cron/cron-lock/import-public-data.lock"
             CDD_ONCOTREE_RECACHE_FAIL=1
             message="Failed to refresh CDD and/or ONCOTREE cache during TRIAGE import!"
             echo $message
-            echo -e "$message" | mail -s "CDD and/or ONCOTREE cache failed to refresh" $email_list
+            echo -e "$message" | mail -s "CDD and/or ONCOTREE cache failed to refresh" $PIPELINES_EMAIL_LIST
         fi
     fi
 
@@ -81,7 +81,7 @@ FLOCK_FILEPATH="/data/portal-cron/cron-lock/import-public-data.lock"
         CBIO_PORTAL_DATA_FETCH_FAIL=1
         EMAIL_BODY="The cbio-portal-data data fetch failed."
         echo -e "Sending email $EMAIL_BODY"
-        echo -e "$EMAIL_BODY" | mail -s "Data fetch failure: cbio-portal-data" $email_list
+        echo -e "$EMAIL_BODY" | mail -s "Data fetch failure: cbio-portal-data" $PIPELINES_EMAIL_LIST
     fi
 
     # fetch updates in CMO impact
@@ -93,7 +93,7 @@ FLOCK_FILEPATH="/data/portal-cron/cron-lock/import-public-data.lock"
         CMO_IMPACT_FETCH_FAIL=1
         EMAIL_BODY="The impact data fetch failed."
         echo -e "Sending email $EMAIL_BODY"
-        echo -e "$EMAIL_BODY" | mail -s "Data fetch failure: impact" $email_list
+        echo -e "$EMAIL_BODY" | mail -s "Data fetch failure: impact" $PIPELINES_EMAIL_LIST
     fi
 
     # fetch updates in private repository
@@ -105,7 +105,7 @@ FLOCK_FILEPATH="/data/portal-cron/cron-lock/import-public-data.lock"
         PRIVATE_FETCH_FAIL=1
         EMAIL_BODY="The private data fetch failed."
         echo -e "Sending email $EMAIL_BODY"
-        echo -e "$EMAIL_BODY" | mail -s "Data fetch failure: private" $email_list
+        echo -e "$EMAIL_BODY" | mail -s "Data fetch failure: private" $PIPELINES_EMAIL_LIST
     fi
 
     echo "fetching updates from datahub..."
@@ -116,7 +116,7 @@ FLOCK_FILEPATH="/data/portal-cron/cron-lock/import-public-data.lock"
         DATAHUB_FETCH_FAIL=1
         EMAIL_BODY="The datahub data fetch failed."
         echo -e "Sending email $EMAIL_BODY"
-        echo -e "$EMAIL_BODY" | mail -s "Data fetch failure: datahub" $pipeline_email_list
+        echo -e "$EMAIL_BODY" | mail -s "Data fetch failure: datahub" $PIPELINES_EMAIL_LIST
     fi
 
     if [[ $DB_VERSION_FAIL -eq 0 && $PRIVATE_FETCH_FAIL -eq 0 && $CMO_IMPACT_FETCH_FAIL -eq 0 && $CBIO_PORTAL_DATA_FETCH_FAIL -eq 0 && $DATAHUB_FETCH_FAIL -eq 0 && $CDD_ONCOTREE_RECACHE_FAIL -eq 0 ]]; then
@@ -130,7 +130,7 @@ FLOCK_FILEPATH="/data/portal-cron/cron-lock/import-public-data.lock"
             echo "Public import failed!"
             EMAIL_BODY="Public import failed"
             echo -e "Sending email $EMAIL_BODY"
-            echo -e "$EMAIL_BODY" | mail -s "Import failure: public" $email_list
+            echo -e "$EMAIL_BODY" | mail -s "Import failure: public" $PIPELINES_EMAIL_LIST
         fi
         num_studies_updated=''
         num_studies_updated_filename="$tmp/num_studies_updated.txt"
@@ -157,7 +157,7 @@ FLOCK_FILEPATH="/data/portal-cron/cron-lock/import-public-data.lock"
         if [ $RESTART_EXIT_STATUS -ne 0 ] ; then
             EMAIL_BODY="Attempt to trigger a redeployment of the public portal tomcat pods failed"
             echo -e "Sending email $EMAIL_BODY"
-            echo -e "$EMAIL_BODY" | mail -s "Public Portal Tomcat Pod Redeployment Error : unable to trigger redeployment" $email_list
+            echo -e "$EMAIL_BODY" | mail -s "Public Portal Tomcat Pod Redeployment Error : unable to trigger redeployment" $PIPELINES_EMAIL_LIST
         fi
     fi
 
@@ -165,7 +165,7 @@ FLOCK_FILEPATH="/data/portal-cron/cron-lock/import-public-data.lock"
     # send email if db version isn't compatible
     if [ $DB_VERSION_FAIL -gt 0 ]; then
         echo -e "Sending email $EMAIL_BODY"
-        echo -e "$EMAIL_BODY" | mail -s "Public Update Failure: DB version is incompatible" $email_list
+        echo -e "$EMAIL_BODY" | mail -s "Public Update Failure: DB version is incompatible" $PIPELINES_EMAIL_LIST
     fi
 
     $JAVA_BINARY $JAVA_IMPORTER_ARGS --send-update-notification --portal public-portal --notification-file "$public_portal_notification_file"

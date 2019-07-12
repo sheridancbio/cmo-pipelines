@@ -4,13 +4,13 @@
 
 # we need this file for the tomcat restart funcions
 source $PORTAL_HOME/scripts/dmp-import-vars-functions.sh
+# set data source env variables
+source $PORTAL_HOME/scripts/set-data-source-environment-vars.sh
 
 tmp=$PORTAL_HOME/tmp/import-cron-cmo-msk
 if [[ -d "$tmp" && "$tmp" != "/" ]]; then
     rm -rf "$tmp"/*
 fi
-email_list="cbioportal-cmo-importer@cbio.mskcc.org"
-pipeline_email_list="cbioportal-pipelines@cbio.mskcc.org"
 now=$(date "+%Y-%m-%d-%H-%M-%S")
 IMPORTER_JAR_FILENAME="$PORTAL_HOME/lib/msk-cmo-importer.jar"
 JAVA_DEBUG_ARGS="-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27184"
@@ -18,6 +18,9 @@ JAVA_IMPORTER_ARGS="$JAVA_PROXY_ARGS $JAVA_DEBUG_ARGS -Dspring.profiles.active=d
 msk_automation_notification_file=$(mktemp $tmp/msk-automation-portal-update-notification.$now.XXXXXX)
 ONCOTREE_VERSION_TO_USE=oncotree_candidate_release
 CANCERSTUDIESLOGFILENAME="$PORTAL_HOME/logs/update-studies-dashi-gdac.log"
+DATA_SOURCES_TO_BE_FETCHED="bic-mskcc private datahub_shahlab msk-extract-datahub"
+unset failed_data_source_fetches
+declare -a failed_data_source_fetches
 
 CDD_ONCOTREE_RECACHE_FAIL=0
 if ! [ -z $INHIBIT_RECACHING_FROM_TOPBRAID ] ; then
@@ -27,57 +30,12 @@ if ! [ -z $INHIBIT_RECACHING_FROM_TOPBRAID ] ; then
         CDD_ONCOTREE_RECACHE_FAIL=1
         message="Failed to refresh CDD and/or ONCOTREE cache during TRIAGE import!"
         echo $message
-        echo -e "$message" | mail -s "CDD and/or ONCOTREE cache failed to refresh" $pipeline_email_list
+        echo -e "$message" | mail -s "CDD and/or ONCOTREE cache failed to refresh" $PIPELINES_EMAIL_LIST
     fi
 fi
 
-# fetch updates in CMO repository
-echo "fetching updates from bic-mskcc..."
-CMO_FETCH_FAIL=0
-$JAVA_BINARY $JAVA_IMPORTER_ARGS --fetch-data --data-source bic-mskcc --run-date latest --update-worksheet
-if [ $? -gt 0 ]; then
-    echo "CMO (bic-mskcc) fetch failed!"
-    CMO_FETCH_FAIL=1
-    EMAIL_BODY="The CMO (bic-mskcc) data fetch failed. Imports into Triage and production WILL NOT HAVE UP-TO-DATE DATA until this is resolved.\n\n*** DO NOT MARK STUDIES FOR IMPORT INTO msk-automation-portal. ***\n\n*** DO NOT MERGE ANY STUDIES until this has been resolved. Please uncheck any merged studies in the cBio Portal Google document. ***\n\nYou may keep projects marked for import into Triage in the cBio Portal Google document. Triage studies will be reimported once there has been a successful data fetch.\n\nPlease don't hesitate to ask if you have any questions."
-    echo -e "Sending email $EMAIL_BODY"
-    echo -e "$EMAIL_BODY" | mail -s "Data fetch failure: CMO (bic-mskcc)" $email_list
-fi
-
-# fetch updates in private repository
-echo "fetching updates from private..."
-PRIVATE_FETCH_FAIL=0
-$JAVA_BINARY $JAVA_IMPORTER_ARGS --fetch-data --data-source private --run-date latest
-if [ $? -gt 0 ]; then
-    echo "CMO (private) fetch failed!"
-    PRIVATE_FETCH_FAIL=1
-    EMAIL_BODY="The CMO (private) data fetch failed. Imports into Triage and production WILL NOT HAVE UP-TO-DATE DATA until this is resolved.\n\n*** DO NOT MARK STUDIES FOR IMPORT INTO msk-automation-portal. ***\n\n*** DO NOT MERGE ANY STUDIES until this has been resolved. Please uncheck any merged studies in the cBio Portal Google document. ***\n\nYou may keep projects marked for import into Triage in the cBio Portal Google document. Triage studies will be reimported once there has been a successful data fetch.\n\nPlease don't hesitate to ask if you have any questions."
-    echo -e "Sending email $EMAIL_BODY"
-    echo -e "$EMAIL_BODY" | mail -s "Data fetch failure: CMO (private)" $email_list
-fi
-
-# fetch updates in datahub_shahlab repository
-echo "fetching updates from datahub_shahlab..."
-DATAHUB_SHAH_LAB_FETCH_FAIL=0
-$JAVA_BINARY $JAVA_IMPORTER_ARGS --fetch-data --data-source datahub_shahlab --run-date latest
-if [ $? -gt 0 ]; then
-    echo "CMO (datahub_shahlab) fetch failed!"
-    DATAHUB_SHAH_LAB_FETCH_FAIL=1
-    EMAIL_BODY="The CMO (datahub_shahlab) data fetch failed. Imports into Triage and production WILL NOT HAVE UP-TO-DATE DATA until this is resolved.\n\n*** DO NOT MARK STUDIES FOR IMPORT INTO msk-automation-portal. ***\n\n*** DO NOT MERGE ANY STUDIES until this has been resolved. Please uncheck any merged studies in the cBio Portal Google document. ***\n\nYou may keep projects marked for import into Triage in the cBio Portal Google document. Triage studies will be reimported once there has been a successful data fetch.\n\nPlease don't hesitate to ask if you have any questions."
-    echo -e "Sending email $EMAIL_BODY"
-    echo -e "$EMAIL_BODY" | mail -s "Data fetch failure: CMO (datahub_shahlab)" $email_list
-fi
-
-#fetch updates in msk-extract/datahub repository msk-extract-datahub
-echo "fetching updates from msk-extract-datahub..."
-MSK_EXTRACT_DATAHUB_FETCH_FAIL=0
-$JAVA_BINARY $JAVA_IMPORTER_ARGS --fetch-data --data-source msk-extract-datahub --run-date latest
-if [ $? -gt 0 ]; then
-    echo "CMO (msk-extract-datahub) fetch failed!"
-    MSK_EXTRACT_DATAHUB_FETCH_FAIL=1
-    EMAIL_BODY="The CMO (msk-extract-datahub) data fetch failed. Imports into Triage and production WILL NOT HAVE UP-TO-DATE DATA until this is resolved.\n\n*** DO NOT MARK STUDIES FOR IMPORT INTO msk-automation-portal. ***\n\n*** DO NOT MERGE ANY STUDIES until this has been resolved. Please uncheck any merged studies in the cBio Portal Google document. ***\n\nYou may keep projects marked for import into Triage in the cBio Portal Google document. Triage studies will be reimported once there has been a successful data fetch.\n\nPlease don't hesitate to ask if you have any questions."
-    echo -e "Sending email $EMAIL_BODY"
-    echo -e "$EMAIL_BODY" | mail -s "Data fetch failure: CMO (msk-extract-datahub)" $email_list
-fi
+# fetch updates to data source repos
+fetch_updates_in_data_sources $DATA_SOURCES_TO_BE_FETCHED
 
 DB_VERSION_FAIL=0
 # check database version before importing anything
@@ -88,7 +46,7 @@ if [ $? -gt 0 ]; then
     DB_VERSION_FAIL=1
 fi
 
-if [[ $DB_VERSION_FAIL -eq 0 && $CMO_FETCH_FAIL -eq 0 && $PRIVATE_FETCH_FAIL -eq 0 && $DATAHUB_SHAH_LAB_FETCH_FAIL -eq 0 && $MSK_EXTRACT_DATAHUB_FETCH_FAIL -eq 0 && $CDD_ONCOTREE_RECACHE_FAIL -eq 0 ]]; then
+if [[ $DB_VERSION_FAIL -eq 0 && ${#failed_data_source_fetches[*]} -eq 0 && $CDD_ONCOTREE_RECACHE_FAIL -eq 0 ]] ; then
     # import vetted studies into MSK portal
     echo "importing cancer type updates into msk portal database..."
     $JAVA_BINARY -Xmx16g $JAVA_IMPORTER_ARGS --import-types-of-cancer --oncotree-version ${ONCOTREE_VERSION_TO_USE}
@@ -100,7 +58,7 @@ if [[ $DB_VERSION_FAIL -eq 0 && $CMO_FETCH_FAIL -eq 0 && $PRIVATE_FETCH_FAIL -eq
         IMPORT_FAIL=1
         EMAIL_BODY="MSK CMO import failed"
         echo -e "Sending email $EMAIL_BODY"
-        echo -e "$EMAIL_BODY" | mail -s "Import failure: MSK CMO" $email_list
+        echo -e "$EMAIL_BODY" | mail -s "Import failure: MSK CMO" $CMO_EMAIL_LIST
     fi
 
     num_studies_updated=`cat $tmp/num_studies_updated.txt`
@@ -119,7 +77,7 @@ EMAIL_BODY="The GDAC database version is incompatible. Imports will be skipped u
 # send email if db version isn't compatible
 if [ $DB_VERSION_FAIL -gt 0 ]; then
     echo -e "Sending email $EMAIL_BODY"
-    echo -e "$EMAIL_BODY" | mail -s "GDAC Update Failure: DB version is incompatible" $email_list
+    echo -e "$EMAIL_BODY" | mail -s "GDAC Update Failure: DB version is incompatible" $CMO_EMAIL_LIST
 fi
 
 echo "Cleaning up any untracked files from MSK-CMO import..."

@@ -6,7 +6,7 @@ tmp=$PORTAL_HOME/tmp/import-cron-genie
 if [[ -d "$tmp" && "$tmp" != "/" ]]; then
     rm -rf "$tmp"/*
 fi
-email_list="cbioportal-pipelines@cbio.mskcc.org"
+PIPELINES_EMAIL_LIST="cbioportal-pipelines@cbio.mskcc.org"
 now=$(date "+%Y-%m-%d-%H-%M-%S")
 IMPORTER_JAR_FILENAME="$PORTAL_HOME/lib/genie-importer.jar"
 JAVA_DEBUG_ARGS="-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27186"
@@ -22,7 +22,7 @@ if ! [ -z $INHIBIT_RECACHING_FROM_TOPBRAID ] ; then
         CDD_ONCOTREE_RECACHE_FAIL=1
         message="Failed to refresh CDD and/or ONCOTREE cache during TRIAGE import!"
         echo $message
-        echo -e "$message" | mail -s "CDD and/or ONCOTREE cache failed to refresh" $email_list
+        echo -e "$message" | mail -s "CDD and/or ONCOTREE cache failed to refresh" $PIPELINES_EMAIL_LIST
     fi
 fi
 
@@ -44,7 +44,7 @@ if [ $? -gt 0 ]; then
     GENIE_FETCH_FAIL=1
     EMAIL_BODY="The genie data fetch failed."
     echo -e "Sending email $EMAIL_BODY"
-    echo -e "$EMAIL_BODY" | mail -s "Data fetch failure: genie" $email_list
+    echo -e "$EMAIL_BODY" | mail -s "Data fetch failure: genie" $PIPELINES_EMAIL_LIST
 fi
 
 if [[ $DB_VERSION_FAIL -eq 0 && $GENIE_FETCH_FAIL -eq 0 && $CDD_ONCOTREE_RECACHE_FAIL -eq 0 ]]; then
@@ -59,7 +59,7 @@ if [[ $DB_VERSION_FAIL -eq 0 && $GENIE_FETCH_FAIL -eq 0 && $CDD_ONCOTREE_RECACHE
         IMPORT_FAIL=1
         EMAIL_BODY="Genie import failed"
         echo -e "Sending email $EMAIL_BODY"
-        echo -e "$EMAIL_BODY" | mail -s "Import failure: Genie" $email_list
+        echo -e "$EMAIL_BODY" | mail -s "Import failure: Genie" $PIPELINES_EMAIL_LIST
     fi
     num_studies_updated=`cat $tmp/num_studies_updated.txt`
 
@@ -82,7 +82,7 @@ if [[ $DB_VERSION_FAIL -eq 0 && $GENIE_FETCH_FAIL -eq 0 && $CDD_ONCOTREE_RECACHE
         if [ ${#failed_restart_server_list[*]} -ne 0 ] ; then
             EMAIL_BODY="Attempt to trigger a restart of the $TOMCAT_SERVER_DISPLAY_NAME server on the following hosts failed: ${failed_restart_server_list[*]}"
             echo -e "Sending email $EMAIL_BODY"
-            echo -e "$EMAIL_BODY" | mail -s "$TOMCAT_SERVER_PRETTY_DISPLAY_NAME Restart Error : unable to trigger restart" $email_list
+            echo -e "$EMAIL_BODY" | mail -s "$TOMCAT_SERVER_PRETTY_DISPLAY_NAME Restart Error : unable to trigger restart" $PIPELINES_EMAIL_LIST
         fi
         echo "'$num_studies_updated' studies have been updated (no longer need to restart $TOMCAT_SERVER_DISPLAY_NAME server...)"
     else
@@ -94,7 +94,7 @@ EMAIL_BODY="The genie database version is incompatible. Imports will be skipped 
 # send email if db version isn't compatible
 if [ $DB_VERSION_FAIL -gt 0 ]; then
     echo -e "Sending email $EMAIL_BODY"
-    echo -e "$EMAIL_BODY" | mail -s "GENIE Update Failure: DB version is incompatible" $email_list
+    echo -e "$EMAIL_BODY" | mail -s "GENIE Update Failure: DB version is incompatible" $PIPELINES_EMAIL_LIST
 fi
 
 $JAVA_BINARY $JAVA_IMPORTER_ARGS --send-update-notification --portal genie-portal --notification-file "$genie_portal_notification_file"

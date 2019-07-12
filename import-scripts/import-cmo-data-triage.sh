@@ -12,18 +12,22 @@ FLOCK_FILEPATH="/data/portal-cron/cron-lock/import-cmo-data-triage.lock"
 
     # set necessary env variables with automation-environment.sh
 
+    # set data source env variables
+    source $PORTAL_HOME/scripts/set-data-source-environment-vars.sh
+    
     tmp=$PORTAL_HOME/tmp/import-cron-cmo-triage
     if [[ -d "$tmp" && "$tmp" != "/" ]]; then
         rm -rf "$tmp"/*
     fi
-    cmo_email_list="cbioportal-cmo-importer@cbio.mskcc.org"
-    pipeline_email_list="cbioportal-pipelines@cbio.mskcc.org"
     now=$(date "+%Y-%m-%d-%H-%M-%S")
     IMPORTER_JAR_FILENAME="$PORTAL_HOME/lib/triage-cmo-importer.jar"
     JAVA_DEBUG_ARGS="-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27183"
     JAVA_IMPORTER_ARGS="$JAVA_PROXY_ARGS $JAVA_DEBUG_ARGS -Dspring.profiles.active=dbcp -Djava.io.tmpdir=$tmp -ea -cp $IMPORTER_JAR_FILENAME org.mskcc.cbio.importer.Admin"
     triage_notification_file=$(mktemp $tmp/triage-portal-update-notification.$now.XXXXXX)
     ONCOTREE_VERSION_TO_USE=oncotree_candidate_release
+    DATA_SOURCES_TO_BE_FETCHED="bic-mskcc private genie impact impact-MERGED knowledge-systems-curated-studies immunotherapy datahub datahub_shahlab msk-extract-datahub"
+    unset failed_data_source_fetches
+    declare -a failed_data_source_fetches
 
     CDD_ONCOTREE_RECACHE_FAIL=0
     if ! [ -z $INHIBIT_RECACHING_FROM_TOPBRAID ] ; then
@@ -33,128 +37,12 @@ FLOCK_FILEPATH="/data/portal-cron/cron-lock/import-cmo-data-triage.lock"
             CDD_ONCOTREE_RECACHE_FAIL=1
             message="Failed to refresh CDD and/or ONCOTREE cache during TRIAGE import!"
             echo $message
-            echo -e "$message" | mail -s "CDD and/or ONCOTREE cache failed to refresh" $pipeline_email_list
+            echo -e "$message" | mail -s "CDD and/or ONCOTREE cache failed to refresh" $PIPELINES_EMAIL_LIST
         fi
     fi
 
-    # fetch updates in CMO repository
-    echo "fetching updates from bic-mskcc..."
-    CMO_FETCH_FAIL=0
-    $JAVA_BINARY $JAVA_IMPORTER_ARGS --fetch-data --data-source bic-mskcc --run-date latest --update-worksheet
-    if [ $? -gt 0 ]; then
-        echo "CMO (bic-mskcc) fetch failed!"
-        CMO_FETCH_FAIL=1
-        EMAIL_BODY="The CMO (bic-mskcc) data fetch failed.  Imports into Triage and production WILL NOT HAVE UP-TO-DATE DATA until this is resolved.\n\n*** DO NOT MARK STUDIES FOR IMPORT INTO msk-automation-portal. ***\n\n*** DO NOT MERGE ANY STUDIES until this has been resolved. Please uncheck any merged studies in the cBio Portal Google document. ***\n\nYou may keep projects marked for import into Triage in the cBio Portal Google document.  Triage studies will be reimported once there has been a successful data fetch.\n\nPlease don't hesitate to ask if you have any questions."
-        echo -e "Sending email $EMAIL_BODY"
-        echo -e "$EMAIL_BODY" | mail -s "Data fetch failure: CMO (bic-mskcc)" $cmo_email_list
-    fi
-
-    # fetch updates in private repository
-    echo "fetching updates from private..."
-    PRIVATE_FETCH_FAIL=0
-    $JAVA_BINARY $JAVA_IMPORTER_ARGS --fetch-data --data-source private --run-date latest
-    if [ $? -gt 0 ]; then
-        echo "private fetch failed!"
-        PRIVATE_FETCH_FAIL=1
-        EMAIL_BODY="The private data fetch failed."
-        echo -e "Sending email $EMAIL_BODY"
-        echo -e "$EMAIL_BODY" | mail -s "Data fetch failure: private" $pipeline_email_list
-    fi
-
-    # fetch updates in genie repository
-    echo "fetching updates from genie..."
-    GENIE_FETCH_FAIL=0
-    $JAVA_BINARY $JAVA_IMPORTER_ARGS --fetch-data --data-source genie --run-date latest
-    if [ $? -gt 0 ]; then
-        echo "genie fetch failed!"
-        GENIE_FETCH_FAIL=1
-        EMAIL_BODY="The genie data fetch failed."
-        echo -e "Sending email $EMAIL_BODY"
-        echo -e "$EMAIL_BODY" | mail -s "Data fetch failure: genie" $pipeline_email_list
-    fi
-
-    # fetch updates in CMO impact
-    echo "fetching updates from impact..."
-    CMO_IMPACT_FETCH_FAIL=0
-    $JAVA_BINARY $JAVA_IMPORTER_ARGS --fetch-data --data-source impact --run-date latest
-    if [ $? -gt 0 ]; then
-        echo "impact fetch failed!"
-        CMO_IMPACT_FETCH_FAIL=1
-        EMAIL_BODY="The impact data fetch failed."
-        echo -e "Sending email $EMAIL_BODY"
-        echo -e "$EMAIL_BODY" | mail -s "Data fetch failure: impact" $pipeline_email_list
-    fi
-
-    echo "fetching updates from impact-MERGED..."
-    IMPACT_MERGED_FETCH_FAIL=0
-    $JAVA_BINARY $JAVA_IMPORTER_ARGS --fetch-data --data-source impact-MERGED --run-date latest
-    if [ $? -gt 0 ]; then
-        echo "impact-MERGED fetch failed!"
-        IMPACT_MERGED_FETCH_FAIL=1
-        EMAIL_BODY="The impact-MERGED data fetch failed."
-        echo -e "Sending email $EMAIL_BODY"
-        echo -e "$EMAIL_BODY" | mail -s "Data fetch failure: impact-MERGED" $pipeline_email_list
-    fi
-
-    # fetch updates in studies repository
-    echo "fetching updates from cbio-portal-data..."
-    CBIO_PORTAL_DATA_FETCH_FAIL=0
-    $JAVA_BINARY $JAVA_IMPORTER_ARGS --fetch-data --data-source knowledge-systems-curated-studies --run-date latest
-    if [ $? -gt 0 ]; then
-        echo "cbio-portal-data fetch failed!"
-        CBIO_PORTAL_DATA_FETCH_FAIL=1
-        EMAIL_BODY="The cbio-portal-data data fetch failed."
-        echo -e "Sending email $EMAIL_BODY"
-        echo -e "$EMAIL_BODY" | mail -s "Data fetch failure: cbio-portal-data" $pipeline_email_list
-    fi
-
-    # fetch updates in immunotherapy repository
-    echo "fetching updates from immunotherapy..."
-    IMMUNOTHERAPY_FETCH_FAIL=0
-    $JAVA_BINARY $JAVA_IMPORTER_ARGS --fetch-data --data-source immunotherapy --run-date latest
-    if [ $? -gt 0 ]; then
-        echo "immunotherapy fetch failed!"
-        IMMUNOTHERAPY_FETCH_FAIL=1
-        EMAIL_BODY="The immunotherapy data fetch failed."
-        echo -e "Sending email $EMAIL_BODY"
-        echo -e "$EMAIL_BODY" | mail -s "Data fetch failure: immunotherapy" $pipeline_email_list
-    fi
-
-    # fetch updates in datahub repository
-    echo "fetching updates from datahub..."
-    DATAHUB_FETCH_FAIL=0
-    $JAVA_BINARY $JAVA_IMPORTER_ARGS --fetch-data --data-source datahub --run-date latest
-    if [ $? -gt 0 ]; then
-        echo "datahub fetch failed!"
-        DATAHUB_FETCH_FAIL=1
-        EMAIL_BODY="The datahub data fetch failed."
-        echo -e "Sending email $EMAIL_BODY"
-        echo -e "$EMAIL_BODY" | mail -s "Data fetch failure: datahub" $pipeline_email_list
-    fi
-
-    # fetch updates in datahub_shahlab repository
-    echo "fetching updates from datahub_shahlab..."
-    DATAHUB_SHAH_LAB_FETCH_FAIL=0
-    $JAVA_BINARY $JAVA_IMPORTER_ARGS --fetch-data --data-source datahub_shahlab --run-date latest
-    if [ $? -gt 0 ]; then
-        echo "datahub_shahlab fetch failed!"
-        DATAHUB_SHAH_LAB_FETCH_FAIL=1
-        EMAIL_BODY="The datahub_shahlab data fetch failed."
-        echo -e "Sending email $EMAIL_BODY"
-        echo -e "$EMAIL_BODY" | mail -s "Data fetch failure: datahub_shahlab" $pipeline_email_list
-    fi
-
-    #fetch updates in msk-extract/datahub repository msk-extract-datahub
-    echo "fetching updates from msk-extract-datahub..."
-    MSK_EXTRACT_DATAHUB_FETCH_FAIL=0
-    $JAVA_BINARY $JAVA_IMPORTER_ARGS --fetch-data --data-source msk-extract-datahub --run-date latest
-    if [ $? -gt 0 ]; then
-        echo "msk-extract-datahub fetch failed!"
-        MSK_EXTRACT_DATAHUB_FETCH_FAIL=1
-        EMAIL_BODY="The msk-extract-datahub data fetch failed."
-        echo -e "Sending email $EMAIL_BODY"
-        echo -e "$EMAIL_BODY" | mail -s "Data fetch failure: msk-extract-datahub" $pipeline_email_list
-    fi
+    # fetch updates to data source repos
+    fetch_updates_in_data_sources $DATA_SOURCES_TO_BE_FETCHED
 
     # import data that requires QC into triage portal
     echo "importing cancer type updates into triage portal database..."
@@ -173,7 +61,7 @@ FLOCK_FILEPATH="/data/portal-cron/cron-lock/import-cmo-data-triage.lock"
     fi
 
     # if the database version is correct and ALL fetches succeed, then import
-    if [[ $DB_VERSION_FAIL -eq 0 && $CMO_FETCH_FAIL -eq 0 && $PRIVATE_FETCH_FAIL -eq 0 && $GENIE_FETCH_FAIL -eq 0 && $CMO_IMPACT_FETCH_FAIL -eq 0 && $IMPACT_MERGED_FETCH_FAIL -eq 0 && $CBIO_PORTAL_DATA_FETCH_FAIL -eq 0 && $IMMUNOTHERAPY_FETCH_FAIL -eq 0 && $DATAHUB_FETCH_FAIL -eq 0 && $DATAHUB_SHAH_LAB_FETCH_FAIL -eq 0 && $MSK_EXTRACT_DATAHUB_FETCH_FAIL -eq 0 && $CDD_ONCOTREE_RECACHE_FAIL -eq 0 ]] ; then
+    if [[ $DB_VERSION_FAIL -eq 0 && ${#failed_data_source_fetches[*]} -eq 0 && $CDD_ONCOTREE_RECACHE_FAIL -eq 0 ]] ; then
         echo "importing study data into triage portal database..."
         IMPORT_FAIL=0
         $JAVA_BINARY -Xmx32G $JAVA_IMPORTER_ARGS --update-study-data --portal triage-portal --use-never-import --update-worksheet --notification-file "$triage_notification_file" --oncotree-version ${ONCOTREE_VERSION_TO_USE} --transcript-overrides-source mskcc
@@ -182,7 +70,7 @@ FLOCK_FILEPATH="/data/portal-cron/cron-lock/import-cmo-data-triage.lock"
             IMPORT_FAIL=1
             EMAIL_BODY="Triage import failed"
             echo -e "Sending email $EMAIL_BODY"
-            echo -e "$EMAIL_BODY" | mail -s "Import failure: triage" $pipeline_email_list
+            echo -e "$EMAIL_BODY" | mail -s "Import failure: triage" $PIPELINES_EMAIL_LIST
         fi
         num_studies_updated=`cat $tmp/num_studies_updated.txt`
 
@@ -190,16 +78,14 @@ FLOCK_FILEPATH="/data/portal-cron/cron-lock/import-cmo-data-triage.lock"
         if [[ $IMPORT_FAIL -eq 0 && $num_studies_updated -gt 0 ]]; then
             TOMCAT_SERVER_PRETTY_DISPLAY_NAME="Triage Tomcat"
             TOMCAT_SERVER_DISPLAY_NAME="triage-tomcat"
-            #echo "'$num_studies_updated' studies have been updated, redeploying triage-portal war..."
             echo "'$num_studies_updated' studies have been updated.  Restarting triage-tomcat server..."
             if ! /usr/bin/sudo /etc/init.d/triage-tomcat restart ; then
                 EMAIL_BODY="Attempt to trigger a restart of the $TOMCAT_SERVER_DISPLAY_NAME server failed"
                 echo -e "Sending email $EMAIL_BODY"
-                echo -e "$EMAIL_BODY" | mail -s "$TOMCAT_SERVER_PRETTY_DISPLAY_NAME Restart Error : unable to trigger restart" $pipeline_email_list
+                echo -e "$EMAIL_BODY" | mail -s "$TOMCAT_SERVER_PRETTY_DISPLAY_NAME Restart Error : unable to trigger restart" $PIPELINES_EMAIL_LIST
             fi
-            #echo "'$num_studies_updated' studies have been updated (no longer need to restart triage-tomcat server...)"
         else
-            echo "No studies have been updated, skipping redeploy of triage-portal war..."
+            echo "No studies have been updated, skipping restart of triage-tomcat server..."
         fi
 
         # import ran and either failed or succeeded
@@ -212,7 +98,7 @@ FLOCK_FILEPATH="/data/portal-cron/cron-lock/import-cmo-data-triage.lock"
     if [ $DB_VERSION_FAIL -gt 0 ]
     then
         echo -e "Sending email $EMAIL_BODY"
-        echo -e "$EMAIL_BODY" | mail -s "Triage Update Failure: DB version is incompatible" $cmo_email_list
+        echo -e "$EMAIL_BODY" | mail -s "Triage Update Failure: DB version is incompatible" $CMO_EMAIL_LIST
     fi
 
     echo "Cleaning up any untracked files from MSK-TRIAGE import..."
