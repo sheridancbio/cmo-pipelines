@@ -53,7 +53,7 @@ LYMPHOMA_SUPER_COHORT_SUBSET_FAIL=0
 
 GENERATE_MASTERLIST_FAIL=0
 
-email_list="cbioportal-pipelines@cbio.mskcc.org"
+PIPELINES_EMAIL_LIST="cbioportal-pipelines@cbio.mskcc.org"
 
 # -----------------------------------------------------------------------------------------------------------
 # START DMP DATA FETCHING
@@ -66,7 +66,7 @@ fi
 if [ -z $JAVA_BINARY ] | [ -z $HG_BINARY ] | [ -z $PORTAL_HOME ] | [ -z $MSK_IMPACT_DATA_HOME ] ; then
     message="test could not run import-dmp-impact.sh: automation-environment.sh script must be run in order to set needed environment variables (like MSK_IMPACT_DATA_HOME, ...)"
     echo $message
-    echo -e "$message" |  mail -s "fetch-dmp-data-for-import failed to run." $email_list
+    echo -e "$message" |  mail -s "fetch-dmp-data-for-import failed to run." $PIPELINES_EMAIL_LIST
     sendPreImportFailureMessageMskPipelineLogsSlack "$message"
     exit 2
 fi
@@ -81,7 +81,7 @@ if ! [ -z $INHIBIT_RECACHING_FROM_TOPBRAID ] ; then
     if [ $? -gt 0 ]; then
         message="Failed to refresh CDD cache!"
         echo $message
-        echo -e "$message" | mail -s "CDD cache failed to refresh" $email_list
+        echo -e "$message" | mail -s "CDD cache failed to refresh" $PIPELINES_EMAIL_LIST
         sendPreImportFailureMessageMskPipelineLogsSlack "$message"
         CDD_RECACHE_FAIL=1
     fi
@@ -89,7 +89,7 @@ if ! [ -z $INHIBIT_RECACHING_FROM_TOPBRAID ] ; then
     if [ $? -gt 0 ]; then
         message="Failed to refresh ONCOTREE cache!"
         echo $message
-        echo -e "$message" | mail -s "ONCOTREE cache failed to refresh" $email_list
+        echo -e "$message" | mail -s "ONCOTREE cache failed to refresh" $PIPELINES_EMAIL_LIST
         sendPreImportFailureMessageMskPipelineLogsSlack "$message"
         ONCOTREE_RECACHE_FAIL=1
     fi
@@ -1360,28 +1360,28 @@ EMAIL_BODY="Failed to push outgoing changes to Mercurial - address ASAP!"
 # send email if failed to push outgoing changes to mercurial
 if [ $MERCURIAL_PUSH_FAIL -gt 0 ] ; then
     echo -e "Sending email $EMAIL_BODY"
-    echo -e "$EMAIL_BODY" | mail -s "[URGENT] HG PUSH FAILURE" $email_list
+    echo -e "$EMAIL_BODY" | mail -s "[URGENT] HG PUSH FAILURE" $PIPELINES_EMAIL_LIST
 fi
 
 EMAIL_BODY="The MSKIMPACT study failed fetch. The original study will remain on the portal."
 # send email if fetch fails
 if [ $IMPORT_STATUS_IMPACT -gt 0 ] ; then
     echo -e "Sending email $EMAIL_BODY"
-    echo -e "$EMAIL_BODY" | mail -s "MSKIMPACT Fetch Failure: Import" $email_list
+    echo -e "$EMAIL_BODY" | mail -s "MSKIMPACT Fetch Failure: Import" $PIPELINES_EMAIL_LIST
 fi
 
 EMAIL_BODY="The HEMEPACT study failed fetch. The original study will remain on the portal."
 # send email if fetch fails
 if [ $IMPORT_STATUS_HEME -gt 0 ] ; then
     echo -e "Sending email $EMAIL_BODY"
-    echo -e "$EMAIL_BODY" | mail -s "HEMEPACT Fetch Failure: Import" $email_list
+    echo -e "$EMAIL_BODY" | mail -s "HEMEPACT Fetch Failure: Import" $PIPELINES_EMAIL_LIST
 fi
 
 EMAIL_BODY="The RAINDANCE study failed fetch. The original study will remain on the portal."
 # send email if fetch fails
 if [ $IMPORT_STATUS_RAINDANCE -gt 0 ] ; then
     echo -e "Sending email $EMAIL_BODY"
-    echo -e "$EMAIL_BODY" | mail -s "RAINDANCE Fetch Failure: Import" $email_list
+    echo -e "$EMAIL_BODY" | mail -s "RAINDANCE Fetch Failure: Import" $PIPELINES_EMAIL_LIST
 fi
 
 EMAIL_BODY="The ARCHER study failed fetch. The original study will remain on the portal."
@@ -1401,89 +1401,89 @@ fi
 EMAIL_BODY="Failed to merge ARCHER fusion events into MSKIMPACT"
 if [ $ARCHER_MERGE_IMPACT_FAIL -gt 0 ] ; then
     echo -e "Sending email $EMAIL_BODY"
-    echo -e "$EMAIL_BODY" |  mail -s "MSKIMPACT-ARCHER Merge Failure: Study will be updated without new ARCHER fusion events." $email_list
+    echo -e "$EMAIL_BODY" |  mail -s "MSKIMPACT-ARCHER Merge Failure: Study will be updated without new ARCHER fusion events." $PIPELINES_EMAIL_LIST
 fi
 
 EMAIL_BODY="Failed to merge ARCHER fusion events into HEMEPACT"
 if [ $ARCHER_MERGE_HEME_FAIL -gt 0 ] ; then
     echo -e "Sending email $EMAIL_BODY"
-    echo -e "$EMAIL_BODY" |  mail -s "HEMEPACT-ARCHER Merge Failure: Study will be updated without new ARCHER fusion events." $email_list
+    echo -e "$EMAIL_BODY" |  mail -s "HEMEPACT-ARCHER Merge Failure: Study will be updated without new ARCHER fusion events." $PIPELINES_EMAIL_LIST
 fi
 
 EMAIL_BODY="Failed to subset UNLINKED_ARCHER data from ARCHER_UNFILTERED"
 if [ $UNLINKED_ARCHER_SUBSET_FAIL -gt 0 ] ; then
     echo -e "Sending email $EMAIL_BODY"
-    echo -e "$EMAIL_BODY" |  mail -s "UNLINKED_ARCHER Subset Failure: Study will not be updated." $email_list
+    echo -e "$EMAIL_BODY" |  mail -s "UNLINKED_ARCHER Subset Failure: Study will not be updated." $PIPELINES_EMAIL_LIST
 fi
 
 EMAIL_BODY="Failed to merge MSK-IMPACT, HEMEPACT, ARCHER, and RAINDANCE data. Merged study will not be updated."
 if [ $MIXEDPACT_MERGE_FAIL -gt 0 ] ; then
     echo -e "Sending email $EMAIL_BODY"
-    echo -e "$EMAIL_BODY" |  mail -s "MIXEDPACT Merge Failure: Study will not be updated." $email_list
+    echo -e "$EMAIL_BODY" |  mail -s "MIXEDPACT Merge Failure: Study will not be updated." $PIPELINES_EMAIL_LIST
 fi
 
 EMAIL_BODY="Failed to merge MSK-IMPACT, HEMEPACT, and ARCHER data. Merged study will not be updated."
 if [ $MSK_SOLID_HEME_MERGE_FAIL -gt 0 ] ; then
     echo -e "Sending email $EMAIL_BODY"
-    echo -e "$EMAIL_BODY" |  mail -s "MSKSOLIDHEME Merge Failure: Study will not be updated." $email_list
+    echo -e "$EMAIL_BODY" |  mail -s "MSKSOLIDHEME Merge Failure: Study will not be updated." $PIPELINES_EMAIL_LIST
 fi
 
 EMAIL_BODY="Failed to subset Kings County Cancer Center data. Subset study will not be updated."
 if [ $MSK_KINGS_SUBSET_FAIL -gt 0 ] ; then
     echo -e "Sending email $EMAIL_BODY"
-    echo -e "$EMAIL_BODY" |  mail -s "KINGSCOUNTY Subset Failure: Study will not be updated." $email_list
+    echo -e "$EMAIL_BODY" |  mail -s "KINGSCOUNTY Subset Failure: Study will not be updated." $PIPELINES_EMAIL_LIST
 fi
 
 EMAIL_BODY="Failed to subset Lehigh Valley data. Subset study will not be updated."
 if [ $MSK_LEHIGH_SUBSET_FAIL -gt 0 ] ; then
     echo -e "Sending email $EMAIL_BODY"
-    echo -e "$EMAIL_BODY" |  mail -s "LEHIGHVALLEY Subset Failure: Study will not be updated." $email_list
+    echo -e "$EMAIL_BODY" |  mail -s "LEHIGHVALLEY Subset Failure: Study will not be updated." $PIPELINES_EMAIL_LIST
 fi
 
 EMAIL_BODY="Failed to subset Queens Cancer Center data. Subset study will not be updated."
 if [ $MSK_QUEENS_SUBSET_FAIL -gt 0 ] ; then
     echo -e "Sending email $EMAIL_BODY"
-    echo -e "$EMAIL_BODY" |  mail -s "QUEENSCANCERCENTER Subset Failure: Study will not be updated." $email_list
+    echo -e "$EMAIL_BODY" |  mail -s "QUEENSCANCERCENTER Subset Failure: Study will not be updated." $PIPELINES_EMAIL_LIST
 fi
 
 EMAIL_BODY="Failed to subset Miami Cancer Institute data. Subset study will not be updated."
 if [ $MSK_MCI_SUBSET_FAIL -gt 0 ] ; then
     echo -e "Sending email $EMAIL_BODY"
-    echo -e "$EMAIL_BODY" |  mail -s "MIAMICANCERINSTITUTE Subset Failure: Study will not be updated." $email_list
+    echo -e "$EMAIL_BODY" |  mail -s "MIAMICANCERINSTITUTE Subset Failure: Study will not be updated." $PIPELINES_EMAIL_LIST
 fi
 
 EMAIL_BODY="Failed to subset Hartford Healthcare data. Subset study will not be updated."
 if [ $MSK_HARTFORD_SUBSET_FAIL -gt 0 ] ; then
     echo -e "Sending email $EMAIL_BODY"
-    echo -e "$EMAIL_BODY" |  mail -s "HARTFORDHEALTHCARE Subset Failure: Study will not be updated." $email_list
+    echo -e "$EMAIL_BODY" |  mail -s "HARTFORDHEALTHCARE Subset Failure: Study will not be updated." $PIPELINES_EMAIL_LIST
 fi
 
 EMAIL_BODY="Failed to subset Ralph Lauren Center data. Subset study will not be updated."
 if [ $MSK_RALPHLAUREN_SUBSET_FAIL -gt 0 ] ; then
     echo -e "Sending email $EMAIL_BODY"
-    echo -e "$EMAIL_BODY" |  mail -s "RALPHLAUREN Subset Failure: Study will not be updated." $email_list
+    echo -e "$EMAIL_BODY" |  mail -s "RALPHLAUREN Subset Failure: Study will not be updated." $PIPELINES_EMAIL_LIST
 fi
 
 EMAIL_BODY="Failed to subset MSK Tailor Med Japan data. Subset study will not be updated."
 if [ $MSK_RIKENGENESISJAPAN_SUBSET_FAIL -gt 0 ] ; then
     echo -e "Sending email $EMAIL_BODY"
-    echo -e "$EMAIL_BODY" |  mail -s "RIKENGENESISJAPAN Subset Failure: Study will not be updated." $email_list
+    echo -e "$EMAIL_BODY" |  mail -s "RIKENGENESISJAPAN Subset Failure: Study will not be updated." $PIPELINES_EMAIL_LIST
 fi
 
 EMAIL_BODY="Failed to subset MSKIMPACT_PED data. Subset study will not be updated."
 if [ $MSKIMPACT_PED_SUBSET_FAIL -gt 0 ]; then
     echo -e "Sending email $EMAIL_BODY"
-    echo -e "$EMAIL_BODY" | mail -s "MSKIMPACT_PED Subset Failure: Study will not be updated." $email_list
+    echo -e "$EMAIL_BODY" | mail -s "MSKIMPACT_PED Subset Failure: Study will not be updated." $PIPELINES_EMAIL_LIST
 fi
 
 EMAIL_BODY="Failed to subset MSKIMPACT SCLC data. Subset study will not be updated."
 if [ $SCLC_MSKIMPACT_SUBSET_FAIL -gt 0 ] ; then
     echo -e "Sending email $EMAIL_BODY"
-    echo -e "$EMAIL_BODY" | mail -s "SCLCMSKIMPACT Subset Failure: Study will not be updated." $email_list
+    echo -e "$EMAIL_BODY" | mail -s "SCLCMSKIMPACT Subset Failure: Study will not be updated." $PIPELINES_EMAIL_LIST
 fi
 
 EMAIL_BODY="Failed to subset LYMPHOMASUPERCOHORT data. Subset study will not be updated."
 if [ $LYMPHOMA_SUPER_COHORT_SUBSET_FAIL -gt 0 ] ; then
     echo -e "Sending email $EMAIL_BODY"
-    echo -e "$EMAIL_BODY" | mail -s "LYMPHOMASUPERCOHORT Subset Failure: Study will not be updated." $email_list
+    echo -e "$EMAIL_BODY" | mail -s "LYMPHOMASUPERCOHORT Subset Failure: Study will not be updated." $PIPELINES_EMAIL_LIST
 fi

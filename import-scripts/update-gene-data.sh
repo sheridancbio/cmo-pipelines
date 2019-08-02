@@ -4,7 +4,7 @@ tmp=$PORTAL_HOME/tmp/update-gene-data
 if [[ -d "$tmp" && "$tmp" != "/" ]]; then
     rm -rf "$tmp"/*
 fi
-email_list="cbioportal-pipelines@cbio.mskcc.org"
+PIPELINES_EMAIL_LIST="cbioportal-pipelines@cbio.mskcc.org"
 GENE_DATA_UPDATER_JAR_FILENAME="$PORTAL_HOME/lib/gene_data_updater.jar"
 JAVA_GENE_DATA_UPDATER_ARGS="$JAVA_PROXY_ARGS -jar $GENE_DATA_UPDATER_JAR_FILENAME"
 JAVA_SSL_TRUSTORE_ARGS="-Djavax.net.ssl.trustStore=$AWS_GDAC_SSL_TRUSTSTORE -Djavax.net.ssl.turstStorePassword=$TRUSTSTORE_PASSWORD"
@@ -77,15 +77,15 @@ function runGeneUpdatePipeline {
     $JAVA_BINARY $JAVA_EXTRA_ARGS $JAVA_GENE_DATA_UPDATER_ARGS -d $tmp/Homo_sapiens.gene_info -l $tmp/ref_GRCh38.p12_top_level.gff3 -n $tmp/gene-update-notification.txt
     if [ $? -ne 0 ]; then
         echo "Error updating gene data"
-        echo -e "Error updating gene data." | mail -s "Gene Data Update Failure: $DATABASE_NAME" $email_list
+        echo -e "Error updating gene data." | mail -s "Gene Data Update Failure: $DATABASE_NAME" $PIPELINES_EMAIL_LIST
     else
         echo "Success!"
         echo "Emailing results to email list..."
         if [[ -f $tmp/gene-update-notification.txt && $(wc -l < $tmp/gene-update-notification.txt) -gt 0 ]]; then
-            cat $tmp/gene-update-notification.txt | mail -s "Gene Data Update Results: $DATABASE_NAME" $email_list
+            cat $tmp/gene-update-notification.txt | mail -s "Gene Data Update Results: $DATABASE_NAME" $PIPELINES_EMAIL_LIST
         else
             EMAIL_BODY="Error loading $tmp/gene-update-notification.txt"
-            echo -e $EMAIL_BODY | mail -s "Gene Data Update Results: $DATABASE_NAME" $email_list
+            echo -e $EMAIL_BODY | mail -s "Gene Data Update Results: $DATABASE_NAME" $PIPELINES_EMAIL_LIST
         fi
     fi
 }
@@ -111,7 +111,7 @@ TOMCAT_SERVER_DISPLAY_NAME="triage-tomcat7"
 if ! /usr/bin/sudo /etc/init.d/triage-tomcat7 restart ; then
     EMAIL_BODY="Attempt to trigger a restart of the $TOMCAT_SERVER_DISPLAY_NAME server failed"
     echo -e "Sending email $EMAIL_BODY"
-    echo -e "$EMAIL_BODY" | mail -s "$TOMCAT_SERVER_PRETTY_DISPLAY_NAME Restart Error : unable to trigger restart" $pipeline_email_list
+    echo -e "$EMAIL_BODY" | mail -s "$TOMCAT_SERVER_PRETTY_DISPLAY_NAME Restart Error : unable to trigger restart" $PIPELINES_EMAIL_LIST
 fi
 
 echo "Restarting msk-tomcat servers..."
@@ -131,7 +131,7 @@ done
 if [ ${#failed_restart_server_list[*]} -ne 0 ] ; then
     EMAIL_BODY="Attempt to trigger a restart of the $TOMCAT_SERVER_DISPLAY_NAME server on the following hosts failed: ${failed_restart_server_list[*]}"
     echo -e "Sending email $EMAIL_BODY"
-    echo -e "$EMAIL_BODY" | mail -s "$TOMCAT_SERVER_PRETTY_DISPLAY_NAME Restart Error : unable to trigger restart" $email_list
+    echo -e "$EMAIL_BODY" | mail -s "$TOMCAT_SERVER_PRETTY_DISPLAY_NAME Restart Error : unable to trigger restart" $PIPELINES_EMAIL_LIST
 fi
 
 echo "Restarting public-tomcat servers..."
@@ -151,7 +151,7 @@ done
 if [ ${#failed_restart_server_list[*]} -ne 0 ] ; then
     EMAIL_BODY="Attempt to trigger a restart of the $TOMCAT_SERVER_DISPLAY_NAME server on the following hosts failed: ${failed_restart_server_list[*]}"
     echo -e "Sending email $EMAIL_BODY"
-    echo -e "$EMAIL_BODY" | mail -s "$TOMCAT_SERVER_PRETTY_DISPLAY_NAME Restart Error : unable to trigger restart" $email_list
+    echo -e "$EMAIL_BODY" | mail -s "$TOMCAT_SERVER_PRETTY_DISPLAY_NAME Restart Error : unable to trigger restart" $PIPELINES_EMAIL_LIST
 fi
 
 echo "Removing gene data files downloaded..."

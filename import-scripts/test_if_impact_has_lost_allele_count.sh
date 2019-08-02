@@ -1,5 +1,5 @@
 #!/bin/bash
-email_list="cbioportal-pipelines@cbio.mskcc.org"
+PIPELINES_EMAIL_LIST="cbioportal-pipelines@cbio.mskcc.org"
 export tab=$'\t'
 tmp=$PORTAL_HOME/tmp/import-cron-dmp-msk
 sourcefilename=$MSK_IMPACT_DATA_HOME/data_mutations_extended.txt
@@ -16,7 +16,7 @@ headerlinecount=$(cat ${tempfilename} | wc -l)
 if [ ${headerlinecount} -ne 1 ] ; then
 	message="failed to complete mskimpact missing tumor/normal-ref/alt counts test because no header was found"
 	echo ${message}
-	echo -e "${message}" | mail -s "MSKIMPACT scan for missing tumor/normal-ref/alt counts failure" $email_list
+	echo -e "${message}" | mail -s "MSKIMPACT scan for missing tumor/normal-ref/alt counts failure" $PIPELINES_EMAIL_LIST
 	rm -f ${tempfilename}
 	exit 1
 fi
@@ -31,7 +31,7 @@ rm -f ${tempfilename}.fields
 if [ -z ${mut_stat_index} ] || [ -z ${t_ref_index} ] || [ -z ${t_alt_index} ] || [ -z ${n_ref_index} ] || [ -z ${n_alt_index} ] ; then
 	message="failed to complete mskimpact missing tumor/normal-ref/alt counts test because header was missing a necessary field"
 	echo ${message}
-	echo -e "${message}" | mail -s "MSKIMPACT scan for missing tumor/normal-ref/alt counts failure" $email_list
+	echo -e "${message}" | mail -s "MSKIMPACT scan for missing tumor/normal-ref/alt counts failure" $PIPELINES_EMAIL_LIST
 	rm ${tempfilename}
 	exit 2
 fi
@@ -46,7 +46,7 @@ rm -f ${tempfilename} ${tempfilename}.blanks
 if [ ${recordswithblanks} -gt 0 ] ; then
 	message="mskimpact missing tumor/normal-ref/alt counts test failed : ${recordswithblanks} (somatic/unknown) records with blanks found in field t_ref_count, t_alt_count, n_ref_count, or n_alt_count"
 	echo ${message}
-	echo -e "${message}" | mail -s "MSKIMPACT scan for missing tumor/normal-ref/alt counts failure" $email_list
+	echo -e "${message}" | mail -s "MSKIMPACT scan for missing tumor/normal-ref/alt counts failure" $PIPELINES_EMAIL_LIST
 	exit 3
 fi
 #test passed - no blanks found in somatic/unknown records
