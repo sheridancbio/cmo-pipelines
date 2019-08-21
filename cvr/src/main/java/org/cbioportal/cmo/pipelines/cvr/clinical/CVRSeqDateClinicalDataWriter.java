@@ -65,8 +65,8 @@ public class CVRSeqDateClinicalDataWriter implements ItemStreamWriter<CompositeC
     // Set up the writer and print the json from CVR to a file
     @Override
     public void open(ExecutionContext ec) throws ItemStreamException {
-        if (studyId.equals("mskimpact")) {
-            File stagingFile = new File(stagingDirectory, cvrUtilities.SEQ_DATE_CLINICAL_FILE);
+        if (CVRUtilities.SUPPORTED_SEQ_DATE_STUDY_IDS.contains(studyId)) {
+            File stagingFile = new File(stagingDirectory, CVRUtilities.SEQ_DATE_CLINICAL_FILE);
             PassThroughLineAggregator aggr = new PassThroughLineAggregator();
             flatFileItemWriter.setLineAggregator(aggr);
             flatFileItemWriter.setHeaderCallback(new FlatFileHeaderCallback() {
@@ -86,14 +86,14 @@ public class CVRSeqDateClinicalDataWriter implements ItemStreamWriter<CompositeC
 
     @Override
     public void close() throws ItemStreamException {
-        if (studyId.equals("mskimpact")) {
+        if (CVRUtilities.SUPPORTED_SEQ_DATE_STUDY_IDS.contains(studyId)) {
             flatFileItemWriter.close();
         }
     }
 
     @Override
     public void write(List<? extends CompositeClinicalRecord> items) throws Exception {
-        if (studyId.equals("mskimpact")) {
+        if (CVRUtilities.SUPPORTED_SEQ_DATE_STUDY_IDS.contains(studyId)) {
             List<String> writeList = new ArrayList<>();
             for (CompositeClinicalRecord item : items) {
                 if (item.getSeqDateRecord()!= null) {

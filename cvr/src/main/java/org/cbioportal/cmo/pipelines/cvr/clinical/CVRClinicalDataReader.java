@@ -89,8 +89,10 @@ public class CVRClinicalDataReader implements ItemStreamReader<CVRClinicalRecord
         }
         processClinicalFile(ec);
         processJsonFile();
-        if (studyId.equals("mskimpact")) {
+        if (CVRUtilities.SUPPORTED_SEQ_DATE_STUDY_IDS.contains(studyId)) {
             processSeqDateFile(ec);
+        }
+        if (studyId.equals("mskimpact")) {
             processAgeFile(ec);
         }
         // updates portalSamplesNotInDmpList and dmpSamplesNotInPortal sample lists
@@ -167,7 +169,7 @@ public class CVRClinicalDataReader implements ItemStreamReader<CVRClinicalRecord
     private void processJsonFile() {
         CVRData cvrData = new CVRData();
         // load cvr data from cvr_data.json file
-        File cvrFile = new File(stagingDirectory, cvrUtilities.CVR_FILE);
+        File cvrFile = new File(stagingDirectory, CVRUtilities.CVR_FILE);
         try {
             cvrData = cvrUtilities.readJson(cvrFile);
         } catch (IOException e) {
@@ -184,7 +186,7 @@ public class CVRClinicalDataReader implements ItemStreamReader<CVRClinicalRecord
     }
 
     private void processAgeFile(ExecutionContext ec) {
-        File mskimpactAgeFile = new File(stagingDirectory, cvrUtilities.DDP_AGE_FILE);
+        File mskimpactAgeFile = new File(stagingDirectory, CVRUtilities.DDP_AGE_FILE);
         if (!mskimpactAgeFile.exists()) {
             log.error("File does not exist - skipping data loading from age file: " + mskimpactAgeFile.getName());
             return;
@@ -230,7 +232,7 @@ public class CVRClinicalDataReader implements ItemStreamReader<CVRClinicalRecord
     }
 
     private void processSeqDateFile(ExecutionContext ec) {
-        File mskimpactSeqDateFile = new File(stagingDirectory, cvrUtilities.SEQ_DATE_CLINICAL_FILE);
+        File mskimpactSeqDateFile = new File(stagingDirectory, CVRUtilities.SEQ_DATE_CLINICAL_FILE);
         if (!mskimpactSeqDateFile.exists()) {
             log.error("File does not exist - skipping data loading from seq date file: " + mskimpactSeqDateFile.getName());
 			return;
