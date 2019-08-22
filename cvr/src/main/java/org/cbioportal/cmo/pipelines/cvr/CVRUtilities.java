@@ -66,6 +66,7 @@ public class CVRUtilities {
     public static final String GML_FILE = "cvr_gml_data.json";
     public static final String GENE_PANEL = "gene_panels/impact468_gene_panel.txt";
     public static final String ZERO_VARIANT_WHITELIST_FILE = "cvr/zero_variant_whitelist.txt";
+    public static final List<String> SUPPORTED_SEQ_DATE_STUDY_IDS = Arrays.asList("mskimpact", "mskimpact_heme");
 
     // pipeline globals
     public static final String CNA_HEADER_HUGO_SYMBOL = "Hugo_Symbol";
