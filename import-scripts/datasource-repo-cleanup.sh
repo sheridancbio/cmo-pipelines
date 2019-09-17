@@ -64,14 +64,14 @@ function determineRepositoryManager {
 
     REPO_PATH=$1
     cd $REPO_PATH
-    git rev-parse --is-inside-work-tree
+    git rev-parse --is-inside-work-tree > /dev/null 2>&1
     if [ $? -eq 0 ] ; then
-        eval "repository_manager=$GITHUB_MANAGER"
+        repository_manager="$GITHUB_MANAGER"
         return
     fi
-    hg root
+    hg root > /dev/null 2>&1
     if [ $? -eq 0 ] ; then
-        eval "repository_manager=$MERCURIAL_MANAGER"
+        repository_manager="$MERCURIAL_MANAGER"
         return
     fi
 }
@@ -105,7 +105,7 @@ else
         echo "Cleaning up repository: $repository..."
         if [ -d $repository ] ; then
             # determine repository manager and run corresponding cleanup commands
-            determineRepositoryManager $repository repository_manager
+            determineRepositoryManager $repository
             echo -e "\t---> Repository manager = $repository_manager"
             case "$repository_manager" in
                 $MERCURIAL_MANAGER)
