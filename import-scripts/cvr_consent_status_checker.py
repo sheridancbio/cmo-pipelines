@@ -21,6 +21,12 @@ SMTP_SERVER = 'cbio.mskcc.org'
 MESSAGE_RECIPIENTS = ['cbioportal-pipelines@cbio.mskcc.org']
 CONSENT_STATUS_EMAIL_SUBJECT = 'CVR Part A & C Consent Status Updates'
 
+MUTATION_STATUS_COLUMN = "Mutation_Status"
+SAMPLE_ID_COLUMN = "Tumor_Sample_Barcode"
+GERMLINE_MUTATION_STATUS = "GERMLINE"
+
+ERROR_FILE = sys.stderr
+
 CVR_CONSENT_STATUS_ENDPOINTS = {
     PARTA_FIELD_NAME : PARTA_CONSENTED_URL,
     PARTC_FIELD_NAME : PARTC_CONSENTED_URL
@@ -44,7 +50,7 @@ def fetch_expected_consent_status_values():
         expected_consent_status_values[field] = consent_values
     return expected_consent_status_values
 
-def cvr_consent_status_fetcher_main(cvr_clinical_file, expected_consent_status_values):
+def cvr_consent_status_fetcher_main(cvr_clinical_file, cvr_mutation_file, expected_consent_status_values):
     '''
         Checks the current consent status for
         Part A & C against the expected consent status values
@@ -89,9 +95,35 @@ def cvr_consent_status_fetcher_main(cvr_clinical_file, expected_consent_status_v
                     remove_list.add(record['SAMPLE_ID'])
                     samples_to_remove[field] = remove_list
 
+    if samples_to_remove.get(PARTC_FIELD_NAME, set()):
+        remove_germline_revoked_samples(cvr_mutation_file, samples_to_remove.get(PARTC_FIELD_NAME))
     if samples_to_requeue != {} or samples_to_remove != {}:
         email_consent_status_report(samples_to_requeue, samples_to_remove)
 
+def remove_germline_revoked_samples(cvr_mutation_file, revoked_germline_samples):
+    '''
+        Removes germline mutation records from MAF for samples where 
+        Part C Consent Status has changed from Yes to No.
+    '''
+    tmpfile_name = cvr_mutation_file + ".tmp"
+    tmpfile = open(tmpfile_name, "w")
+    with open(cvr_mutation_file, 'rU') as data_file:
+        header = []
+        for line in data_file.readlines():
+            if line.startswith("#"):
+                tmpfile.write(line)
+                continue
+            if not header:
+                header = map(str.strip, line.split('\t'))
+                tmpfile.write(line)
+                continue
+            record = dict(zip(header, map(str.strip, line.split('\t'))))
+            if record[SAMPLE_ID_COLUMN] in revoked_germline_samples and record[MUTATION_STATUS_COLUMN] == GERMLINE_MUTATION_STATUS:
+               continue
+            tmpfile.write(line)
+    tmpfile.close()
+    os.rename(tmpfile_name, cvr_mutation_file)
+ 
 def generate_attachment(message, attachment_name, samples):
     '''
         Generates email attachment.
@@ -135,11 +167,21 @@ def email_consent_status_report(samples_to_requeue, samples_to_remove):
 def main():
     parser = optparse.OptionParser()
     parser.add_option('-c', '--clinical-file', action = 'store', dest = 'clinfile', help = 'CVR clinical file')
+    parser.add_option('-m', '--mutation-file', action = 'store', dest = 'maf', help = 'CVR MAF')
     (options, args) = parser.parse_args()
     cvr_clinical_file = options.clinfile
+    cvr_mutation_file = options.maf
 
+    if not cvr_clinical_file or not os.path.exists(cvr_clinical_file):
+        print >> ERROR_FILE, "Invalid CVR clinical file: %s, exiting..." % (cvr_clinical_file)
+        sys.exit(2)
+        
+    if not cvr_mutation_file or not os.path.exists(cvr_mutation_file):
+        print >> ERROR_FILE, "Invalid CVR mutation file: %s, exiting..." % (cvr_mutation_file)
+        sys.exit(2)
+        
     expected_consent_status_values = fetch_expected_consent_status_values()
-    cvr_consent_status_fetcher_main(cvr_clinical_file, expected_consent_status_values)
+    cvr_consent_status_fetcher_main(cvr_clinical_file, cvr_mutation_file, expected_consent_status_values)
 
 if __name__ == '__main__':
     main()
