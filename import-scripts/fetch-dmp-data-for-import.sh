@@ -465,9 +465,9 @@ fi
 printTimeStampedDataProcessingStepMessage "ACCESS data processing"
 
 if [ $IMPORT_STATUS_ACCESS -eq 0 ] ; then
-    # fetch new/updated archer samples using CVR Web service (must come after mercurial fetching).
+    # fetch new/updated access samples using CVR Web service (must come after mercurial fetching).
     printTimeStampedDataProcessingStepMessage "CVR fetch for access"
-    # archer has -b option to block warnings for samples with zero variants (all samples will have zero variants)
+    # access has -b option to block warnings for samples with zero variants (all samples will have zero variants)
     $JAVA_BINARY $JAVA_CVR_FETCHER_ARGS -d $MSK_ACCESS_DATA_HOME -n data_clinical_mskaccess_data_clinical.txt -i mskaccess -s -b $CVR_TEST_MODE_ARGS
     if [ $? -gt 0 ] ; then
         echo "CVR ACCESS fetch failed!"
@@ -511,9 +511,7 @@ fi
 
 # -----------------------------------------------------------------------------------------------------------
 # GENERATE CANCER TYPE CASE LISTS AND SUPP DATE ADDED FILES
-# NOTE: Cancer type case lists ARCHER_UNFILTERED are not needed. These case lists will
-# be generated for MSKSOLIDHEME and the UNLINKED ARCHER study after merging/subsetting.
-# NOTE2: Even though cancer type case lists are not needed for MSKIMPACT, HEMEPACT for the portal
+# NOTE: Even though cancer type case lists are not needed for MSKIMPACT, HEMEPACT for the portal
 # since they are imported as part of MSKSOLIDHEME - the LYMPHOMASUPERCOHORT subsets these source
 # studies by CANCER_TYPE and ONCOTREE_CODE so we want to keep these fields up-to-date which is
 # accomplished by running the 'addCancerTypeCaseLists' function
@@ -537,8 +535,13 @@ if [ $IMPORT_STATUS_HEME -eq 0 ] && [ $FETCH_CVR_HEME_FAIL -eq 0 ] ; then
 fi
 
 # add "DATE ADDED" info to clinical data for ARCHER
-if [[ $IMPORT_STATUS_ARCHER -eq 0 && $FETCH_CVR_ARCHER_FAIL -eq 0 && $EXPORT_SUPP_DATE_ARCHER_FAIL -eq 0 ]] ; then
-    addDateAddedData $MSK_ARCHER_UNFILTERED_DATA_HOME "data_clinical_mskarcher_data_clinical.txt" "data_clinical_mskarcher_data_clinical_supp_date.txt"
+if [[ $IMPORT_STATUS_ARCHER -eq 0 && $FETCH_CVR_ARCHER_FAIL -eq 0 ]] ; then
+    addCancerTypeCaseLists $MSK_ARCHER_UNFILTERED_DATA_HOME "mskarcher" "data_clinical_mskarcher_data_clinical.txt"
+    cd $MSK_ARCHER_UNFILTERED_DATA_HOME ; find . -name "*.orig" -delete ; $HG_BINARY add * ; $HG_BINARY revert data_clinical* data_timeline* --no-backup ; $HG_BINARY commit -m "Latest ARCHER_UNFILTERED Dataset: Case Lists"
+    if [ $EXPORT_SUPP_DATE_ARCHER_FAIL -eq 0 ] ; then
+        addDateAddedData $MSK_ARCHER_UNFILTERED_DATA_HOME "data_clinical_mskarcher_data_clinical.txt" "data_clinical_mskarcher_data_clinical_supp_date.txt"
+    fi
+
 fi
 
 # generate case lists by cancer type and add "DATE ADDED" info to clinical data for RAINDANCE
@@ -861,33 +864,43 @@ fi
 
 # -------------------------------------------------------------
 # UNLINKED ARCHER DATA PROCESSING
+# NOTE: This processing should only occur if (1) PROCESS_UNLINKED_ARCHER_STUDY=1 and
+# we wish to import only the ARCHER cases which are not linked to MSKIMPACT or HEMEPACT cases
 
-# process data for UNLINKED_ARCHER
-if [[ $IMPORT_STATUS_ARCHER -eq 0 && $FETCH_CVR_ARCHER_FAIL -eq 0 ]] ; then
-    # attempt to subset archer unfiltered w/same excluded archer samples list used for MIXEDPACT, MSKSOLIDHEME
-    $PYTHON_BINARY $PORTAL_HOME/scripts/merge.py -d $MSK_ARCHER_DATA_HOME -i mskarcher -m "true" -e $MAPPED_ARCHER_FUSION_SAMPLES_FILE $MSK_ARCHER_UNFILTERED_DATA_HOME
-    if [ $? -gt 0 ] ; then
-        echo "UNLINKED_ARCHER subset failed! Study will not be updated in the portal."
-        sendPreImportFailureMessageMskPipelineLogsSlack "UNLINKED_ARCHER subset"
-        echo $(date)
-        cd $MSK_ARCHER_DATA_HOME ; $HG_BINARY update -C ; find . -name "*.orig" -delete
-        UNLINKED_ARCHER_SUBSET_FAIL=1
-    else
-        echo "UNLINKED_ARCHER subset successful! Creating cancer type case lists..."
-        echo $(date)
-        # add metadata headers and overrides before importing
-        $PYTHON_BINARY $PORTAL_HOME/scripts/add_clinical_attribute_metadata_headers.py -s mskarcher -f $MSK_ARCHER_DATA_HOME/data_clinical*
+if [ $PROCESS_UNLINKED_ARCHER_STUDY -eq 1 ] ; then
+    # process data for UNLINKED_ARCHER
+    if [[ $IMPORT_STATUS_ARCHER -eq 0 && $FETCH_CVR_ARCHER_FAIL -eq 0 ]] ; then
+        # attempt to subset archer unfiltered w/same excluded archer samples list used for MIXEDPACT, MSKSOLIDHEME
+        $PYTHON_BINARY $PORTAL_HOME/scripts/merge.py -d $MSK_ARCHER_DATA_HOME -i mskarcher -m "true" -e $MAPPED_ARCHER_FUSION_SAMPLES_FILE $MSK_ARCHER_UNFILTERED_DATA_HOME
         if [ $? -gt 0 ] ; then
-            echo "Error: Adding metadata headers for UNLINKED_ARCHER failed! Study will not be updated in portal."
+            echo "UNLINKED_ARCHER subset failed! Study will not be updated in the portal."
+            sendPreImportFailureMessageMskPipelineLogsSlack "UNLINKED_ARCHER subset"
+            echo $(date)
             cd $MSK_ARCHER_DATA_HOME ; $HG_BINARY update -C ; find . -name "*.orig" -delete
+            UNLINKED_ARCHER_SUBSET_FAIL=1
+            IMPORT_STATUS_ARCHER=1
         else
-            # commit updates and generated case lists
-            cd $MSK_ARCHER_DATA_HOME ; find . -name "*.orig" -delete ; $HG_BINARY add * ; $HG_BINARY commit -m "Latest UNLINKED_ARCHER Dataset"
-            addCancerTypeCaseLists $MSK_ARCHER_DATA_HOME "mskarcher" "data_clinical_sample.txt" "data_clinical_patient.txt"
-            cd $MSK_ARCHER_DATA_HOME ; find . -name "*.orig" -delete ; $HG_BINARY add * ; $HG_BINARY revert data_clinical* data_timeline* --no-backup ; $HG_BINARY commit -m "Latest UNLINKED_ARCHER Dataset: Case Lists"
-            touch $MSK_ARCHER_IMPORT_TRIGGER
+            echo "UNLINKED_ARCHER subset successful! Creating cancer type case lists..."
+            echo $(date)
+            # add metadata headers and overrides before importing
+            $PYTHON_BINARY $PORTAL_HOME/scripts/add_clinical_attribute_metadata_headers.py -s mskarcher -f $MSK_ARCHER_DATA_HOME/data_clinical*
+            if [ $? -gt 0 ] ; then
+                echo "Error: Adding metadata headers for UNLINKED_ARCHER failed! Study will not be updated in portal."
+                cd $MSK_ARCHER_DATA_HOME ; $HG_BINARY update -C ; find . -name "*.orig" -delete
+                IMPORT_STATUS_ARCHER=1
+            else
+                # commit updates and generated case lists
+                cd $MSK_ARCHER_DATA_HOME ; find . -name "*.orig" -delete ; $HG_BINARY add * ; $HG_BINARY commit -m "Latest UNLINKED_ARCHER Dataset"
+                addCancerTypeCaseLists $MSK_ARCHER_DATA_HOME "mskarcher" "data_clinical_sample.txt" "data_clinical_patient.txt"
+                cd $MSK_ARCHER_DATA_HOME ; find . -name "*.orig" -delete ; $HG_BINARY add * ; $HG_BINARY revert data_clinical* data_timeline* --no-backup ; $HG_BINARY commit -m "Latest UNLINKED_ARCHER Dataset: Case Lists"
+            fi
         fi
     fi
+fi
+
+# trigger import for archer if all pre-import and processing steps succeeded
+if [[ $IMPORT_STATUS_ARCHER -eq 0 && $FETCH_CVR_ARCHER_FAIL -eq 0 ]] ; then
+    touch $MSK_ARCHER_IMPORT_TRIGGER
 fi
 
 #--------------------------------------------------------------
