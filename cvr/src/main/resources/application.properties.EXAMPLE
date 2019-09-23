@@ -23,6 +23,7 @@ dmp.tokens.retrieve_gml_segment_data=gml_get_seg_data
 dmp.tokens.consume_sample=cbio_consume_sample
 dmp.tokens.consume_gml_sample=gml_cbio_consume_sample
 dmp.tokens.requeue.impact=cbio_requeue
+dmp.tokens.requeue_gml_sample=gml_cbio_requeue
 
 # master list
 dmp.tokens.retrieve_master_list.route=get_cbio_signedout_samples

@@ -17,11 +17,15 @@ OUTPUT_FILE = sys.stdout
 DMP_USER = 'dmp.user_name'
 DMP_PASSWORD = 'dmp.password'
 DMP_SERVER = 'dmp.server_name'
+DMP_GML_SERVER = 'dmp.gml_server_name'
 
 CREATE_SESSION = 'dmp.tokens.create_session'
+CREATE_GML_SESSION = 'dmp.tokens.create_gml_session'
 
 CONSUME_SAMPLE = 'dmp.tokens.consume_sample'
+CONSUME_GML_SAMPLE = 'dmp.tokens.consume_gml_sample'
 REQUEUE_SAMPLE = 'dmp.tokens.requeue.impact'
+REQUEUE_GML_SAMPLE = 'dmp.tokens.requeue_gml_sample'
 
 MASTERLIST_ROUTE = 'dmp.tokens.retrieve_master_list.route'
 MASTERLIST_MSKIMPACT = 'dmp.tokens.retrieve_master_list.impact'
@@ -34,14 +38,19 @@ RETRIEVE_VARIANTS_HEMEPACT = 'dmp.tokens.retrieve_variants.heme'
 RETRIEVE_VARIANTS_RAINDANCE = 'dmp.tokens.retrieve_variants.rdts'
 RETRIEVE_VARIANTS_ARCHER = 'dmp.tokens.retrieve_variants.archer'
 RETRIEVE_VARIANTS_ACCESS = 'dmp.tokens.retrieve_variants.access'
+RETIREVE_GML_VARIANTS = 'dmp.tokens.retrieve_gml_variants'
 
 REQUIRED_PROPERTIES = [
     DMP_USER,
     DMP_PASSWORD,
     DMP_SERVER,
+    DMP_GML_SERVER,
     CREATE_SESSION,
+    CREATE_GML_SESSION,
     CONSUME_SAMPLE,
+    CONSUME_GML_SAMPLE,
     REQUEUE_SAMPLE,
+    REQUEUE_GML_SAMPLE,
     MASTERLIST_ROUTE,
     MASTERLIST_MSKIMPACT,
     MASTERLIST_HEMEPACT,
@@ -51,7 +60,8 @@ REQUIRED_PROPERTIES = [
     RETRIEVE_VARIANTS_HEMEPACT,
     RETRIEVE_VARIANTS_RAINDANCE,
     RETRIEVE_VARIANTS_ARCHER,
-    RETRIEVE_VARIANTS_ACCESS
+    RETRIEVE_VARIANTS_ACCESS,
+    RETIREVE_GML_VARIANTS
 ]
 
 SESSION_DATA_FILENAME = 'cvr_session_data.json'
@@ -75,23 +85,28 @@ RETRIEVE_VARIANTS_DMP_SAMPLE_ID = 'dmp_sample_id'
 CONSUME_AFFECTED_ROWS = 'affectedRows'
 
 DMP_STUDY_IDS = ['mskimpact', 'mskimpact_heme', 'mskraindance', 'mskarcher', 'mskaccess']
-DMP_SAMPLE_ID_PATTERN = re.compile('P-\d*-T\d*-[IH|TB|TS|AH|AS|IM]+\d')
+DMP_SAMPLE_ID_PATTERN = re.compile('P-\d+-(T|N)\d+-(IH|TB|TS|AH|AS|IM)\d+')
 
 MASTERLIST_CHECK_ARG_DESCRIPTION = '[optional] Fetches masterlist for study and reports samples from samples file that are missing from masterlist.'
 REQUEUE_SAMPLES_ARG_DESCRIPTION = '[optional] Requeues samples and reports whether requeue was successful or not. If requeue failed then attempts to determine if failure is due to sample(s) missing from study masterlist or if sample is already queued for next CVR fetch.'
 RETRIEVE_VARIANTS_ARG_DESCRIPTION = '[optional] Retrieves data for queued samples for study and stores data for samples in list to user-specified CVR JSON file. Must be run with [-j | --cvr-json-file]'
 CONSUME_SAMPLES_ARG_DESCRIPTION = '[optional] Consumes samples from samples file.'
+GERMLINE_MODE_ARG_DESCRIPTION = '[optional] Runs CVR DMP utility tool in germline mode (i.e., uses germline server and endpoints).'
 
 # ------------------------------------------------------------------------------
 class PortalProperties(object):
-    def __init__(self, properties_filename):
+    def __init__(self, properties_filename, germline_mode):
         properties = self.parse_properties(properties_filename)
         self.dmp_user = properties[DMP_USER]
         self.dmp_password = properties[DMP_PASSWORD]
         self.dmp_server = properties[DMP_SERVER]
+        self.dmp_gml_server = properties[DMP_GML_SERVER]
         self.create_session = properties[CREATE_SESSION]
+        self.create_gml_session = properties[CREATE_GML_SESSION]
         self.consume_sample = properties[CONSUME_SAMPLE]
+        self.consume_gml_sample = properties[CONSUME_GML_SAMPLE]
         self.requeue_sample = properties[REQUEUE_SAMPLE]
+        self.requeue_gml_sample = properties[REQUEUE_GML_SAMPLE]
         self.masterlist_route = properties[MASTERLIST_ROUTE]
         self.masterlist_mskimpact = properties[MASTERLIST_MSKIMPACT]
         self.masterlist_hemepact = properties[MASTERLIST_HEMEPACT]
@@ -102,6 +117,8 @@ class PortalProperties(object):
         self.retrieve_variants_raindance = properties[RETRIEVE_VARIANTS_RAINDANCE]
         self.retrieve_variants_archer = properties[RETRIEVE_VARIANTS_ARCHER]
         self.retrieve_variants_access = properties[RETRIEVE_VARIANTS_ACCESS]
+        self.retrieve_gml_variants = properties[RETIREVE_GML_VARIANTS]
+        self.is_germline_mode = germline_mode
 
     def parse_properties(self, properties_filename):
         properties = {}
@@ -142,7 +159,9 @@ class PortalProperties(object):
         if study_id == 'mskarcher':
             return self.masterlist_archer
 
-    def get_study_retrieve_variants_endppoint(self, study_id):
+    def get_study_retrieve_variants_endpoint(self, study_id):
+        if self.is_germline_mode:
+            return self.retrieve_gml_variants
         if study_id == 'mskimpact':
             return self.retrieve_variants_mskimpact
         if study_id == 'mskimpact_heme':
@@ -154,13 +173,33 @@ class PortalProperties(object):
         if study_id == 'mskacess':
             return self.retrieve_variants_access
 
+    def get_dmp_server(self):
+        if self.is_germline_mode:
+            return self.dmp_gml_server
+        return self.dmp_server
+
+    def get_dmp_session(self):
+        if self.is_germline_mode:
+            return self.create_gml_session
+        return self.create_session
+
+    def get_dmp_requeue(self):
+        if self.is_germline_mode:
+            return self.requeue_gml_sample
+        return self.requeue_sample
+
+    def get_dmp_consume(self):
+        if self.is_germline_mode:
+            return self.consume_gml_sample
+        return self.consume_sample
+
 # ------------------------------------------------------------------------------
 # functions
 def create_and_store_session_data(portal_properties, session_data_file):
     '''
         Creates a CVR session.
     '''
-    url = '%s%s/%s/%s/0' % (portal_properties.dmp_server, portal_properties.create_session, portal_properties.dmp_user, portal_properties.dmp_password)
+    url = '%s%s/%s/%s/0' % (portal_properties.get_dmp_server(), portal_properties.get_dmp_session(), portal_properties.dmp_user, portal_properties.dmp_password)
     response = urllib.urlopen(url, urllib.urlencode({}))
     data = json.loads(response.read())
 
@@ -226,6 +265,7 @@ def get_session_data(portal_properties, session_data_file):
 def get_dmp_masterlist(portal_properties, session_data, study_id):
     '''
         Returns the master list for a given study id.
+        NOTE: This does not apply to germline mode.
     '''
     if study_id == 'mskaccess':
         print >> OUTPUT_FILE, 'The CVR master list is not yet supported in the CVR web service for study mskaccess'
@@ -254,7 +294,7 @@ def requeue_sample(portal_properties, session_data, sample_id):
     '''
         Requeues sample and returns requeue status.
     '''
-    url = '%s%s/%s/%s' % (portal_properties.dmp_server, portal_properties.requeue_sample, session_data[CREATE_SESSION_SESSION_ID], sample_id)
+    url = '%s%s/%s/%s' % (portal_properties.get_dmp_server(), portal_properties.get_dmp_requeue(), session_data[CREATE_SESSION_SESSION_ID], sample_id)
     response = urllib.urlopen(url)
     data = json.loads(response.read())
     return (int(data[REQUEUE_RESULT]) == 1)
@@ -263,15 +303,17 @@ def retrieve_study_variants_queue(portal_properties, session_data, study_id):
     '''
         Retrieves variants for given study and returns data plus list of all samples in current queue.
     '''
-    url = '%s%s/%s/0' % (portal_properties.dmp_server, portal_properties.get_study_retrieve_variants_endppoint(study_id), session_data[CREATE_SESSION_SESSION_ID])
+    url = '%s%s/%s/0' % (portal_properties.get_dmp_server(), portal_properties.get_study_retrieve_variants_endpoint(study_id), session_data[CREATE_SESSION_SESSION_ID])
     response = urllib.urlopen(url)
     data = json.loads(response.read())
 
     sample_queue = set()
     results = []
+    print '\n\n\n'
     for sample_id,sample_data in data[RETRIEVE_VARIANTS_RESULTS].items():
         sample_queue.add(sample_id)
         results.append(sample_data)
+    print '\n\n\n'
 
     study_variants_data = {
         RETRIEVE_VARIANTS_DISCLAIMER:data[RETRIEVE_VARIANTS_DISCLAIMER],
@@ -290,7 +332,7 @@ def consume_sample(portal_properties, session_data, sample_id):
     '''
         Consumes given sample and returns bool indicating whether sample consumed successfully.
     '''
-    url = '%s%s/%s/%s' % (portal_properties.dmp_server, portal_properties.consume_sample, session_data[CREATE_SESSION_SESSION_ID], sample_id)
+    url = '%s%s/%s/%s' % (portal_properties.get_dmp_server(), portal_properties.get_dmp_consume(), session_data[CREATE_SESSION_SESSION_ID], sample_id)
     response = urllib.urlopen(url)
     data = json.loads(response.read())
     return (int(data.get(CONSUME_AFFECTED_ROWS, '0')) == 1)
@@ -494,6 +536,7 @@ def main():
     parser.add_option('-r', '--requeue-samples', action = 'store_true', dest = 'requeuemode', default = False, help = REQUEUE_SAMPLES_ARG_DESCRIPTION)
     parser.add_option('-v', '--retrieve-variants', action = 'store_true', dest = 'retrievevarsmode', default = False, help = RETRIEVE_VARIANTS_ARG_DESCRIPTION)
     parser.add_option('-c', '--consume-samples', action = 'store_true', dest = 'consumemode', default = False, help = CONSUME_SAMPLES_ARG_DESCRIPTION)
+    parser.add_option('-g', '--germline', action = 'store_true', dest = 'germlinemode', default = False, help = GERMLINE_MODE_ARG_DESCRIPTION)
 
     # additional arguments dependent on type of mode being run
     parser.add_option('-j', '--cvr-json-file', action = 'store', dest = 'cvrjson', help = 'CVR JSON file to save queued data to')
@@ -511,6 +554,7 @@ def main():
     requeue_samples_mode = options.requeuemode
     retrieve_variants_mode = options.retrievevarsmode
     consume_samples_mode = options.consumemode
+    germline_mode = options.germlinemode
 
     # argument(s) dependent on type of mode
     cvr_json_file = options.cvrjson
@@ -528,6 +572,8 @@ def main():
         usage(parser, 'Must provide a CVR JSON file as [-j | --cvr-json-file] when running in retrieve variants mode [-r | --retrieve-variants]. Exiting...')
 
     modes = []
+    if germline_mode:
+        modes.append('germline mode')
     if masterlist_mode:
         modes.append('masterlist check mode')
     if requeue_samples_mode:
@@ -541,7 +587,7 @@ def main():
     for mode in modes:
         print >> OUTPUT_FILE, '\t%s' % (mode)
 
-    portal_properties = PortalProperties(properties_filename)
+    portal_properties = PortalProperties(properties_filename, germline_mode)
     session_data = get_session_data(portal_properties, session_data_file)
     study_masterlist = get_dmp_masterlist(portal_properties, session_data, study_id)
     current_study_cvr_variants_results,current_study_sample_queue = retrieve_study_variants_queue(portal_properties, session_data, study_id)
