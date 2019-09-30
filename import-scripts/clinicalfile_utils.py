@@ -205,6 +205,17 @@ def write_data(data_file, output_file):
             if not line.startswith("#"):
                 os.write(output_file, line)
 
+def write_and_exclude_columns(clinical_filename, exclude_column_names, output_file):
+    header = get_header(clinical_filename)
+    columns_to_remove_indexes = get_indexes_for_columns(header, exclude_column_names)
+
+    with open(clinical_filename) as clinical_file:
+        for line in clinical_file:
+            line = line.rstrip('\n')
+            row = line.split('\t')
+            output_file.write('\t'.join([field for index, field in enumerate(row) if index not in columns_to_remove_indexes]))
+            output_file.write('\n')
+
 def duplicate_existing_attribute_to_new_attribute(clinical_file, existing_attribute_name, new_attribute_name):
     """
         Duplicates a specified attribute in clinical file (including values) under a new specified attribute name.
@@ -268,3 +279,10 @@ def get_index_for_column(header, column_name):
     except ValueError:
         pass
     return column_index
+
+def get_indexes_for_columns(header, column_names):
+    """
+        Given a list of column names, return a list of indexes.
+        If one or more columns is not present, throws ValueError.
+    """
+    return [header.index(c) for c in column_names]

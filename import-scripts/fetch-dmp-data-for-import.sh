@@ -605,7 +605,7 @@ if [ $(wc -l < $SAMPLE_MASTER_LIST_FOR_FILTERING_FILENAME) -eq 0 ] ; then
 fi
 
 # -----------------------------------------------------------------------------------------------------------
-# IMPROT PROJECTS INTO REDCAP
+# IMPORT PROJECTS INTO REDCAP
 
 # import newly fetched files into redcap
 printTimeStampedDataProcessingStepMessage "redcap import for all cohorts"
@@ -844,6 +844,12 @@ if [ $IMPORT_STATUS_ARCHER -eq 0 ] ; then
         cd $MSK_ARCHER_UNFILTERED_DATA_HOME ; $HG_BINARY update -C ; find . -name "*.orig" -delete
         sendPreImportFailureMessageMskPipelineLogsSlack "ARCHER_UNFILTERED Redcap Export"
     else
+        # we want to remove MSI_COMMENT, MSI_SCORE, and MSI_TYPE from the data clinical file
+        archer_data_clinical_tmp_file=$(mktemp $MSK_DMP_TMPDIR/archer_data_clinical_patient.txt.XXXXXX)
+        $PYTHON_BINARY $PORTAL_HOME/scripts/filter_clinical_data.py --clinical-file $MSK_ARCHER_UNFILTERED_DATA_HOME/data_clinical_sample.txt --exclude-columns MSI_COMMENT,MSI_SCORE,MSI_TYPE > $archer_data_clinical_tmp_file
+        if [ $? -eq 0 ] ; then
+            mv $archer_data_clinical_tmp_file $MSK_ARCHER_UNFILTERED_DATA_HOME/data_clinical_sample.txt
+        fi
         touch $MSK_ARCHER_IMPORT_TRIGGER
         cd $MSK_ARCHER_UNFILTERED_DATA_HOME ; find . -name "*.orig" -delete ; $HG_BINARY add * ; $HG_BINARY commit -m "Latest ARCHER_UNFILTERED Dataset: Clinical and Timeline"
     fi
