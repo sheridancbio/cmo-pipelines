@@ -13,4 +13,7 @@ date
 echo executing import-gdac-aws-data.sh
 /data/portal-cron/scripts/import-gdac-aws-data.sh
 date
+echo executing update-msk-extract-cohort.sh
+/data/portal-cron/scripts/update-msk-extract-cohort.sh
+date
 echo wrapper complete
