@@ -16,4 +16,7 @@ date
 echo executing update-msk-extract-cohort.sh
 /data/portal-cron/scripts/update-msk-extract-cohort.sh
 date
+echo executing update-msk-spectrum-cohort.sh
+/data/portal-cron/scripts/update-msk-spectrum-cohort.sh
+date
 echo wrapper complete
