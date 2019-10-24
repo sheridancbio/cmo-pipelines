@@ -129,7 +129,7 @@ public class GMLFusionDataReader implements ItemStreamReader<CVRFusionRecord> {
         DelimitedLineTokenizer tokenizer = new DelimitedLineTokenizer(DelimitedLineTokenizer.DELIMITER_TAB);
         DefaultLineMapper<CVRFusionRecord> mapper = new DefaultLineMapper<>();
         mapper.setLineTokenizer(tokenizer);
-        mapper.setFieldSetMapper(new CVRFusionFieldSetMapper());
+        mapper.setFieldSetMapper(new CVRGMLFusionFieldSetMapper());
 
         FlatFileItemReader<CVRFusionRecord> reader = new FlatFileItemReader<>();
         reader.setResource(new FileSystemResource(gmlFusionsFile));
