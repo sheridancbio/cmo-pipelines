@@ -31,6 +31,7 @@ export CBIOPORTAL_HOME=$PORTAL_GIT_HOME/cbioportal
 export GENOME_NEXUS_ANNOTATOR_HOME=$PORTAL_GIT_HOME/genome-nexus-annotation-pipeline
 export ANNOTATOR_JAR=$GENOME_NEXUS_ANNOTATOR_HOME/annotationPipeline/target/annotationPipeline*.jar
 export ONCO_HOME=$PORTAL_GIT_HOME/oncotree
+export ONCOKB_ANNOTATOR_HOME=$PORTAL_GIT_HOME/oncokb-annotator
 export CDD_HOME=$PORTAL_GIT_HOME/clinical-data-dictionary
 export DDP_CREDENTIALS_FILE=$PORTAL_HOME/pipelines-credentials/application-secure.properties
 export AWS_GDAC_SSL_TRUSTSTORE=$PORTAL_HOME/pipelines-credentials/PipelinesGdacDbAwsBackup.truststore
@@ -120,3 +121,9 @@ export ACCESS_REDCAP_BACKUP=$REDCAP_BACKUP_DATA_HOME/mskaccess
 # environment variables used in the import-pdx-data script
 #######################
 export CRDB_FETCHER_PDX_HOME=$PDX_DATA_HOME/crdb_pdx_raw_data
+
+#######################
+# environment variables used for oncokb annotator script
+#######################
+ONCOKB_URL="http://oncokb.org"
+CANCER_HOTSPOTS_URL="http://www.cancerhotspots.org"
