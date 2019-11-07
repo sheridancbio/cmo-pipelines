@@ -5,7 +5,7 @@ source $PORTAL_HOME/scripts/dmp-import-vars-functions.sh
 ONCOKB_ANNOTATION_SUCCESS=1
 
 # Make sure necessary environment variables are set before running
-if [ -z $PYTHON_BINARY ] | [ -z $HG_BINARY ] | [ -z $ONCOKB_ANNOTATOR_HOME ] | [ -z $MSK_SOLID_HEME_DATA_HOME ] | [ -z $ONCOKB_URL ] | [ -z $CANCER_HOTSPOTS_URL ] ; then
+if [ -z $PYTHON_BINARY ] | [ -z $HG_BINARY ] | [ -z $ONCOKB_ANNOTATOR_HOME ] | [ -z $DMP_DATA_HOME ] | [ -z $MSK_SOLID_HEME_DATA_HOME ] | [ -z $ONCOKB_URL ] | [ -z $CANCER_HOTSPOTS_URL ] ; then
     message="could not run oncokb annotation script: automation-environment.sh script must be run in order to set needed environment variables."
     echo $message
     echo -e "$message" |  mail -s "oncokb-annotator failed to run." $PIPELINES_EMAIL_LIST
@@ -13,14 +13,30 @@ if [ -z $PYTHON_BINARY ] | [ -z $HG_BINARY ] | [ -z $ONCOKB_ANNOTATOR_HOME ] | [
     exit 2
 fi
 
+# Update DMP repo before running annotations
+cd $DMP_DATA_HOME ; $HG_BINARY pull -u
+
 # Annotating MAF
 echo $(date)
 echo "Beginning MAF annotation..."
 if [ $ONCOKB_ANNOTATION_SUCCESS -eq 1 ] ; then
-    $PYTHON_BINARY $ONCOKB_ANNOTATOR_HOME/MafAnnotator.py -i $MSK_SOLID_HEME_DATA_HOME/data_mutations_extended.txt -o $MSK_SOLID_HEME_DATA_HOME/oncokb/data_mutations_extended.oncokb.txt -c $MSK_SOLID_HEME_DATA_HOME/data_clinical_sample.txt -u $ONCOKB_URL -v $CANCER_HOTSPOTS_URL
+    # if an oncokb annotated maf already exists then create a copy that can be used to speed up the annotation process
+    PREVIOUS_ANNOTATED_MAF_ARGS=""
+    PREVIOUS_ANNOTATED_MAF_NAME=$MSK_SOLID_HEME_DATA_HOME/oncokb/data_mutations_extended.oncokb.previous.txt
+    if [ -f $MSK_SOLID_HEME_DATA_HOME/oncokb/data_mutations_extended.oncokb.txt ] ; then
+        cp $MSK_SOLID_HEME_DATA_HOME/oncokb/data_mutations_extended.oncokb.txt $PREVIOUS_ANNOTATED_MAF_NAME
+        PREVIOUS_ANNOTATED_MAF_ARGS="-p $PREVIOUS_ANNOTATED_MAF_NAME"
+    fi
+
+    $PYTHON_BINARY $ONCOKB_ANNOTATOR_HOME/MafAnnotator.py -i $MSK_SOLID_HEME_DATA_HOME/data_mutations_extended.txt -o $MSK_SOLID_HEME_DATA_HOME/oncokb/data_mutations_extended.oncokb.txt -c $MSK_SOLID_HEME_DATA_HOME/data_clinical_sample.txt -u $ONCOKB_URL -v $CANCER_HOTSPOTS_URL $PREVIOUS_ANNOTATED_MAF_ARGS
     if [ $? -ne 0 ] ; then
         echo "Failed to annotate MAF, exiting..."
-        ONCOKB_ANNOTATION_SUCCESS=0 
+        ONCOKB_ANNOTATION_SUCCESS=0
+    fi
+
+    # if a previous annotated maf was created during this step then remove it from directory
+    if [ -f $PREVIOUS_ANNOTATED_MAF_NAME ] ; then
+        rm $PREVIOUS_ANNOTATED_MAF_NAME
     fi
 fi
 
@@ -31,7 +47,7 @@ if [ $ONCOKB_ANNOTATION_SUCCESS -eq 1 ] ; then
     $PYTHON_BINARY $ONCOKB_ANNOTATOR_HOME/FusionAnnotator.py -i $MSK_SOLID_HEME_DATA_HOME/data_fusions.txt -o $MSK_SOLID_HEME_DATA_HOME/oncokb/data_fusions.oncokb.txt -c $MSK_SOLID_HEME_DATA_HOME/data_clinical_sample.txt -u $ONCOKB_URL
     if [ $? -ne 0 ] ; then
         echo "Failed to annotate fusion file, exiting..."
-        ONCOKB_ANNOTATION_SUCCESS=0 
+        ONCOKB_ANNOTATION_SUCCESS=0
     fi
 fi
 
@@ -42,7 +58,7 @@ if [ $ONCOKB_ANNOTATION_SUCCESS -eq 1 ] ; then
     $PYTHON_BINARY $ONCOKB_ANNOTATOR_HOME/CnaAnnotator.py -i $MSK_SOLID_HEME_DATA_HOME/data_CNA.txt -o $MSK_SOLID_HEME_DATA_HOME/oncokb/data_CNA.oncokb.txt -c $MSK_SOLID_HEME_DATA_HOME/data_clinical_sample.txt -u $ONCOKB_URL
     if [ $? -ne 0 ] ; then
         echo "Failed to annotate CNA file, exiting..."
-        ONCOKB_ANNOTATION_SUCCESS=0 
+        ONCOKB_ANNOTATION_SUCCESS=0
     fi
 fi
 
@@ -53,7 +69,7 @@ if [ $ONCOKB_ANNOTATION_SUCCESS -eq 1 ] ; then
     $PYTHON_BINARY $ONCOKB_ANNOTATOR_HOME/ClinicalDataAnnotator.py -i $MSK_SOLID_HEME_DATA_HOME/data_clinical_sample.txt -o $MSK_SOLID_HEME_DATA_HOME/oncokb/data_clinical_sample.oncokb.txt -a $MSK_SOLID_HEME_DATA_HOME/oncokb/data_mutations_extended.oncokb.txt,$MSK_SOLID_HEME_DATA_HOME/oncokb/data_fusions.oncokb.txt,$MSK_SOLID_HEME_DATA_HOME/oncokb/data_CNA.oncokb.txt
     if [ $? -ne 0 ] ; then
         echo "Failed to annotate clinical file, exiting..."
-        ONCOKB_ANNOTATION_SUCCESS=0 
+        ONCOKB_ANNOTATION_SUCCESS=0
     fi
 fi
 
@@ -64,7 +80,7 @@ if [ $ONCOKB_ANNOTATION_SUCCESS -eq 1 ] ; then
     $PYTHON_BINARY $ONCOKB_ANNOTATOR_HOME/OncoKBPlots.py -i $MSK_SOLID_HEME_DATA_HOME/oncokb/data_clinical_sample.oncokb.txt -o $MSK_SOLID_HEME_DATA_HOME/oncokb/data_clinical_sample.oncokb.pdf -n 100
     if [ $? -ne 0 ] ; then
         echo "Failed to generate clinical pdf, exiting..."
-        ONCOKB_ANNOTATION_SUCCESS=0 
+        ONCOKB_ANNOTATION_SUCCESS=0
     fi
 fi
 
@@ -73,12 +89,12 @@ echo $(date)
 echo "Beginning somatic clinical annotation..."
 if [ $ONCOKB_ANNOTATION_SUCCESS -eq 1 ] ; then
     # Generate somatic-only MAF by excluding lines including 'GERMLINE'
-    awk -F'\t' '$26 != "GERMLINE"' $MSK_SOLID_HEME_DATA_HOME/oncokb/data_mutations_extended.oncokb.txt >$MSK_SOLID_HEME_DATA_HOME/oncokb/data_mutations_extended_somatic.oncokb.txt
+    awk -F'\t' '$26 != "GERMLINE"' $MSK_SOLID_HEME_DATA_HOME/oncokb/data_mutations_extended.oncokb.txt > $MSK_SOLID_HEME_DATA_HOME/oncokb/data_mutations_extended_somatic.oncokb.txt
 
     $PYTHON_BINARY $ONCOKB_ANNOTATOR_HOME/ClinicalDataAnnotator.py -i $MSK_SOLID_HEME_DATA_HOME/data_clinical_sample.txt -o $MSK_SOLID_HEME_DATA_HOME/oncokb/data_clinical_sample_somatic.oncokb.txt -a $MSK_SOLID_HEME_DATA_HOME/oncokb/data_mutations_extended_somatic.oncokb.txt,$MSK_SOLID_HEME_DATA_HOME/oncokb/data_fusions.oncokb.txt,$MSK_SOLID_HEME_DATA_HOME/oncokb/data_CNA.oncokb.txt
     if [ $? -ne 0 ] ; then
         echo "Failed to annotate somatic clinical file, exiting..."
-        ONCOKB_ANNOTATION_SUCCESS=0 
+        ONCOKB_ANNOTATION_SUCCESS=0
     fi
 fi
 
@@ -89,7 +105,7 @@ if [ $ONCOKB_ANNOTATION_SUCCESS -eq 1 ] ; then
     $PYTHON_BINARY $ONCOKB_ANNOTATOR_HOME/OncoKBPlots.py -i $MSK_SOLID_HEME_DATA_HOME/oncokb/data_clinical_sample_somatic.oncokb.txt -o $MSK_SOLID_HEME_DATA_HOME/oncokb/data_clinical_sample_somatic.oncokb.pdf -n 100
     if [ $? -ne 0 ] ; then
         echo "Failed to generate somatic clinical pdf, exiting..."
-        ONCOKB_ANNOTATION_SUCCESS=0 
+        ONCOKB_ANNOTATION_SUCCESS=0
     fi
 fi
 
