@@ -23,7 +23,7 @@ PURGE_DEACTIVATED_LDAP_USERS_FLOCK_FILEPATH="/data/portal-cron/cron-lock/purge_d
 
     echo "### Starting import" >> "$USERSGENIELOGFILENAME"
     date >> "$USERSGENIELOGFILENAME"
-    $PYTHON_BINARY $PORTAL_HOME/scripts/importUsers.py --port 3306 --secrets-file $PIPELINES_CONFIG_HOME/google-docs/client_secrets.json --creds-file $PIPELINES_CONFIG_HOME/google-docs/creds.dat --properties-file $PIPELINES_CONFIG_HOME/properties/import-users/portal.properties.dashi.genie --send-email-confirm true --sender GENIE >> "$USERSGENIELOGFILENAME" 2>&1
+    $PYTHON_BINARY $PORTAL_HOME/scripts/importUsers.py --port 3306 --secrets-file $PIPELINES_CONFIG_HOME/google-docs/client_secrets.json --creds-file $PIPELINES_CONFIG_HOME/google-docs/creds.dat --properties-file $PIPELINES_CONFIG_HOME/properties/import-users/portal.properties.dashi.genie.aws --send-email-confirm true --sender GENIE --ssl-ca $PORTAL_HOME/pipelines-credentials/pipelines-genie-db-aws-rds-combined-ca-bundle.pem >> "$USERSGENIELOGFILENAME" 2>&1
     CGDS_GENIE_IMPORT_STATUS=$?
 
     PIPELINES_EMAIL_LIST="cbioportal-pipelines@cbio.mskcc.org"

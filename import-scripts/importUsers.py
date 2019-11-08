@@ -1,10 +1,10 @@
 #! /usr/bin/env python
 
 # ------------------------------------------------------------------------------
-# Script which adds new users fram google spreadsheet into the the cgds
+# Script which adds new users from google spreadsheet into the the cgds
 # user table.  The following properties must be specified in portal.properties:
 #
-# db.name
+# db.portal_db_name
 # db.user
 # db.password
 # db.host
@@ -12,6 +12,7 @@
 # google.pw
 # users.spreadsheet
 # users.worksheet
+# importer.spreadsheet
 #
 # The script considers all users in the google spreadsheet
 # that have an "APPROVED" value in the "Status (APPROVED or BLANK)" column.  If that
@@ -287,7 +288,7 @@ def get_user_authorities(cursor, google_email):
 # ------------------------------------------------------------------------------
 # get current users from google spreadsheet
 
-def get_new_user_map(spreadsheet, worksheet_feed, current_user_map, portal_name,mskcc_user_spreadsheet):
+def get_new_user_map(spreadsheet, worksheet_feed, current_user_map, portal_name, mskcc_user_spreadsheet):
 
     # map that we are returning
     # key is the institutional email address + google (in case user has multiple google ids)
@@ -363,11 +364,18 @@ def get_all_user_map(spreadsheet, worksheet_feed,mskcc_user_spreadsheet):
 
 # ------------------------------------------------------------------------------
 # get db connection
-def get_db_connection(portal_properties, port):
+def get_db_connection(portal_properties, port, ssl_ca_filename=None):
 
     # try and create a connection to the db
     try:
-        connection = MySQLdb.connect(host=portal_properties.cgds_database_host, port=int(port),
+        if ssl_ca_filename:
+            connection = MySQLdb.connect(host=portal_properties.cgds_database_host, port=int(port),
+                                     user=portal_properties.cgds_database_user,
+                                     passwd=portal_properties.cgds_database_pw,
+                                     db=portal_properties.cgds_database_name,
+                                     ssl={'ca': ssl_ca_filename})
+        else:
+            connection = MySQLdb.connect(host=portal_properties.cgds_database_host, port=int(port),
                                      user=portal_properties.cgds_database_user,
                                      passwd=portal_properties.cgds_database_pw,
                                      db=portal_properties.cgds_database_name)
@@ -535,7 +543,7 @@ def get_portal_name_map(google_spreadsheet,client):
 # displays program usage (invalid args)
 
 def usage():
-    print >> OUTPUT_FILE, 'importUsers.py --secrets-file [google secrets.json] --creds-file [oauth creds filename] --properties-file [properties file] --send-email-confirm [true or false] --use-institutional-id [true or false] --port [mysql port number] --sender [sender identifier - optional]'
+    print >> OUTPUT_FILE, 'importUsers.py --secrets-file [google secrets.json] --creds-file [oauth creds filename] --properties-file [properties file] --send-email-confirm [true or false] --use-institutional-id [true or false] --port [mysql port number] --sender [sender identifier - optional] --ssl-ca [ssl certificate file - optional]'
 
 # ------------------------------------------------------------------------------
 # the big deal main.
@@ -544,7 +552,7 @@ def main():
 
     # parse command line options
     try:
-        opts, args = getopt.getopt(sys.argv[1:], '', ['secrets-file=', 'creds-file=', 'properties-file=', 'send-email-confirm=', 'use-institutional-id=', 'port=', 'sender='])
+        opts, args = getopt.getopt(sys.argv[1:], '', ['secrets-file=', 'creds-file=', 'properties-file=', 'ssl-ca=', 'send-email-confirm=', 'use-institutional-id=', 'port=', 'sender='])
     except getopt.error, msg:
         print >> ERROR_FILE, msg
         usage()
@@ -557,6 +565,7 @@ def main():
     send_email_confirm = ''
     port = ''
     sender = ''
+    ssl_ca_filename = '' # not required
 
     for o, a in opts:
         if o == '--secrets-file':
@@ -565,6 +574,8 @@ def main():
             creds_filename = a
         elif o == '--properties-file':
             properties_filename = a
+        elif o == '--ssl-ca':
+            ssl_ca_filename = a
         elif o == '--send-email-confirm':
             send_email_confirm = a
         elif o == '--sender':
@@ -591,7 +602,7 @@ def main():
 
     # get db connection & create cursor
     print >> OUTPUT_FILE, 'Connecting to database: ' + portal_properties.cgds_database_name
-    connection = get_db_connection(portal_properties, port)
+    connection = get_db_connection(portal_properties, port, ssl_ca_filename)
     if connection is not None:
         cursor = connection.cursor()
     else:
