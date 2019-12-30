@@ -34,7 +34,7 @@ PURGE_DEACTIVATED_LDAP_USERS_FLOCK_FILEPATH="/data/portal-cron/cron-lock/purge_d
     if [[ $CGDS_GENIE_IMPORT_STATUS -ne 0 ]] ; then
         FAILED_DATABASES="$FAILED_DATABASES cgds_genie"
     fi
-    if ! [ -z $FAILED_DATABASES ] ; then
+    if ! [ -z "$FAILED_DATABASES" ] ; then
         MINUTES_NOW=$(date "+%M")
         if [ $MINUTES_NOW == "00" ] ; then
             EMAIL_BODY="Failure importing users into$FAILED_DATABASES"
