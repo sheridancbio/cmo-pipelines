@@ -10,7 +10,7 @@ JENKINS_SRV_PIPELINES_CREDENTIALS=$JENKINS_SRV_HOME_DIRECTORY/pipelines-credenti
 JENKINS_SRV_GIT_CREDENTIALS=$JENKINS_SRV_HOME_DIRECTORY/git-credentials
 # Function for alerting slack channel that something failed
 function sendFailureMessageMskPipelineLogsSlack {
-    curl -X POST --data-urlencode "payload={\"channel\": \"#msk-pipeline-logs\", \"username\": \"cbioportal_importer\", \"text\": \"$1\", \"icon_emoji\": \":boom:\"}" https://hooks.slack.com/services/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
+    curl -X POST --data-urlencode "payload={\"channel\": \"#msk-pipeline-logs\", \"username\": \"cbioportal_importer\", \"text\": \"$1\", \"icon_emoji\": \":boom:\"}" $SLACK_PIPELINES_MONITOR_URL
 }
 
 if ! [ -f $PATH_TO_AUTOMATION_SCRIPT ] ; then
@@ -19,11 +19,14 @@ if ! [ -f $PATH_TO_AUTOMATION_SCRIPT ] ; then
 fi
 
 . $PATH_TO_AUTOMATION_SCRIPT
+
 # local jenkins staging paths
 LOCAL_PROPERTIES_DIRECTORY=$PIPELINES_CONFIG_HOME/properties/
 LOCAL_JENKINS_DIRECTORY=$PIPELINES_CONFIG_HOME/jenkins/
 LOCAL_PIPELINES_CREDENTIALS=$PORTAL_HOME/pipelines-credentials/
 LOCAL_GIT_CREDENTIALS=$PIPELINES_CONFIG_HOME/git/git-credentials
+
+SLACK_PIPELINES_MONITOR_URL=`cat $SLACK_URL_FILE`
 
 cd $LOCAL_PROPERTIES_DIRECTORY
 git pull
