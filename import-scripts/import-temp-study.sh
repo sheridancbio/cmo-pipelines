@@ -41,7 +41,7 @@ function usage {
 
 function sendFailureMessageMskPipelineLogsSlack {
     MESSAGE=$1
-    curl -X POST --data-urlencode "payload={\"channel\": \"#msk-pipeline-logs\", \"username\": \"cbioportal_importer\", \"text\": \"MSK temporary study import process failed: $MESSAGE\", \"icon_emoji\": \":tired_face:\"}" https://hooks.slack.com/services/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
+    curl -X POST --data-urlencode "payload={\"channel\": \"#msk-pipeline-logs\", \"username\": \"cbioportal_importer\", \"text\": \"MSK temporary study import process failed: $MESSAGE\", \"icon_emoji\": \":tired_face:\"}" $SLACK_PIPELINES_MONITOR_URL
 }
 
 # set default value(s)
@@ -124,6 +124,7 @@ fi
 JAVA_DEBUG_ARGS="-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182"
 JAVA_IMPORTER_ARGS="$JAVA_PROXY_ARGS $JAVA_DEBUG_ARGS -Dspring.profiles.active=dbcp -Djava.io.tmpdir=$TMP_DIRECTORY -ea -cp $IMPORTER_JAR_FILENAME org.mskcc.cbio.importer.Admin"
 GROUP_FOR_HIDING_BACKUP_STUDIES="KSBACKUP"
+SLACK_PIPELINES_MONITOR_URL=`cat $SLACK_URL_FILE`
 
 # define validator notification filename based on cancer study id, remove if already exists, touch new file
 now=$(date "+%Y-%m-%d-%H-%M-%S")

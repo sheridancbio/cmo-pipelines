@@ -1,6 +1,9 @@
 #!/bin/bash
 
-TESTING_DIRECTORY=/var/lib/jenkins/tempdir
+JENKINS_USER_HOME_DIRECTORY=/var/lib/jenkins
+JENKINS_PIPELINES_CREDENTIALS=$JENKINS_USER_HOME_DIRECTORY/pipelines-credentials
+TESTING_DIRECTORY=$JENKINS_USER_HOME_DIRECTORY/tempdir
+
 if [ ! -d $TESTING_DIRECTORY ] ; then
     mkdir -p $TESTING_DIRECTORY
 fi
@@ -11,11 +14,12 @@ CMO_PIPELINES_DIRECTORY="$(pwd)"
 CMO_REDCAP_DIRECTORY=$CMO_PIPELINES_DIRECTORY/redcap
 CMO_INTEGRATION_TESTS_DIRECTORY=$CMO_PIPELINES_DIRECTORY/integration-tests
 REDCAP_JAR=$CMO_REDCAP_DIRECTORY/redcap_pipeline/target/redcap_pipeline.jar
+SLACK_PIPELINES_MONITOR_URL=`cat $JENKINS_PIPELINES_CREDENTIALS/slack.url`
 TEST_SUCCESS=0
 
 # Function for alerting slack channel of any failures
 function sendFailureMessageMskPipelineLogsSlack {
-    curl -X POST --data-urlencode "payload={\"channel\": \"#msk-pipeline-logs\", \"username\": \"jenkins\", \"text\": \"Redcap ID mappings integration test failed! Please fix before the production run.\", \"icon_emoji\": \":face_palm:\"}" https://hooks.slack.com/services/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
+    curl -X POST --data-urlencode "payload={\"channel\": \"#msk-pipeline-logs\", \"username\": \"jenkins\", \"text\": \"Redcap ID mappings integration test failed! Please fix before the production run.\", \"icon_emoji\": \":face_palm:\"}" $SLACK_PIPELINES_MONITOR_URL
 }
 
 mkdir -p $REDCAP_EXPORTS_DIRECTORY $LIB_DIRECTORY
