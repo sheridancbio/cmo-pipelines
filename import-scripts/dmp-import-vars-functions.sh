@@ -314,13 +314,13 @@ function remove_raw_clinical_timeline_data_files {
     # remove raw clinical files except patient and sample cbio format clinical files
     for f in $STUDY_DIRECTORY/data_clinical*; do
         if [[ $f != *"data_clinical_patient.txt"* && $f != *"data_clinical_sample.txt"* ]] ; then
-            rm -f $f; $HG_BINARY rm -f $f
+            $GIT_BINARY rm -f $f
         fi
     done
     # remove raw timeline files except cbio format timeline file
     for f in $STUDY_DIRECTORY/data_timeline*; do
         if [ $f != *"data_timeline.txt"* ] ; then
-            rm -f $f; $HG_BINARY rm -f $f
+            $GIT_BINARY rm -f $f
         fi
     done
 }
