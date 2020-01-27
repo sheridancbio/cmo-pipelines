@@ -2,6 +2,8 @@
 
 source $PORTAL_HOME/scripts/dmp-import-vars-functions.sh
 
+source $PORTAL_HOME/scripts/set-data-source-environment-vars.sh
+
 ONCOKB_ANNOTATION_SUCCESS=1
 
 function send_failure_messages () {
@@ -14,7 +16,7 @@ function send_failure_messages () {
 }
 
 # Make sure necessary environment variables are set before running
-if [ -z $PYTHON_BINARY ] | [ -z $HG_BINARY ] | [ -z $ONCOKB_ANNOTATOR_HOME ] | [ -z $DMP_DATA_HOME ] | [ -z $MSK_SOLID_HEME_DATA_HOME ] | [ -z $ONCOKB_URL ] | [ -z $CANCER_HOTSPOTS_URL ] | [ -z $ONCOKB_TOKEN_FILE ]; then
+if [ -z $PYTHON_BINARY ] | [ -z $GIT_BINARY ] | [ -z $ONCOKB_ANNOTATOR_HOME ] | [ -z $DMP_DATA_HOME ] | [ -z $MSK_SOLID_HEME_DATA_HOME ] | [ -z $ONCOKB_URL ] | [ -z $CANCER_HOTSPOTS_URL ] | [ -z $ONCOKB_TOKEN_FILE ]; then
     message="Could not run oncokb annotation script: automation-environment.sh script must be run in order to set needed environment variables."
     send_failure_messages "$message" "oncokb-annotator failed to run." "$message"
     exit 2
@@ -35,7 +37,7 @@ if [ -z $ONCOKB_TOKEN ]; then
 fi
 
 # Update DMP repo before running annotations
-cd $DMP_DATA_HOME ; $HG_BINARY pull -u
+fetch_updates_in_data_sources dmp
 
 # Annotating MAF
 echo $(date)
@@ -143,13 +145,13 @@ fi
 
 # Only commit if all steps succeeded
 if [ $ONCOKB_ANNOTATION_SUCCESS -eq 0 ] ; then
-    cd $MSK_SOLID_HEME_DATA_HOME ; $HG_BINARY update -C ; find . -name "*.orig" -delete
+    bash $PORTAL_HOME/scripts/datasource-repo-cleanup.sh $PORTAL_DATA_HOME/dmp
     message="OncoKB Annotation failed for MSKSOLIDHEME. Check logs for more details."
     send_failure_messages "$message" "MSKSOLIDHEME OncoKB Annotation Failure" "MSKSOLIDHEME OncoKB Annotation"
 else
     echo "committing OncoKB Annotation for MSKSOLIDHEME"
-    cd $MSK_SOLID_HEME_DATA_HOME ; $HG_BINARY commit -m "Latest MSKSOLIDHEME OncoKB Annotations"
-    $HG_BINARY push
+    cd $MSK_SOLID_HEME_DATA_HOME ; $GIT_BINARY add * ; $GIT_BINARY commit -m "Latest MSKSOLIDHEME OncoKB Annotations"
+    $GIT_BINARY push origin
 fi
 
 echo $(date)

@@ -63,7 +63,7 @@ if [[ -d "$MSK_DMP_TMPDIR" && "$MSK_DMP_TMPDIR" != "/" ]] ; then
     rm -rf "$MSK_DMP_TMPDIR"/*
 fi
 
-if [ -z $JAVA_BINARY ] | [ -z $HG_BINARY ] | [ -z $PORTAL_HOME ] | [ -z $MSK_IMPACT_DATA_HOME ] ; then
+if [ -z $JAVA_BINARY ] | [ -z $GIT_BINARY ] | [ -z $PORTAL_HOME ] | [ -z $MSK_IMPACT_DATA_HOME ] ; then
     message="test could not run import-dmp-impact.sh: automation-environment.sh script must be run in order to set needed environment variables (like MSK_IMPACT_DATA_HOME, ...)"
     echo $message
     echo -e "$message" |  mail -s "fetch-dmp-data-for-import failed to run." $PIPELINES_EMAIL_LIST
@@ -99,11 +99,11 @@ if ! [ -z $INHIBIT_RECACHING_FROM_TOPBRAID ] ; then
     fi
 fi
 
-# fetch clinical data mercurial
+# fetch clinical data from data repository
 echo "fetching updates from dmp repository..."
 $JAVA_BINARY $JAVA_IMPORTER_ARGS --fetch-data --data-source dmp --run-date latest
 if [ $? -gt 0 ] ; then
-    sendPreImportFailureMessageMskPipelineLogsSlack "Mercurial Failure: DMP repository update"
+    sendPreImportFailureMessageMskPipelineLogsSlack "Git Failure: DMP repository update"
     exit 2
 fi
 
@@ -150,7 +150,7 @@ if [ $? -gt 0 ] ; then
     sendPreImportFailureMessageMskPipelineLogsSlack "ACCESS Redcap export of mskaccess_data_clinical_supp_date"
 fi
 
-# IF WE CANCEL ANY IMPORT, LET REDCAP GET AHEAD OF CURRENCY, BUT DON'T LET MERCURIAL ADVANCE [REVERT]
+# IF WE CANCEL ANY IMPORT, LET REDCAP GET AHEAD OF CURRENCY, BUT DON'T LET THE REPOSITORY HEAD ADVANCE [REVERT]
 printTimeStampedDataProcessingStepMessage "export of cvr clinical files from redcap"
 echo "exporting impact data_clinical.txt from redcap"
 export_project_from_redcap $MSK_IMPACT_DATA_HOME mskimpact_data_clinical_cvr
@@ -195,21 +195,21 @@ printTimeStampedDataProcessingStepMessage "MSKIMPACT data processing"
 printTimeStampedDataProcessingStepMessage "Darwin CAISIS fetch for mskimpact"
 $JAVA_BINARY $JAVA_DARWIN_FETCHER_ARGS -s mskimpact -d $MSK_IMPACT_DATA_HOME -c
 if [ $? -gt 0 ] ; then
-    cd $MSK_IMPACT_DATA_HOME ; $HG_BINARY update -C ; find . -name "*.orig" -delete
+    cd $DMP_DATA_HOME ; $GIT_BINARY reset HEAD --hard
     sendPreImportFailureMessageMskPipelineLogsSlack "MSKIMPACT Darwin CAISIS Fetch"
 else
     FETCH_DARWIN_CAISIS_FAIL=0
     echo "committing darwin caisis data"
-    cd $MSK_IMPACT_DATA_HOME ; $HG_BINARY commit -m "Latest MSKIMPACT Dataset: Darwin CAISIS"
+    cd $MSK_IMPACT_DATA_HOME ; $GIT_BINARY add ./* ; $GIT_BINARY commit -m "Latest MSKIMPACT Dataset: Darwin CAISIS"
 fi
 
 if [ $IMPORT_STATUS_IMPACT -eq 0 ] ; then
-    # fetch new/updated IMPACT samples using CVR Web service   (must come after mercurial fetching)
+    # fetch new/updated IMPACT samples using CVR Web service   (must come after git fetching)
     printTimeStampedDataProcessingStepMessage "CVR fetch for mskimpact"
     $JAVA_BINARY $JAVA_CVR_FETCHER_ARGS -d $MSK_IMPACT_DATA_HOME -n data_clinical_mskimpact_data_clinical_cvr.txt -i mskimpact -r 150 $CVR_TEST_MODE_ARGS
     if [ $? -gt 0 ] ; then
         echo "CVR fetch failed!"
-        cd $MSK_IMPACT_DATA_HOME ; $HG_BINARY update -C ; find . -name "*.orig" -delete
+        cd $DMP_DATA_HOME ; $GIT_BINARY reset HEAD --hard
         sendPreImportFailureMessageMskPipelineLogsSlack "MSKIMPACT CVR Fetch"
         IMPORT_STATUS_IMPACT=1
     else
@@ -217,7 +217,7 @@ if [ $IMPORT_STATUS_IMPACT -eq 0 ] ; then
         bash $PORTAL_HOME/scripts/test_if_impact_has_lost_allele_count.sh
         if [ $? -gt 0 ] ; then
             echo "Empty allele count sanity check failed! MSK-IMPACT will not be imported!"
-            cd $MSK_IMPACT_DATA_HOME ; $HG_BINARY update -C ; find . -name "*.orig" -delete
+            cd $DMP_DATA_HOME ; $GIT_BINARY reset HEAD --hard
             sendPreImportFailureMessageMskPipelineLogsSlack "MSKIMPACT empty allele count sanity check"
             IMPORT_STATUS_IMPACT=1
         else
@@ -225,13 +225,13 @@ if [ $IMPORT_STATUS_IMPACT -eq 0 ] ; then
             $PYTHON_BINARY $PORTAL_HOME/scripts/phi-scanner.py -a $PIPELINES_CONFIG_HOME/properties/fetch-cvr/phi-scanner-attributes.txt -j $MSK_IMPACT_DATA_HOME/cvr_data.json
             if [ $? -gt 0 ] ; then
                 echo "PHI attributes found in $MSK_IMPACT_DATA_HOME/cvr_data.json! MSK-IMPACT will not be imported!"
-                cd $MSK_IMPACT_DATA_HOME ; $HG_BINARY update -C ; find . -name "*.orig" -delete
+                cd $DMP_DATA_HOME ; $GIT_BINARY reset HEAD --hard
                 sendPreImportFailureMessageMskPipelineLogsSlack "MSKIMPACT PHI attributes scan failed on $MSK_IMPACT_DATA_HOME/cvr_data.json"
                 IMPORT_STATUS_IMPACT=1
             else
                 FETCH_CVR_IMPACT_FAIL=0
                 echo "committing cvr data"
-                cd $MSK_IMPACT_DATA_HOME ; $HG_BINARY commit -m "Latest MSKIMPACT Dataset: CVR"
+                cd $MSK_IMPACT_DATA_HOME ; $GIT_BINARY add ./* ; $GIT_BINARY commit -m "Latest MSKIMPACT Dataset: CVR"
             fi
             # identify samples that need to be requeued or removed from data set due to CVR Part A or Part C consent status changes
             $PYTHON_BINARY $PORTAL_HOME/scripts/cvr_consent_status_checker.py -c $MSK_IMPACT_DATA_HOME/data_clinical_mskimpact_data_clinical_cvr.txt -m $MSK_IMPACT_DATA_HOME/data_mutations_extended.txt
@@ -243,7 +243,7 @@ if [ $IMPORT_STATUS_IMPACT -eq 0 ] ; then
     $JAVA_BINARY $JAVA_CVR_FETCHER_ARGS -d $MSK_IMPACT_DATA_HOME -n data_clinical_mskimpact_data_clinical_cvr.txt -g -i mskimpact $CVR_TEST_MODE_ARGS
     if [ $? -gt 0 ] ; then
         echo "CVR Germline fetch failed!"
-        cd $MSK_IMPACT_DATA_HOME ; $HG_BINARY update -C ; find . -name "*.orig" -delete
+        cd $DMP_DATA_HOME ; $GIT_BINARY reset HEAD --hard
         sendPreImportFailureMessageMskPipelineLogsSlack "MSKIMPACT CVR Germline Fetch"
         IMPORT_STATUS_IMPACT=1
         #override the success of the tumor sample cvr fetch with a failed status
@@ -253,14 +253,14 @@ if [ $IMPORT_STATUS_IMPACT -eq 0 ] ; then
         $PYTHON_BINARY $PORTAL_HOME/scripts/phi-scanner.py -a $PIPELINES_CONFIG_HOME/properties/fetch-cvr/phi-scanner-attributes.txt -j $MSK_IMPACT_DATA_HOME/cvr_gml_data.json
         if [ $? -gt 0 ] ; then
             echo "PHI attributes found in $MSK_IMPACT_DATA_HOME/cvr_gml_data.json! MSK-IMPACT will not be imported!"
-            cd $MSK_IMPACT_DATA_HOME ; $HG_BINARY update -C ; find . -name "*.orig" -delete
+            cd $DMP_DATA_HOME ; $GIT_BINARY reset HEAD --hard
             sendPreImportFailureMessageMskPipelineLogsSlack "MSKIMPACT PHI attributes scan failed on $MSK_IMPACT_DATA_HOME/cvr_gml_data.json"
             IMPORT_STATUS_IMPACT=1
             #override the success of the tumor sample cvr fetch with a failed status
             FETCH_CVR_IMPACT_FAIL=1
         else
             echo "committing CVR germline data"
-            cd $MSK_IMPACT_DATA_HOME ; $HG_BINARY commit -m "Latest MSKIMPACT Dataset: CVR Germline"
+            cd $MSK_IMPACT_DATA_HOME ; $GIT_BINARY add ./* ; $GIT_BINARY commit -m "Latest MSKIMPACT Dataset: CVR Germline"
         fi
     fi
 fi
@@ -276,12 +276,12 @@ fi
 
 $JAVA_BINARY $JAVA_DDP_FETCHER_ARGS -c mskimpact -p $mskimpact_dmp_pids_file -s $MSK_IMPACT_DATA_HOME/cvr/seq_date.txt -f survival -o $MSK_IMPACT_DATA_HOME -r $MSKIMPACT_DDP_DEMOGRAPHICS_RECORD_COUNT
 if [ $? -gt 0 ] ; then
-    cd $MSK_IMPACT_DATA_HOME ; $HG_BINARY update -C ; find . -name "*.orig" -delete
+    cd $DMP_DATA_HOME ; $GIT_BINARY reset HEAD --hard
     sendPreImportFailureMessageMskPipelineLogsSlack "MSKIMPACT DDP Demographics Fetch"
 else
     FETCH_DDP_IMPACT_FAIL=0
     echo "committing ddp data"
-    cd $MSK_IMPACT_DATA_HOME ; $HG_BINARY commit -m "Latest MSKIMPACT Dataset: DDP Demographics"
+    cd $MSK_IMPACT_DATA_HOME ; $GIT_BINARY add ./* ; $GIT_BINARY commit -m "Latest MSKIMPACT Dataset: DDP Demographics"
 fi
 
 # fetch ddp data for pediatric cohort
@@ -291,12 +291,12 @@ if [ $FETCH_DDP_IMPACT_FAIL -eq 0 ] ; then
     DDP_PEDIATRIC_PROP_OVERRIDES="-Dddp.clinical_filename=data_clinical_ddp_pediatrics.txt"
     $JAVA_BINARY $DDP_PEDIATRIC_PROP_OVERRIDES $JAVA_DDP_FETCHER_ARGS -o $MSK_IMPACT_DATA_HOME -p $MSK_DMP_TMPDIR/mskimpact_ped_patient_list.txt -s $MSK_IMPACT_DATA_HOME/cvr/seq_date.txt -f diagnosis,radiation,chemotherapy,surgery,survival
     if [ $? -gt 0 ] ; then
-        cd $MSK_IMPACT_DATA_HOME ; $HG_BINARY update -C ; find . -name "*.orig" -delete
+        cd $DMP_DATA_HOME ; $GIT_BINARY reset HEAD --hard
         sendPreImportFailureMessageMskPipelineLogsSlack "MSKIMPACT Pediatric DDP Fetch"
     else
         FETCH_DDP_IMPACT_FAIL=0
         echo "committing Pediatric DDP data"
-        cd $MSK_IMPACT_DATA_HOME ; $HG_BINARY commit -m "Latest MSKIMPACT Dataset: Pediatric DDP demographics/timeline"
+        cd $MSK_IMPACT_DATA_HOME ; $GIT_BINARY add ./* ; $GIT_BINARY commit -m "Latest MSKIMPACT Dataset: Pediatric DDP demographics/timeline"
     fi
 fi
 
@@ -304,7 +304,7 @@ if [ $PERFORM_CRDB_FETCH -gt 0 ] ; then
     # fetch CRDB data
     printTimeStampedDataProcessingStepMessage "CRDB fetch for mskimpact"
     $JAVA_BINARY $JAVA_CRDB_FETCHER_ARGS --directory $MSK_IMPACT_DATA_HOME
-    # no need for hg update/commit ; CRDB generated files are stored in redcap and not mercurial
+    # no need for data repository update/commit ; CRDB generated files are stored in redcap and not git
     if [ $? -gt 0 ] ; then
         sendPreImportFailureMessageMskPipelineLogsSlack "MSKIMPACT CRDB Fetch"
     else
@@ -319,13 +319,13 @@ fi
 printTimeStampedDataProcessingStepMessage "HEMEPACT data processing"
 
 if [ $IMPORT_STATUS_HEME -eq 0 ] ; then
-    # fetch new/updated heme samples using CVR Web service (must come after mercurial fetching). Threshold is set to 50 since heme contains only 190 samples (07/12/2017)
+    # fetch new/updated heme samples using CVR Web service (must come after git fetching). Threshold is set to 50 since heme contains only 190 samples (07/12/2017)
     printTimeStampedDataProcessingStepMessage "CVR fetch for hemepact"
     $JAVA_BINARY $JAVA_CVR_FETCHER_ARGS -d $MSK_HEMEPACT_DATA_HOME -n data_clinical_hemepact_data_clinical.txt -i mskimpact_heme -r 50 $CVR_TEST_MODE_ARGS
     if [ $? -gt 0 ] ; then
         echo "CVR heme fetch failed!"
         echo "This will not affect importing of mskimpact"
-        cd $MSK_HEMEPACT_DATA_HOME ; $HG_BINARY update -C ; find . -name "*.orig" -delete
+        cd $DMP_DATA_HOME ; $GIT_BINARY reset HEAD --hard
         sendPreImportFailureMessageMskPipelineLogsSlack "HEMEPACT CVR Fetch"
         IMPORT_STATUS_HEME=1
     else
@@ -333,13 +333,13 @@ if [ $IMPORT_STATUS_HEME -eq 0 ] ; then
         $PYTHON_BINARY $PORTAL_HOME/scripts/phi-scanner.py -a $PIPELINES_CONFIG_HOME/properties/fetch-cvr/phi-scanner-attributes.txt -j $MSK_HEMEPACT_DATA_HOME/cvr_data.json
         if [ $? -gt 0 ] ; then
             echo "PHI attributes found in $MSK_HEMEPACT_DATA_HOME/cvr_data.json! HEMEPACT will not be imported!"
-            cd $MSK_HEMEPACT_DATA_HOME; $HG_BINARY update -C ; find . -name "*.orig" -delete
+            cd $DMP_DATA_HOME ; $GIT_BINARY reset HEAD --hard
             sendPreImportFailureMessageMskPipelineLogsSlack "HEMEPACT PHI attributes scan failed on $MSK_HEMEPACT_DATA_HOME/cvr_data.json"
             IMPORT_STATUS_HEME=1
         else
             FETCH_CVR_HEME_FAIL=0
             echo "committing cvr data for heme"
-            cd $MSK_HEMEPACT_DATA_HOME ; $HG_BINARY commit -m "Latest HEMEPACT dataset"
+            cd $MSK_HEMEPACT_DATA_HOME ; $GIT_BINARY add ./* ; $GIT_BINARY commit -m "Latest HEMEPACT dataset"
         fi
     fi
 fi
@@ -355,12 +355,12 @@ fi
 
 $JAVA_BINARY $JAVA_DDP_FETCHER_ARGS -c mskimpact_heme -p $mskimpact_heme_dmp_pids_file -s $MSK_HEMEPACT_DATA_HOME/cvr/seq_date.txt -f survival -o $MSK_HEMEPACT_DATA_HOME -r $HEMEPACT_DDP_DEMOGRAPHICS_RECORD_COUNT
 if [ $? -gt 0 ] ; then
-    cd $MSK_HEMEPACT_DATA_HOME ; $HG_BINARY update -C ; find . -name "*.orig" -delete
+    cd $DMP_DATA_HOME ; $GIT_BINARY reset HEAD --hard
     sendPreImportFailureMessageMskPipelineLogsSlack "HEMEPACT DDP Demographics Fetch"
 else
     FETCH_DDP_HEME_FAIL=0
     echo "committing ddp data"
-    cd $MSK_HEMEPACT_DATA_HOME ; $HG_BINARY commit -m "Latest HEMEPACT Dataset: DDP Demographics"
+    cd $MSK_HEMEPACT_DATA_HOME ; $GIT_BINARY add ./* ; $GIT_BINARY commit -m "Latest HEMEPACT Dataset: DDP Demographics"
 fi
 
 # -----------------------------------------------------------------------------------------------------------
@@ -368,13 +368,13 @@ fi
 printTimeStampedDataProcessingStepMessage "RAINDANCE data processing"
 
 if [ $IMPORT_STATUS_RAINDANCE -eq 0 ] ; then
-    # fetch new/updated raindance samples using CVR Web service (must come after mercurial fetching). The -s flag skips segment data fetching
+    # fetch new/updated raindance samples using CVR Web service (must come after git fetching). The -s flag skips segment data fetching
     printTimeStampedDataProcessingStepMessage "CVR fetch for raindance"
     $JAVA_BINARY $JAVA_CVR_FETCHER_ARGS -d $MSK_RAINDANCE_DATA_HOME -n data_clinical_mskraindance_data_clinical.txt -s -i mskraindance $CVR_TEST_MODE_ARGS
     if [ $? -gt 0 ] ; then
         echo "CVR raindance fetch failed!"
         echo "This will not affect importing of mskimpact"
-        cd $MSK_RAINDANCE_DATA_HOME ; $HG_BINARY update -C ; find . -name "*.orig" -delete
+        cd $DMP_DATA_HOME ; $GIT_BINARY reset HEAD --hard
         sendPreImportFailureMessageMskPipelineLogsSlack "RAINDANCE CVR Fetch"
         IMPORT_STATUS_RAINDANCE=1
     else
@@ -382,12 +382,12 @@ if [ $IMPORT_STATUS_RAINDANCE -eq 0 ] ; then
         $PYTHON_BINARY $PORTAL_HOME/scripts/phi-scanner.py -a $PIPELINES_CONFIG_HOME/properties/fetch-cvr/phi-scanner-attributes.txt -j $MSK_RAINDANCE_DATA_HOME/cvr_data.json
         if [ $? -gt 0 ] ; then
             echo "PHI attributes found in $MSK_RAINDANCE_DATA_HOME/cvr_data.json! RAINDANCE will not be imported!"
-            cd $MSK_RAINDANCE_DATA_HOME; $HG_BINARY update -C ; find . -name "*.orig" -delete
+            cd $DMP_DATA_HOME ; $GIT_BINARY reset HEAD --hard
             sendPreImportFailureMessageMskPipelineLogsSlack "RAINDANCE PHI attributes scan failed on $MSK_RAINDANCE_DATA_HOME/cvr_data.json"
             IMPORT_STATUS_RAINDANCE=1
         else
             FETCH_CVR_RAINDANCE_FAIL=0
-            cd $MSK_RAINDANCE_DATA_HOME ; $HG_BINARY commit -m "Latest RAINDANCE dataset"
+            cd $MSK_RAINDANCE_DATA_HOME ; $GIT_BINARY add ./* ; $GIT_BINARY commit -m "Latest RAINDANCE dataset"
         fi
     fi
 fi
@@ -403,12 +403,12 @@ fi
 
 $JAVA_BINARY $JAVA_DDP_FETCHER_ARGS -c mskraindance -p $mskraindance_dmp_pids_file -s $MSK_RAINDANCE_DATA_HOME/cvr/seq_date.txt -f survival -o $MSK_RAINDANCE_DATA_HOME -r $RAINDANCE_DDP_DEMOGRAPHICS_RECORD_COUNT
 if [ $? -gt 0 ] ; then
-    cd $MSK_RAINDANCE_DATA_HOME ; $HG_BINARY update -C ; find . -name "*.orig" -delete
+    cd $DMP_DATA_HOME ; $GIT_BINARY reset HEAD --hard
     sendPreImportFailureMessageMskPipelineLogsSlack "RAINDANCE DDP Demographics Fetch"
 else
     FETCH_DDP_RAINDANCE_FAIL=0
     echo "committing ddp data"
-    cd $MSK_RAINDANCE_DATA_HOME ; $HG_BINARY commit -m "Latest RAINDANCE Dataset: DDP Demographics"
+    cd $MSK_RAINDANCE_DATA_HOME ; $GIT_BINARY add ./* ; $GIT_BINARY commit -m "Latest RAINDANCE Dataset: DDP Demographics"
 fi
 
 # -----------------------------------------------------------------------------------------------------------
@@ -416,14 +416,14 @@ fi
 printTimeStampedDataProcessingStepMessage "ARCHER data processing"
 
 if [ $IMPORT_STATUS_ARCHER -eq 0 ] ; then
-    # fetch new/updated archer samples using CVR Web service (must come after mercurial fetching).
+    # fetch new/updated archer samples using CVR Web service (must come after git fetching).
     printTimeStampedDataProcessingStepMessage "CVR fetch for archer"
     # archer has -b option to block warnings for samples with zero variants (all samples will have zero variants)
     $JAVA_BINARY $JAVA_CVR_FETCHER_ARGS -d $MSK_ARCHER_UNFILTERED_DATA_HOME -n data_clinical_mskarcher_data_clinical.txt -i mskarcher -s -b $CVR_TEST_MODE_ARGS
     if [ $? -gt 0 ] ; then
         echo "CVR Archer fetch failed!"
         echo "This will not affect importing of mskimpact"
-        cd $MSK_ARCHER_UNFILTERED_DATA_HOME ; $HG_BINARY update -C ; find . -name "*.orig" -delete
+        cd $DMP_DATA_HOME ; $GIT_BINARY reset HEAD --hard
         sendPreImportFailureMessageMskPipelineLogsSlack "ARCHER_UNFILTERED CVR Fetch"
         IMPORT_STATUS_ARCHER=1
     else
@@ -431,12 +431,12 @@ if [ $IMPORT_STATUS_ARCHER -eq 0 ] ; then
         $PYTHON_BINARY $PORTAL_HOME/scripts/phi-scanner.py -a $PIPELINES_CONFIG_HOME/properties/fetch-cvr/phi-scanner-attributes.txt -j $MSK_ARCHER_UNFILTERED_DATA_HOME/cvr_data.json
         if [ $? -gt 0 ] ; then
             echo "PHI attributes found in $MSK_ARCHER_UNFILTERED_DATA_HOME/cvr_data.json! UNLINKED_ARCHER will not be imported!"
-            cd $MSK_ARCHER_UNFILTERED_DATA_HOME; $HG_BINARY update -C ; find . -name "*.orig" -delete
+            cd $DMP_DATA_HOME ; $GIT_BINARY reset HEAD --hard
             sendPreImportFailureMessageMskPipelineLogsSlack "ARCHER PHI attributes scan failed on $MSK_ARCHER_UNFILTERED_DATA_HOME/cvr_data.json"
             IMPORT_STATUS_ARCHER=1
         else
             FETCH_CVR_ARCHER_FAIL=0
-            cd $MSK_ARCHER_UNFILTERED_DATA_HOME ; $HG_BINARY commit -m "Latest ARCHER_UNFILTERED dataset"
+            cd $MSK_ARCHER_UNFILTERED_DATA_HOME ; $GIT_BINARY add ./* ; $GIT_BINARY commit -m "Latest ARCHER_UNFILTERED dataset"
         fi
     fi
 fi
@@ -452,12 +452,12 @@ fi
 
 $JAVA_BINARY $JAVA_DDP_FETCHER_ARGS -c mskarcher -p $mskarcher_dmp_pids_file -s $MSK_ARCHER_UNFILTERED_DATA_HOME/cvr/seq_date.txt -f survival -o $MSK_ARCHER_UNFILTERED_DATA_HOME -r $ARCHER_DDP_DEMOGRAPHICS_RECORD_COUNT
 if [ $? -gt 0 ] ; then
-    cd $MSK_ARCHER_UNFILTERED_DATA_HOME ; $HG_BINARY update -C ; find . -name "*.orig" -delete
+    cd $DMP_DATA_HOME ; $GIT_BINARY reset HEAD --hard
     sendPreImportFailureMessageMskPipelineLogsSlack "ARCHER_UNFILTERED DDP Demographics Fetch"
 else
     FETCH_DDP_ARCHER_FAIL=0
     echo "committing ddp data"
-    cd $MSK_ARCHER_UNFILTERED_DATA_HOME ; $HG_BINARY commit -m "Latest ARCHER_UNFILTERED Dataset: DDP Demographics"
+    cd $MSK_ARCHER_UNFILTERED_DATA_HOME ; $GIT_BINARY add ./* ; $GIT_BINARY commit -m "Latest ARCHER_UNFILTERED Dataset: DDP Demographics"
 fi
 
 # -----------------------------------------------------------------------------------------------------------
@@ -465,14 +465,14 @@ fi
 printTimeStampedDataProcessingStepMessage "ACCESS data processing"
 
 if [ $IMPORT_STATUS_ACCESS -eq 0 ] ; then
-    # fetch new/updated access samples using CVR Web service (must come after mercurial fetching).
+    # fetch new/updated access samples using CVR Web service (must come after git fetching).
     printTimeStampedDataProcessingStepMessage "CVR fetch for access"
     # access has -b option to block warnings for samples with zero variants (all samples will have zero variants)
     $JAVA_BINARY $JAVA_CVR_FETCHER_ARGS -d $MSK_ACCESS_DATA_HOME -n data_clinical_mskaccess_data_clinical.txt -i mskaccess -s -b $CVR_TEST_MODE_ARGS
     if [ $? -gt 0 ] ; then
         echo "CVR ACCESS fetch failed!"
         echo "This will not affect importing of mskimpact"
-        cd $MSK_ACCESS_DATA_HOME ; $HG_BINARY update -C ; find . -name "*.orig" -delete
+        cd $DMP_DATA_HOME ; $GIT_BINARY reset HEAD --hard
         sendPreImportFailureMessageMskPipelineLogsSlack "ACCESS CVR Fetch"
         IMPORT_STATUS_ACCESS=1
     else
@@ -480,12 +480,12 @@ if [ $IMPORT_STATUS_ACCESS -eq 0 ] ; then
         $PYTHON_BINARY $PORTAL_HOME/scripts/phi-scanner.py -a $PIPELINES_CONFIG_HOME/properties/fetch-cvr/phi-scanner-attributes.txt -j $MSK_ACCESS_DATA_HOME/cvr_data.json
         if [ $? -gt 0 ] ; then
             echo "PHI attributes found in $MSK_ACCESS_DATA_HOME/cvr_data.json! ACCESS will not be imported!"
-            cd $MSK_ACCESS_DATA_HOME; $HG_BINARY update -C ; find . -name "*.orig" -delete
+            cd $DMP_DATA_HOME ; $GIT_BINARY reset HEAD --hard
             sendPreImportFailureMessageMskPipelineLogsSlack "ACCESS PHI attributes scan failed on $MSK_ACCESS_DATA_HOME/cvr_data.json"
             IMPORT_STATUS_ACCESS=1
         else
             FETCH_CVR_ACCESS_FAIL=0
-            cd $MSK_ACCESS_DATA_HOME ; $HG_BINARY commit -m "Latest ACCESS dataset"
+            cd $MSK_ACCESS_DATA_HOME ; $GIT_BINARY add ./* ; $GIT_BINARY commit -m "Latest ACCESS dataset"
         fi
     fi
 fi
@@ -501,12 +501,12 @@ fi
 
 $JAVA_BINARY $JAVA_DDP_FETCHER_ARGS -c mskaccess -p $mskaccess_dmp_pids_file -s $MSK_ACCESS_DATA_HOME/cvr/seq_date.txt -f survival -o $MSK_ACCESS_DATA_HOME -r $ACCESS_DDP_DEMOGRAPHICS_RECORD_COUNT
 if [ $? -gt 0 ] ; then
-    cd $MSK_ACCESS_DATA_HOME ; $HG_BINARY update -C ; find . -name "*.orig" -delete
+    cd $DMP_DATA_HOME ; $GIT_BINARY reset HEAD --hard
     sendPreImportFailureMessageMskPipelineLogsSlack "ACCESS DDP Demographics Fetch"
 else
     FETCH_DDP_ACCESS_FAIL=0
     echo "committing ddp data"
-    cd $MSK_ACCESS_DATA_HOME ; $HG_BINARY commit -m "Latest ACCESS Dataset: DDP Demographics"
+    cd $MSK_ACCESS_DATA_HOME ; $GIT_BINARY add ./* ; $GIT_BINARY commit -m "Latest ACCESS Dataset: DDP Demographics"
 fi
 
 # -----------------------------------------------------------------------------------------------------------
@@ -519,7 +519,8 @@ fi
 # add "DATE ADDED" info to clinical data for MSK-IMPACT
 if [ $IMPORT_STATUS_IMPACT -eq 0 ] && [ $FETCH_CVR_IMPACT_FAIL -eq 0 ] ; then
     addCancerTypeCaseLists $MSK_IMPACT_DATA_HOME "mskimpact" "data_clinical_mskimpact_data_clinical_cvr.txt"
-    cd $MSK_IMPACT_DATA_HOME ; find . -name "*.orig" -delete ; $HG_BINARY add * ; $HG_BINARY revert data_clinical* data_timeline* --no-backup ; $HG_BINARY commit -m "Latest MSKIMPACT Dataset: Case Lists"
+    cd $MSK_IMPACT_DATA_HOME ; $GIT_BINARY add case_lists ; $GIT_BINARY commit -m "Latest MSKIMPACT Dataset: Case Lists"
+    cd $DMP_DATA_HOME ; $GIT_BINARY reset HEAD --hard
     if [ $EXPORT_SUPP_DATE_IMPACT_FAIL -eq 0 ] ; then
         addDateAddedData $MSK_IMPACT_DATA_HOME "data_clinical_mskimpact_data_clinical_cvr.txt" "data_clinical_mskimpact_supp_date_cbioportal_added.txt"
     fi
@@ -528,7 +529,8 @@ fi
 # add "DATE ADDED" info to clinical data for HEMEPACT
 if [ $IMPORT_STATUS_HEME -eq 0 ] && [ $FETCH_CVR_HEME_FAIL -eq 0 ] ; then
     addCancerTypeCaseLists $MSK_HEMEPACT_DATA_HOME "mskimpact_heme" "data_clinical_hemepact_data_clinical.txt"
-    cd $MSK_HEMEPACT_DATA_HOME ; find . -name "*.orig" -delete ; $HG_BINARY add * ; $HG_BINARY revert data_clinical* data_timeline* --no-backup ; $HG_BINARY commit -m "Latest HEMEPACT Dataset: Case Lists"
+    cd $MSK_HEMEPACT_DATA_HOME ; $GIT_BINARY add case_lists ; $GIT_BINARY commit -m "Latest HEMEPACT Dataset: Case Lists"
+    cd $DMP_DATA_HOME ; $GIT_BINARY reset HEAD --hard
     if [ $EXPORT_SUPP_DATE_HEME_FAIL -eq 0 ] ; then
         addDateAddedData $MSK_HEMEPACT_DATA_HOME "data_clinical_hemepact_data_clinical.txt" "data_clinical_hemepact_data_clinical_supp_date.txt"
     fi
@@ -537,7 +539,8 @@ fi
 # add "DATE ADDED" info to clinical data for ARCHER
 if [[ $IMPORT_STATUS_ARCHER -eq 0 && $FETCH_CVR_ARCHER_FAIL -eq 0 ]] ; then
     addCancerTypeCaseLists $MSK_ARCHER_UNFILTERED_DATA_HOME "mskarcher" "data_clinical_mskarcher_data_clinical.txt"
-    cd $MSK_ARCHER_UNFILTERED_DATA_HOME ; find . -name "*.orig" -delete ; $HG_BINARY add * ; $HG_BINARY revert data_clinical* data_timeline* --no-backup ; $HG_BINARY commit -m "Latest ARCHER_UNFILTERED Dataset: Case Lists"
+    cd $MSK_ARCHER_UNFILTERED_DATA_HOME ; $GIT_BINARY add case_lists ; $GIT_BINARY commit -m "Latest ARCHER_UNFILTERED Dataset: Case Lists"
+    cd $DMP_DATA_HOME ; $GIT_BINARY reset HEAD --hard
     if [ $EXPORT_SUPP_DATE_ARCHER_FAIL -eq 0 ] ; then
         addDateAddedData $MSK_ARCHER_UNFILTERED_DATA_HOME "data_clinical_mskarcher_data_clinical.txt" "data_clinical_mskarcher_data_clinical_supp_date.txt"
     fi
@@ -547,7 +550,8 @@ fi
 # generate case lists by cancer type and add "DATE ADDED" info to clinical data for RAINDANCE
 if [ $IMPORT_STATUS_RAINDANCE -eq 0 ] && [ $FETCH_CVR_RAINDANCE_FAIL -eq 0 ] ; then
     addCancerTypeCaseLists $MSK_RAINDANCE_DATA_HOME "mskraindance" "data_clinical_mskraindance_data_clinical.txt"
-    cd $MSK_RAINDANCE_DATA_HOME ; find . -name "*.orig" -delete ; $HG_BINARY add * ; $HG_BINARY revert data_clinical* data_timeline* --no-backup ; $HG_BINARY commit -m "Latest RAINDANCE Dataset: Case Lists"
+    cd $MSK_RAINDANCE_DATA_HOME ; $GIT_BINARY add case_lists ; $GIT_BINARY commit -m "Latest RAINDANCE Dataset: Case Lists"
+    cd $DMP_DATA_HOME ; $GIT_BINARY reset HEAD --hard
     if [ $EXPORT_SUPP_DATE_RAINDANCE_FAIL -eq 0 ] ; then
         addDateAddedData $MSK_RAINDANCE_DATA_HOME "data_clinical_mskraindance_data_clinical.txt" "data_clinical_mskraindance_data_clinical_supp_date.txt"
     fi
@@ -556,7 +560,8 @@ fi
 # generate case lists by cancer type and add "DATE ADDED" info to clinical data for ACCESS
 if [ $IMPORT_STATUS_ACCESS -eq 0 ] && [ $FETCH_CVR_ACCESS_FAIL -eq 0 ] ; then
     addCancerTypeCaseLists $MSK_ACCESS_DATA_HOME "mskaccess" "data_clinical_mskaccess_data_clinical.txt"
-    cd $MSK_ACCESS_DATA_HOME ; find . -name "*.orig" -delete ; $HG_BINARY add * ; $HG_BINARY revert data_clinical* data_timeline* --no-backup ; $HG_BINARY commit -m "Latest ACCESS Dataset: Case Lists"
+    cd $MSK_ACCESS_DATA_HOME ; $GIT_BINARY add case_lists ; $GIT_BINARY commit -m "Latest ACCESS Dataset: Case Lists"
+    cd $DMP_DATA_HOME ; $GIT_BINARY reset HEAD --hard
     if [ $EXPORT_SUPP_DATE_ACCESS_FAIL -eq 0 ] ; then
         addDateAddedData $MSK_ACCESS_DATA_HOME "data_clinical_mskaccess_data_clinical.txt" "data_clinical_mskaccess_data_clinical_supp_date.txt"
     fi
@@ -576,9 +581,9 @@ if [ $IMPORT_STATUS_IMPACT -eq 0 ] && [ $FETCH_CVR_ARCHER_FAIL -eq 0 ] && [ $FET
     $PYTHON_BINARY $PORTAL_HOME/scripts/archer_fusions_merger.py --archer-fusions $MSK_ARCHER_UNFILTERED_DATA_HOME/data_fusions.txt --linked-cases-filename $MSK_ARCHER_UNFILTERED_DATA_HOME/cvr/linked_cases.txt --fusions-filename $MSK_IMPACT_DATA_HOME/data_fusions.txt --clinical-filename $MSK_IMPACT_DATA_HOME/data_clinical_mskimpact_data_clinical_cvr.txt --mapped-archer-samples-filename $MAPPED_ARCHER_FUSION_SAMPLES_FILE --study-id "mskimpact"
     if [ $? -gt 0 ] ; then
         ARCHER_MERGE_IMPACT_FAIL=1
-        cd $MSK_IMPACT_DATA_HOME; $HG_BINARY update -C ; find . -name "*.orig" -delete
+        cd $DMP_DATA_HOME ; $GIT_BINARY reset HEAD --hard
     else
-        $HG_BINARY add $MAPPED_ARCHER_FUSION_SAMPLES_FILE; cd $MSK_IMPACT_DATA_HOME ; find . -name "*.orig" -delete ; $HG_BINARY add * ; $HG_BINARY commit -m "Adding ARCHER_UNFILTERED fusions to MSKIMPACT"
+        $GIT_BINARY add $MAPPED_ARCHER_FUSION_SAMPLES_FILE $MSK_IMPACT_DATA_HOME ; $GIT_BINARY commit -m "Adding ARCHER_UNFILTERED fusions to MSKIMPACT"
     fi
 fi
 
@@ -588,9 +593,9 @@ if [ $IMPORT_STATUS_HEME -eq 0 ] && [ $FETCH_CVR_ARCHER_FAIL -eq 0 ] && [ $FETCH
     $PYTHON_BINARY $PORTAL_HOME/scripts/archer_fusions_merger.py --archer-fusions $MSK_ARCHER_UNFILTERED_DATA_HOME/data_fusions.txt --linked-cases-filename $MSK_ARCHER_UNFILTERED_DATA_HOME/cvr/linked_cases.txt --fusions-filename $MSK_HEMEPACT_DATA_HOME/data_fusions.txt --clinical-filename $MSK_HEMEPACT_DATA_HOME/data_clinical_hemepact_data_clinical.txt --mapped-archer-samples-filename $MAPPED_ARCHER_FUSION_SAMPLES_FILE --study-id "mskimpact_heme"
     if [ $? -gt 0 ] ; then
         ARCHER_MERGE_HEME_FAIL=1
-        cd $MSK_HEMEPACT_DATA_HOME; $HG_BINARY update -C ; find . -name "*.orig" -delete
+        cd $DMP_DATA_HOME ; $GIT_BINARY reset HEAD --hard
     else
-        $HG_BINARY add $MAPPED_ARCHER_FUSION_SAMPLES_FILE; cd $MSK_HEMEPACT_DATA_HOME ; find . -name "*.orig" -delete ; $HG_BINARY add * ; $HG_BINARY commit -m "Adding ARCHER_UNFILTERED fusions to HEMEPACT"
+        $GIT_BINARY add $MAPPED_ARCHER_FUSION_SAMPLES_FILE $MSK_HEMEPACT_DATA_HOME ; $GIT_BINARY commit -m "Adding ARCHER_UNFILTERED fusions to HEMEPACT"
     fi
 fi
 
@@ -775,7 +780,7 @@ echo "removing raw clinical & timeline files for mskaccess"
 remove_raw_clinical_timeline_data_files $MSK_ACCESS_DATA_HOME
 
 # commit raw file cleanup - study staging directories should only contain files for portal import
-$HG_BINARY commit -m "Raw clinical and timeline file cleanup: MSKIMPACT, HEMEPACT, RAINDANCE, ARCHER, ACCESS"
+$GIT_BINARY commit -m "Raw clinical and timeline file cleanup: MSKIMPACT, HEMEPACT, RAINDANCE, ARCHER, ACCESS"
 
 
 # -------------------------------------------------------------
@@ -789,15 +794,15 @@ if [ $IMPORT_STATUS_IMPACT -eq 0 ] ; then
     export_stable_id_from_redcap mskimpact $MSK_IMPACT_DATA_HOME mskimpact_data_clinical_ddp_demographics_pediatrics,mskimpact_timeline_radiation_ddp,mskimpact_timeline_chemotherapy_ddp,mskimpact_timeline_surgery_ddp,mskimpact_pediatrics_sample_supp,mskimpact_pediatrics_patient_supp,mskimpact_pediatrics_supp_timeline
     if [ $? -gt 0 ] ; then
         IMPORT_STATUS_IMPACT=1
-        cd $MSK_IMPACT_DATA_HOME ; $HG_BINARY update -C ; find . -name "*.orig" -delete
+        cd $DMP_DATA_HOME ; $GIT_BINARY reset HEAD --hard
         sendPreImportFailureMessageMskPipelineLogsSlack "MSKIMPACT Redcap Export"
     else
         if [ $GENERATE_MASTERLIST_FAIL -eq 0 ] ; then
             $PYTHON_BINARY $PORTAL_HOME/scripts/filter_dropped_samples_patients.py -s $MSK_IMPACT_DATA_HOME/data_clinical_sample.txt -p $MSK_IMPACT_DATA_HOME/data_clinical_patient.txt -t $MSK_IMPACT_DATA_HOME/data_timeline.txt -f $MSK_DMP_TMPDIR/sample_masterlist_for_filtering.txt
             if [ $? -gt 0 ] ; then
-                cd $MSK_IMPACT_DATA_HOME ; $HG_BINARY update -C ; find . -name "*.orig" -delete
+                cd $DMP_DATA_HOME ; $GIT_BINARY reset HEAD --hard
             else
-                cd $MSK_IMPACT_DATA_HOME ; find . -name "*.orig" -delete ; $HG_BINARY add * ; $HG_BINARY commit -m "Latest MSKIMPACT Dataset: Clinical and Timeline"
+                cd $MSK_IMPACT_DATA_HOME ; $GIT_BINARY add * ; $GIT_BINARY commit -m "Latest MSKIMPACT Dataset: Clinical and Timeline"
             fi
         fi
         touch $MSK_IMPACT_CONSUME_TRIGGER
@@ -811,11 +816,11 @@ if [ $IMPORT_STATUS_HEME -eq 0 ] ; then
     export_stable_id_from_redcap mskimpact_heme $MSK_HEMEPACT_DATA_HOME
     if [ $? -gt 0 ] ; then
         IMPORT_STATUS_HEME=1
-        cd $MSK_HEMEPACT_DATA_HOME ; $HG_BINARY update -C ; find . -name "*.orig" -delete
+        cd $DMP_DATA_HOME ; $GIT_BINARY reset HEAD --hard
         sendPreImportFailureMessageMskPipelineLogsSlack "HEMEPACT Redcap Export"
     else
         touch $MSK_HEMEPACT_CONSUME_TRIGGER
-        cd $MSK_HEMEPACT_DATA_HOME ; find . -name "*.orig" -delete ; $HG_BINARY add * ; $HG_BINARY commit -m "Latest HEMEPACT Dataset: Clinical and Timeline"
+        cd $MSK_HEMEPACT_DATA_HOME ; $GIT_BINARY add * ; $GIT_BINARY commit -m "Latest HEMEPACT Dataset: Clinical and Timeline"
     fi
 fi
 
@@ -826,11 +831,11 @@ if [ $IMPORT_STATUS_RAINDANCE -eq 0 ] ; then
     export_stable_id_from_redcap mskraindance $MSK_RAINDANCE_DATA_HOME
     if [ $? -gt 0 ] ; then
         IMPORT_STATUS_RAINDANCE=1
-        cd $MSK_RAINDANCE_DATA_HOME ; $HG_BINARY update -C ; find . -name "*.orig" -delete
+        cd $DMP_DATA_HOME ; $GIT_BINARY reset HEAD --hard
         sendPreImportFailureMessageMskPipelineLogsSlack "RAINDANCE Redcap Export"
     else
         touch $MSK_RAINDANCE_IMPORT_TRIGGER
-        cd $MSK_RAINDANCE_DATA_HOME ; find . -name "*.orig" -delete ; $HG_BINARY add * ; $HG_BINARY commit -m "Latest RAINDANCE Dataset: Clinical and Timeline"
+        cd $MSK_RAINDANCE_DATA_HOME ; $GIT_BINARY add * ; $GIT_BINARY commit -m "Latest RAINDANCE Dataset: Clinical and Timeline"
     fi
 fi
 
@@ -841,7 +846,7 @@ if [ $IMPORT_STATUS_ARCHER -eq 0 ] ; then
     export_stable_id_from_redcap mskarcher $MSK_ARCHER_UNFILTERED_DATA_HOME
     if [ $? -gt 0 ] ; then
         IMPORT_STATUS_ARCHER=1
-        cd $MSK_ARCHER_UNFILTERED_DATA_HOME ; $HG_BINARY update -C ; find . -name "*.orig" -delete
+        cd $DMP_DATA_HOME ; $GIT_BINARY reset HEAD --hard
         sendPreImportFailureMessageMskPipelineLogsSlack "ARCHER_UNFILTERED Redcap Export"
     else
         # we want to remove MSI_COMMENT, MSI_SCORE, and MSI_TYPE from the data clinical file
@@ -851,7 +856,7 @@ if [ $IMPORT_STATUS_ARCHER -eq 0 ] ; then
             mv $archer_data_clinical_tmp_file $MSK_ARCHER_UNFILTERED_DATA_HOME/data_clinical_sample.txt
         fi
         touch $MSK_ARCHER_IMPORT_TRIGGER
-        cd $MSK_ARCHER_UNFILTERED_DATA_HOME ; find . -name "*.orig" -delete ; $HG_BINARY add * ; $HG_BINARY commit -m "Latest ARCHER_UNFILTERED Dataset: Clinical and Timeline"
+        cd $MSK_ARCHER_UNFILTERED_DATA_HOME ; $GIT_BINARY add * ; $GIT_BINARY commit -m "Latest ARCHER_UNFILTERED Dataset: Clinical and Timeline"
     fi
 fi
 
@@ -860,11 +865,11 @@ if [ $IMPORT_STATUS_ACCESS -eq 0 ] ; then
     export_stable_id_from_redcap mskaccess $MSK_ACCESS_DATA_HOME
     if [ $? -gt 0 ] ; then
         IMPORT_STATUS_ACCESS=1
-        cd $MSK_ACCESS_DATA_HOME ; $HG_BINARY update -C ; find . -name "*.orig" -delete
+        cd $DMP_DATA_HOME ; $GIT_BINARY reset HEAD --hard
         sendPreImportFailureMessageMskPipelineLogsSlack "ACCESS Redcap Export"
     else
         touch $MSK_ACCESS_CONSUME_TRIGGER
-        cd $MSK_ACCESS_DATA_HOME ; find . -name "*.orig" -delete ; $HG_BINARY add * ; $HG_BINARY commit -m "Latest ACCESS Dataset: Clinical and Timeline"
+        cd $MSK_ACCESS_DATA_HOME ; $GIT_BINARY add * ; $GIT_BINARY commit -m "Latest ACCESS Dataset: Clinical and Timeline"
     fi
 fi
 
@@ -882,7 +887,7 @@ if [ $PROCESS_UNLINKED_ARCHER_STUDY -eq 1 ] ; then
             echo "UNLINKED_ARCHER subset failed! Study will not be updated in the portal."
             sendPreImportFailureMessageMskPipelineLogsSlack "UNLINKED_ARCHER subset"
             echo $(date)
-            cd $MSK_ARCHER_DATA_HOME ; $HG_BINARY update -C ; find . -name "*.orig" -delete
+            cd $DMP_DATA_HOME ; $GIT_BINARY reset HEAD --hard
             UNLINKED_ARCHER_SUBSET_FAIL=1
             IMPORT_STATUS_ARCHER=1
         else
@@ -892,13 +897,14 @@ if [ $PROCESS_UNLINKED_ARCHER_STUDY -eq 1 ] ; then
             $PYTHON_BINARY $PORTAL_HOME/scripts/add_clinical_attribute_metadata_headers.py -s mskarcher -f $MSK_ARCHER_DATA_HOME/data_clinical*
             if [ $? -gt 0 ] ; then
                 echo "Error: Adding metadata headers for UNLINKED_ARCHER failed! Study will not be updated in portal."
-                cd $MSK_ARCHER_DATA_HOME ; $HG_BINARY update -C ; find . -name "*.orig" -delete
+                cd $DMP_DATA_HOME ; $GIT_BINARY reset HEAD --hard
                 IMPORT_STATUS_ARCHER=1
             else
                 # commit updates and generated case lists
-                cd $MSK_ARCHER_DATA_HOME ; find . -name "*.orig" -delete ; $HG_BINARY add * ; $HG_BINARY commit -m "Latest UNLINKED_ARCHER Dataset"
+                cd $MSK_ARCHER_DATA_HOME ; $GIT_BINARY add * ; $GIT_BINARY commit -m "Latest UNLINKED_ARCHER Dataset"
                 addCancerTypeCaseLists $MSK_ARCHER_DATA_HOME "mskarcher" "data_clinical_sample.txt" "data_clinical_patient.txt"
-                cd $MSK_ARCHER_DATA_HOME ; find . -name "*.orig" -delete ; $HG_BINARY add * ; $HG_BINARY revert data_clinical* data_timeline* --no-backup ; $HG_BINARY commit -m "Latest UNLINKED_ARCHER Dataset: Case Lists"
+                cd $MSK_ARCHER_DATA_HOME ; $GIT_BINARY add case_lists ; $GIT_BINARY commit -m "Latest UNLINKED_ARCHER Dataset: Case Lists"
+                cd $DMP_DATA_HOME ; $GIT_BINARY reset HEAD --hard
             fi
         fi
     fi
@@ -946,7 +952,7 @@ if [ $? -gt 0 ] ; then
     echo "MSKSOLIDHEME merge failed! Study will not be updated in the portal."
     echo $(date)
     MSK_SOLID_HEME_MERGE_FAIL=1
-    # we rollback/clean mercurial after the import of MSKSOLIDHEME (if merge or import fails)
+    # we rollback/clean git after the import of MSKSOLIDHEME (if merge or import fails)
 else
     echo "MSKSOLIDHEME merge successful! Creating cancer type case lists..."
     echo $(date)
@@ -973,28 +979,27 @@ if [ $(wc -l < $MSK_ARCHER_UNFILTERED_DATA_HOME/meta_SV.txt) -eq 0 ] ; then
     rm $MSK_ARCHER_UNFILTERED_DATA_HOME/meta_SV.txt
 fi
 
-# NOTE: using $HG_BINARY revert * --no-backup instead of $HG_BINARY UPDATE -C to avoid
-# stashing changes to MSKSOLIDHEME if MIXEDPACT merge fails
-
 # commit or revert changes for MIXEDPACT
 if [ $MIXEDPACT_MERGE_FAIL -gt 0 ] ; then
     sendPreImportFailureMessageMskPipelineLogsSlack "MIXEDPACT merge"
     echo "MIXEDPACT merge failed! Reverting data to last commit."
-    cd $MSK_MIXEDPACT_DATA_HOME ; $HG_BINARY revert * --no-backup ; find . -name "*.orig" -delete
+    cd $MSK_MIXEDPACT_DATA_HOME ; $GIT_BINARY checkout -- .
 else
     echo "Committing MIXEDPACT data"
-    cd $MSK_MIXEDPACT_DATA_HOME ; find . -name "*.orig" -delete ; $HG_BINARY add * ; $HG_BINARY commit -m "Latest MIXEDPACT dataset"
+    cd $MSK_MIXEDPACT_DATA_HOME ; $GIT_BINARY add * ; $GIT_BINARY commit -m "Latest MIXEDPACT dataset"
 fi
 
 # commit or revert changes for MSKSOLIDHEME
 if [ $MSK_SOLID_HEME_MERGE_FAIL -gt 0 ] ; then
     sendPreImportFailureMessageMskPipelineLogsSlack "MSKSOLIDHEME merge"
     echo "MSKSOLIDHEME merge and/or updates failed! Reverting data to last commit."
-    cd $MSK_SOLID_HEME_DATA_HOME ; $HG_BINARY revert * --no-backup ; find . -name "*.orig" -delete
+    cd $MSK_SOLID_HEME_DATA_HOME ; $GIT_BINARY checkout -- .
 else
     echo "Committing MSKSOLIDHEME data"
-    cd $MSK_SOLID_HEME_DATA_HOME ; find . -name "*.orig" -delete ; $HG_BINARY add * ; $HG_BINARY commit -m "Latest MSKSOLIDHEME dataset"
+    cd $MSK_SOLID_HEME_DATA_HOME ; $GIT_BINARY add * ; $GIT_BINARY commit -m "Latest MSKSOLIDHEME dataset"
 fi
+
+cd $DMP_DATA_HOME ; $GIT_BINARY reset HEAD --hard
 
 #--------------------------------------------------------------
 # AFFILIATE COHORTS
@@ -1025,10 +1030,10 @@ fi
 if [ $MSK_KINGS_SUBSET_FAIL -gt 0 ] ; then
     sendPreImportFailureMessageMskPipelineLogsSlack "KINGSCOUNTY subset"
     echo "KINGSCOUNTY subset and/or updates failed! Reverting data to last commit."
-    cd $MSK_KINGS_DATA_HOME ; $HG_BINARY update -C ; find . -name "*.orig" -delete
+    cd $DMP_DATA_HOME ; $GIT_BINARY reset HEAD --hard
 else
     echo "Committing KINGSCOUNTY data"
-    cd $MSK_KINGS_DATA_HOME ; find . -name "*.orig" -delete ; $HG_BINARY add * ; $HG_BINARY commit -m "Latest KINGSCOUNTY dataset"
+    cd $MSK_KINGS_DATA_HOME ; $GIT_BINARY add * ; $GIT_BINARY commit -m "Latest KINGSCOUNTY dataset"
 fi
 
 # LEHIGHVALLEY subset
@@ -1052,10 +1057,10 @@ fi
 if [ $MSK_LEHIGH_SUBSET_FAIL -gt 0 ] ; then
     sendPreImportFailureMessageMskPipelineLogsSlack "LEHIGHVALLEY subset"
     echo "LEHIGHVALLEY subset and/or updates failed! Reverting data to last commit."
-    cd $MSK_LEHIGH_DATA_HOME ; $HG_BINARY update -C ; find . -name "*.orig" -delete
+    cd $DMP_DATA_HOME ; $GIT_BINARY reset HEAD --hard
 else
     echo "Committing LEHIGHVALLEY data"
-    cd $MSK_LEHIGH_DATA_HOME ; find . -name "*.orig" -delete ; $HG_BINARY add * ; $HG_BINARY commit -m "Latest LEHIGHVALLEY dataset"
+    cd $MSK_LEHIGH_DATA_HOME ; $GIT_BINARY add * ; $GIT_BINARY commit -m "Latest LEHIGHVALLEY dataset"
 fi
 
 # QUEENSCANCERCENTER subset
@@ -1079,10 +1084,10 @@ fi
 if [ $MSK_QUEENS_SUBSET_FAIL -gt 0 ] ; then
     sendPreImportFailureMessageMskPipelineLogsSlack "QUEENSCANCERCENTER subset"
     echo "QUEENSCANCERCENTER subset and/or updates failed! Reverting data to last commit."
-    cd $MSK_QUEENS_DATA_HOME ; $HG_BINARY update -C ; find . -name "*.orig" -delete
+    cd $DMP_DATA_HOME ; $GIT_BINARY reset HEAD --hard
 else
     echo "Committing QUEENSCANCERCENTER data"
-    cd $MSK_QUEENS_DATA_HOME ; find . -name "*.orig" -delete ; $HG_BINARY add * ; $HG_BINARY commit -m "Latest QUEENSCANCERCENTER dataset"
+    cd $MSK_QUEENS_DATA_HOME ; $GIT_BINARY add * ; $GIT_BINARY commit -m "Latest QUEENSCANCERCENTER dataset"
 fi
 
 # MIAMICANCERINSTITUTE subset
@@ -1106,10 +1111,10 @@ fi
 if [ $MSK_MCI_SUBSET_FAIL -gt 0 ] ; then
     sendPreImportFailureMessageMskPipelineLogsSlack "MIAMICANCERINSTITUTE subset"
     echo "MIAMICANCERINSTITUTE subset and/or updates failed! Reverting data to last commit."
-    cd $MSK_MCI_DATA_HOME ; $HG_BINARY update -C ; find . -name "*.orig" -delete
+    cd $DMP_DATA_HOME ; $GIT_BINARY reset HEAD --hard
 else
     echo "Committing MIAMICANCERINSTITUTE data"
-    cd $MSK_MCI_DATA_HOME ; find . -name "*.orig" -delete ; $HG_BINARY add * ; $HG_BINARY commit -m "Latest MIAMICANCERINSTITUTE dataset"
+    cd $MSK_MCI_DATA_HOME ; $GIT_BINARY add * ; $GIT_BINARY commit -m "Latest MIAMICANCERINSTITUTE dataset"
 fi
 
 # HARTFORDHEALTHCARE subset
@@ -1133,10 +1138,10 @@ fi
 if [ $MSK_HARTFORD_SUBSET_FAIL -gt 0 ] ; then
     sendPreImportFailureMessageMskPipelineLogsSlack "HARTFORDHEALTHCARE subset"
     echo "HARTFORDHEALTHCARE subset and/or updates failed! Reverting data to last commit."
-    cd $MSK_HARTFORD_DATA_HOME ; $HG_BINARY update -C ; find . -name "*.orig" -delete
+    cd $DMP_DATA_HOME ; $GIT_BINARY reset HEAD --hard
 else
     echo "Committing HARTFORDHEALTHCARE data"
-    cd $MSK_HARTFORD_DATA_HOME ; find . -name "*.orig" -delete ; $HG_BINARY add * ; $HG_BINARY commit -m "Latest HARTFORDHEALTHCARE dataset"
+    cd $MSK_HARTFORD_DATA_HOME ; $GIT_BINARY add * ; $GIT_BINARY commit -m "Latest HARTFORDHEALTHCARE dataset"
 fi
 
 # RALPHLAUREN subset
@@ -1160,10 +1165,10 @@ fi
 if [ $MSK_RALPHLAUREN_SUBSET_FAIL -gt 0 ] ; then
     sendPreImportFailureMessageMskPipelineLogsSlack "RALPHLAUREN subset"
     echo "RALPHLAUREN subset and/or updates failed! Reverting data to last commit."
-    cd $MSK_RALPHLAUREN_DATA_HOME ; $HG_BINARY update -C ; find . -name "*.orig" -delete
+    cd $DMP_DATA_HOME ; $GIT_BINARY reset HEAD --hard
 else
     echo "Committing RALPHLAUREN data"
-    cd $MSK_RALPHLAUREN_DATA_HOME ; find . -name "*.orig" -delete ; $HG_BINARY add * ; $HG_BINARY commit -m "Latest RALPHLAUREN dataset"
+    cd $MSK_RALPHLAUREN_DATA_HOME ; $GIT_BINARY add * ; $GIT_BINARY commit -m "Latest RALPHLAUREN dataset"
 fi
 
 # RIKENGENESISJAPAN subset
@@ -1187,10 +1192,10 @@ fi
 if [ $MSK_RIKENGENESISJAPAN_SUBSET_FAIL -gt 0 ] ; then
     sendPreImportFailureMessageMskPipelineLogsSlack "RIKENGENESISJAPAN subset"
     echo "RIKENGENESISJAPAN subset and/or updates failed! Reverting data to last commit."
-    cd $MSK_RIKENGENESISJAPAN_DATA_HOME ; $HG_BINARY update -C ; find . -name "*.orig" -delete
+    cd $DMP_DATA_HOME ; $GIT_BINARY reset HEAD --hard
 else
     echo "Committing RIKENGENESISJAPAN data"
-    cd $MSK_RIKENGENESISJAPAN_DATA_HOME ; find . -name "*.orig" -delete ; $HG_BINARY add * ; $HG_BINARY commit -m "Latest RIKENGENESISJAPAN dataset"
+    cd $MSK_RIKENGENESISJAPAN_DATA_HOME ; $GIT_BINARY add * ; $GIT_BINARY commit -m "Latest RIKENGENESISJAPAN dataset"
 fi
 
 #--------------------------------------------------------------
@@ -1228,10 +1233,10 @@ else
     if [ $MSKIMPACT_PED_SUBSET_FAIL -gt 0 ] ; then
         sendPreImportFailureMessageMskPipelineLogsSlack "MSKIMPACT_PED subset"
         echo "MSKIMPACT_PED subset and/or updates failed! Reverting data to last commit."
-        cd $MSKIMPACT_PED_DATA_HOME ; $HG_BINARY update -C ; find . -name "*.orig" -delete
+        cd $DMP_DATA_HOME ; $GIT_BINARY reset HEAD --hard
     else
         echo "Committing MSKIMPACT_PED data"
-        cd $MSKIMPACT_PED_DATA_HOME ; find . -name "*.orig" -delete ; $HG_BINARY add * ; $HG_BINARY commit -m "Latest MSKIMPACT_PED dataset"
+        cd $MSKIMPACT_PED_DATA_HOME ; $GIT_BINARY add * ; $GIT_BINARY commit -m "Latest MSKIMPACT_PED dataset"
     fi
 fi
 
@@ -1259,10 +1264,10 @@ fi
 if [ $SCLC_MSKIMPACT_SUBSET_FAIL -gt 0 ] ; then
     sendPreImportFailureMessageMskPipelineLogsSlack "SCLCMSKIMPACT subset"
     echo "SCLCMSKIMPACT subset and/or updates failed! Reverting data to last commit."
-    cd $MSK_SCLC_DATA_HOME ; $HG_BINARY update -C ; find . -name "*.orig" -delete
+    cd $DMP_DATA_HOME ; $GIT_BINARY reset HEAD --hard
 else
     echo "Committing SCLCMSKIMPACT data"
-    cd $MSK_SCLC_DATA_HOME ; find . -name "*.orig" -delete ; $HG_BINARY add * ; $HG_BINARY commit -m "Latest SCLCMSKIMPACT dataset"
+    cd $MSK_SCLC_DATA_HOME ; $GIT_BINARY add * ; $GIT_BINARY commit -m "Latest SCLCMSKIMPACT dataset"
 fi
 
 #--------------------------------------------------------------
@@ -1357,31 +1362,31 @@ fi
 if [ $LYMPHOMA_SUPER_COHORT_SUBSET_FAIL -gt 0 ] ; then
     sendPreImportFailureMessageMskPipelineLogsSlack "LYMPHOMASUPERCOHORT merge"
     echo "Lymphoma super cohort subset and/or updates failed! Reverting data to last commit."
-    cd $LYMPHOMA_SUPER_COHORT_DATA_HOME ; $HG_BINARY update -C ; find . -name "*.orig" -delete
+    cd $DMP_DATA_HOME ; $GIT_BINARY reset HEAD --hard
 else
     echo "Committing Lymphoma super cohort data"
-    cd $LYMPHOMA_SUPER_COHORT_DATA_HOME ; find . -name "*.orig" -delete ; $HG_BINARY add * ; $HG_BINARY commit -m "Latest Lymphoma Super Cohort dataset"
+    cd $LYMPHOMA_SUPER_COHORT_DATA_HOME ; $GIT_BINARY add * ; $GIT_BINARY commit -m "Latest Lymphoma Super Cohort dataset"
 fi
 
 #--------------------------------------------------------------
-# MERCURIAL PUSH
-printTimeStampedDataProcessingStepMessage "push of dmp data updates to mercurial repository"
-# check updated data back into mercurial
-MERCURIAL_PUSH_FAIL=0
-cd $DMP_DATA_HOME ; $HG_BINARY push
+# GIT PUSH
+printTimeStampedDataProcessingStepMessage "push of dmp data updates to git repository"
+# check updated data back into git
+GIT_PUSH_FAIL=0
+cd $DMP_DATA_HOME ; $GIT_BINARY push origin
 if [ $? -gt 0 ] ; then
-    MERCURIAL_PUSH_FAIL=1
-    sendPreImportFailureMessageMskPipelineLogsSlack "HG PUSH :fire: - address ASAP!"
+    GIT_PUSH_FAIL=1
+    sendPreImportFailureMessageMskPipelineLogsSlack "GIT PUSH :fire: - address ASAP!"
 fi
 
 #--------------------------------------------------------------
 # Emails for failed processes
 
-EMAIL_BODY="Failed to push outgoing changes to Mercurial - address ASAP!"
-# send email if failed to push outgoing changes to mercurial
-if [ $MERCURIAL_PUSH_FAIL -gt 0 ] ; then
+EMAIL_BODY="Failed to push outgoing changes to Git - address ASAP!"
+# send email if failed to push outgoing changes to git
+if [ $GIT_PUSH_FAIL -gt 0 ] ; then
     echo -e "Sending email $EMAIL_BODY"
-    echo -e "$EMAIL_BODY" | mail -s "[URGENT] HG PUSH FAILURE" $PIPELINES_EMAIL_LIST
+    echo -e "$EMAIL_BODY" | mail -s "[URGENT] GIT PUSH FAILURE" $PIPELINES_EMAIL_LIST
 fi
 
 EMAIL_BODY="The MSKIMPACT study failed fetch. The original study will remain on the portal."
