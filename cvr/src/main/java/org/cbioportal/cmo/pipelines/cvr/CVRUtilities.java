@@ -465,19 +465,4 @@ public class CVRUtilities {
         return fields;
     }
 
-    public List<List<MutationRecord>> partitionMutationRecordsListForPOST(List<MutationRecord> mutationRecords, Integer postIntervalSize) {
-        int start = 0;
-        int end = postIntervalSize;
-        List<List<MutationRecord>> mutationRecordPartionedLists = new ArrayList<>();
-        while(end <= mutationRecords.size()) {
-            mutationRecordPartionedLists.add(mutationRecords.subList(start, end));
-            start = end;
-            end = start + postIntervalSize;
-        }
-        if (end > mutationRecords.size()) {
-            mutationRecordPartionedLists.add(mutationRecords.subList(start, mutationRecords.size()));
-        }
-        return mutationRecordPartionedLists;
-    }
-
 }

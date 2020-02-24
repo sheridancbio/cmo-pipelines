@@ -3,6 +3,7 @@ log4j.rootLogger=INFO, a
 
 # Change INFO to DEBUG, if you want see debugging info on our packages only.
 log4j.category.org.mskcc=INFO
+#log4j.category.org.cbioportal.annotator=ALL
 #log4j.category.org.springframework=ALL
 
 #log4j.logger.org.springframework.security=DEBUG
