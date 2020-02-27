@@ -319,7 +319,7 @@ function remove_raw_clinical_timeline_data_files {
     done
     # remove raw timeline files except cbio format timeline file
     for f in $STUDY_DIRECTORY/data_timeline*; do
-        if [ $f != *"data_timeline.txt"* ] ; then
+        if [[ $f != *"data_timeline.txt"* ]] ; then
             $GIT_BINARY rm -f $f
         fi
     done
