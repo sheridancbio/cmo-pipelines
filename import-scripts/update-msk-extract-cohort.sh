@@ -20,7 +20,7 @@ fi
 IMPORT_FAIL=0
 mskextract_notification_file=$(mktemp $MSK_DMP_TMPDIR/mskextract-portal-update-notification.$now.XXXXXX)
 # update msk-extract github repo
-fetch_updates_in_data_sources "msk-extract"
+fetch_updates_in_data_sources "msk-extract-datahub"
 
 # fetch ddp timeline data
 printTimeStampedDataProcessingStepMessage "DDP demographics fetch for MSKEXTRACT"
