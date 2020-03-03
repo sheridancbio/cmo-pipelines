@@ -35,15 +35,16 @@ package org.cbioportal.cmo.pipelines.cvr.clinical;
 import java.io.*;
 import java.util.*;
 import org.apache.commons.lang.StringUtils;
+import org.cbioportal.cmo.pipelines.cvr.CvrSampleListUtil;
 import org.cbioportal.cmo.pipelines.cvr.CVRUtilities;
+import org.cbioportal.cmo.pipelines.cvr.model.composite.CompositeClinicalRecord;
+import org.cbioportal.cmo.pipelines.cvr.model.staging.CVRClinicalRecord;
 import org.springframework.batch.item.*;
 import org.springframework.batch.item.file.*;
 import org.springframework.batch.item.file.transform.PassThroughLineAggregator;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.*;
-import org.cbioportal.cmo.pipelines.cvr.model.staging.CVRClinicalRecord;
-import org.cbioportal.cmo.pipelines.cvr.model.composite.CompositeClinicalRecord;
-import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  *
@@ -60,6 +61,9 @@ public class CVRNewClinicalDataWriter implements ItemStreamWriter<CompositeClini
     @Autowired
     public CVRUtilities cvrUtilities;
 
+    @Autowired
+    public CvrSampleListUtil cvrSampleListUtil;
+    
     private FlatFileItemWriter<String> flatFileItemWriter = new FlatFileItemWriter<>();
 
     // Set up the writer and print the json from CVR to a file
@@ -95,6 +99,8 @@ public class CVRNewClinicalDataWriter implements ItemStreamWriter<CompositeClini
                 writeList.add(item.getNewClinicalRecord());
             }
         }
+        cvrSampleListUtil.setNewClinicalFileRecordCount(writeList.size());
         flatFileItemWriter.write(writeList);
     }
 }
+

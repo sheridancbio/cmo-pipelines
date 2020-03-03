@@ -145,15 +145,21 @@ public class CVRClinicalDataReader implements ItemStreamReader<CVRClinicalRecord
         reader.setLinesToSkip(1);
         reader.open(ec);
 
+        cvrSampleListUtil.setOriginalClinicalFileRecordCount(0);
         try {
             CVRClinicalRecord to_add;
             while ((to_add = reader.read()) != null) {
-                if (!cvrSampleListUtil.getNewDmpSamples().contains(to_add.getSAMPLE_ID()) && to_add.getSAMPLE_ID() != null) {
-                    clinicalRecords.add(to_add);
-                    cvrSampleListUtil.addPortalSample(to_add.getSAMPLE_ID());
-                    List<CVRClinicalRecord> records = patientToRecordMap.getOrDefault(to_add.getPATIENT_ID(), new ArrayList<CVRClinicalRecord>());
-                    records.add(to_add);
-                    patientToRecordMap.put(to_add.getPATIENT_ID(), records);
+                if (to_add.getSAMPLE_ID() != null) {
+                    cvrSampleListUtil.setOriginalClinicalFileRecordCount(cvrSampleListUtil.getOriginalClinicalFileRecordCount() + 1);
+                    if (!cvrSampleListUtil.getNewDmpSamples().contains(to_add.getSAMPLE_ID())) {
+                        // for each record from yesterday's clinical data file ... add it to ClinicalRecords, Sample List, and Patient-Sample mapping if:
+                        // it was not pulled down from the dmp server during the current fetch-in-progress
+                        clinicalRecords.add(to_add);
+                        cvrSampleListUtil.addPortalSample(to_add.getSAMPLE_ID());
+                        List<CVRClinicalRecord> records = patientToRecordMap.getOrDefault(to_add.getPATIENT_ID(), new ArrayList<CVRClinicalRecord>());
+                        records.add(to_add);
+                        patientToRecordMap.put(to_add.getPATIENT_ID(), records);
+                    }
                 }
             }
         }

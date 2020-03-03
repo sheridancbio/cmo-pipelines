@@ -61,6 +61,8 @@ public class CvrSampleListUtil {
     private Set<String> whitelistedSamplesWithZeroVariants = new HashSet<>();
     private Set<String> nonWhitelistedZeroVariantSamples = new HashSet<>();
     private Set<String> newUnreportedSamplesWithZeroVariants = new HashSet<>();
+    private Integer originalClinicalFileRecordCount = 0;
+    private Integer newClinicalFileRecordCount = 0;
 
     Logger log = Logger.getLogger(CvrSampleListUtil.class);
 
@@ -124,6 +126,38 @@ public class CvrSampleListUtil {
     public void addNewDmpSample(String sampleId) {
         this.newDmpSamples.add(sampleId);
         addPortalSample(sampleId); //adds id to portal samples list also
+    }
+
+    /**
+     * Count of samples seen in original clinical data file
+     *
+     * @return the originalClinicalFileRecordCount
+     */
+    public Integer getOriginalClinicalFileRecordCount() {
+        return originalClinicalFileRecordCount;
+    }
+
+    /**
+     * @param originalClinicalFileRecordCount the originalClinicalFileRecordCount to set
+     */
+    public void setOriginalClinicalFileRecordCount(Integer originalClinicalFileRecordCount) {
+        this.originalClinicalFileRecordCount = originalClinicalFileRecordCount;
+    }
+
+    /**
+     * Count of samples written to new clinical file
+     *
+     * @return the newClinicalFileRecordCount
+     */
+    public Integer getNewClinicalFileRecordCount() {
+        return newClinicalFileRecordCount;
+    }
+
+    /**
+     * @param newClinicalFileRecordCount the newClinicalFileRecordCount to set
+     */
+    public void setNewClinicalFileRecordCount(Integer newClinicalFileRecordCount) {
+        this.newClinicalFileRecordCount = newClinicalFileRecordCount;
     }
 
     /**

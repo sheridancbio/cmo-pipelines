@@ -304,6 +304,7 @@ public class BatchConfiguration {
     @Bean
     public Step clinicalStep() {
         return stepBuilderFactory.get("clinicalStep")
+                .listener(clinicalDataValidationListener())
                 .<CVRClinicalRecord, CompositeClinicalRecord> chunk(chunkInterval)
                 .reader(clinicalDataReader())
                 .processor(clinicalDataProcessor())
@@ -732,6 +733,11 @@ public class BatchConfiguration {
     @Bean
     public StepExecutionListener cvrResponseListener() {
         return new CvrResponseListener();
+    }
+
+    @Bean
+    public StepExecutionListener clinicalDataValidationListener() {
+        return new ClinicalDataValidationListener();
     }
 
     @Bean

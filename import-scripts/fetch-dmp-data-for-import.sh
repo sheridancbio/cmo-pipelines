@@ -206,7 +206,7 @@ fi
 if [ $IMPORT_STATUS_IMPACT -eq 0 ] ; then
     # fetch new/updated IMPACT samples using CVR Web service   (must come after git fetching)
     printTimeStampedDataProcessingStepMessage "CVR fetch for mskimpact"
-    $JAVA_BINARY $JAVA_CVR_FETCHER_ARGS -d $MSK_IMPACT_DATA_HOME -n data_clinical_mskimpact_data_clinical_cvr.txt -i mskimpact -r 150 $CVR_TEST_MODE_ARGS
+    $JAVA_BINARY $JAVA_CVR_FETCHER_ARGS -d $MSK_IMPACT_DATA_HOME -n data_clinical_mskimpact_data_clinical_cvr.txt -v -i mskimpact -r 150 $CVR_TEST_MODE_ARGS
     if [ $? -gt 0 ] ; then
         echo "CVR fetch failed!"
         cd $DMP_DATA_HOME ; $GIT_BINARY reset HEAD --hard
@@ -240,7 +240,7 @@ if [ $IMPORT_STATUS_IMPACT -eq 0 ] ; then
 
     # fetch new/updated IMPACT germline samples using CVR Web service   (must come after normal cvr fetching)
     printTimeStampedDataProcessingStepMessage "CVR germline fetch for mskimpact"
-    $JAVA_BINARY $JAVA_CVR_FETCHER_ARGS -d $MSK_IMPACT_DATA_HOME -n data_clinical_mskimpact_data_clinical_cvr.txt -g -i mskimpact $CVR_TEST_MODE_ARGS
+    $JAVA_BINARY $JAVA_CVR_FETCHER_ARGS -d $MSK_IMPACT_DATA_HOME -n data_clinical_mskimpact_data_clinical_cvr.txt -v -g -i mskimpact $CVR_TEST_MODE_ARGS
     if [ $? -gt 0 ] ; then
         echo "CVR Germline fetch failed!"
         cd $DMP_DATA_HOME ; $GIT_BINARY reset HEAD --hard
@@ -321,7 +321,7 @@ printTimeStampedDataProcessingStepMessage "HEMEPACT data processing"
 if [ $IMPORT_STATUS_HEME -eq 0 ] ; then
     # fetch new/updated heme samples using CVR Web service (must come after git fetching). Threshold is set to 50 since heme contains only 190 samples (07/12/2017)
     printTimeStampedDataProcessingStepMessage "CVR fetch for hemepact"
-    $JAVA_BINARY $JAVA_CVR_FETCHER_ARGS -d $MSK_HEMEPACT_DATA_HOME -n data_clinical_hemepact_data_clinical.txt -i mskimpact_heme -r 50 $CVR_TEST_MODE_ARGS
+    $JAVA_BINARY $JAVA_CVR_FETCHER_ARGS -d $MSK_HEMEPACT_DATA_HOME -n data_clinical_hemepact_data_clinical.txt -v -i mskimpact_heme -r 50 $CVR_TEST_MODE_ARGS
     if [ $? -gt 0 ] ; then
         echo "CVR heme fetch failed!"
         echo "This will not affect importing of mskimpact"
@@ -370,7 +370,7 @@ printTimeStampedDataProcessingStepMessage "RAINDANCE data processing"
 if [ $IMPORT_STATUS_RAINDANCE -eq 0 ] ; then
     # fetch new/updated raindance samples using CVR Web service (must come after git fetching). The -s flag skips segment data fetching
     printTimeStampedDataProcessingStepMessage "CVR fetch for raindance"
-    $JAVA_BINARY $JAVA_CVR_FETCHER_ARGS -d $MSK_RAINDANCE_DATA_HOME -n data_clinical_mskraindance_data_clinical.txt -s -i mskraindance $CVR_TEST_MODE_ARGS
+    $JAVA_BINARY $JAVA_CVR_FETCHER_ARGS -d $MSK_RAINDANCE_DATA_HOME -n data_clinical_mskraindance_data_clinical.txt -v -s -i mskraindance $CVR_TEST_MODE_ARGS
     if [ $? -gt 0 ] ; then
         echo "CVR raindance fetch failed!"
         echo "This will not affect importing of mskimpact"
@@ -419,7 +419,7 @@ if [ $IMPORT_STATUS_ARCHER -eq 0 ] ; then
     # fetch new/updated archer samples using CVR Web service (must come after git fetching).
     printTimeStampedDataProcessingStepMessage "CVR fetch for archer"
     # archer has -b option to block warnings for samples with zero variants (all samples will have zero variants)
-    $JAVA_BINARY $JAVA_CVR_FETCHER_ARGS -d $MSK_ARCHER_UNFILTERED_DATA_HOME -n data_clinical_mskarcher_data_clinical.txt -i mskarcher -s -b $CVR_TEST_MODE_ARGS
+    $JAVA_BINARY $JAVA_CVR_FETCHER_ARGS -d $MSK_ARCHER_UNFILTERED_DATA_HOME -n data_clinical_mskarcher_data_clinical.txt -v -s -i mskarcher -b $CVR_TEST_MODE_ARGS
     if [ $? -gt 0 ] ; then
         echo "CVR Archer fetch failed!"
         echo "This will not affect importing of mskimpact"
@@ -468,7 +468,7 @@ if [ $IMPORT_STATUS_ACCESS -eq 0 ] ; then
     # fetch new/updated access samples using CVR Web service (must come after git fetching).
     printTimeStampedDataProcessingStepMessage "CVR fetch for access"
     # access has -b option to block warnings for samples with zero variants (all samples will have zero variants)
-    $JAVA_BINARY $JAVA_CVR_FETCHER_ARGS -d $MSK_ACCESS_DATA_HOME -n data_clinical_mskaccess_data_clinical.txt -i mskaccess -s -b $CVR_TEST_MODE_ARGS
+    $JAVA_BINARY $JAVA_CVR_FETCHER_ARGS -d $MSK_ACCESS_DATA_HOME -n data_clinical_mskaccess_data_clinical.txt -v -s -i mskaccess -b $CVR_TEST_MODE_ARGS
     if [ $? -gt 0 ] ; then
         echo "CVR ACCESS fetch failed!"
         echo "This will not affect importing of mskimpact"
