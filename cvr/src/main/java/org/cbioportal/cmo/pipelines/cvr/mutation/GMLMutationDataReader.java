@@ -178,23 +178,20 @@ public class GMLMutationDataReader implements ItemStreamReader<AnnotatedRecord> 
     }
 
     private List<AnnotatedRecord> annotateRecordsWithPOST(List<MutationRecord> records) throws Exception {
-        List<AnnotatedRecord> annotatedRecordsList = new ArrayList<>();
-        List<List<MutationRecord>> partitionedMutationRecordsList = cvrUtilities.partitionMutationRecordsListForPOST(records, postIntervalSize);
         int totalVariantsToAnnotateCount = records.size();
         int annotatedVariantsCount = 0;
-        for (List<MutationRecord> partitionedList : partitionedMutationRecordsList) {
-            List<AnnotatedRecord> annotatedRecords = annotator.getAnnotatedRecordsUsingPOST(summaryStatistics, partitionedList, "mskcc", forceAnnotation);
-            // TODO figure out how to default annotated record to cvrUtilities.buildCVRAnnotatedRecord(record) if any annotation failures occur
-            for (AnnotatedRecord ar : annotatedRecords) {
-                logAnnotationProgress(++annotatedVariantsCount, totalVariantsToAnnotateCount, postIntervalSize);
-                mutationRecords.add(ar);
-                mutationMap.getOrDefault(ar.getTUMOR_SAMPLE_BARCODE(), new ArrayList()).add(ar);
-                additionalPropertyKeys.addAll(ar.getAdditionalProperties().keySet());
-                header.addAll(ar.getHeaderWithAdditionalFields());
-            }
-            annotatedRecordsList.addAll(annotatedRecords);
+        // annotate with GenomeNexusImpl annotator from genome nexus annotation pipeline
+        // records will be partitioned inside annotator client
+        // records which do not get a response back will automatically be defauled to an AnnotatedRecord(record)
+        List<AnnotatedRecord> annotatedRecords = annotator.getAnnotatedRecordsUsingPOST(summaryStatistics, records, "mskcc", forceAnnotation, postIntervalSize);
+        for (AnnotatedRecord ar : annotatedRecords) {
+            logAnnotationProgress(++annotatedVariantsCount, totalVariantsToAnnotateCount, postIntervalSize);
+            mutationRecords.add(ar);
+            mutationMap.getOrDefault(ar.getTUMOR_SAMPLE_BARCODE(), new ArrayList()).add(ar);
+            additionalPropertyKeys.addAll(ar.getAdditionalProperties().keySet());
+            header.addAll(ar.getHeaderWithAdditionalFields());
         }
-        return annotatedRecordsList;
+        return annotatedRecords;
     }
 
     private void logAnnotationProgress(Integer annotatedVariantsCount, Integer totalVariantsToAnnotateCount, Integer intervalSize) {
