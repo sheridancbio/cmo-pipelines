@@ -28,7 +28,8 @@ function make_directory_file() {
     echo "<title>$TITLE_STRING</title>" >> $INDEX_FILENAME
     echo "</head>" >> $INDEX_FILENAME
     echo "<body>" >> $INDEX_FILENAME
-    echo "<h2>Available Downloads</h2>" >> $INDEX_FILENAME
+    echo "<h2>OncoKB Annotated MSK-IMPACT</h2>" >> $INDEX_FILENAME
+    echo "<h3>Available Downloads</h3>" >> $INDEX_FILENAME
     echo "<p>Control-click links and choose \"Save Link As...\"" >> $INDEX_FILENAME
     echo "<ul>" >> $INDEX_FILENAME
     ls $SOURCE_DIR > $FILELIST_FILENAME
@@ -38,6 +39,8 @@ function make_directory_file() {
         fi
     done < $FILELIST_FILENAME
     echo "</ul>" >> $INDEX_FILENAME
+    timestamp=$(date '+%Y_%m_%d %H:%M %Z')
+    echo "<p style=\"color:Teal;font-size:7px;\">(last updated: $timestamp)" >> $INDEX_FILENAME
     echo "</body>" >> $INDEX_FILENAME
     echo "</html>" >> $INDEX_FILENAME
 }
