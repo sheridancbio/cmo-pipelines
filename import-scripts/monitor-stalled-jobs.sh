@@ -1,20 +1,33 @@
 #!/bin/bash
 
+if [ -z "$SLACK_URL_FILE" ] ; then
+    echo "could not run monitor-stalled-jobs.sh: automation-environment.sh script must be run in order to set needed environment variables (like SLACK_URL_FILE, ...)"
+    exit 1
+fi
+
+SLACK_PIPELINES_MONITOR_URL=`cat $SLACK_URL_FILE`
+
 # converts timestamp (D:H:M:S) to seconds
-convert_to_seconds() {
+function convert_to_seconds () {
     elapsed_time=$1
     elapsed_time_in_seconds=`echo "$elapsed_time" | awk -F: '{ total=0; m=1; } { for (i=0; i < NF; i++) {total += $(NF-i)*m; m *= i >= 2 ? 24 : 60 }} {print total}'`
     echo $elapsed_time_in_seconds
 }
 
 # function for sending notification emails
-send_email_notification() {
+function send_email_notification () {
     process_name=$1
     hostname=`hostname`
     ### FAILURE EMAIL ###
     EMAIL_BODY="Following processes appear to be stalled.\nHostname: ${hostname}\ndate: ${now}\nrunning processes: see below\n\nCMD\tPID\tSTART_TIME\tETIME\n${process_name}\n"
     echo -e "Sending email\n$EMAIL_BODY"
     echo -e "$EMAIL_BODY" | mail -s "Alert: Import jobs stalled on ${hostname}" cbioportal-pipelines@cbio.mskcc.org
+}
+
+# Function for alerting slack channel of stalled jobs
+function send_slack_warning_message () {
+    curl -X POST --data-urlencode "payload={\"channel\": \"#msk-pipeline-logs\", \"username\": \"cbioportal_importer\", \"text\": \"A stalled nightly import process has been detected.\", \"icon_emoji\": \":tired_face:\"}" $SLACK_PIPELINES_MONITOR_URL
+    # this comment corrects vim syntax coloring "
 }
 
 # Array of process names being checked
@@ -67,6 +80,7 @@ do
         # if process is stalled and current time is greater than 'email time' - send email and set email time to current time plus 3 hours
             if [ $(date +%H%M) -gt ${email_times[i]} ] ; then
                 send_email_notification "$ps_output"
+                send_slack_warning_message
                 email_times[i]="$((10#$(date -d '+3 hours' +"%H%M")))"
             fi
         fi
