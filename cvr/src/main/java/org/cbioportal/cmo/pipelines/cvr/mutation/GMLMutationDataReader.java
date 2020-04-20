@@ -137,7 +137,7 @@ public class GMLMutationDataReader implements ItemStreamReader<AnnotatedRecord> 
         }
         log.info("Loaded " + String.valueOf(recordsToAnnotate.size()) + " records from GML JSON");
         try {
-            annotateRecordsWithPOST(recordsToAnnotate);
+            annotateRecordsWithPOST(recordsToAnnotate, true);
         } catch (Exception e) {
             log.error("Error annotating with POSTs", e);
             throw new RuntimeException(e);
@@ -174,16 +174,16 @@ public class GMLMutationDataReader implements ItemStreamReader<AnnotatedRecord> 
         }
         reader.close();
         log.info("Loaded " + String.valueOf(recordsToAnnotate.size()) + " records from MAF");
-        annotateRecordsWithPOST(recordsToAnnotate);
+        annotateRecordsWithPOST(recordsToAnnotate, forceAnnotation);
     }
 
-    private List<AnnotatedRecord> annotateRecordsWithPOST(List<MutationRecord> records) throws Exception {
+    private List<AnnotatedRecord> annotateRecordsWithPOST(List<MutationRecord> records, boolean reannotate) throws Exception {
         int totalVariantsToAnnotateCount = records.size();
         int annotatedVariantsCount = 0;
         // annotate with GenomeNexusImpl annotator from genome nexus annotation pipeline
         // records will be partitioned inside annotator client
         // records which do not get a response back will automatically be defauled to an AnnotatedRecord(record)
-        List<AnnotatedRecord> annotatedRecords = annotator.getAnnotatedRecordsUsingPOST(summaryStatistics, records, "mskcc", forceAnnotation, postIntervalSize);
+        List<AnnotatedRecord> annotatedRecords = annotator.getAnnotatedRecordsUsingPOST(summaryStatistics, records, "mskcc", true, postIntervalSize, reannotate);
         for (AnnotatedRecord ar : annotatedRecords) {
             logAnnotationProgress(++annotatedVariantsCount, totalVariantsToAnnotateCount, postIntervalSize);
             mutationRecords.add(ar);
