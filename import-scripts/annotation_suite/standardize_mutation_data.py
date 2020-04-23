@@ -494,7 +494,7 @@ def resolve_variant_allele_data(data, maf_data):
     maf_data["Variant_Type"] = variant_type
     maf_data["Reference_Allele"] = ref_allele
     maf_data["Tumor_Seq_Allele2"] = tumor_seq_allele1
-    maf_data["Tumor_Seq_Allele2"] = tumor_seq_allele
+    maf_data["Tumor_Seq_Allele2"] = tumor_seq_allele2
     maf_data["Start_Position"] = start_pos
     maf_data["End_Position"] = end_pos
 
