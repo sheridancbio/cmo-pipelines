@@ -60,7 +60,7 @@ fi
 # check for presence of SSL cert in ${ANNOTATION_SUITE_SCRIPTS_HOME}
 JAVA_SSL_ARGS=""
 SSL_CERT_PATH=${ANNOTATION_SUITE_SCRIPTS_HOME}/AwsSsl.truststore
-if [ -f ${SSL_CERT_PATH} ] ; then
+if ! [ -f ${SSL_CERT_PATH} ] ; then
     echo "Could not find SSL certificate: ${SSL_CERT_PATH} - please make sure this certificate exists and is present in ${ANNOTATION_SUITE_SCRIPTS_HOME}. Exiting..."
     exit 1
 else
