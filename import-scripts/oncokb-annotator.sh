@@ -129,6 +129,21 @@ FLOCK_FILEPATH="/data/portal-cron/cron-lock/oncokb-annotator.sh"
 
     ONCOKB_README_FILE="$ONCOKB_OUT_DIR/README"
 
+    REANNOTATE_MUTATIONS="false"
+    # parse input arguments
+    for i in "$@"; do
+        case $i in
+        -rm|--reannotate-mutations)
+            REANNOTATE_MUTATIONS="true"
+            shift
+            ;;
+        *)
+            echo "error : unrecognized argument: ${i}" 1>&2
+            exit 1
+            ;;
+        esac
+    done
+
     echo $(date)
     echo "Staring oncokb-annotator run on $SOURCE_DIR"
     ONCOKB_ANNOTATION_SUCCESS=1
@@ -179,7 +194,7 @@ FLOCK_FILEPATH="/data/portal-cron/cron-lock/oncokb-annotator.sh"
         echo "Beginning MAF annotation..."
         # if an oncokb annotated maf already exists then create a copy that can be used to speed up the annotation process
         PREVIOUS_ANNOTATED_MAF_ARGS=""
-        if [ -f "$ONCOKB_MAF_FILE" ] ; then
+        if [ $REANNOTATE_MUTATIONS == "true" ] && [ -f "$ONCOKB_MAF_FILE" ] ; then
             mv $ONCOKB_MAF_FILE $ONCOKB_PREVIOUS_MAF_FILE
             PREVIOUS_ANNOTATED_MAF_ARGS="-p $ONCOKB_PREVIOUS_MAF_FILE"
         fi
