@@ -1,6 +1,9 @@
 #!/bin/bash
 ### ./import-hgnc.sh
 
+# set umask so that all files which are created in the shared directories (e.g. TMP_DIR) are world writable / deletable
+umask 0000
+
 ### Required environmental variables
 PORTAL_HOME=/data/portal-cron
 PORTAL_DATA_HOME=$PORTAL_HOME/cbio-portal-data
