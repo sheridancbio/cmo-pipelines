@@ -32,7 +32,10 @@ NOTIFICATION_FILENAME=$(mktemp $TMP_DIR/hgnc-portal-update-notification.$NOW.XXX
 
 echo "Fetching datahub"
 $JAVA_BINARY $JAVA_IMPORTER_ARGS --fetch-data --data-source datahub --run-date latest
-if [ $? -ne 0 ] ; then
+FETCH_STATUS="$?"
+# chmod in order to allow others to update the fetched repositories after us
+chmod -R --quiet a+w "$PORTAL_DATA_HOME"
+if [ "$FETCH_STATUS" != "0" ] ; then
     "Unable to fetch data updates, exiting without import. Check '$LOG_FILENAME' for details"
     exit 1
 fi
