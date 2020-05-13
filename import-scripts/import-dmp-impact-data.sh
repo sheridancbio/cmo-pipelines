@@ -198,6 +198,7 @@ if [ $DB_VERSION_FAIL -eq 0 ] && [ -f $MSK_ARCHER_IMPORT_TRIGGER ] ; then
         # However, if a study does not have an existing genetic profile with genetic_alteration_type = "MUTATION_EXTENDED" then the study view mutations table does not show up.
         # This is a temporary quick and dirty fix to override the genetic_alteration_type for mskarcher_mutations to "MTATION_EXTENDED" (which is imported with genetic_alteration_type = "FUSION")
         mysql --host="$DMP_DB_HOST" --user="$DMP_DB_USER" --password="$DMP_DB_PASSWORD" "$DMP_DB_DATABASE_NAME" -e "update genetic_profile set genetic_alteration_type = 'MUTATION_EXTENDED' where genetic_alteration_type = 'FUSION' and stable_id = 'mskarcher_mutations'"
+        consumeSamplesAfterArcherImport
         RESTART_AFTER_DMP_PIPELINES_IMPORT=1
         IMPORT_FAIL_ARCHER=0
     fi

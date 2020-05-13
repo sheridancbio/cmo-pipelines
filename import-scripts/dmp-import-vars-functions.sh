@@ -403,3 +403,12 @@ function consumeSamplesAfterSolidHemeImport {
         rm -f $MSK_ACCESS_CONSUME_TRIGGER
     fi
 }
+
+# Function for consuming fetched samples after successful archer import
+function consumeSamplesAfterArcherImport {
+    if [ -f $MSK_ARCHER_CONSUME_TRIGGER ] ; then
+        echo "Consuming archer samples from cvr"
+        $JAVA_BINARY $JAVA_CVR_FETCHER_ARGS -c $MSK_ARCHER_UNFILTERED_DATA_HOME/cvr_data.json
+        rm -f $MSK_ARCHER_CONSUME_TRIGGER
+    fi
+}
