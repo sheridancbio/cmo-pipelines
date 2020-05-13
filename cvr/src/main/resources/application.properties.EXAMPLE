@@ -5,6 +5,7 @@ chunk=
 
 # dmp
 dmp.server_name=
+dmp.consume_server_name=
 dmp.user_name=
 dmp.password=
 dmp.tokens.create_session=create_session
