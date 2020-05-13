@@ -32,7 +32,7 @@ dmp.tokens.retrieve_master_list.impact=impact
 dmp.tokens.retrieve_master_list.rdts=raindance
 dmp.tokens.retrieve_master_list.heme=heme
 dmp.tokens.retrieve_master_list.archer=archer
-#TODO: dmp.tokens.retrieve_master_list.access=
+dmp.tokens.retrieve_master_list.access=access
 
 # genome nexus
 genomenexus.base=http://annotation.genomenexus.org/

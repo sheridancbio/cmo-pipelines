@@ -860,6 +860,7 @@ if [ $IMPORT_STATUS_ARCHER -eq 0 ] ; then
             mv $archer_data_clinical_tmp_file $MSK_ARCHER_UNFILTERED_DATA_HOME/data_clinical_sample.txt
         fi
         touch $MSK_ARCHER_IMPORT_TRIGGER
+        touch $MSK_ARCHER_CONSUME_TRIGGER
         cd $MSK_ARCHER_UNFILTERED_DATA_HOME ; $GIT_BINARY add * ; $GIT_BINARY commit -m "Latest ARCHER_UNFILTERED Dataset: Clinical and Timeline"
     fi
 fi

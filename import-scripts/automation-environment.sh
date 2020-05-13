@@ -75,6 +75,7 @@ export CASE_LIST_CONFIG_FILE=$PIPELINES_CONFIG_HOME/resources/case_list_config.t
 export MSK_DMP_TMPDIR=$PORTAL_HOME/tmp/import-cron-dmp-msk
 export MSK_IMPACT_CONSUME_TRIGGER=$MSK_DMP_TMPDIR/mskimpact_consume_trigger.txt
 export MSK_HEMEPACT_CONSUME_TRIGGER=$MSK_DMP_TMPDIR/mskimpact_heme_consume_trigger.txt
+export MSK_ARCHER_CONSUME_TRIGGER=$MSK_DMP_TMPDIR/mskarcher_consume_trigger.txt
 export MSK_ACCESS_CONSUME_TRIGGER=$MSK_DMP_TMPDIR/mskaccess_consume_trigger.txt
 export MSK_RAINDANCE_IMPORT_TRIGGER=$MSK_DMP_TMPDIR/mskraindance_import_trigger.txt
 export MSK_ARCHER_IMPORT_TRIGGER=$MSK_DMP_TMPDIR/mskarcher_import_trigger.txt
