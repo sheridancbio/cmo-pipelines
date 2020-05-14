@@ -54,8 +54,8 @@ import org.springframework.web.client.RestTemplate;
  */
 public class ConsumeSampleWriter implements ItemStreamWriter<String> {
     
-    @Value("${dmp.consume_server_name}")
-    private String dmpConsumeServerName;
+    @Value("${dmp.server_name}")
+    private String dmpServerName;
 
     @Value("${dmp.gml_server_name}")
     private String dmpGmlServerName;
@@ -89,7 +89,7 @@ public class ConsumeSampleWriter implements ItemStreamWriter<String> {
             this.dmpConsumeUrl = dmpGmlServerName + dmpConsumeGmlSample + "/" + sessionId + "/";
         }
         else {
-            this.dmpConsumeUrl = dmpConsumeServerName + dmpConsumeSample + "/" + sessionId + "/";
+            this.dmpConsumeUrl = dmpServerName + dmpConsumeSample + "/" + sessionId + "/";
         }
     }
 
