@@ -114,7 +114,9 @@ public class CVRPipeline {
         }
         else if (gml) {
             // SessionID is gotten from a spring bean in the SessionConfiguration and passed through here as a param
+            // add session id from somatic server for calling master list endpoint as well
             builder.addString("sessionId", ctx.getBean(SessionConfiguration.GML_SESSION, String.class));
+            builder.addString("gmlMasterListSessionId", ctx.getBean(SessionConfiguration.SESSION_ID, String.class));
             jobName = BatchConfiguration.GML_JOB;
         }
         else {
