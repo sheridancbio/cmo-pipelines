@@ -64,6 +64,9 @@ public class CvrSampleListsTasklet implements Tasklet {
     @Value("#{jobParameters[gmlMode]}")
     private Boolean gmlMode;
 
+    @Value("#{jobParameters[gmlMasterListSessionId]}")
+    private String gmlMasterListSessionId;
+
     @Autowired
     public CVRUtilities cvrUtilities;
 
@@ -175,7 +178,14 @@ public class CvrSampleListsTasklet implements Tasklet {
     }
 
     private Set<String> generateDmpMasterList() {
-        String dmpUrl = dmpServerName + dmpRetrieveMasterListRoute + "/" + sessionId + "/" + masterListTokensMap.get(studyId);
+        String dmpUrl = dmpServerName + dmpRetrieveMasterListRoute + "/";
+        if (gmlMode) {
+            dmpUrl += gmlMasterListSessionId;
+        } else {
+            dmpUrl += sessionId;
+        }
+        dmpUrl += "/" + masterListTokensMap.get(studyId);
+
         RestTemplate restTemplate = new RestTemplate();
         HttpEntity<LinkedMultiValueMap<String, Object>> requestEntity = getRequestEntity();
         ResponseEntity<CVRMasterList> responseEntity = restTemplate.exchange(dmpUrl, HttpMethod.GET, requestEntity, CVRMasterList.class);
