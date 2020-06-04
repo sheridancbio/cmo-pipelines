@@ -32,14 +32,11 @@
 
 package org.mskcc.cmo.ks.ddp.source.exception;
 
-import com.google.common.base.Joiner;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.log4j.Logger;
 
 public class InvalidAuthenticationException extends RuntimeException {
 
-    private static final Logger logger = LoggerFactory.getLogger(InvalidAuthenticationException.class);
+    private static final Logger logger = Logger.getLogger(InvalidAuthenticationException.class);
 
     public InvalidAuthenticationException(String errorMessage) {
         super(errorMessage);
