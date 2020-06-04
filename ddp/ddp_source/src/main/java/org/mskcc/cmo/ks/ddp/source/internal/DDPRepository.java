@@ -39,7 +39,6 @@ import org.mskcc.cmo.ks.ddp.source.util.AuthenticationUtil;
 import java.util.*;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.base.Strings;
-import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.http.cookie.Cookie;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.*;
@@ -113,7 +112,7 @@ public class DDPRepository {
         catch (Exception e) {
             // this can be a RestClientException from restTemplate.exchange, from ddpResponseUtil.parseData, or the exception we throw
             LOG.error("Failed to get cohorts");
-            LOG.debug(ExceptionUtils.getStackTrace(e));
+            LOG.debug(e.getStackTrace());
             throw new RuntimeException("Error fetching authorized cohorts for user: " + authenticationUtil.getUsername(), e);
         }
         return cohortData;
@@ -144,7 +143,7 @@ public class DDPRepository {
             // if 400 then bad request
             String message = "Failed to fetch patients for cohort '" + cohortId + "' - " + e.getLocalizedMessage();
             LOG.error(message);
-            LOG.debug(ExceptionUtils.getStackTrace(e));
+            LOG.debug(e.getStackTrace());
             throw new RuntimeException(message, e);
         }
         return cohortPatients;
@@ -184,7 +183,7 @@ public class DDPRepository {
             // if 400 then the dmp id provided does not resolve to a patient id in DDP system
             String message = "Failed to fetch patient demographics: '" + patientId + "' - " + e.getLocalizedMessage();
             LOG.error(message);
-            LOG.debug(ExceptionUtils.getStackTrace(e));
+            LOG.debug(e.getStackTrace());
             throw new RuntimeException(message, e);
         }
         PatientDemographics toReturn = new PatientDemographics();
@@ -228,7 +227,7 @@ public class DDPRepository {
             // if 400 then the dmp id provided does not resolve to a patient id in DDP system
             String message = "Failed to fetch patient diagnoses: '" + patientId + "' - " + e.getLocalizedMessage();
             LOG.error(message);
-            LOG.debug(ExceptionUtils.getStackTrace(e));
+            LOG.debug(e.getStackTrace());
             throw new RuntimeException(message, e);
         }
         return patientDiagnosisList;
@@ -268,7 +267,7 @@ public class DDPRepository {
             // if 400 then the dmp id provided does not resolve to a patient id in DDP system
             String message = "Error fetching patient identifier: '" + patientId + "' - " + e.getLocalizedMessage();
             LOG.error(message);
-            LOG.debug(ExceptionUtils.getStackTrace(e));
+            LOG.debug(e.getStackTrace());
             throw new RuntimeException(message, e);
         }
         return patientIdentifiers;
@@ -305,7 +304,7 @@ public class DDPRepository {
             // if 400 then the dmp id provided does not resolve to a patient id in DDP system
             String message = "Failed to fetch patient radiation procedures: " + patientId + "' - " + e.getLocalizedMessage();
             LOG.error(message);
-            LOG.debug(ExceptionUtils.getStackTrace(e));
+            LOG.debug(e.getStackTrace());
             throw new RuntimeException(message, e);
         }
         return patientRadiationProcedures;
@@ -342,7 +341,7 @@ public class DDPRepository {
             // if 400 then the dmp id provided does not resolve to a patient id in DDP system
             String message = "Failed to fetch patient chemo procedures: " + patientId + "' - " + e.getLocalizedMessage();
             LOG.error(message);
-            LOG.debug(ExceptionUtils.getStackTrace(e));
+            LOG.debug(e.getStackTrace());
             throw new RuntimeException(message, e);
         }
         return patientChemoProcedures;
@@ -379,7 +378,7 @@ public class DDPRepository {
             // if 400 then the dmp id provided does not resolve to a patient id in DDP system
             String message = "Failed to fetch patient surgical procedures: " + patientId + "' - " + e.getLocalizedMessage();
             LOG.error(message);
-            LOG.debug(ExceptionUtils.getStackTrace(e));
+            LOG.debug(e.getStackTrace());
             throw new RuntimeException(message, e);
         }
         // filter out surgical procedures with empty procedure description
