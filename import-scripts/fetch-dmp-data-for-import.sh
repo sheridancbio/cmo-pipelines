@@ -8,7 +8,6 @@ source $PORTAL_HOME/scripts/dmp-import-vars-functions.sh
 # Flags indicating whether a study can be updated
 IMPORT_STATUS_IMPACT=0
 IMPORT_STATUS_HEME=0
-IMPORT_STATUS_RAINDANCE=0
 IMPORT_STATUS_ARCHER=0
 IMPORT_STATUS_ACCESS=0
 
@@ -19,7 +18,6 @@ ARCHER_MERGE_HEME_FAIL=0
 # Assume export of supp date from RedCap succeded unless it failed
 EXPORT_SUPP_DATE_IMPACT_FAIL=0
 EXPORT_SUPP_DATE_HEME_FAIL=0
-EXPORT_SUPP_DATE_RAINDANCE_FAIL=0
 EXPORT_SUPP_DATE_ARCHER_FAIL=0
 EXPORT_SUPP_DATE_ACCESS_FAIL=0
 
@@ -28,12 +26,10 @@ FETCH_CRDB_IMPACT_FAIL=1
 FETCH_DARWIN_CAISIS_FAIL=1
 FETCH_DDP_IMPACT_FAIL=1
 FETCH_DDP_HEME_FAIL=1
-FETCH_DDP_RAINDANCE_FAIL=1
 FETCH_DDP_ARCHER_FAIL=1
 FETCH_DDP_ACCESS_FAIL=1
 FETCH_CVR_IMPACT_FAIL=1
 FETCH_CVR_HEME_FAIL=1
-FETCH_CVR_RAINDANCE_FAIL=1
 FETCH_CVR_ARCHER_FAIL=1
 FETCH_CVR_ACCESS_FAIL=1
 
@@ -129,13 +125,6 @@ if [ $? -gt 0 ] ; then
     sendPreImportFailureMessageMskPipelineLogsSlack "HEMEPACT Redcap export of hemepact_data_clinical_supp_date"
 fi
 
-echo "exporting raindance data_clinical_supp_date.txt from redcap"
-export_project_from_redcap $MSK_RAINDANCE_DATA_HOME mskraindance_data_clinical_supp_date
-if [ $? -gt 0 ] ; then
-    EXPORT_SUPP_DATE_RAINDANCE_FAIL=1
-    sendPreImportFailureMessageMskPipelineLogsSlack "RAINDANCE Redcap export of mskraindance_data_clinical_supp_date"
-fi
-
 echo "exporting archer data_clinical_supp_date.txt from redcap"
 export_project_from_redcap $MSK_ARCHER_UNFILTERED_DATA_HOME mskarcher_data_clinical_supp_date
 if [ $? -gt 0 ] ; then
@@ -164,13 +153,6 @@ export_project_from_redcap $MSK_HEMEPACT_DATA_HOME hemepact_data_clinical
 if [ $? -gt 0 ] ; then
     IMPORT_STATUS_HEME=1
     sendPreImportFailureMessageMskPipelineLogsSlack "HEMEPACT Redcap export of hemepact_data_clinical_cvr"
-fi
-
-echo "exporting raindance data_clinical.txt from redcap"
-export_project_from_redcap $MSK_RAINDANCE_DATA_HOME mskraindance_data_clinical
-if [ $? -gt 0 ] ; then
-    IMPORT_STATUS_RAINDANCE=1
-    sendPreImportFailureMessageMskPipelineLogsSlack "RAINDANCE Redcap export of mskraindance_data_clinical_cvr"
 fi
 
 echo "exporting archer data_clinical.txt from redcap"
@@ -364,54 +346,6 @@ else
 fi
 
 # -----------------------------------------------------------------------------------------------------------
-# RAINDANCE DATA FETCHES
-printTimeStampedDataProcessingStepMessage "RAINDANCE data processing"
-
-if [ $IMPORT_STATUS_RAINDANCE -eq 0 ] ; then
-    # fetch new/updated raindance samples using CVR Web service (must come after git fetching). The -s flag skips segment data fetching
-    printTimeStampedDataProcessingStepMessage "CVR fetch for raindance"
-    $JAVA_BINARY $JAVA_CVR_FETCHER_ARGS -d $MSK_RAINDANCE_DATA_HOME -n data_clinical_mskraindance_data_clinical.txt -s -i mskraindance $CVR_TEST_MODE_ARGS
-    if [ $? -gt 0 ] ; then
-        echo "CVR raindance fetch failed!"
-        echo "This will not affect importing of mskimpact"
-        cd $DMP_DATA_HOME ; $GIT_BINARY reset HEAD --hard
-        sendPreImportFailureMessageMskPipelineLogsSlack "RAINDANCE CVR Fetch"
-        IMPORT_STATUS_RAINDANCE=1
-    else
-        # check for PHI
-        $PYTHON_BINARY $PORTAL_HOME/scripts/phi-scanner.py -a $PIPELINES_CONFIG_HOME/properties/fetch-cvr/phi-scanner-attributes.txt -j $MSK_RAINDANCE_DATA_HOME/cvr_data.json
-        if [ $? -gt 0 ] ; then
-            echo "PHI attributes found in $MSK_RAINDANCE_DATA_HOME/cvr_data.json! RAINDANCE will not be imported!"
-            cd $DMP_DATA_HOME ; $GIT_BINARY reset HEAD --hard
-            sendPreImportFailureMessageMskPipelineLogsSlack "RAINDANCE PHI attributes scan failed on $MSK_RAINDANCE_DATA_HOME/cvr_data.json"
-            IMPORT_STATUS_RAINDANCE=1
-        else
-            FETCH_CVR_RAINDANCE_FAIL=0
-            cd $MSK_RAINDANCE_DATA_HOME ; $GIT_BINARY add ./* ; $GIT_BINARY commit -m "Latest RAINDANCE dataset"
-        fi
-    fi
-fi
-
-# fetch ddp demographics data
-printTimeStampedDataProcessingStepMessage "DDP demographics fetch for raindance"
-mskraindance_dmp_pids_file=$MSK_DMP_TMPDIR/mskraindance_patient_list.txt
-awk -F'\t' 'NR==1 { for (i=1; i<=NF; i++) { f[$i] = i } }{ if ($f["PATIENT_ID"] != "PATIENT_ID") { print $(f["PATIENT_ID"]) } }' $MSK_RAINDANCE_DATA_HOME/data_clinical_mskraindance_data_clinical.txt | sort | uniq > $mskraindance_dmp_pids_file
-RAINDANCE_DDP_DEMOGRAPHICS_RECORD_COUNT=$(wc -l < $RAINDANCE_REDCAP_BACKUP/data_clinical_mskraindance_data_clinical_ddp_demographics.txt)
-if [ $RAINDANCE_DDP_DEMOGRAPHICS_RECORD_COUNT -le $DEFAULT_DDP_DEMOGRAPHICS_ROW_COUNT ] ; then
-    RAINDANCE_DDP_DEMOGRAPHICS_RECORD_COUNT=$DEFAULT_DDP_DEMOGRAPHICS_ROW_COUNT
-fi
-
-$JAVA_BINARY $JAVA_DDP_FETCHER_ARGS -c mskraindance -p $mskraindance_dmp_pids_file -s $MSK_RAINDANCE_DATA_HOME/cvr/seq_date.txt -f survival -o $MSK_RAINDANCE_DATA_HOME -r $RAINDANCE_DDP_DEMOGRAPHICS_RECORD_COUNT
-if [ $? -gt 0 ] ; then
-    cd $DMP_DATA_HOME ; $GIT_BINARY reset HEAD --hard
-    sendPreImportFailureMessageMskPipelineLogsSlack "RAINDANCE DDP Demographics Fetch"
-else
-    FETCH_DDP_RAINDANCE_FAIL=0
-    echo "committing ddp data"
-    cd $MSK_RAINDANCE_DATA_HOME ; $GIT_BINARY add ./* ; $GIT_BINARY commit -m "Latest RAINDANCE Dataset: DDP Demographics"
-fi
-
-# -----------------------------------------------------------------------------------------------------------
 # ARCHER DATA FETCHES
 printTimeStampedDataProcessingStepMessage "ARCHER data processing"
 
@@ -545,17 +479,6 @@ if [[ $IMPORT_STATUS_ARCHER -eq 0 && $FETCH_CVR_ARCHER_FAIL -eq 0 ]] ; then
     if [ $EXPORT_SUPP_DATE_ARCHER_FAIL -eq 0 ] ; then
         addDateAddedData $MSK_ARCHER_UNFILTERED_DATA_HOME "data_clinical_mskarcher_data_clinical.txt" "data_clinical_mskarcher_data_clinical_supp_date.txt"
         cd $MSK_ARCHER_UNFILTERED_DATA_HOME ; $GIT_BINARY add data_clinical_mskarcher_data_clinical_supp_date.txt ; $GIT_BINARY commit -m "Latest ARCHER_UNFILTERED Dataset: SUPP DATE ADDED"
-    fi
-    cd $DMP_DATA_HOME ; $GIT_BINARY reset HEAD --hard
-fi
-
-# generate case lists by cancer type and add "DATE ADDED" info to clinical data for RAINDANCE
-if [ $IMPORT_STATUS_RAINDANCE -eq 0 ] && [ $FETCH_CVR_RAINDANCE_FAIL -eq 0 ] ; then
-    addCancerTypeCaseLists $MSK_RAINDANCE_DATA_HOME "mskraindance" "data_clinical_mskraindance_data_clinical.txt"
-    cd $MSK_RAINDANCE_DATA_HOME ; $GIT_BINARY add case_lists ; $GIT_BINARY commit -m "Latest RAINDANCE Dataset: Case Lists"
-    if [ $EXPORT_SUPP_DATE_RAINDANCE_FAIL -eq 0 ] ; then
-        addDateAddedData $MSK_RAINDANCE_DATA_HOME "data_clinical_mskraindance_data_clinical.txt" "data_clinical_mskraindance_data_clinical_supp_date.txt"
-        cd $MSK_RAINDANCE_DATA_HOME ; $GIT_BINARY add data_clinical_mskraindance_data_clinical_supp_date.txt ; $GIT_BINARY commit -m "Latest RAINDANCE Dataset: SUPP DATE ADDED"
     fi
     cd $DMP_DATA_HOME ; $GIT_BINARY reset HEAD --hard
 fi
@@ -713,31 +636,6 @@ if [ $FETCH_CVR_ARCHER_FAIL -eq 0 ] ; then
     fi
 fi
 
-## RAINDANCE imports
-
-if [ $FETCH_DDP_RAINDANCE_FAIL -eq 0 ] ; then
-   import_raindance_ddp_to_redcap
-   if [ $? -gt 0 ] ; then
-       IMPORT_STATUS_RAINDANCE=1
-       sendPreImportFailureMessageMskPipelineLogsSlack "RAINDANCE DDP Redcap Import"
-   fi
-fi
-
-# imports raindance cvr data into redcap
-if [ $FETCH_CVR_RAINDANCE_FAIL -eq 0 ] ; then
-    import_raindance_cvr_to_redcap
-    if [ $? -gt 0 ] ; then
-        IMPORT_STATUS_RAINDANCE=1
-        sendPreImportFailureMessageMskPipelineLogsSlack "RAINDANCE CVR Redcap Import"
-    fi
-    if [ $EXPORT_SUPP_DATE_RAINDANCE_FAIL -eq 0 ] ; then
-        import_raindance_supp_date_to_redcap
-        if [ $? -gt 0 ] ; then
-            sendPreImportFailureMessageMskPipelineLogsSlack "RAINDANCE Supp Date Redcap Import. Project is now empty, data restoration required"
-        fi
-    fi
-fi
-
 ## ACCESS imports
 
 if [ $FETCH_DDP_ACCESS_FAIL -eq 0 ] ; then
@@ -774,9 +672,6 @@ remove_raw_clinical_timeline_data_files $MSK_IMPACT_DATA_HOME
 echo "removing raw clinical & timeline files for hemepact"
 remove_raw_clinical_timeline_data_files $MSK_HEMEPACT_DATA_HOME
 
-echo "removing raw clinical & timeline files for mskraindance"
-remove_raw_clinical_timeline_data_files $MSK_RAINDANCE_DATA_HOME
-
 echo "removing raw clinical & timeline files for mskarcher"
 remove_raw_clinical_timeline_data_files $MSK_ARCHER_UNFILTERED_DATA_HOME
 
@@ -784,7 +679,7 @@ echo "removing raw clinical & timeline files for mskaccess"
 remove_raw_clinical_timeline_data_files $MSK_ACCESS_DATA_HOME
 
 # commit raw file cleanup - study staging directories should only contain files for portal import
-$GIT_BINARY commit -m "Raw clinical and timeline file cleanup: MSKIMPACT, HEMEPACT, RAINDANCE, ARCHER, ACCESS"
+$GIT_BINARY commit -m "Raw clinical and timeline file cleanup: MSKIMPACT, HEMEPACT, ARCHER, ACCESS"
 
 
 # -------------------------------------------------------------
@@ -825,21 +720,6 @@ if [ $IMPORT_STATUS_HEME -eq 0 ] ; then
     else
         touch $MSK_HEMEPACT_CONSUME_TRIGGER
         cd $MSK_HEMEPACT_DATA_HOME ; $GIT_BINARY add * ; $GIT_BINARY commit -m "Latest HEMEPACT Dataset: Clinical and Timeline"
-    fi
-fi
-
-## RAINDANCE export
-
-printTimeStampedDataProcessingStepMessage "export of redcap data for raindance"
-if [ $IMPORT_STATUS_RAINDANCE -eq 0 ] ; then
-    export_stable_id_from_redcap mskraindance $MSK_RAINDANCE_DATA_HOME
-    if [ $? -gt 0 ] ; then
-        IMPORT_STATUS_RAINDANCE=1
-        cd $DMP_DATA_HOME ; $GIT_BINARY reset HEAD --hard
-        sendPreImportFailureMessageMskPipelineLogsSlack "RAINDANCE Redcap Export"
-    else
-        touch $MSK_RAINDANCE_IMPORT_TRIGGER
-        cd $MSK_RAINDANCE_DATA_HOME ; $GIT_BINARY add * ; $GIT_BINARY commit -m "Latest RAINDANCE Dataset: Clinical and Timeline"
     fi
 fi
 
@@ -924,6 +804,7 @@ fi
 
 #--------------------------------------------------------------
 ## MERGE STUDIES FOR MIXEDPACT, MSKSOLIDHEME:
+# Note: RAINDANCE is no longer being updated but the data will still be included in MIXEDPACT
 #   (1) MSK-IMPACT, HEMEPACT, RAINDANCE, ARCHER, and ACCESS (MIXEDPACT)
 #   (1) MSK-IMPACT, HEMEPACT, ARCHER, and ACCESS (MSKSOLIDHEME)
 
@@ -1408,13 +1289,6 @@ EMAIL_BODY="The HEMEPACT study failed fetch. The original study will remain on t
 if [ $IMPORT_STATUS_HEME -gt 0 ] ; then
     echo -e "Sending email $EMAIL_BODY"
     echo -e "$EMAIL_BODY" | mail -s "HEMEPACT Fetch Failure: Import" $PIPELINES_EMAIL_LIST
-fi
-
-EMAIL_BODY="The RAINDANCE study failed fetch. The original study will remain on the portal."
-# send email if fetch fails
-if [ $IMPORT_STATUS_RAINDANCE -gt 0 ] ; then
-    echo -e "Sending email $EMAIL_BODY"
-    echo -e "$EMAIL_BODY" | mail -s "RAINDANCE Fetch Failure: Import" $PIPELINES_EMAIL_LIST
 fi
 
 EMAIL_BODY="The ARCHER study failed fetch. The original study will remain on the portal."

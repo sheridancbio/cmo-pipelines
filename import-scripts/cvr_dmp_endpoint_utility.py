@@ -30,12 +30,10 @@ REQUEUE_GML_SAMPLE = 'dmp.tokens.requeue_gml_sample'
 MASTERLIST_ROUTE = 'dmp.tokens.retrieve_master_list.route'
 MASTERLIST_MSKIMPACT = 'dmp.tokens.retrieve_master_list.impact'
 MASTERLIST_HEMEPACT = 'dmp.tokens.retrieve_master_list.heme'
-MASTERLIST_RAINDANCE = 'dmp.tokens.retrieve_master_list.rdts'
 MASTERLIST_ARCHER = 'dmp.tokens.retrieve_master_list.archer'
 
 RETRIEVE_VARIANTS_MSKIMPMACT = 'dmp.tokens.retrieve_variants.impact'
 RETRIEVE_VARIANTS_HEMEPACT = 'dmp.tokens.retrieve_variants.heme'
-RETRIEVE_VARIANTS_RAINDANCE = 'dmp.tokens.retrieve_variants.rdts'
 RETRIEVE_VARIANTS_ARCHER = 'dmp.tokens.retrieve_variants.archer'
 RETRIEVE_VARIANTS_ACCESS = 'dmp.tokens.retrieve_variants.access'
 RETIREVE_GML_VARIANTS = 'dmp.tokens.retrieve_gml_variants'
@@ -54,11 +52,9 @@ REQUIRED_PROPERTIES = [
     MASTERLIST_ROUTE,
     MASTERLIST_MSKIMPACT,
     MASTERLIST_HEMEPACT,
-    MASTERLIST_RAINDANCE,
     MASTERLIST_ARCHER,
     RETRIEVE_VARIANTS_MSKIMPMACT,
     RETRIEVE_VARIANTS_HEMEPACT,
-    RETRIEVE_VARIANTS_RAINDANCE,
     RETRIEVE_VARIANTS_ARCHER,
     RETRIEVE_VARIANTS_ACCESS,
     RETIREVE_GML_VARIANTS
@@ -84,7 +80,7 @@ RETRIEVE_VARIANTS_DMP_SAMPLE_ID = 'dmp_sample_id'
 
 CONSUME_AFFECTED_ROWS = 'affectedRows'
 
-DMP_STUDY_IDS = ['mskimpact', 'mskimpact_heme', 'mskraindance', 'mskarcher', 'mskaccess']
+DMP_STUDY_IDS = ['mskimpact', 'mskimpact_heme', 'mskarcher', 'mskaccess']
 DMP_SAMPLE_ID_PATTERN = re.compile('P-\d+-(T|N)\d+-(IH|TB|TS|AH|AS|IM)\d+')
 
 MASTERLIST_CHECK_ARG_DESCRIPTION = '[optional] Fetches masterlist for study and reports samples from samples file that are missing from masterlist.'
@@ -110,11 +106,9 @@ class PortalProperties(object):
         self.masterlist_route = properties[MASTERLIST_ROUTE]
         self.masterlist_mskimpact = properties[MASTERLIST_MSKIMPACT]
         self.masterlist_hemepact = properties[MASTERLIST_HEMEPACT]
-        self.masterlist_raindance = properties[MASTERLIST_RAINDANCE]
         self.masterlist_archer = properties[MASTERLIST_ARCHER]
         self.retrieve_variants_mskimpact = properties[RETRIEVE_VARIANTS_MSKIMPMACT]
         self.retrieve_variants_hemepact = properties[RETRIEVE_VARIANTS_HEMEPACT]
-        self.retrieve_variants_raindance = properties[RETRIEVE_VARIANTS_RAINDANCE]
         self.retrieve_variants_archer = properties[RETRIEVE_VARIANTS_ARCHER]
         self.retrieve_variants_access = properties[RETRIEVE_VARIANTS_ACCESS]
         self.retrieve_gml_variants = properties[RETIREVE_GML_VARIANTS]
@@ -154,8 +148,6 @@ class PortalProperties(object):
             return self.masterlist_mskimpact
         if study_id == 'mskimpact_heme':
             return self.masterlist_hemepact
-        if study_id == 'mskraindance':
-            return self.masterlist_raindance
         if study_id == 'mskarcher':
             return self.masterlist_archer
 
@@ -166,8 +158,6 @@ class PortalProperties(object):
             return self.retrieve_variants_mskimpact
         if study_id == 'mskimpact_heme':
             return self.retrieve_variants_hemepact
-        if study_id == 'mskraindance':
-            return self.retrieve_variants_raindance
         if study_id == 'mskarcher':
             return self.retrieve_variants_archer
         if study_id == 'mskacess':
