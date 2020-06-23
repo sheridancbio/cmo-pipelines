@@ -847,7 +847,7 @@ def main():
     parser.add_argument("-f", "--fetch-directory", help = "directory where crdb-pdx data is stored", required = True)
     parser.add_argument("-l", "--lib", help = "directory containing subsetting/merge scripts (i.e cmo-pipelines/import-scripts)", required = True)
     parser.add_argument("-m", "--mapping-file", help = "CRDB-fetched file containing mappings from souce/id to destination/id", required = True)
-    parser.add_argument("-r", "--root-directory", help = "root directory for all new studies (i.e dmp to mskimpact, hemepact, raindance...", required = True)
+    parser.add_argument("-r", "--root-directory", help = "root directory for all new studies (i.e dmp to mskimpact, hemepact...", required = True)
     parser.add_argument("-t", "--temp-directory", help = "temp directory to store trigger files", required = True)
     parser.add_argument("-w", "--warning-file", help = "file to store all warnings/errors for email", required = True)
     parser.add_argument("-a", "--annotator", help = "path to annotator jar", required = True)
