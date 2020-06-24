@@ -344,4 +344,14 @@ public class CVRMergedResult {
         }
         return signedoutSnps;
     }
+
+    public List<CVRSnp> getAllNonSignedoutCvrSnps() {
+        List<CVRSnp> nonSignedoutSnps = new ArrayList<>();
+        for (CVRSnp snp : getAllCvrSnps()) {
+            if (snp.getClinicalSignedOut().equals("0")) {
+                nonSignedoutSnps.add(snp);
+            }
+        }
+        return nonSignedoutSnps;
+    }
 }

@@ -52,7 +52,7 @@ import org.springframework.core.io.FileSystemResource;
  *
  * @author heinsz
  */
-public class CVRUnfilteredMutationDataReader implements ItemStreamReader<AnnotatedRecord> {
+public class CVRNonSignedoutMutationDataReader implements ItemStreamReader<AnnotatedRecord> {
 
     @Value("#{jobParameters[stagingDirectory]}")
     private String stagingDirectory;
@@ -79,7 +79,7 @@ public class CVRUnfilteredMutationDataReader implements ItemStreamReader<Annotat
     Set<String> header = new LinkedHashSet<>();
     private AnnotationSummaryStatistics summaryStatistics;
 
-    Logger log = Logger.getLogger(CVRUnfilteredMutationDataReader.class);
+    Logger log = Logger.getLogger(CVRNonSignedoutMutationDataReader.class);
 
     @Override
     public void open(ExecutionContext ec) throws ItemStreamException {
@@ -97,7 +97,7 @@ public class CVRUnfilteredMutationDataReader implements ItemStreamReader<Annotat
         loadMutationRecordsFromJson(cvrData);
 
         // load mutation records from existing maf
-        this.mutationFile = new File(stagingDirectory, CVRUtilities.UNFILTERED_MUTATION_FILE);
+        this.mutationFile = new File(stagingDirectory, CVRUtilities.NONSIGNEDOUT_MUTATION_FILE);
         if (!mutationFile.exists()) {
             log.info("File does not exist - skipping data loading from mutation file: " + mutationFile.getName());
         }
@@ -114,7 +114,7 @@ public class CVRUnfilteredMutationDataReader implements ItemStreamReader<Annotat
         }
         // add header and filename to write to for writer
         ec.put("mutationHeader", new ArrayList(header));
-        ec.put("mafFilename", CVRUtilities.UNFILTERED_MUTATION_FILE);
+        ec.put("mafFilename", CVRUtilities.NONSIGNEDOUT_MUTATION_FILE);
         summaryStatistics.printSummaryStatistics();
     }
 
@@ -122,12 +122,12 @@ public class CVRUnfilteredMutationDataReader implements ItemStreamReader<Annotat
         List<MutationRecord> recordsToAnnotate = new ArrayList<>();
         for (CVRMergedResult result : cvrData.getResults()) {
             String sampleId = result.getMetaData().getDmpSampleId();
-            int sampleSNPCount = result.getAllCvrSnps().size();
+            int countNonSignedoutSampleSnps = result.getAllNonSignedoutCvrSnps().size();
             String somaticStatus = result.getMetaData().getSomaticStatus() != null ? result.getMetaData().getSomaticStatus() : "N/A";
-            for (CVRSnp snp : result.getAllCvrSnps()) {
+            for (CVRSnp snp : result.getAllNonSignedoutCvrSnps()) {
                 recordsToAnnotate.add(cvrUtilities.buildCVRMutationRecord(snp, sampleId, somaticStatus));
             }
-            cvrSampleListUtil.updateUnfilteredSampleSnpCount(sampleId, sampleSNPCount);
+            cvrSampleListUtil.updateNonSignedoutSampleSnpCount(sampleId, countNonSignedoutSampleSnps);
         }
         log.info("Loaded " + String.valueOf(recordsToAnnotate.size()) + " records from JSON");
         try {
@@ -164,7 +164,7 @@ public class CVRUnfilteredMutationDataReader implements ItemStreamReader<Annotat
                     cvrUtilities.isDuplicateRecord(to_add, mutationMap.get(to_add.getTUMOR_SAMPLE_BARCODE()))) {
                 continue;
             }
-            cvrSampleListUtil.updateSignedoutSampleSnpCounts(to_add.getTUMOR_SAMPLE_BARCODE(), 1);
+            cvrSampleListUtil.updateNonSignedoutSampleSnpCount(to_add.getTUMOR_SAMPLE_BARCODE(), 1);
             recordsToAnnotate.add(to_add);
         }
         reader.close();
