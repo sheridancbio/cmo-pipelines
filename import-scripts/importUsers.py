@@ -539,6 +539,18 @@ def get_portal_name_map(google_spreadsheet,client):
     return portal_name,mskcc_user_spreadsheet
 
 
+def establish_new_db_connection(portal_properties, port, ssl_ca_filename):
+    # get db connection & create cursor
+    print >> OUTPUT_FILE, 'Connecting to database: ' + portal_properties.cgds_database_name
+    connection = get_db_connection(portal_properties, port, ssl_ca_filename)
+    if connection is not None:
+        cursor = connection.cursor()
+    else:
+        print >> OUTPUT_FILE, 'Error connecting to database, exiting'
+        sys.exit(2)
+    return (connection, cursor)
+
+
 # ------------------------------------------------------------------------------
 # displays program usage (invalid args)
 
@@ -600,15 +612,6 @@ def main():
         print >> OUTPUT_FILE, 'Error reading %s, exiting' % properties_filename
         return
 
-    # get db connection & create cursor
-    print >> OUTPUT_FILE, 'Connecting to database: ' + portal_properties.cgds_database_name
-    connection = get_db_connection(portal_properties, port, ssl_ca_filename)
-    if connection is not None:
-        cursor = connection.cursor()
-    else:
-        print >> OUTPUT_FILE, 'Error connecting to database, exiting'
-        return
-
     # login to google and get spreadsheet feed
     client = google_login(secrets_filename, creds_filename, portal_properties.google_id, portal_properties.google_pw, sys.argv[0])
 
@@ -617,6 +620,7 @@ def main():
     google_spreadsheets = portal_properties.google_spreadsheet.split(';')
     for google_spreadsheet in google_spreadsheets:
         if not google_spreadsheet == '':
+            (connection, cursor) = establish_new_db_connection(portal_properties, port, ssl_ca_filename)
             print >> OUTPUT_FILE, 'Importing ' + google_spreadsheet + ' ...'
 
             worksheet_feed = get_worksheet_feed(client, google_spreadsheet,
@@ -646,18 +650,18 @@ def main():
                         if new_user_key not in emails_to_remove:
                             print >> OUTPUT_FILE, ('Sending confirmation email to new user: %s at %s' %
                                                (new_user.name, new_user.inst_email))
+
                             send_mail([new_user.inst_email],subject,body, sender = from_field, bcc = bcc_field)
                         else:
                             send_mail([new_user_key], error_subject, error_body, sender = from_field, bcc = bcc_field)
 
+                # commit changes before moving on to next spreadsheet
+                cursor.close()
+                connection.commit()
+                connection.close()
+
             if google_spreadsheet == mskcc_user_spreadsheet:
                 add_unknown_users_to_spreadsheet(client, cursor, google_spreadsheet, portal_properties.google_worksheet,mskcc_user_spreadsheet)
-
-    # clean up
-    cursor.close()
-    connection.commit()
-    connection.close()
-
 
 # ------------------------------------------------------------------------------
 # ready to roll
