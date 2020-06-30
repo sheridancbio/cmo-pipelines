@@ -80,7 +80,7 @@ public class CvrRequeueListener implements StepExecutionListener {
         Map<String, String> sampleListStats = cvrSampleListUtil.getSampleListStats();
         List<CVRRequeueRecord> failedToRequeueSamples = (List<CVRRequeueRecord>) stepExecution.getJobExecution().getExecutionContext().get("failedToRequeueSamples");
         Set<String> zeroVariantSamples = cvrSampleListUtil.getNonWhitelistedZeroVariantSamples();
-        Map<String, Integer> unfilteredSampleSnpCounts = cvrSampleListUtil.getUnfilteredSampleSnpCounts();
+        Map<String, Integer> nonSignedoutSampleSnpCounts = cvrSampleListUtil.getNonSignedoutSampleSnpCounts();
         Set<String> samplesInvalidPatientId = cvrSampleListUtil.getSamplesInvalidPatientIdList();
 
         String subject = "CVR pipeline master list errors: " +  studyId;
@@ -153,10 +153,10 @@ public class CvrRequeueListener implements StepExecutionListener {
             Set<String> unreportedZeroVariantSamples = new HashSet<>(); // sample ids that the white list file is updated with
             log.warn(zeroVariantSamples.size() + " samples have zero variants and are not whitelisted");
             for (String sampleId : zeroVariantSamples) {
-                Integer unfilteredCount = unfilteredSampleSnpCounts.getOrDefault(sampleId, 0);
-                // if both signed out and non-signed out (unfiltered) variant counts are zero
+                Integer nonSignedoutCount = nonSignedoutSampleSnpCounts.getOrDefault(sampleId, 0);
+                // if both signed out and non-signed out variant counts are zero
                 // then safe to update white listed samples file with current sample
-                if (unfilteredCount == 0) {
+                if (nonSignedoutCount == 0) {
                     unreportedZeroVariantSamples.add(sampleId);
                 }
                 else {
@@ -175,9 +175,9 @@ public class CvrRequeueListener implements StepExecutionListener {
                     if (count <= 30) {
                         body.append("\n\t");
                         body.append(sampleId);
-                        Integer unfilteredCount = unfilteredSampleSnpCounts.getOrDefault(sampleId, 0);
-                        body.append(" (unfiltered snp count: ");
-                        body.append(unfilteredCount.toString());
+                        Integer nonSignedoutCount = nonSignedoutSampleSnpCounts.getOrDefault(sampleId, 0);
+                        body.append(" (non-signedout snp count: ");
+                        body.append(nonSignedoutCount.toString());
                         body.append(")");
                     } else {
                         break;

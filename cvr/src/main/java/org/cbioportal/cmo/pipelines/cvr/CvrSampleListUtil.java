@@ -57,7 +57,7 @@ public class CvrSampleListUtil {
     private Set<String> samplesInvalidPatientIdList = new HashSet<>();
     private Map<String, String> sampleListStats = new HashMap<>();
     private Map<String, Integer> signedoutSampleSnpCounts = new HashMap<>();
-    private Map<String, Integer> unfilteredSampleSnpCounts = new HashMap<>();
+    private Map<String, Integer> nonSignedoutSampleSnpCounts = new HashMap<>();
     private Set<String> whitelistedSamplesWithZeroVariants = new HashSet<>();
     private Set<String> nonWhitelistedZeroVariantSamples = new HashSet<>();
     private Set<String> newUnreportedSamplesWithZeroVariants = new HashSet<>();
@@ -373,11 +373,11 @@ public class CvrSampleListUtil {
 
     /**
      * @param sampleId the sampleId to add
-     * @param count the number of unfiltered snps for that sample
+     * @param count the number of non-signedout snps for that sample
      */
-    public void updateUnfilteredSampleSnpCount(String sampleId, Integer count) {
-        Integer currentCount = unfilteredSampleSnpCounts.getOrDefault(sampleId, 0);
-        this.unfilteredSampleSnpCounts.put(sampleId, currentCount + count);
+    public void updateNonSignedoutSampleSnpCount(String sampleId, Integer count) {
+        Integer currentCount = nonSignedoutSampleSnpCounts.getOrDefault(sampleId, 0);
+        this.nonSignedoutSampleSnpCounts.put(sampleId, currentCount + count);
     }
 
     /**
@@ -406,10 +406,10 @@ public class CvrSampleListUtil {
     }
 
     /**
-     * @return the count of unfiltered snps for every sample
+     * @return the count of non-signedout snps for every sample
      */
-    public Map<String, Integer> getUnfilteredSampleSnpCounts() {
-        return this.unfilteredSampleSnpCounts;
+    public Map<String, Integer> getNonSignedoutSampleSnpCounts() {
+        return this.nonSignedoutSampleSnpCounts;
     }
 
     public String getSamplePatientId(String sampleId) {

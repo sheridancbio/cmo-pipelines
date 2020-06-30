@@ -193,7 +193,7 @@ def merge_studies(file_types, reference_set, keep_match, output_directory, study
 
                 merge_files(file_types[META_FILE_MAP[file_type][0]], file_type, reference_set, keep_match, output_directory, merge_style, study_id)
             elif file_type == SUPP_DATA and not exclude_supp_data:
-                # multiple studies may have the same file basename for other filetypes i.e., data_mutations_unfiltered.txt
+                # multiple studies may have the same file basename for other filetypes i.e., data_mutations_nonsignedout.txt
                 # we need to figure out which files to pair
                 supp_filetypes = {}
                 for f in files:
