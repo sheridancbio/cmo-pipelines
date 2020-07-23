@@ -69,7 +69,7 @@ def get_authorization_header(deployment):
     if "DATA_ACCESS_TOKEN" not in os.environ:
         print "No value set for environment variable DATA_ACCESS_TOKEN. Unable to submit requests, exiting..."
         sys.exit(1)
-    return {"Authorization" : "Bearer %s" % (os.environ("DATA_ACCESS_TOKEN"))}
+    return {"Authorization" : "Bearer %s" % (os.environ["DATA_ACCESS_TOKEN"])}
 
 def get_cancer_studies(cbio_url, authorization_header):
     cancer_study_ids = []
