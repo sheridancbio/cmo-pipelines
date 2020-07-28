@@ -31,6 +31,7 @@ MASTERLIST_ROUTE = 'dmp.tokens.retrieve_master_list.route'
 MASTERLIST_MSKIMPACT = 'dmp.tokens.retrieve_master_list.impact'
 MASTERLIST_HEMEPACT = 'dmp.tokens.retrieve_master_list.heme'
 MASTERLIST_ARCHER = 'dmp.tokens.retrieve_master_list.archer'
+MASTERLIST_ACCESS = 'dmp.tokens.retrieve_master_list.access'
 
 RETRIEVE_VARIANTS_MSKIMPMACT = 'dmp.tokens.retrieve_variants.impact'
 RETRIEVE_VARIANTS_HEMEPACT = 'dmp.tokens.retrieve_variants.heme'
@@ -53,6 +54,7 @@ REQUIRED_PROPERTIES = [
     MASTERLIST_MSKIMPACT,
     MASTERLIST_HEMEPACT,
     MASTERLIST_ARCHER,
+    MASTERLIST_ACCESS,
     RETRIEVE_VARIANTS_MSKIMPMACT,
     RETRIEVE_VARIANTS_HEMEPACT,
     RETRIEVE_VARIANTS_ARCHER,
@@ -81,7 +83,7 @@ RETRIEVE_VARIANTS_DMP_SAMPLE_ID = 'dmp_sample_id'
 CONSUME_AFFECTED_ROWS = 'affectedRows'
 
 DMP_STUDY_IDS = ['mskimpact', 'mskimpact_heme', 'mskarcher', 'mskaccess']
-DMP_SAMPLE_ID_PATTERN = re.compile('P-\d+-(T|N)\d+-(IH|TB|TS|AH|AS|IM)\d+')
+DMP_SAMPLE_ID_PATTERN = re.compile('P-\d+-(T|N)\d+-(IH|TB|TS|AH|AS|IM|XS)\d+')
 
 MASTERLIST_CHECK_ARG_DESCRIPTION = '[optional] Fetches masterlist for study and reports samples from samples file that are missing from masterlist.'
 REQUEUE_SAMPLES_ARG_DESCRIPTION = '[optional] Requeues samples and reports whether requeue was successful or not. If requeue failed then attempts to determine if failure is due to sample(s) missing from study masterlist or if sample is already queued for next CVR fetch.'
@@ -107,6 +109,7 @@ class PortalProperties(object):
         self.masterlist_mskimpact = properties[MASTERLIST_MSKIMPACT]
         self.masterlist_hemepact = properties[MASTERLIST_HEMEPACT]
         self.masterlist_archer = properties[MASTERLIST_ARCHER]
+        self.masterlist_access = properties[MASTERLIST_ACCESS]
         self.retrieve_variants_mskimpact = properties[RETRIEVE_VARIANTS_MSKIMPMACT]
         self.retrieve_variants_hemepact = properties[RETRIEVE_VARIANTS_HEMEPACT]
         self.retrieve_variants_archer = properties[RETRIEVE_VARIANTS_ARCHER]
@@ -150,6 +153,8 @@ class PortalProperties(object):
             return self.masterlist_hemepact
         if study_id == 'mskarcher':
             return self.masterlist_archer
+        if study_id == 'mskaccess':
+            return self.masterlist_access
 
     def get_study_retrieve_variants_endpoint(self, study_id):
         if self.is_germline_mode:
@@ -160,7 +165,7 @@ class PortalProperties(object):
             return self.retrieve_variants_hemepact
         if study_id == 'mskarcher':
             return self.retrieve_variants_archer
-        if study_id == 'mskacess':
+        if study_id == 'mskaccess':
             return self.retrieve_variants_access
 
     def get_dmp_server(self):
@@ -257,9 +262,6 @@ def get_dmp_masterlist(portal_properties, session_data, study_id):
         Returns the master list for a given study id.
         NOTE: This does not apply to germline mode.
     '''
-    if study_id == 'mskaccess':
-        print >> OUTPUT_FILE, 'The CVR master list is not yet supported in the CVR web service for study mskaccess'
-        return set()
     url = '%s%s/%s/%s' % (portal_properties.dmp_server, portal_properties.masterlist_route, session_data[CREATE_SESSION_SESSION_ID], portal_properties.get_study_masterlist_endpoint(study_id))
     print >> OUTPUT_FILE, 'Fetching masterlist for study \'%s\': %s' % (study_id, url)
     response = urllib.urlopen(url)
