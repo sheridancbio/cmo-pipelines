@@ -663,13 +663,13 @@ def main():
                         else:
                             send_mail([new_user_key], error_subject, error_body, sender = from_field, bcc = bcc_field)
 
+                if google_spreadsheet == mskcc_user_spreadsheet:
+                    add_unknown_users_to_spreadsheet(client, cursor, google_spreadsheet, portal_properties.google_worksheet,mskcc_user_spreadsheet)
+
                 # commit changes before moving on to next spreadsheet
                 cursor.close()
                 connection.commit()
                 connection.close()
-
-            if google_spreadsheet == mskcc_user_spreadsheet:
-                add_unknown_users_to_spreadsheet(client, cursor, google_spreadsheet, portal_properties.google_worksheet,mskcc_user_spreadsheet)
 
 # ------------------------------------------------------------------------------
 # ready to roll
