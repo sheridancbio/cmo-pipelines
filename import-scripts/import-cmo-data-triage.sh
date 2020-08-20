@@ -101,5 +101,5 @@ FLOCK_FILEPATH="/data/portal-cron/cron-lock/import-cmo-data-triage.lock"
     fi
 
     echo "Cleaning up any untracked files from MSK-TRIAGE import..."
-    bash $PORTAL_HOME/scripts/datasource-repo-cleanup.sh $PORTAL_DATA_HOME $PORTAL_DATA_HOME/bic-mskcc $PORTAL_DATA_HOME/private $PORTAL_DATA_HOME/impact $PORTAL_DATA_HOME/immunotherapy $PORTAL_DATA_HOME/datahub $PORTAL_DATA_HOME/datahub_shahlab $PORTAL_DATA_HOME/msk-mind
+    bash $PORTAL_HOME/scripts/datasource-repo-cleanup.sh $PORTAL_DATA_HOME $PORTAL_DATA_HOME/bic-mskcc $PORTAL_DATA_HOME/private $PORTAL_DATA_HOME/impact $PORTAL_DATA_HOME/immunotherapy $PORTAL_DATA_HOME/datahub $PORTAL_DATA_HOME/datahub_shahlab $PORTAL_DATA_HOME/msk-mind $PORTAL_DATA_HOME/pipelines-testing
 ) {flock_fd}>$FLOCK_FILEPATH
