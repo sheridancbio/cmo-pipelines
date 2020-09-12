@@ -132,7 +132,7 @@ FLOCK_FILEPATH="/data/portal-cron/cron-lock/oncokb-annotator.sh"
     ONCOKB_README_FILE="$ONCOKB_OUT_DIR/README"
 
     # Make sure necessary environment variables are set before running
-    if [ -z $PYTHON_BINARY ] || [ -z $GIT_BINARY ] || [ -z $ONCOKB_ANNOTATOR_HOME ] || [ -z $DMP_DATA_HOME ] || [ -z $MSK_SOLID_HEME_DATA_HOME ] || [ -z $ONCOKB_URL ] || [ -z $CANCER_HOTSPOTS_URL ] || [ -z $ONCOKB_TOKEN_FILE ] || [ -z $PORTAL_HOME ] ; then
+    if [ -z $PYTHON3_BINARY ] || [ -z $GIT_BINARY ] || [ -z $ONCOKB_ANNOTATOR_HOME ] || [ -z $DMP_DATA_HOME ] || [ -z $MSK_SOLID_HEME_DATA_HOME ] || [ -z $ONCOKB_URL ] || [ -z $CANCER_HOTSPOTS_URL ] || [ -z $ONCOKB_TOKEN_FILE ] || [ -z $PORTAL_HOME ] ; then
         message="Could not run oncokb annotation script: automation-environment.sh script must be run in order to set needed environment variables."
         send_failure_messages "$message" "oncokb-annotator failed to run." "$message"
         exit 2
@@ -213,7 +213,7 @@ FLOCK_FILEPATH="/data/portal-cron/cron-lock/oncokb-annotator.sh"
             fi
         fi
 
-        $PYTHON_BINARY $MAF_ANNOTATOR_SCRIPT -b $ONCOKB_TOKEN -i $STAGING_MAF_FILE -o $ONCOKB_MAF_FILE -c $STAGING_SAMPLE_FILE -u $ONCOKB_URL -v $CANCER_HOTSPOTS_URL $PREVIOUS_ANNOTATED_MAF_ARGS
+        $PYTHON3_BINARY $MAF_ANNOTATOR_SCRIPT -b $ONCOKB_TOKEN -i $STAGING_MAF_FILE -o $ONCOKB_MAF_FILE -c $STAGING_SAMPLE_FILE -u $ONCOKB_URL -v $CANCER_HOTSPOTS_URL $PREVIOUS_ANNOTATED_MAF_ARGS
         if [ $? -ne 0 ] ; then
             echo "Failed to annotate MAF, exiting..."
             ONCOKB_ANNOTATION_SUCCESS=0
@@ -229,7 +229,7 @@ FLOCK_FILEPATH="/data/portal-cron/cron-lock/oncokb-annotator.sh"
     if [ $ONCOKB_ANNOTATION_SUCCESS -eq 1 ] ; then
         echo $(date)
         echo "Beginning fusions annotation..."
-        $PYTHON_BINARY $FUSION_ANNOTATOR_SCRIPT -b $ONCOKB_TOKEN -i $STAGING_FUSION_FILE -o $ONCOKB_FUSION_FILE -c $STAGING_SAMPLE_FILE -u $ONCOKB_URL
+        $PYTHON3_BINARY $FUSION_ANNOTATOR_SCRIPT -b $ONCOKB_TOKEN -i $STAGING_FUSION_FILE -o $ONCOKB_FUSION_FILE -c $STAGING_SAMPLE_FILE -u $ONCOKB_URL
         if [ $? -ne 0 ] ; then
             echo "Failed to annotate fusion file, exiting..."
             ONCOKB_ANNOTATION_SUCCESS=0
@@ -240,7 +240,7 @@ FLOCK_FILEPATH="/data/portal-cron/cron-lock/oncokb-annotator.sh"
     if [ $ONCOKB_ANNOTATION_SUCCESS -eq 1 ] ; then
         echo $(date)
         echo "Beginning CNA annotation..."
-        $PYTHON_BINARY $CNA_ANNOTATOR_SCRIPT -b $ONCOKB_TOKEN -i $STAGING_CNA_FILE -o $ONCOKB_CNA_FILE -c $STAGING_SAMPLE_FILE -u $ONCOKB_URL
+        $PYTHON3_BINARY $CNA_ANNOTATOR_SCRIPT -b $ONCOKB_TOKEN -i $STAGING_CNA_FILE -o $ONCOKB_CNA_FILE -c $STAGING_SAMPLE_FILE -u $ONCOKB_URL
         if [ $? -ne 0 ] ; then
             echo "Failed to annotate CNA file, exiting..."
             ONCOKB_ANNOTATION_SUCCESS=0
@@ -251,7 +251,7 @@ FLOCK_FILEPATH="/data/portal-cron/cron-lock/oncokb-annotator.sh"
     if [ $ONCOKB_ANNOTATION_SUCCESS -eq 1 ] ; then
         echo $(date)
         echo "Beginning clinical annotation..."
-        $PYTHON_BINARY $CLINICAL_ANNOTATOR_SCRIPT -i $STAGING_SAMPLE_FILE -o $ONCOKB_SAMPLE_FILE -a $ONCOKB_MAF_FILE,$ONCOKB_FUSION_FILE,$ONCOKB_CNA_FILE
+        $PYTHON3_BINARY $CLINICAL_ANNOTATOR_SCRIPT -i $STAGING_SAMPLE_FILE -o $ONCOKB_SAMPLE_FILE -a $ONCOKB_MAF_FILE,$ONCOKB_FUSION_FILE,$ONCOKB_CNA_FILE
         if [ $? -ne 0 ] ; then
             echo "Failed to annotate clinical file, exiting..."
             ONCOKB_ANNOTATION_SUCCESS=0
@@ -262,7 +262,7 @@ FLOCK_FILEPATH="/data/portal-cron/cron-lock/oncokb-annotator.sh"
     if [ $ONCOKB_ANNOTATION_SUCCESS -eq 1 ] ; then
         echo $(date)
         echo "Beginning clinical PDF generation..."
-        $PYTHON_BINARY $PDF_SCRIPT -i $ONCOKB_SAMPLE_FILE -o $ONCOKB_PDF_FILE -n $ONCOKB_PDF_NUMBER
+        $PYTHON3_BINARY $PDF_SCRIPT -i $ONCOKB_SAMPLE_FILE -o $ONCOKB_PDF_FILE -n $ONCOKB_PDF_NUMBER
         if [ $? -ne 0 ] ; then
             echo "Failed to generate clinical pdf, exiting..."
             ONCOKB_ANNOTATION_SUCCESS=0
@@ -275,7 +275,7 @@ FLOCK_FILEPATH="/data/portal-cron/cron-lock/oncokb-annotator.sh"
         echo "Beginning somatic clinical annotation..."
         # Generate somatic-only MAF by excluding lines including 'GERMLINE'
         awk -F'\t' '$26 != "GERMLINE"' $ONCOKB_MAF_FILE > $ONCOKB_SOMATIC_MAF_FILE
-        $PYTHON_BINARY $CLINICAL_ANNOTATOR_SCRIPT -i $STAGING_SAMPLE_FILE -o $ONCOKB_SOMATIC_SAMPLE_FILE -a $ONCOKB_SOMATIC_MAF_FILE,$ONCOKB_FUSION_FILE,$ONCOKB_CNA_FILE
+        $PYTHON3_BINARY $CLINICAL_ANNOTATOR_SCRIPT -i $STAGING_SAMPLE_FILE -o $ONCOKB_SOMATIC_SAMPLE_FILE -a $ONCOKB_SOMATIC_MAF_FILE,$ONCOKB_FUSION_FILE,$ONCOKB_CNA_FILE
         if [ $? -ne 0 ] ; then
             echo "Failed to annotate somatic clinical file, exiting..."
             ONCOKB_ANNOTATION_SUCCESS=0
@@ -286,7 +286,7 @@ FLOCK_FILEPATH="/data/portal-cron/cron-lock/oncokb-annotator.sh"
     if [ $ONCOKB_ANNOTATION_SUCCESS -eq 1 ] ; then
         echo $(date)
         echo "Beginning somatic clinical PDF generation..."
-        $PYTHON_BINARY $PDF_SCRIPT -i $ONCOKB_SOMATIC_SAMPLE_FILE -o $ONCOKB_SOMATIC_PDF_FILE -n $ONCOKB_PDF_NUMBER
+        $PYTHON3_BINARY $PDF_SCRIPT -i $ONCOKB_SOMATIC_SAMPLE_FILE -o $ONCOKB_SOMATIC_PDF_FILE -n $ONCOKB_PDF_NUMBER
         if [ $? -ne 0 ] ; then
             echo "Failed to generate somatic clinical pdf, exiting..."
             ONCOKB_ANNOTATION_SUCCESS=0
@@ -297,7 +297,7 @@ FLOCK_FILEPATH="/data/portal-cron/cron-lock/oncokb-annotator.sh"
     if [ $ONCOKB_ANNOTATION_SUCCESS -eq 1 ] ; then
         echo $(date)
         echo "Beginning README generation..."
-        $PYTHON_BINARY $README_SCRIPT -o $ONCOKB_README_FILE -u $ONCOKB_URL
+        $PYTHON3_BINARY $README_SCRIPT -o $ONCOKB_README_FILE -u $ONCOKB_URL
         if [ $? -ne 0 ] ; then
             echo "Failed to generate README, exiting..."
             ONCOKB_ANNOTATION_SUCCESS=0
