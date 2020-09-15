@@ -43,6 +43,11 @@ function cleanupGithubRepository {
     if [ $return_value -gt 0 ] ; then
         return $return_value
     fi
+    echo "git lfs prune"
+    git lfs prune ; return_value=$?
+    if [ $return_value -gt 0 ] ; then
+        return $return_value
+    fi
     return $return_value
 }
 
