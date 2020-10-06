@@ -129,8 +129,10 @@ public class CVRPipeline {
         Job cvrJob = ctx.getBean(jobName, Job.class);
         JobParameters jobParameters = builder.toJobParameters();
         JobExecution jobExecution = jobLauncher.run(cvrJob, jobParameters);
-        EmailUtil emailUtil = ctx.getBean(BatchConfiguration.EMAIL_UTIL, EmailUtil.class);
-        checkExceptions(jobExecution, jobParameters, emailUtil);
+        if (!testingMode) {
+            EmailUtil emailUtil = ctx.getBean(BatchConfiguration.EMAIL_UTIL, EmailUtil.class);
+            checkExceptions(jobExecution, jobParameters, emailUtil);
+        }
         log.info("Shutting down CVR Pipeline");
     }
 
@@ -158,9 +160,11 @@ public class CVRPipeline {
         }
         JobParameters jobParameters = builder.toJobParameters();
         Job consumeJob = ctx.getBean(BatchConfiguration.CONSUME_SAMPLES_JOB, Job.class);
-        EmailUtil emailUtil = ctx.getBean(BatchConfiguration.EMAIL_UTIL, EmailUtil.class);
         JobExecution jobExecution = jobLauncher.run(consumeJob, jobParameters);
-        checkExceptions(jobExecution, jobParameters, emailUtil);
+        if (!testingMode) {
+            EmailUtil emailUtil = ctx.getBean(BatchConfiguration.EMAIL_UTIL, EmailUtil.class);
+            checkExceptions(jobExecution, jobParameters, emailUtil);
+        }
         log.info("Shutting down Consume Sample Job");
     }
 
