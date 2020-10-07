@@ -324,6 +324,31 @@ if [ $IMPORT_STATUS_HEME -eq 0 ] ; then
             cd $MSK_HEMEPACT_DATA_HOME ; $GIT_BINARY add ./* ; $GIT_BINARY commit -m "Latest HEMEPACT dataset"
         fi
     fi
+    # fetch new/updated HEMEPACT germline samples using CVR Web service   (must come after normal cvr fetching)
+    printTimeStampedDataProcessingStepMessage "CVR germline fetch for hemepact"
+    $JAVA_BINARY $JAVA_CVR_FETCHER_ARGS -d $MSK_HEMEPACT_DATA_HOME -n data_clinical_hemepact_data_clinical.txt -g -i mskimpact_heme $CVR_TEST_MODE_ARGS
+    if [ $? -gt 0 ] ; then
+        echo "CVR Germline fetch failed!"
+        cd $DMP_DATA_HOME ; $GIT_BINARY reset HEAD --hard
+        sendPreImportFailureMessageMskPipelineLogsSlack "HEMEPACT CVR Germline Fetch"
+        IMPORT_STATUS_HEME=1
+        #override the success of the tumor sample cvr fetch with a failed status
+        FETCH_CVR_HEME_FAIL=1
+    else
+        # check for PHI
+        $PYTHON_BINARY $PORTAL_HOME/scripts/phi-scanner.py -a $PIPELINES_CONFIG_HOME/properties/fetch-cvr/phi-scanner-attributes.txt -j $MSK_HEMEPACT_DATA_HOME/cvr_gml_data.json
+        if [ $? -gt 0 ] ; then
+            echo "PHI attributes found in $MSK_HEMEPACT_DATA_HOME/cvr_gml_data.json! HEMEPACT will not be imported!"
+            cd $DMP_DATA_HOME ; $GIT_BINARY reset HEAD --hard
+            sendPreImportFailureMessageMskPipelineLogsSlack "HEMEPACT PHI attributes scan failed on $MSK_HEMEPACT_DATA_HOME/cvr_gml_data.json"
+            IMPORT_STATUS_HEME=1
+            #override the success of the tumor sample cvr fetch with a failed status
+            FETCH_CVR_HEME_FAIL=1
+        else
+            echo "committing CVR germline data"
+            cd $MSK_HEMEPACT_DATA_HOME ; $GIT_BINARY add ./* ; $GIT_BINARY commit -m "Latest HEMEPACT Dataset: CVR Germline"
+        fi
+    fi
 fi
 
 # fetch ddp demographics data
