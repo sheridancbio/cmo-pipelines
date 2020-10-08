@@ -281,6 +281,30 @@ function import_access_ddp_to_redcap {
     return $return_value
 }
 
+# Function for importing raindance cvr files to redcap
+function import_raindance_cvr_to_redcap {
+    return_value=0
+    if ! import_project_to_redcap $MSK_RAINDANCE_DATA_HOME/data_clinical_mskraindance_data_clinical.txt mskraindance_data_clinical ; then return_value=1 ; fi
+    return $return_value
+}
+
+# Function for importing raindance supp date files to redcap
+function import_raindance_supp_date_to_redcap {
+    return_value=0
+    if ! import_project_to_redcap $MSK_RAINDANCE_DATA_HOME/data_clinical_mskraindance_data_clinical_supp_date.txt mskraindance_data_clinical_supp_date ; then return_value=1 ; fi
+    return $return_value
+}
+
+# Function for importing raindance ddp files to redcap
+function import_raindance_ddp_to_redcap {
+    return_value=0
+    if ! import_project_to_redcap $MSK_RAINDANCE_DATA_HOME/data_clinical_ddp.txt mskraindance_data_clinical_ddp_demographics ; then return_value=1 ; fi
+    # if ! import_project_to_redcap $MSK_RAINDANCE_DATA_HOME/data_timeline_ddp_chemotherapy.txt mskraindance_timeline_chemotherapy_ddp; then return_value=1 ; fi
+    # if ! import_project_to_redcap $MSK_RAINDANCE_DATA_HOME/data_timeline_ddp_radiation.txt mskraindance_timeline_radiation_ddp ; then return_value=1 ; fi
+    # if ! import_project_to_redcap $MSK_RAINDANCE_DATA_HOME/data_timeline_ddp_surgery.txt mskraindance_data_timeline_surgery_ddp ; then return_value=1 ; fi
+    return $return_value
+}
+
 # Function for removing raw clinical and timeline files from study directory
 function remove_raw_clinical_timeline_data_files {
     STUDY_DIRECTORY=$1

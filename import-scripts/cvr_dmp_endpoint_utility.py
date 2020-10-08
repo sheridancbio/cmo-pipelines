@@ -32,11 +32,13 @@ MASTERLIST_MSKIMPACT = 'dmp.tokens.retrieve_master_list.impact'
 MASTERLIST_HEMEPACT = 'dmp.tokens.retrieve_master_list.heme'
 MASTERLIST_ARCHER = 'dmp.tokens.retrieve_master_list.archer'
 MASTERLIST_ACCESS = 'dmp.tokens.retrieve_master_list.access'
+MASTERLIST_RAINDANCE = 'dmp.tokens.retrieve_master_list.rdts'
 
 RETRIEVE_VARIANTS_MSKIMPMACT = 'dmp.tokens.retrieve_variants.impact'
 RETRIEVE_VARIANTS_HEMEPACT = 'dmp.tokens.retrieve_variants.heme'
 RETRIEVE_VARIANTS_ARCHER = 'dmp.tokens.retrieve_variants.archer'
 RETRIEVE_VARIANTS_ACCESS = 'dmp.tokens.retrieve_variants.access'
+RETRIEVE_VARIANTS_RAINDANCE = 'dmp.tokens.retrieve_variants.rdts'
 RETIREVE_GML_VARIANTS = 'dmp.tokens.retrieve_gml_variants'
 
 REQUIRED_PROPERTIES = [
@@ -55,10 +57,12 @@ REQUIRED_PROPERTIES = [
     MASTERLIST_HEMEPACT,
     MASTERLIST_ARCHER,
     MASTERLIST_ACCESS,
+    MASTERLIST_RAINDANCE,
     RETRIEVE_VARIANTS_MSKIMPMACT,
     RETRIEVE_VARIANTS_HEMEPACT,
     RETRIEVE_VARIANTS_ARCHER,
     RETRIEVE_VARIANTS_ACCESS,
+    RETRIEVE_VARIANTS_RAINDANCE,
     RETIREVE_GML_VARIANTS
 ]
 
@@ -82,7 +86,7 @@ RETRIEVE_VARIANTS_DMP_SAMPLE_ID = 'dmp_sample_id'
 
 CONSUME_AFFECTED_ROWS = 'affectedRows'
 
-DMP_STUDY_IDS = ['mskimpact', 'mskimpact_heme', 'mskarcher', 'mskaccess']
+DMP_STUDY_IDS = ['mskimpact', 'mskimpact_heme', 'mskraindance', 'mskarcher', 'mskaccess']
 DMP_SAMPLE_ID_PATTERN = re.compile('P-\d+-(T|N)\d+-(IH|TB|TS|AH|AS|IM|XS)\d+')
 
 MASTERLIST_CHECK_ARG_DESCRIPTION = '[optional] Fetches masterlist for study and reports samples from samples file that are missing from masterlist.'
@@ -110,10 +114,12 @@ class PortalProperties(object):
         self.masterlist_hemepact = properties[MASTERLIST_HEMEPACT]
         self.masterlist_archer = properties[MASTERLIST_ARCHER]
         self.masterlist_access = properties[MASTERLIST_ACCESS]
+        self.masterlist_raindance = properties[MASTERLIST_RAINDANCE]
         self.retrieve_variants_mskimpact = properties[RETRIEVE_VARIANTS_MSKIMPMACT]
         self.retrieve_variants_hemepact = properties[RETRIEVE_VARIANTS_HEMEPACT]
         self.retrieve_variants_archer = properties[RETRIEVE_VARIANTS_ARCHER]
         self.retrieve_variants_access = properties[RETRIEVE_VARIANTS_ACCESS]
+        self.retrieve_variants_raindance = properties[RETRIEVE_VARIANTS_RAINDANCE]
         self.retrieve_gml_variants = properties[RETIREVE_GML_VARIANTS]
         self.is_germline_mode = germline_mode
 
@@ -155,6 +161,8 @@ class PortalProperties(object):
             return self.masterlist_archer
         if study_id == 'mskaccess':
             return self.masterlist_access
+        if study_id == 'mskraindance':
+            return self.masterlist_raindance
 
     def get_study_retrieve_variants_endpoint(self, study_id):
         if self.is_germline_mode:
@@ -167,6 +175,8 @@ class PortalProperties(object):
             return self.retrieve_variants_archer
         if study_id == 'mskaccess':
             return self.retrieve_variants_access
+        if study_id == 'mskraindance':
+            return self.retrieve_variants_raindance
 
     def get_dmp_server(self):
         if self.is_germline_mode:

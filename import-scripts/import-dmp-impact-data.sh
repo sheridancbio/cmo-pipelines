@@ -73,6 +73,7 @@ rikengenesisjapan_notification_file=$(mktemp $MSK_DMP_TMPDIR/msk-rikengenesisjap
 lymphoma_super_cohort_notification_file=$(mktemp $MSK_DMP_TMPDIR/lymphoma-super-cohort-portal-update-notification.$now.XXXXXX)
 sclc_mskimpact_notification_file=$(mktemp $MSK_DMP_TMPDIR/sclc-mskimpact-portal-update-notification.$now.XXXXXX)
 mskimpact_ped_notification_file=$(mktemp $MSK_DMP_TMPDIR/mskimpact-ped-update-notification.$now.XXXXXX)
+mskraindance_notification_file=$(mktemp $MSK_DMP_TMPDIR/mskraindance-portal-update-notification.$now.XXXXXX)
 
 # -----------------------------------------------------------------------------------------------------------
 
@@ -91,6 +92,7 @@ IMPORT_FAIL_RIKENGENESISJAPAN=1
 IMPORT_FAIL_MSKIMPACT_PED=1
 IMPORT_FAIL_SCLC_MSKIMPACT=1
 IMPORT_FAIL_LYMPHOMA=1
+IMPORT_FAIL_RAINDANCE=1
 GENERATE_MASTERLIST_FAIL=0
 MERCURIAL_PUSH_FAIL=0
 
@@ -161,8 +163,30 @@ else
     restartMSKTomcats
 fi
 
-# set 'RESTART_AFTER_DMP_PIPELINES_IMPORT' flag to 1 if ARCHER succesfully updates
+# set 'RESTART_AFTER_DMP_PIPELINES_IMPORT' flag to 1 if RAINDANCE, ARCHER succesfully update
 RESTART_AFTER_DMP_PIPELINES_IMPORT=0
+
+## TEMP STUDY IMPORT: MSKRAINDANCE
+if [ $DB_VERSION_FAIL -eq 0 ] && [ -f $MSK_RAINDANCE_IMPORT_TRIGGER ] ; then
+    printTimeStampedDataProcessingStepMessage "import for mskraindance"
+    bash $PORTAL_HOME/scripts/import-temp-study.sh --study-id="mskraindance" --temp-study-id="temporary_mskraindance" --backup-study-id="yesterday_mskraindance" --portal-name="mskraindance-portal" --study-path="$MSK_RAINDANCE_DATA_HOME" --notification-file="$mskraindance_notification_file" --tmp-directory="$MSK_DMP_TMPDIR" --email-list="$PIPELINES_EMAIL_LIST" --oncotree-version="${ONCOTREE_VERSION_TO_USE}" --importer-jar="$PORTAL_HOME/lib/msk-dmp-importer.jar" --transcript-overrides-source="mskcc"
+    if [ $? -eq 0 ] ; then
+        RESTART_AFTER_DMP_PIPELINES_IMPORT=1
+        IMPORT_FAIL_RAINDANCE=0
+    fi
+    rm $MSK_RAINDANCE_IMPORT_TRIGGER
+else
+    if [ $DB_VERSION_FAIL -gt 0 ] ; then
+        echo "Not importing MSKRAINDANCE - database version is not compatible"
+    else
+        echo "Not importing MSKRAINDANCE - something went wrong with a fetch"
+    fi
+fi
+if [ $IMPORT_FAIL_RAINDANCE -gt 0 ] ; then
+    sendImportFailureMessageMskPipelineLogsSlack "RAINDANCE import"
+else
+    sendImportSuccessMessageMskPipelineLogsSlack "RAINDANCE"
+fi
 
 # TEMP STUDY IMPORT: MSKARCHER
 mysql --host="$DMP_DB_HOST" --user="$DMP_DB_USER" --password="$DMP_DB_PASSWORD" "$DMP_DB_DATABASE_NAME" -e "update genetic_profile set genetic_alteration_type = 'FUSION' where genetic_alteration_type = 'MUTATION_EXTENDED' and stable_id = 'mskarcher_mutations'"
@@ -194,9 +218,10 @@ fi
 
 ## TOMCAT RESTART
 # Restart will only execute if at least one of these studies succesfully updated.
+#   MSKRAINDANCE
 #   MSKARCHER
 if [ $RESTART_AFTER_DMP_PIPELINES_IMPORT -eq 0 ] ; then
-    echo "Failed to update ARCHER - next tomcat restart will execute after successful updates to MSK affiliate studies..."
+    echo "Failed to update RAINDANCE, ARCHER - next tomcat restart will execute after successful updates to MSK affiliate studies..."
     echo $(date)
 else
     restartMSKTomcats
