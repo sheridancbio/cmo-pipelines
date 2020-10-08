@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# take snapshot of REDCap projects for MSKIMPACT, HEMEPACT, ARCHER
+# take snapshot of REDCap projects for MSKIMPACT, HEMEPACT, ARCHER, RAINDANCE
 echo $(date)
 PIPELINES_EMAIL_LIST="cbioportal-pipelines@cbio.mskcc.org"
 SLACK_PIPELINES_MONITOR_URL=`cat $SLACK_URL_FILE`
@@ -10,11 +10,13 @@ MSKIMPACT_REDCAP_EXPORT_FAIL=0
 HEMEPACT_REDCAP_EXPORT_FAIL=0
 ARCHER_REDCAP_EXPORT_FAIL=0
 ACCESS_REDCAP_EXPORT_FAIL=0
+RAINDANCE_REDCAP_EXPORT_FAIL=0
 
 MSKIMPACT_VALIDATION_FAIL=0
 HEMEPACT_VALIDATION_FAIL=0
 ARCHER_VALIDATION_FAIL=0
 ACCESS_VALIDATION_FAIL=0
+RAINDANCE_VALIDATION_FAIL=0
 
 # -----------------------------------------------------------------------------------------------------------
 # FUNCTIONS
@@ -144,13 +146,34 @@ else
     fi
 fi
 
+# export and commit RAINDANCE REDCap data
+$JAVA_BINARY $JAVA_REDCAP_PIPELINE_ARGS -e -r -s mskraindance -d $RAINDANCE_REDCAP_BACKUP
+if [ $? -gt 0 ]; then
+    echo "Failed to export REDCap data snapshot for RAINDANCE! Aborting any changes made during export..."
+    cd $RAINDANCE_REDCAP_BACKUP; $HG_BINARY update -C; rm *.orig
+    RAINDANCE_REDCAP_EXPORT_FAIL=1
+    sendFailureMessageMskPipelineLogsSlack "RAINDANCE export"
+else
+    validateRedcapExportForStudy $RAINDANCE_REDCAP_BACKUP
+    if [ $? -gt 0 ]; then
+        echo "Validation of RAINDANCE REDCap snapshot failed! Aborting any changes made during export..."
+        RAINDANCE_VALIDATION_FAIL=1
+        cd $RAINDANCE_REDCAP_BACKUP; $HG_BINARY update -C; rm *.orig
+        RAINDANCE_REDCAP_EXPORT_FAIL=1
+        sendFailureMessageMskPipelineLogsSlack "RAINDANCE validation"
+    else
+        echo "Committing RAINDANCE REDCap data snapshot"
+        cd $RAINDANCE_REDCAP_BACKUP; $HG_BINARY commit -m "RAINDANCE REDCap Snapshot"
+    fi
+fi
+
 # push outgoing changesets to mercurial repo
 echo "Pushing REDCap snapshot back to mercurial repository..."
 echo $(date)
 cd $REDCAP_BACKUP_DATA_HOME; $HG_BINARY push
 
 # slack successful backup message
-if [[ $MSKIMPACT_REDCAP_EXPORT_FAIL -eq 0 && $MSKIMPACT_VALIDATION_FAIL -eq 0 && $HEMEPACT_REDCAP_EXPORT_FAIL -eq 0 && $HEMEPACT_VALIDATION_FAIL -eq 0 && $ARCHER_REDCAP_EXPORT_FAIL -eq 0 && $ARCHER_VALIDATION_FAIL -eq 0 && $ACCESS_REDCAP_EXPORT_FAIL -eq 0 && $ACCESS_VALIDATION_FAIL -eq 0 ]]; then
+if [[ $MSKIMPACT_REDCAP_EXPORT_FAIL -eq 0 && $MSKIMPACT_VALIDATION_FAIL -eq 0 && $RAINDANCE_REDCAP_EXPORT_FAIL -eq 0 && $RAINDANCE_VALIDATION_FAIL -eq 0 && $HEMEPACT_REDCAP_EXPORT_FAIL -eq 0 && $HEMEPACT_VALIDATION_FAIL -eq 0 && $ARCHER_REDCAP_EXPORT_FAIL -eq 0 && $ARCHER_VALIDATION_FAIL -eq 0 && $ACCESS_REDCAP_EXPORT_FAIL -eq 0 && $ACCESS_VALIDATION_FAIL -eq 0 ]]; then
     sendSuccessMessageMskPipelineLogsSlack "ALL studies"
 else
     if [[ $MSKIMPACT_REDCAP_EXPORT_FAIL -eq 0 && $MSKIMPACT_VALIDATION_FAIL -eq 0 ]] ; then
@@ -164,6 +187,9 @@ else
     fi
     if [[ $ACCESS_REDCAP_EXPORT_FAIL -eq 0 && $ACCESS_VALIDATION_FAIL -eq 0 ]] ; then
         sendSuccessMessageMskPipelineLogsSlack "ACCESS"
+    fi
+    if [[ $RAINDANCE_REDCAP_EXPORT_FAIL -eq 0 && $RAINDANCE_VALIDATION_FAIL -eq 0 ]] ; then
+        sendSuccessMessageMskPipelineLogsSlack "RAINDANCE"
     fi
 fi
 
@@ -192,7 +218,13 @@ fi
 EMAIL_BODY="Failed to backup ACCESS REDCap data"
 if [ $ACCESS_REDCAP_EXPORT_FAIL -gt 0 ]; then
     echo "Sending email $EMAIL_BODY"
-    echo $EMAIL_BODY | mail -s "[URGENT]: ACCESS REDCap Backup Failure" $email_list
+    echo $EMAIL_BODY | mail -s "[URGENT]: ACCESS REDCap Backup Failure" $PIPELINES_EMAIL_LIST
+fi
+
+EMAIL_BODY="Failed to backup RAINDANCE REDCap data"
+if [ $RAINDANCE_REDCAP_EXPORT_FAIL -gt 0 ]; then
+    echo "Sending email $EMAIL_BODY"
+    echo $EMAIL_BODY | mail -s "[URGENT]: RAINDANCE REDCap Backup Failure" $PIPELINES_EMAIL_LIST
 fi
 
 # send emails for validation failures
@@ -217,5 +249,11 @@ fi
 EMAIL_BODY="Validation of ACCESS REDCap data failed"
 if [ $ACCESS_VALIDATION_FAIL -gt 0 ]; then
     echo "Sending email $EMAIL_BODY"
-    echo $EMAIL_BODY | mail -s "[URGENT]: ACCESS REDCap Data Validation Failure" $email_list
+    echo $EMAIL_BODY | mail -s "[URGENT]: ACCESS REDCap Data Validation Failure" $PIPELINES_EMAIL_LIST
+fi
+
+EMAIL_BODY="Validation of RAINDANCE REDCap data failed"
+if [ $RAINDANCE_VALIDATION_FAIL -gt 0 ]; then
+    echo "Sending email $EMAIL_BODY"
+    echo $EMAIL_BODY | mail -s "[URGENT]: RAINDANCE REDCap Data Validation Failure" $PIPELINES_EMAIL_LIST
 fi
