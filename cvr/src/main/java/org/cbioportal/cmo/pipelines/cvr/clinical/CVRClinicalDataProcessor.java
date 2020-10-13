@@ -41,6 +41,7 @@ import org.cbioportal.cmo.pipelines.cvr.CVRUtilities;
 import org.cbioportal.cmo.pipelines.cvr.CvrSampleListUtil;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.apache.log4j.Logger;
 
 /**
  *
@@ -54,12 +55,20 @@ public class CVRClinicalDataProcessor implements ItemProcessor<CVRClinicalRecord
     @Autowired
     public CvrSampleListUtil cvrSampleListUtil;
     
+    Logger log = Logger.getLogger(CVRClinicalDataProcessor.class);
+
     @Override
     public CompositeClinicalRecord process(CVRClinicalRecord i) throws Exception {
+        if (i == null) return null;
         List<String> record = new ArrayList<>();
         List<String> seqDateRecord = new ArrayList<>();
         for (String field : CVRClinicalRecord.getFieldNames()) {
-            record.add(cvrUtilitiess.convertWhitespace(i.getClass().getMethod("get" + field).invoke(i).toString().trim()));
+            try {
+                record.add(cvrUtilitiess.convertWhitespace(i.getClass().getMethod("get" + field).invoke(i).toString().trim()));
+            } catch (NullPointerException e) {
+                log.error("Null pointer expection: " + field);
+                record.add("");
+            }
         }
         for (String field : MskimpactSeqDate.getFieldNames()) {
             seqDateRecord.add(cvrUtilitiess.convertWhitespace(i.getClass().getMethod("get" + field).invoke(i).toString().trim()));
