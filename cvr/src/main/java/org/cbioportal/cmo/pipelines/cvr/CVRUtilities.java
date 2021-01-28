@@ -246,7 +246,7 @@ public class CVRUtilities {
                 matchedNormSampleBarcode, matchedNormSeqAllele1, matchedNormSeqAllele2, tumorValidationAllele1,
                 tumorValidationAllele2, matchNormValidationAllele1, matchNormValidationAllele2, verificationStatus,
                 validationStatus, mutationStatus, sequencingPhase, sequencingSource, validationMethod, score,
-                bamFile, sequencer, tumorSampleUUID, matchedNormSampleUUID, tRefCount, nRefCount, tAltCount, nAltCount, "", "", "", "", "", "", "", "", "", "", "", additionalProperties);
+                bamFile, sequencer, tumorSampleUUID, matchedNormSampleUUID, tRefCount, nRefCount, tAltCount, nAltCount, "", "", "", "", "", "", "", "", "", "", "", "", additionalProperties);
     }
 
     public MutationRecord buildCVRMutationRecord(CVRSnp snp, String sampleId, String somaticStatus) {
