@@ -165,7 +165,7 @@ FLOCK_FILEPATH="/data/portal-cron/cron-lock/oncokb-annotator.sh"
     # Pause, up to some time limit for dmp imports to complete
     if [ $ONCOKB_ANNOTATION_SUCCESS -eq 1 ] ; then
         echo $(date)
-        echo "Checking that dmp import pipeline run in complete..."
+        echo "Checking that dmp import pipeline run is complete..."
         MAXIMUM_WAIT_SECONDS=$(( 6 * 3600 )) # 6 hours wait time
         wait_for_completion_of_dmp_import_run $MAXIMUM_WAIT_SECONDS
         if [ $? -ne 0 ] ; then
