@@ -80,12 +80,15 @@ FLOCK_FILEPATH="/data/portal-cron/cron-lock/import-cmo-data-triage.lock"
         num_studies_updated=`cat $tmp/num_studies_updated.txt`
 
         # redeploy war
-
-    # redeploy war
         if [[ $IMPORT_FAIL -eq 0 && $num_studies_updated -gt 0 ]]; then
-            echo "'$num_studies_updated' studies have been updated, requesting redeployment of triage portal war..."
-            restartTriageTomcats
-            echo "'$num_studies_updated' studies have been updated (no longer need to restart $TOMCAT_SERVER_DISPLAY_NAME server...)"
+            echo "'$num_studies_updated' studies have been updated, requesting redeployment of triage portal pods..."
+            bash $PORTAL_HOME/scripts/restart-portal-pods.sh triage
+            RESTART_EXIT_STATUS=$?
+            if [ $RESTART_EXIT_STATUS -ne 0 ] ; then
+                EMAIL_BODY="Attempt to trigger a redeployment of the triage portal tomcat pods failed"
+                echo -e "Sending email $EMAIL_BODY"
+                echo -e "$EMAIL_BODY" | mail -s "Triage Portal Tomcat Pod Redeployment Error : unable to trigger redeployment" $PIPELINES_EMAIL_LIST
+            fi
         else
             echo "No studies have been updated, skipping restart of triage-tomcat server..."
         fi

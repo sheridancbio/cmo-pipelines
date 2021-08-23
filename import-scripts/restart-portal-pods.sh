@@ -15,6 +15,7 @@ portal_to_deployment_map["public"]="cbioportal-spring-boot"
 portal_to_deployment_map["genie-public"]="cbioportal-backend-genie-public"
 portal_to_deployment_map["genie-private"]="cbioportal-backend-genie-private"
 portal_to_deployment_map["genie-archive"]="cbioportal-backend-genie-archive"
+portal_to_deployment_map["triage"]="eks-triage"
 # portal_to_deployment_map["msk"]="MSK_PORTAL_DEPLOYMENT_NAME_GOES_HERE"
 unset portal_to_cache_service_list
 declare -A portal_to_cache_service_list
@@ -22,6 +23,7 @@ portal_to_cache_service_list["public"]="cbioportal-public-persistence-redis-mast
 portal_to_cache_service_list["genie-public"]="cbioportal-persistence-redis-genie-master cbioportal-persistence-redis-genie-slave"
 portal_to_cache_service_list["genie-private"]="cbioportal-persistence-redis-genie-master cbioportal-persistence-redis-genie-slave"
 portal_to_cache_service_list["genie-archive"]=""
+portal_to_cache_service_list["triage"]=""
 # portal_to_cache_service_list["msk"]="LIST_OF_REDIS_SERVICES_GOES_HERE"
 
 function print_portal_id_values() {
