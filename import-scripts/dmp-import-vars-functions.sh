@@ -110,16 +110,29 @@ function addCancerTypeCaseLists {
     STUDY_DATA_DIRECTORY=$1
     STUDY_ID=$2
     # accept 1 or 2 data_clinical filenames
-    FILENAME_1="$3"
-    FILENAME_2="$4"
+    FILENAME_1="$3" # this will be oncotree converted then added to the list
+    FILENAME_2="$4" # this will not be converted but will be added to the list
     FILEPATH_1="$STUDY_DATA_DIRECTORY/$FILENAME_1"
     FILEPATH_2="$STUDY_DATA_DIRECTORY/$FILENAME_2"
     CLINICAL_FILE_LIST="$FILEPATH_1, $FILEPATH_2"
     if [ -z "$FILENAME_2" ] ; then
         CLINICAL_FILE_LIST="$FILEPATH_1"
     fi
+    CASE_LISTS_DIRECTORY="$STUDY_DATA_DIRECTORY/case_lists"
+    if ! [ -d "$STUDY_DATA_DIRECTORY" ] ; then
+        echo "Error in addCancerTypeCaseLists : argument for STUDY_DATA_DIRECTORY '$STUDY_DATA_DIRECTORY' is not a directory" >&2
+        return 1
+    fi
+    if ! [ -d "$CASE_LISTS_DIRECTORY" ] ; then
+        mkdir -p "$CASE_LISTS_DIRECTORY"
+        mkdir_status=$?
+        if [ $mkdir_status -ne 0 ] ; then
+            echo "Error in addCancerTypeCaseLists : could not create missing case_lists directory '$CASE_LISTS_DIRECTORY'" >&2
+            return 1
+        fi
+    fi
     # remove current case lists and run oncotree converter before creating new cancer case lists
-    rm $STUDY_DATA_DIRECTORY/case_lists/*
+    rm -f $STUDY_DATA_DIRECTORY/case_lists/*
     $PYTHON_BINARY $PORTAL_HOME/scripts/oncotree_code_converter.py --oncotree-url "http://oncotree.mskcc.org/" --oncotree-version $ONCOTREE_VERSION_TO_USE --clinical-file $FILEPATH_1 --force
     $PYTHON_BINARY $PORTAL_HOME/scripts/create_case_lists_by_cancer_type.py --clinical-file-list="$CLINICAL_FILE_LIST" --output-directory="$STUDY_DATA_DIRECTORY/case_lists" --study-id="$STUDY_ID" --attribute="CANCER_TYPE"
     if [ "$STUDY_ID" == "mskimpact" ] || [ "$STUDY_ID" == "mixedpact" ] || [ "$STUDY_ID" == "msk_solid_heme" ] ; then
