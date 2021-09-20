@@ -5,6 +5,12 @@ source $PORTAL_HOME/scripts/set-data-source-environment-vars.sh
 
 echo $(date)
 
+if ! [ -d "$MSK_DMP_TMPDIR" ] ; then
+    if ! mkdir -p "$MSK_DMP_TMPDIR" ; then
+        echo "Error : could not create tmp directory '$MSK_DMP_TMPDIR'" >&2
+        exit 1
+    fi
+fi
 if [[ -d "$MSK_DMP_TMPDIR" && "$MSK_DMP_TMPDIR" != "/" ]] ; then
     rm -rf "$MSK_DMP_TMPDIR"/*
 fi
