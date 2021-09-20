@@ -23,6 +23,12 @@ if [ -z $PORTAL_DATA_HOME ] ; then
     exit 1
 fi 
 
+if ! [ -d "$TMP_DIR" ] ; then
+    if ! mkdir -p "$TMP_DIR" ; then
+        echo "Error : could not create TMP_DIR directory '$TMP_DIR'" >&2
+        exit 1
+    fi
+fi
 if [[ -d "$TMP_DIR" && "$TMP_DIR" != "/" ]]; then
     rm -rf "$TMP_DIR"/*
 fi

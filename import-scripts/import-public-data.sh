@@ -34,6 +34,12 @@ FLOCK_FILEPATH="/data/portal-cron/cron-lock/import-public-data.lock"
 
     # clear temp directory
     tmp=$PORTAL_HOME/tmp/import-cron-public
+    if ! [ -d "$tmp" ] ; then
+        if ! mkdir -p "$tmp" ; then
+            echo "Error : could not create tmp directory '$tmp'" >&2
+            exit 1
+        fi
+    fi
     if [[ -d "$tmp" && "$tmp" != "/" ]]; then
         rm -rf "$tmp"/*
     fi

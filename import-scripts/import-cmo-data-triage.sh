@@ -17,6 +17,12 @@ FLOCK_FILEPATH="/data/portal-cron/cron-lock/import-cmo-data-triage.lock"
     source $PORTAL_HOME/scripts/set-data-source-environment-vars.sh
 
     tmp=$PORTAL_HOME/tmp/import-cron-cmo-triage
+    if ! [ -d "$tmp" ] ; then
+        if ! mkdir -p "$tmp" ; then
+            echo "Error : could not create tmp directory '$tmp'" >&2
+            exit 1
+        fi
+    fi
     if [[ -d "$tmp" && "$tmp" != "/" ]]; then
         rm -rf "$tmp"/*
     fi

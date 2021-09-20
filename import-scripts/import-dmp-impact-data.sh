@@ -32,6 +32,13 @@ DMP_DB_USER=${extracted_properties[db.user]}
 DMP_DB_PASSWORD=${extracted_properties[db.password]}
 DMP_DB_DATABASE_NAME=${extracted_properties[db.portal_db_name]}
 
+if ! [ -d "$MSK_DMP_TMPDIR" ] ; then
+    if ! mkdir -p "$MSK_DMP_TMPDIR" ; then
+        echo "Error : could not create tmp directory '$MSK_DMP_TMPDIR'" >&2
+        exit 1
+    fi
+fi
+
 if ! [ -z $INHIBIT_RECACHING_FROM_TOPBRAID ] ; then
     # refresh cdd and oncotree cache - by default this script will attempt to
     # refresh the CDD and ONCOTREE cache but we should check both exit codes
