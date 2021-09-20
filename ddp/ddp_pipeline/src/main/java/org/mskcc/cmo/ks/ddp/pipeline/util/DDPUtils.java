@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2019 Memorial Sloan-Kettering Cancer Center.
+ * Copyright (c) 2018 - 2021 Memorial Sloan-Kettering Cancer Center.
  *
  * This library is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS
@@ -38,6 +38,8 @@ import org.mskcc.cmo.ks.ddp.source.model.PatientDiagnosis;
 import com.google.common.base.Strings;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.ZonedDateTime;
+import java.time.ZoneOffset;
 import java.util.*;
 import java.io.*;
 import org.apache.commons.lang.StringUtils;
@@ -63,6 +65,16 @@ public class DDPUtils {
     private static Set<String> patientsWithNegativeOsMonths = new HashSet<>();
 
     private static final Logger LOG = Logger.getLogger(DDPUtils.class);
+
+    private static Long offsetMilliSecondsForCurrentTimeZone = null;
+    private static Long millisecondsPerDay = 1000L * 60L * 60L * 24L;
+
+    private static Long getOffsetMilliSecondsForCurrentTimeZone() {
+        if (offsetMilliSecondsForCurrentTimeZone == null) {
+            offsetMilliSecondsForCurrentTimeZone = ZonedDateTime.now().getOffset().getTotalSeconds() * 1000L;
+        }
+        return offsetMilliSecondsForCurrentTimeZone;
+    }
 
     public static void setNaaccrEthnicityMap(Map<String, String> naaccrEthnicityMap) {
         DDPUtils.naaccrEthnicityMap = naaccrEthnicityMap;
@@ -356,7 +368,7 @@ public class DDPUtils {
         if (patientDiagnosis == null || patientDiagnosis.isEmpty()) {
             return null;
         }
-        SimpleDateFormat sfd = new SimpleDateFormat("yyyy-MM-dd");
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
         String firstTumorDiagnosisDateValue = null;
         Date firstTumorDiagnosisDate = null;
         for (PatientDiagnosis diagnosis : patientDiagnosis) {
@@ -364,11 +376,11 @@ public class DDPUtils {
                 continue;
             }
             if (firstTumorDiagnosisDate == null) {
-                firstTumorDiagnosisDate = sfd.parse(diagnosis.getTumorDiagnosisDate());
+                firstTumorDiagnosisDate = sdf.parse(diagnosis.getTumorDiagnosisDate());
                 firstTumorDiagnosisDateValue = diagnosis.getTumorDiagnosisDate();
             }
             else {
-                Date currentTumorDiagnosisDate = sfd.parse(diagnosis.getTumorDiagnosisDate());
+                Date currentTumorDiagnosisDate = sdf.parse(diagnosis.getTumorDiagnosisDate());
                 if (currentTumorDiagnosisDate.before(firstTumorDiagnosisDate)) {
                     firstTumorDiagnosisDate = currentTumorDiagnosisDate;
                     firstTumorDiagnosisDateValue = diagnosis.getTumorDiagnosisDate();
@@ -393,6 +405,18 @@ public class DDPUtils {
     }
 
     /**
+     * Calculates the date in days using local midnight to increment day count.
+     *
+     * @param date
+     * @return
+     */
+    private static Long computeDaysFromDateUsingLocalMidnight(Date date) {
+        Long millisecondsFromUtcEpoc = date.getTime();
+        Long millisecondsIfLocalZoneDefinedEpoc = millisecondsFromUtcEpoc + getOffsetMilliSecondsForCurrentTimeZone();
+        return millisecondsIfLocalZoneDefinedEpoc / millisecondsPerDay;
+    }
+
+    /**
      * Calculates the date in days.
      *
      * @param date
@@ -400,7 +424,7 @@ public class DDPUtils {
      */
     private static Long getDateInDays(Date date) {
         if (date != null) {
-            return date.getTime() / (1000 * 60 * 60 * 24); // milliseconds -> minutes -> hours -> days
+            return computeDaysFromDateUsingLocalMidnight(date);
         }
         return null;
     }
@@ -414,9 +438,9 @@ public class DDPUtils {
      */
     private static Long getDateInDays(String dateValue) throws ParseException {
         if (!Strings.isNullOrEmpty(dateValue) && !NULL_EMPTY_VALUES.contains(dateValue)) {
-            SimpleDateFormat sfd = new SimpleDateFormat("yyyy-MM-dd");
-            Date date = sfd.parse(dateValue);
-            return date.getTime() / (1000 * 60 * 60 * 24); // milliseconds -> minutes -> hours -> days
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+            Date date = sdf.parse(dateValue);
+            return computeDaysFromDateUsingLocalMidnight(date);
         }
         return null;
     }
@@ -463,9 +487,9 @@ public class DDPUtils {
      */
     public static Long parseYearFromDate(String dateValue) throws ParseException {
         if (!Strings.isNullOrEmpty(dateValue) && !NULL_EMPTY_VALUES.contains(dateValue)) {
-            SimpleDateFormat sfd = new SimpleDateFormat("yyyy-MM-dd");
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
             Calendar calendar = Calendar.getInstance();
-            calendar.setTime(sfd.parse(dateValue));
+            calendar.setTime(sdf.parse(dateValue));
             return new Long(calendar.get(Calendar.YEAR));
         }
         return null;
