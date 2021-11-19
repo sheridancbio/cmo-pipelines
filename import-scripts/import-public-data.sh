@@ -16,6 +16,8 @@ FLOCK_FILEPATH="/data/portal-cron/cron-lock/import-public-data.lock"
         exit 1
     fi
 
+    source $PORTAL_HOME/scripts/clear-persistence-cache-shell-functions.sh
+
     CHECK_PUBLIC_IMPORT_TRIGGER_FILE=0
     PUBLIC_IMPORT_TRIGGER_FILE=/data/portal-cron/START_PUBLIC_IMPORT
     if [ "$CHECK_PUBLIC_IMPORT_TRIGGER_FILE" -eq "1" ] ; then
@@ -55,9 +57,6 @@ FLOCK_FILEPATH="/data/portal-cron/cron-lock/import-public-data.lock"
     public_portal_notification_file=$(mktemp $tmp/public-portal-update-notification.$now.XXXXXX)
     ONCOTREE_VERSION_TO_USE=oncotree_latest_stable
     CLEAR_PERSISTENCE_CACHE=0 # 0 = do not clear cache, non-0 = clear cache
-
-    # we need this file for the clear persistence cache functions
-    source $PORTAL_HOME/scripts/dmp-import-vars-functions.sh
 
     PIPELINES_EMAIL_LIST="cbioportal-pipelines@cbioportal.org"
     CDD_ONCOTREE_RECACHE_FAIL=0
