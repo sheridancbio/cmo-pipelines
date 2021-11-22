@@ -139,17 +139,16 @@ if ! [ -f $PATH_TO_AUTOMATION_SCRIPT ] ; then
 fi
 
 source $PATH_TO_AUTOMATION_SCRIPT
-# we need this file for the clear persistence cache functions
-source $PORTAL_HOME/scripts/dmp-import-vars-functions.sh
 
-
-if [ -z $BIC_DATA_HOME ] | [ -z $PRIVATE_DATA_HOME ] | [ -z $PDX_DATA_HOME ] | [ -z $HG_BINARY ] | [ -z $PYTHON_BINARY ] | [ -z $DATAHUB_DATA_HOME ] | [ -z $ANNOTATOR_JAR ] | [ -z $CASE_LIST_CONFIG_FILE  ]; then
+if [ -z "$PORTAL_HOME" ] | [ -z "$BIC_DATA_HOME" ] | [ -z "$PRIVATE_DATA_HOME" ] | [ -z "$PDX_DATA_HOME" ] | [ -z "$HG_BINARY" ] | [ -z "$PYTHON_BINARY" ] | [ -z "$DATAHUB_DATA_HOME" ] | [ -z "$ANNOTATOR_JAR" ] | [ -z "$CASE_LIST_CONFIG_FILE"  ] ; then
     message="could not run import-pdx-data.sh: automation-environment.sh script must be run in order to set needed environment variables (like BIC_DATA_HOME, PDX_DATA_HOME, ANNOTATOR_JAR, CASE_LIST_CONFIG_FILE,...)"
     echo ${message}
     echo -e "${message}" |  mail -s "import-pdx-data failed to run." $PIPELINES_EMAIL_LIST
     sendFailureMessageMskPipelineLogsSlack "CRDB PDX Pipeline Failure"
     exit 2
 fi
+
+source $PORTAL_HOME/scripts/clear-persistence-cache-shell-functions.sh
 
 if [ ! -d $CRDB_PDX_TMPDIR ] ; then
     mkdir $CRDB_PDX_TMPDIR

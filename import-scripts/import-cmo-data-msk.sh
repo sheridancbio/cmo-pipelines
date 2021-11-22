@@ -12,10 +12,13 @@ FLOCK_FILEPATH="/data/portal-cron/cron-lock/import-cmo-data-msk.lock"
         exit 1
     fi
 
-    # we need this file for the clear persistence cache functions
-    source $PORTAL_HOME/scripts/dmp-import-vars-functions.sh
+    if [ -z "$PORTAL_HOME" ] ; then
+        echo "Error : import-cmo-data-msk.sh cannot be run without setting the PORTAL_HOME environment variable. (Use automation-environment.sh)"
+        exit 1
+    fi
     # set data source env variables
     source $PORTAL_HOME/scripts/set-data-source-environment-vars.sh
+    source $PORTAL_HOME/scripts/clear-persistence-cache-shell-functions.sh
 
     tmp=$PORTAL_HOME/tmp/import-cron-cmo-msk
     if ! [ -d "$tmp" ] ; then

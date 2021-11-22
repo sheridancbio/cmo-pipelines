@@ -3,8 +3,13 @@
 # associative array for extracting properties from importer.properties
 declare -Ax extracted_properties
 
+if [ -z "$PORTAL_HOME" ] ; then
+    echo "Error : import-dmp-impact-data.sh cannot be run without setting the PORTAL_HOME environment variable. (Use automation-environment.sh)"
+    exit 1
+fi
 # localize global variables / jar names and functions
 source $PORTAL_HOME/scripts/dmp-import-vars-functions.sh
+source $PORTAL_HOME/scripts/clear-persistence-cache-shell-functions.sh
 
 # -----------------------------------------------------------------------------------------------------------
 # START IMPORTS
@@ -13,8 +18,8 @@ echo $(date)
 
 PIPELINES_EMAIL_LIST="cbioportal-pipelines@cbioportal.org"
 
-if [ -z $JAVA_BINARY ] | [ -z $PORTAL_HOME ] | [ -z $MSK_IMPACT_DATA_HOME ] ; then
-    message="test could not run import-dmp-impact.sh: automation-environment.sh script must be run in order to set needed environment variables (like MSK_IMPACT_DATA_HOME, ...)"
+if [ -z $JAVA_BINARY ] | [ -z $MSK_IMPACT_DATA_HOME ] ; then
+    message="could not run import-dmp-impact-data.sh: automation-environment.sh script must be run in order to set needed environment variables (like MSK_IMPACT_DATA_HOME, ...)"
     echo ${message}
     echo -e "${message}" |  mail -s "import-dmp-impact-data failed to run." $PIPELINES_EMAIL_LIST
     sendImportFailureMessageMskPipelineLogsSlack "${message}"

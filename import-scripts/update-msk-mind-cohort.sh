@@ -23,6 +23,8 @@ if [ -z $JAVA_BINARY ] | [ -z $GIT_BINARY ] | [ -z $PORTAL_HOME ] | [ -z $MSK_MI
     exit 2
 fi
 
+source $PORTAL_HOME/scripts/clear-persistence-cache-shell-functions.sh
+
 IMPORT_FAIL=0
 mskextract_notification_file=$(mktemp $MSK_DMP_TMPDIR/mskextract-portal-update-notification.$now.XXXXXX)
 # update msk-mind github repo

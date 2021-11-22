@@ -15,6 +15,8 @@ FLOCK_FILEPATH="/data/portal-cron/cron-lock/import-genie-data.lock"
         exit 1
     fi
 
+    source $PORTAL_HOME/scripts/clear-persistence-cache-shell-functions.sh
+
     tmp=$PORTAL_HOME/tmp/import-cron-genie-archive
     if ! [ -d "$tmp" ] ; then
         if ! mkdir -p "$tmp" ; then
@@ -37,9 +39,6 @@ FLOCK_FILEPATH="/data/portal-cron/cron-lock/import-genie-data.lock"
     genie_archive_portal_notification_file=$(mktemp $tmp/genie-archive-portal-update-notification.$now.XXXXXX)
     ONCOTREE_VERSION_TO_USE=oncotree_2018_06_01
     CLEAR_PERSISTENCE_CACHE=0 # 0 = do not clear cache, non-0 = clear cache
-
-    # we need this file for the clear persistence cache functions
-    source $PORTAL_HOME/scripts/dmp-import-vars-functions.sh
 
     echo $now : starting import
     CDD_ONCOTREE_RECACHE_FAIL=0

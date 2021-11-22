@@ -98,15 +98,6 @@ function sendImportSuccessMessageMskPipelineLogsSlack() {
     curl -X POST --data-urlencode "payload={\"channel\": \"#msk-pipeline-logs\", \"username\": \"cbioportal_importer\", \"text\": \"MSK cBio pipelines import success: $STUDY_ID\", \"icon_emoji\": \":tada:\"}" $SLACK_PIPELINES_MONITOR_URL
 }
 
-# Function for alerting slack channel of clear cache failures
-function sendClearCacheFailureMessage() {
-    EMAIL_RECIPIENT="cbioportal-pipelines@cbioportal.org"
-    EMAIL_SUBJECT="import failure resetting cache $CACHE_GROUP_NAME"
-    EMAIL_BODY="Imported studies may not be visible in one or more of the $CACHE_GROUP_NAME portals.\n\nImport script '$SOURCE_SCRIPT_NAME' attempted to clear/reset the persistence cache for $CACHE_GROUP_NAME portals and a failure was reported. Until a successful cache clearing occurs for these portals, studies which were successfully imported may not yet be visible.\n"
-    echo -e "Sending email $EMAIL_BODY"
-    echo -e "$EMAIL_BODY" | mail -s "$EMAIL_SUBJECT" "$EMAIL_RECIPIENT"
-}
-
 function printTimeStampedDataProcessingStepMessage {
     STEP_DESCRIPTION=$1
     echo -e "\n\n------------------------------------------------------------------------------------"
@@ -340,48 +331,6 @@ function filter_derived_clinical_data {
     STUDY_DIRECTORY=$1
     $PYTHON_BINARY $PORTAL_HOME/scripts/filter_empty_columns.py --file $STUDY_DIRECTORY/data_clinical_patient.txt --keep-column-list $FILTER_EMPTY_COLUMNS_KEEP_COLUMN_LIST &&
     $PYTHON_BINARY $PORTAL_HOME/scripts/filter_empty_columns.py --file $STUDY_DIRECTORY/data_clinical_sample.txt --keep-column-list $FILTER_EMPTY_COLUMNS_KEEP_COLUMN_LIST
-}
-
-# returns the number of portals for which cache reset failed (0 = all succeeded)
-function clearPersistenceCachesForPortals() {
-    portal_list=$1
-    exit_status=0
-    for portal in $portal_list; do
-        if ! $PORTAL_HOME/scripts/clear_cbioportal_persistence_cache.sh $portal ; then
-            exit_status=$(($exit_status + 1))
-        fi
-    done
-    return $exit_status
-}
-
-function clearPersistenceCachesForMskPortals() {
-    all_msk_portals="msk msk-beta"
-    clearPersistenceCachesForPortals "$all_msk_portals"
-}
-
-function clearPersistenceCachesForExternalPortals() {
-    all_external_portals="private sclc"
-    clearPersistenceCachesForPortals "$all_external_portals"
-}
-
-function clearPersistenceCachesForTriagePortals() {
-    all_triage_portals="triage"
-    clearPersistenceCachesForPortals "$all_triage_portals"
-}
-
-function clearPersistenceCachesForPublicPortals() {
-    all_public_portals="public"
-    clearPersistenceCachesForPortals "$all_public_portals"
-}
-
-function clearPersistenceCachesForGeniePortals() {
-    all_genie_portals="genie-public genie-private"
-    clearPersistenceCachesForPortals "$all_genie_portals"
-}
-
-function clearPersistenceCachesForGenieArchivePortals() {
-    all_genie_archive_portals="genie-archive"
-    clearPersistenceCachesForPortals "$all_genie_archive_portals"
 }
 
 # this function can be called without arguments to wait out the dmp tumor server lockout period as defined by hardcoded globals
