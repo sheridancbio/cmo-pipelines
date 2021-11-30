@@ -2,19 +2,30 @@
 
 FLOCK_FILEPATH="/data/portal-cron/cron-lock/import-cmo-data-triage.lock"
 (
-    echo $(date)
-
     # check lock so that script executions do not overlap
     if ! flock --nonblock --exclusive $flock_fd ; then
         exit 0
     fi
 
     # set necessary env variables with automation-environment.sh
-
-    if [ -z "$PORTAL_HOME" ] ; then
-        echo "Error : import-cmo-data-triage.sh cannot be run without setting the PORTAL_HOME environment variable. (Use automation-environment.sh)"
+    if [ -z "$PORTAL_HOME" ] || [ -z "$START_TRIAGE_IMPORT_TRIGGER_FILENAME" ] || [ -z "$KILL_TRIAGE_IMPORT_TRIGGER_FILENAME" ] || [ -z "$TRIAGE_IMPORT_IN_PROGRESS_FILENAME" ] || [ -z "$TRIAGE_IMPORT_KILLING_FILENAME" ] ; then
+        echo "Error : import-cmo-data-triage.sh cannot be run without setting the PORTAL_HOME, START_TRIAGE_IMPORT_TRIGGER_FILENAME, KILL_TRIAGE_IMPORT_TRIGGER_FILENAME, TRIAGE_IMPORT_IN_PROGRESS_FILENAME, TRIAGE_IMPORT_KILLING_FILENAME environment variables. (Use automation-environment.sh)"
         exit 1
     fi
+
+    if [ -f "$KILL_TRIAGE_IMPORT_TRIGGER_FILENAME" ] || [ -f "$TRIAGE_IMPORT_KILLING_FILENAME" ] ; then
+        # if import kill is happening or is triggered, cancel any import trigger and exit
+        rm -f "$START_TRIAGE_IMPORT_TRIGGER_FILENAME"
+        exit 1
+    fi
+
+    if ! [ -f "$START_TRIAGE_IMPORT_TRIGGER_FILENAME" ] ; then
+        # no start trigger for import, so exit
+        exit 1
+    fi
+
+    echo $(date)
+
     # set data source env variables
     source $PORTAL_HOME/scripts/set-data-source-environment-vars.sh
     source $PORTAL_HOME/scripts/clear-persistence-cache-shell-functions.sh
@@ -42,6 +53,10 @@ FLOCK_FILEPATH="/data/portal-cron/cron-lock/import-cmo-data-triage.lock"
     DATA_SOURCES_TO_BE_FETCHED="bic-mskcc cmo-argos private impact impact-MERGED knowledge-systems-curated-studies immunotherapy datahub datahub_shahlab msk-mind-datahub pipelines-testing"
     unset failed_data_source_fetches
     declare -a failed_data_source_fetches
+
+    # import is beginning - create status file showing "in_progress", and remove trigger
+    rm -f "$START_TRIAGE_IMPORT_TRIGGER_FILENAME"
+    touch "$TRIAGE_IMPORT_IN_PROGRESS_FILENAME"
 
     CDD_ONCOTREE_RECACHE_FAIL=0
     if ! [ -z $INHIBIT_RECACHING_FROM_TOPBRAID ] ; then
@@ -111,4 +126,7 @@ FLOCK_FILEPATH="/data/portal-cron/cron-lock/import-cmo-data-triage.lock"
 
     echo "Cleaning up any untracked files from MSK-TRIAGE import..."
     bash $PORTAL_HOME/scripts/datasource-repo-cleanup.sh $PORTAL_DATA_HOME $PORTAL_DATA_HOME/bic-mskcc $PORTAL_DATA_HOME/cmo-argos $PORTAL_DATA_HOME/private $PORTAL_DATA_HOME/impact $PORTAL_DATA_HOME/immunotherapy $PORTAL_DATA_HOME/datahub $PORTAL_DATA_HOME/datahub_shahlab $PORTAL_DATA_HOME/msk-mind $PORTAL_DATA_HOME/pipelines-testing
+
+    # import is done - remove status file showing "in_progress"
+    rm -f "$TRIAGE_IMPORT_IN_PROGRESS_FILENAME"
 ) {flock_fd}>$FLOCK_FILEPATH

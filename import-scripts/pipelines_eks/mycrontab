@@ -3,7 +3,8 @@ MAILTO=cbioportal-pipelines@cbioportal.org
 ########################## 
 # Import Scripts (Comment these out when upgrading)
 ########################## 
-0 12,13,14,15,16,17,18,19,20,21,22 * * * . /data/portal-cron/scripts/automation-environment.sh;/data/portal-cron/scripts/import-cmo-data-triage.sh >> /data/portal-cron/logs/import-cmo-data-triage.log 2>&1 || echo "Failure in crontab: import-cmo-data-triage.sh exited with non-zero exit status" | mail -r "cbioportal-pipelines@cbioportal.org" -s "Failure in crontab" cbioportal-pipelines@cbioportal.org
+* * * * * . /data/portal-cron/scripts/automation-environment.sh;/data/portal-cron/scripts/import-cmo-data-triage.sh >> /data/portal-cron/logs/import-cmo-data-triage.log 2>&1
+* * * * * . /data/portal-cron/scripts/automation-environment.sh;/data/portal-cron/scripts/kill-import-cmo-data-triage.sh >> /data/portal-cron/logs/kill-import-cmo-data-triage.log 2>&1
 0 20 * * * . /data/portal-cron/scripts/automation-environment.sh;/data/portal-cron/scripts/fetch-and-import-dmp-data-wrapper.sh >> /data/portal-cron/logs/fetch-and-import-dmp-impact-data.log 2>&1 || echo "Failure in crontab: fetch-and-import-dmp-data-wrapper.sh exited with non-zero exit status" | mail -r "cbioportal-pipelines@cbioportal.org" -s "Failure in crontab" cbioportal-pipelines@cbioportal.org
 
 ########################## 
