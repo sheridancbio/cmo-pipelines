@@ -137,6 +137,41 @@
           <spatial>true</spatial>
         </configuration>
       </plugin>
+      <plugin>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <version>3.0.0</version>
+        <inherited>false</inherited>
+        <executions>
+          <execution>
+            <id>make-all</id>
+            <phase>compile</phase>
+            <configuration>
+              <target name="GNU make build" description="use GNU make to compile sources in src to executables in bin">
+                <exec executable="make" failonerror="true">
+                  <arg value="all"/>
+                </exec>
+              </target>
+            </configuration>
+            <goals>
+              <goal>run</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>make-clean</id>
+            <phase>clean</phase>
+            <configuration>
+              <target name="GNU make clean" description="clean executables in bin">
+                <exec executable="make" failonerror="true">
+                  <arg value="clean"/>
+                </exec>
+              </target>
+            </configuration>
+            <goals>
+              <goal>run</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
     </plugins>
   </build>
 
