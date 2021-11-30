@@ -3,12 +3,12 @@
 #######################
 # general paths/options for system executables
 #######################
-export JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk-1.8.0.282.b08-1.amzn2.0.1.x86_64
+export JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk-1.8.0.302.b08-0.amzn2.0.1.x86_64
 export JAVA_PROXY_ARGS="-Dhttp.proxyHost=jxi2.mskcc.org -Dhttp.proxyPort=8080 -Dhttp.nonProxyHosts=draco.mskcc.org|pidvudb1.mskcc.org|phcrdbd2.mskcc.org|dashi-dev.cbio.mskcc.org|pipelines.cbioportal.mskcc.org|localhost"
 export JAVA_BINARY=$JAVA_HOME/bin/java
 export PYTHON_BINARY=/usr/bin/python
 export PYTHON3_BINARY=/usr/bin/python3
-export MAVEN_BINARY=/opt/apache-maven-3.8.1/bin/mvn
+export MAVEN_BINARY=/opt/apache-maven-3.8.3/bin/mvn
 export HG_BINARY=/usr/bin/hg
 export GIT_BINARY=/usr/bin/git
 export PATH=$(bash --login -c 'echo $PATH')
