@@ -32,6 +32,6 @@ MAILTO=cbioportal-pipelines@cbioportal.org
 # copy needed configuration files for jenkins integration testing to jenkins server
 0 * * * * /data/portal-cron/scripts/rsync_jenkins_test_properties.sh > /dev/null 2>/dev/null
 0 * * * * rsync -a /data/portal-cron/pipelines-credentials/ cbioportal_importer@eks_production_pipelines_node:/data/portal-cron/pipelines-credentials > /dev/null 2>/dev/null
-0 19 * * * . /data/portal-cron/scripts/automation-environment.sh;/data/portal-cron/scripts/backup-redcap-data.sh >> /data/portal-cron/logs/redcap-data-snapshot.log 2>&1 || echo "Failure in crontab: backup-redcap-data.sh exited with non-zero exit status" | mail -r "cbioportal-pipelines@cbioportal.org" -s "Failure in crontab" cbioportal-pipelines@cbioportal.org
+#0 19 * * * . /data/portal-cron/scripts/automation-environment.sh;/data/portal-cron/scripts/backup-redcap-data.sh >> /data/portal-cron/logs/redcap-data-snapshot.log 2>&1 || echo "Failure in crontab: backup-redcap-data.sh exited with non-zero exit status" | mail -r "cbioportal-pipelines@cbioportal.org" -s "Failure in crontab" cbioportal-pipelines@cbioportal.org
 # look into automating the below script, currently run manually
 #0 8 * * 5 . /data/portal-cron/scripts/automation-environment.sh;/data/portal-cron/scripts/glioma-update-check.sh
