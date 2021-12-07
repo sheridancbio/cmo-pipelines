@@ -1,12 +1,6 @@
 MAILTO=cbioportal-pipelines@cbioportal.org
 
 ########################## 
-# Import Scripts (Comment these out when upgrading)
-########################## 
-0 0,12 * * * . /data/portal-cron/scripts/automation-environment.sh;/data/portal-cron/scripts/import-public-data.sh >> /data/portal-cron/logs/import-public-data-msk.log 2>&1 || echo "Failure in crontab: import-public-data.sh exited with non-zero exit status" | mail -r "cbioportal-pipelines@cbioportal.org" -s "Failure in crontab" cbioportal-pipelines@cbioportal.org
-0 15 * * * . /data/portal-cron/scripts/automation-environment.sh;/data/portal-cron/scripts/import-genie-data.sh >> /data/portal-cron/logs/import-genie-data-msk.log 2>&1 || echo "Failure in crontab: import-genie-data.sh exited with non-zero exit status" | mail -r "cbioportal-pipelines@cbioportal.org" -s "Failure in crontab" cbioportal-pipelines@cbioportal.org
-
-########################## 
 # Monitors
 ########################## 
 */5 * * * * . /data/portal-cron/scripts/automation-environment.sh; . /data/portal-cron/pipelines-credentials/precache.dat; $PYTHON_BINARY /data/portal-cron/scripts/precache-portals.py -d cbioportal-backend-genie-public,cbioportal-backend-genie-private >> /data/portal-cron/logs/precache-portals.log 2>&1 || echo "Failure in crontab: precache portals script exited with non-zero exit status" | mail -r "cbioportal-pipelines@cbioportal.org" -s "Failure in crontab" cbioportal-pipelines@cbioportal.org
