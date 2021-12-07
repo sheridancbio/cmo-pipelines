@@ -12,7 +12,7 @@ CURRENT_CRONTAB_FILE="$PORTAL_HOME/tmp/current_crontab"
 GITHUB_CRONTAB_FILE="$PORTAL_HOME/tmp/git_crontab"
 REQUIRED_USERNAME="cbioportal_importer"
 PIPELINES_HOST_SUFFIX="pipelines.cbioportal.mskcc.org"
-PIPELINES_EKS_HOST_SUFFIX=".mskcc.root.mskcc.org"
+PIPELINES_EKS_HOST_SUFFIX=".cbioportal.aws.mskcc.org"
 
 function send_email_notification() {
     diff_report=$1

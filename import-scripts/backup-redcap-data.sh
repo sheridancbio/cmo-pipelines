@@ -57,7 +57,7 @@ function validateRedcapExportForStudy {
 REDCAP_JAR_FILENAME="$PORTAL_HOME/lib/redcap_pipeline.jar"
 JAVA_REDCAP_PIPELINE_ARGS="$JAVA_SSL_ARGS -jar $REDCAP_JAR_FILENAME"
 # update mercurial repo with latest changes
-$HG_BINARY pull -u
+cd $REDCAP_BACKUP_DATA_HOME; $HG_BINARY pull -u
 
 # export and commit MSKIMPACT REDCap data
 echo "Exporting MSKIMPACT REDCap data..."
