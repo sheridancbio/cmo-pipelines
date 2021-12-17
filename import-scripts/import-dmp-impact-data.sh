@@ -10,6 +10,7 @@ fi
 # localize global variables / jar names and functions
 source $PORTAL_HOME/scripts/dmp-import-vars-functions.sh
 source $PORTAL_HOME/scripts/clear-persistence-cache-shell-functions.sh
+source $PORTAL_HOME/scripts/extract-properties-from-file-functions.sh
 
 # -----------------------------------------------------------------------------------------------------------
 # START IMPORTS

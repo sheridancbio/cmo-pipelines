@@ -16,8 +16,6 @@ FLOCK_FILEPATH="/data/portal-cron/cron-lock/import-public-data.lock"
         exit 1
     fi
 
-    source $PORTAL_HOME/scripts/clear-persistence-cache-shell-functions.sh
-
     CHECK_PUBLIC_IMPORT_TRIGGER_FILE=0
     PUBLIC_IMPORT_TRIGGER_FILE=/data/portal-cron/START_PUBLIC_IMPORT
     if [ "$CHECK_PUBLIC_IMPORT_TRIGGER_FILE" -eq "1" ] ; then
@@ -56,7 +54,6 @@ FLOCK_FILEPATH="/data/portal-cron/cron-lock/import-public-data.lock"
     JAVA_IMPORTER_ARGS="$JAVA_PROXY_ARGS $java_debug_args $JAVA_SSL_ARGS -Dspring.profiles.active=dbcp -Djava.io.tmpdir=$tmp -ea -cp $IMPORTER_JAR_FILENAME org.mskcc.cbio.importer.Admin"
     public_portal_notification_file=$(mktemp $tmp/public-portal-update-notification.$now.XXXXXX)
     ONCOTREE_VERSION_TO_USE=oncotree_latest_stable
-    CLEAR_PERSISTENCE_CACHE=0 # 0 = do not clear cache, non-0 = clear cache
 
     PIPELINES_EMAIL_LIST="cbioportal-pipelines@cbioportal.org"
     CDD_ONCOTREE_RECACHE_FAIL=0
@@ -145,24 +142,7 @@ FLOCK_FILEPATH="/data/portal-cron/cron-lock/import-public-data.lock"
         if [ -r "$num_studies_updated_filename" ] ; then
             num_studies_updated=$(cat "$num_studies_updated_filename")
         fi
-        if [ -z $num_studies_updated ] ; then
-            echo "could not determine the number of studies that have been updated"
-            # if import fails [presumed to have failed if num_studies_updated.txt is missing or empty], some checked-off studies still may have been successfully imported, so clear the persistence caches
-            CLEAR_PERSISTENCE_CACHE=1
-        else
-            echo "'$num_studies_updated' studies have been updated"
-            if [[ $num_studies_updated != "0" ]]; then
-                # if at least 1 study was imported, clear the persistence cache
-                CLEAR_PERSISTENCE_CACHE=1
-            fi
-        fi
-    fi
-
-    if [ $CLEAR_PERSISTENCE_CACHE -ne 0 ] ; then
-        echo "clearing persistence cache for public portal ..."
-        if ! clearPersistenceCachesForPublicPortals ; then
-            sendClearCacheFailureMessage public import-public-data.sh
-        fi
+        echo "'$num_studies_updated' studies have been updated"
     fi
 
     EMAIL_BODY="The Public database version is incompatible. Imports will be skipped until database is updated."
