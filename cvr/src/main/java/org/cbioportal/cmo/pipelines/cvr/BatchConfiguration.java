@@ -119,7 +119,7 @@ public class BatchConfiguration {
                 .next(gmlJsonStep())
                 .next(gmlClinicalStep())
                 .next(gmlMutationStep())
-                .next(gmlFusionStep())
+                .next(gmlCnvIntragenicStep())
                 .build();
     }
 
@@ -148,7 +148,7 @@ public class BatchConfiguration {
                 .start(cvrSampleListsStep())
                 .next(gmlClinicalStep())
                 .next(gmlMutationStep())
-                .next(gmlFusionStep())
+                .next(gmlCnvIntragenicStep())
                 .build();
     }
 
@@ -293,12 +293,12 @@ public class BatchConfiguration {
     }
 
     @Bean
-    public Step gmlFusionStep() {
-        return stepBuilderFactory.get("gmlFusionStep")
-                .<CVRFusionRecord, String> chunk(chunkInterval)
-                .reader(gmlFusionDataReader())
-                .processor(fusionDataProcessor())
-                .writer(fusionDataWriter())
+    public Step gmlCnvIntragenicStep() {
+        return stepBuilderFactory.get("gmlCnvIntragenicStep")
+                .<CVRSvRecord, String> chunk(chunkInterval)
+                .reader(gmlCnvIntragenicDataReader())
+                .processor(svDataProcessor())
+                .writer(svDataWriter())
                 .build();
     }
 
@@ -609,8 +609,8 @@ public class BatchConfiguration {
 
     @Bean
     @StepScope
-    public ItemStreamReader<CVRFusionRecord> gmlFusionDataReader() {
-        return new GMLFusionDataReader();
+    public ItemStreamReader<CVRSvDataWriter> gmlCnvIntragenicDataReader() {
+        return new GMLCnvIntragenicDataReader();
     }
 
     @Bean

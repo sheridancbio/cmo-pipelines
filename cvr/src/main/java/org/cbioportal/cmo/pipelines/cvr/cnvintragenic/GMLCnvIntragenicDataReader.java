@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Memorial Sloan-Kettering Cancer Center.
+ * Copyright (c) 2018 - 2022 Memorial Sloan-Kettering Cancer Center.
  *
  * This library is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS
@@ -30,12 +30,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-package org.cbioportal.cmo.pipelines.cvr.fusion;
+package org.cbioportal.cmo.pipelines.cvr.cnvintragenic;
 
 import com.google.common.base.Strings;
 import org.cbioportal.cmo.pipelines.cvr.CVRUtilities;
 import org.cbioportal.cmo.pipelines.cvr.CvrSampleListUtil;
-import org.cbioportal.cmo.pipelines.cvr.model.staging.CVRFusionRecord;
+import org.cbioportal.cmo.pipelines.cvr.model.staging.CVRSvRecord;
 import org.cbioportal.cmo.pipelines.cvr.model.GMLData;
 import org.cbioportal.cmo.pipelines.cvr.model.GMLResult;
 import org.cbioportal.cmo.pipelines.cvr.model.GMLCnvIntragenicVariant;
@@ -56,7 +56,7 @@ import org.springframework.core.io.FileSystemResource;
  *
  * @author ochoaa
  */
-public class GMLFusionDataReader implements ItemStreamReader<CVRFusionRecord> {
+public class GMLCnvIntragenicDataReader implements ItemStreamReader<CVRSvRecord> {
 
     @Autowired
     public CvrSampleListUtil cvrSampleListUtil;
@@ -67,21 +67,21 @@ public class GMLFusionDataReader implements ItemStreamReader<CVRFusionRecord> {
     @Value("#{jobParameters[stagingDirectory]}")
     private String stagingDirectory;
 
-    private Set<String> gmlFusionsSeen = new HashSet<>();
-    private List<CVRFusionRecord> gmlFusionRecords = new ArrayList<>();
+    private Set<String> gmlCnvIntragenicSeen = new HashSet<>();
+    private List<CVRSvRecord> gmlCnvIntragenicRecords = new ArrayList<>();
 
-    private Logger LOG = Logger.getLogger(GMLFusionDataReader.class);
+    private Logger LOG = Logger.getLogger(GMLCnvIntragenicDataReader.class);
 
     @Override
     public void open(ExecutionContext ec) throws ItemStreamException {
-        // load new germline fusions from json
+        // load new germline cnv-intragenic from json as SV
         processJsonFile();
-        // load existing germline fusions
-        processGmlFusionsFile();
+        // load existing germline cnv-intragenic
+        processGmlCnvIntragenicFile();
 
-        // set fusion file and header to write to for processor, writer
-        ec.put("fusionsFilename", CVRUtilities.FUSION_GML_FILE);
-        ec.put("fusionHeader", CVRFusionRecord.getGermlineFieldNames());
+        // set cnvintragenic file and header to write to for processor, writer
+        ec.put("cnvIntragenicFilename", CVRUtilities.CNV_INTRAGENIC_GML_FILE); // TODO : even if this exists as a separate file in the repository, it will probably need to be merged into the (somatic) data_SV file by the time the fetcher is done with the germline fetch. Otherwise it will not be imported
+        ec.put("svHeader", CVRSvRecord.getFieldNames());
     }
 
     private void processJsonFile() {
@@ -94,71 +94,73 @@ public class GMLFusionDataReader implements ItemStreamReader<CVRFusionRecord> {
             LOG.error("Error reading file: " + cvrGmlFile);
             ex.printStackTrace();
         }
-        // load all new fusion germline events from json
+        // load all new cnv-intragenic germline events from json
         for (GMLResult result : gmlData.getResults()) {
             if (result.getCnvIntragenicVariantsGml().isEmpty()) {
                 continue;
             }
-            // build germline fusion records from cnv intragenic events for each patient sample
+            // build germline sv records from cnv intragenic events for each patient sample
             String patientId = result.getMetaData().getDmpPatientId();
             List<String> samples = cvrSampleListUtil.getGmlPatientSampleMap().get(patientId);
             if (samples != null) {
                 for (GMLCnvIntragenicVariant cnv : result.getCnvIntragenicVariantsGml()) {
                     for (String sampleId : samples) {
-                        CVRFusionRecord record = new CVRFusionRecord(cnv, sampleId);
-                        String fusion = getGmlFusionKey(record);
-                        // skip if already added fusion event for sample
-                        if (!gmlFusionsSeen.add(fusion)) {
+                        // TODO: This must be changed to SV records, and be written using the SV writer ... but, is merge needed too?
+                        CVRSvRecord record = new CVRSvRecord(cnv, sampleId);
+                        String svKey = getSvKey(record);
+                        // skip if already added sv event for sample
+                        if (!gmlCnvIntragenicSeen.add(svKey)) {
                             continue;
                         }
-                        gmlFusionRecords.add(record);
+                        gmlcnvIntragrenicRecords.add(record);
                     }
                 }
             }
         }
     }
 
-    private void processGmlFusionsFile() {
-        File gmlFusionsFile = new File(stagingDirectory, CVRUtilities.FUSION_GML_FILE);
-        if (!gmlFusionsFile.exists()) {
-            LOG.info("File does not exist - skipping data loading from germline fusions file: " + gmlFusionsFile.getName());
+    private void processGmlCnvIntragenicFile() {
+        File gmlCnvIntragenicFile = new File(stagingDirectory, CVRUtilities.CNV_INTRAGENIC_GML_FILE);
+        if (!gmlCnvIntragenicFile.exists()) {
+            LOG.info("File does not exist - skipping data loading from germline cnv intragenic file: " + gmlCnvIntragenicFile.getName());
             return;
         }
-        LOG.info("Loading germline fusions data from: " + gmlFusionsFile.getName());
+        LOG.info("Loading germline cnv intragenic data from: " + gmlCnvIntragenicFile.getName());
 
         DelimitedLineTokenizer tokenizer = new DelimitedLineTokenizer(DelimitedLineTokenizer.DELIMITER_TAB);
         DefaultLineMapper<CVRFusionRecord> mapper = new DefaultLineMapper<>();
         mapper.setLineTokenizer(tokenizer);
-        mapper.setFieldSetMapper(new CVRGMLFusionFieldSetMapper());
+//        mapper.setFieldSetMapper(new CVRGMLFusionFieldSetMapper()); // This mapper is obsolete .. adapt it or make a new one for saved SV records hold gml cnv intragenic events
 
         FlatFileItemReader<CVRFusionRecord> reader = new FlatFileItemReader<>();
-        reader.setResource(new FileSystemResource(gmlFusionsFile));
+        reader.setResource(new FileSystemResource(gmlCnvIntragenicFile));
         reader.setLineMapper(mapper);
         reader.setLinesToSkip(1);
         reader.open(new ExecutionContext());
 
         try {
-            CVRFusionRecord to_add;
+            CVRSvRecord to_add;
             while ((to_add = reader.read()) != null) {
-                String patientId = cvrSampleListUtil.getSamplePatientId(to_add.getTumor_Sample_Barcode());
+                String patientId = cvrSampleListUtil.getSamplePatientId(to_add.getSampleId());
                 // check that matching patient id can be found from patient-sample mapping
                 // and whether patient is in new dmp germline patients (to prevent duplicates)
                 if (!Strings.isNullOrEmpty(patientId) && !cvrSampleListUtil.getNewDmpGmlPatients().contains(patientId)) {
-                    String fusion = getGmlFusionKey(to_add);
-                    if (gmlFusionsSeen.add(fusion)) {
-                        gmlFusionRecords.add(to_add);
+                    String svKey = getSvKey(to_add);
+                    if (gmlCnvIntragenicSeen.add(svKey)) {
+                        gmlCnvIntragenicRecords.add(to_add);
                     }
                 }
             }
         } catch (Exception e){
-            LOG.info("Error loading data from germline fusions file: " + gmlFusionsFile.getName());
+            LOG.info("Error loading data from germline fusions file: " + gmlCnvIntragenicFile.getName());
             throw new ItemStreamException(e);
         }
         reader.close();
     }
 
-    private String getGmlFusionKey(CVRFusionRecord record) {
-        return record.getTumor_Sample_Barcode() + "|" + record.getHugo_Symbol() + "|" + record.getFusion();
+    private String getSvKey(CVRSvRecord record) {
+        //TODO : here we are using a key to tell duplicate Sv Records, comparing what was downloaded previously, sitting in a data file, versus what came down from the json. We need to figure out what duplication means when SV records can have just a single gene referene. Is an SV with gene G and chrom 2 distinct from an SV with gene G and chrom 3 (both fields for site 1)
+        return record.getSampleId() + "|" + record.getSite1_Gene() + "|" + record.getSite2_Gene(); //TODO : is that adequate? Any other distinguising fields? (probably)
     }
 
     @Override
@@ -170,11 +172,11 @@ public class GMLFusionDataReader implements ItemStreamReader<CVRFusionRecord> {
     }
 
     @Override
-    public CVRFusionRecord read() throws Exception {
-        while (!gmlFusionRecords.isEmpty()) {
-            CVRFusionRecord record = gmlFusionRecords.remove(0);
-            if (!cvrSampleListUtil.getPortalSamples().contains(record.getTumor_Sample_Barcode())) {
-                cvrSampleListUtil.addSampleRemoved(record.getTumor_Sample_Barcode());
+    public CVRSvRecord read() throws Exception {
+        while (!gmlCnvIntragenicRecords.isEmpty()) {
+            CVRSvRecord record = gmlCnvIntragenicRecords.remove(0);
+            if (!cvrSampleListUtil.getPortalSamples().contains(record.getSampleId())) {
+                cvrSampleListUtil.addSampleRemoved(record.getSampleId());
                 continue;
             }
             return record;

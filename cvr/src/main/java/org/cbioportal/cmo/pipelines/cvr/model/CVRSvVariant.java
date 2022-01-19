@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 - 2017 Memorial Sloan-Kettering Cancer Center.
+ * Copyright (c) 2016 - 2022 Memorial Sloan-Kettering Cancer Center.
  *
  * This library is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS
@@ -81,7 +81,8 @@ import javax.annotation.Generated;
     "gene2",
     "exon1",
     "exon2",
-    "sample_comment"
+    "sample_comment",
+    "is_germline"
 })
 public class CVRSvVariant {
     @JsonProperty("annotation")
@@ -148,6 +149,8 @@ public class CVRSvVariant {
     private String exon2;
     @JsonProperty("sample_comment")
     private String sampleComment;
+    @JsonProperty("is_germline")
+    private String isGermline;
     @JsonIgnore
     private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
@@ -187,8 +190,9 @@ public class CVRSvVariant {
     * @param site2Chrom
     * @param site2Gene
     * @param annotation
+    * @param isGermline
     */
-    public CVRSvVariant(String annotation, String breakpointType, String comments, String confidenceClass, String connType, String connectionType, String eventInfo, String mapq, String normalReadCount, String normalVariantCount, String pairedEndReadSupport, String site1Chrom, String site1Desc, String site1Gene, String site1Pos, String site2Chrom, String site2Desc, String site2Gene, String site2Pos, String splitReadSupport, String svClassName, String svDesc, String svLength, String svVariantId, String tumorReadCount, String tumorVariantCount, String variantStatusName) {
+    public CVRSvVariant(String annotation, String breakpointType, String comments, String confidenceClass, String connType, String connectionType, String eventInfo, String mapq, String normalReadCount, String normalVariantCount, String pairedEndReadSupport, String site1Chrom, String site1Desc, String site1Gene, String site1Pos, String site2Chrom, String site2Desc, String site2Gene, String site2Pos, String splitReadSupport, String svClassName, String svDesc, String svLength, String svVariantId, String tumorReadCount, String tumorVariantCount, String variantStatusName, String isGermline) {
         this.annotation = annotation;
         this.breakpointType = breakpointType;
         this.comments = comments;
@@ -216,6 +220,7 @@ public class CVRSvVariant {
         this.tumorReadCount = tumorReadCount;
         this.tumorVariantCount = tumorVariantCount;
         this.variantStatusName = variantStatusName;
+        this.isGermline = isGermline;
     }
 
     /**
@@ -836,5 +841,19 @@ public class CVRSvVariant {
      */
     public void setSampleComment(String sampleComment) {
         this.sampleComment = sampleComment;
+    }
+
+    /**
+     * @return the isGermline
+     */
+    public String getIsGermline() {
+        return isGermline;
+    }
+
+    /**
+     * @param isGermline the isGermline to set
+     */
+    public void setIsGermline(String isGermline) {
+        this.isGermline = isGermline;
     }
 }
