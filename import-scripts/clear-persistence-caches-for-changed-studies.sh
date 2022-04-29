@@ -366,7 +366,7 @@ function detect_and_maintain_needed_actions_for_databases() {
                     trigger_study_as_needing_reset "$portal_db" "$study_id"
                 done
             else
-                if ! [ -z "${newly_modified_study_list[@]}" ] ; then
+                if ! [ ${#newly_modified_study_list[@]} -eq 0 ] ; then
                     trigger_db_as_needing_reset "$portal_db"
                 fi
             fi
