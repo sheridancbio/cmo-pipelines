@@ -1,0 +1,6 @@
+SampleId	SvStatus	Site1HugoSymbol	Site2HugoSymbol	Site1EnsemblTranscriptId	Site2EnsemblTranscriptId	Site1EntrezGeneId	Site2EntrezGeneId	Site1RegionNumber	Site2RegionNumber	Site1Region	Site2Region	Site1Chromosome	Site2Chromosome	Site1Contig	Site2Contig	Site1Position	Site2Position	Site1Description	Site2Description	Site2EffectOnFrame	NcbiBuild	SvClass	TumorSplitReadCount	TumorPairedEndReadCount	EventInfo	BreakpointType	ConnectionType	Annotation	Breakpoint_Type	DnaSupport	RnaSupport	SvLength	NormalReadCount	TumorReadCount	NormalVariantCount	TumorVariantCount	NormalPairedEndReadCount	NormalSplitEndReadCount	Comments
+P-DMP-P001-T01-IM5		LMNA	NTRK1																						NTRK1-LMNA fusion														
+P-DMP-P001-T03-IM6		LMNA	NTRK1																						NTRK1-LMNA fusion														
+P-DMP-P001-T03-IM6		AXIN1																							AXIN1-intragenic														
+P-DMP-P001-T04-IM6		LMNA	NTRK1																						NTRK1-LMNA fusion														
+P-DMP-P001-T02-IM6		AXIN1																							AXIN1-intragenic														
