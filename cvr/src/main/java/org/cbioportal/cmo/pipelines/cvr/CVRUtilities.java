@@ -62,7 +62,7 @@ public class CVRUtilities {
     public static final String CORRESPONDING_ID_FILE = "cvr/linked_cases.txt";
     public static final String CNA_FILE = "data_CNA.txt";
     public static final String SEG_FILE = "_data_cna_hg19.seg";
-    public static final String SV_FILE = "data_SV.txt";
+    public static final String SV_FILE = "data_sv.txt";
     public static final String GENE_PANEL_FILE = "data_gene_matrix.txt";
     public static final String GML_FILE = "cvr_gml_data.json";
     public static final String GENE_PANEL = "gene_panels/impact468_gene_panel.txt";
@@ -102,11 +102,11 @@ public class CVRUtilities {
     public static Map<String, List<String>> GENETIC_PROFILES_BY_STUDY = geneticProfilesByStudy();
     private static Map<String, List<String>> geneticProfilesByStudy() {
         Map<String, List<String>> map = new HashMap<>();
-        map.put("mskimpact", new LinkedList(Arrays.asList(new String[]{"mutations", "cna"})));
-        map.put("mskimpact_heme", new LinkedList(Arrays.asList(new String[]{"mutations", "cna"})));
-        map.put("mskarcher", new LinkedList(Arrays.asList(new String[]{"mutations"})));
-        map.put("mskraindance", new LinkedList(Arrays.asList(new String[]{"mutations"})));
-        map.put("mskaccess", new LinkedList(Arrays.asList(new String[]{"mutations", "cna"})));
+        map.put("mskimpact", new LinkedList(Arrays.asList(new String[]{"mutations", "cna", "structural_variants"})));
+        map.put("mskimpact_heme", new LinkedList(Arrays.asList(new String[]{"mutations", "cna", "structural_variants"})));
+        map.put("mskarcher", new LinkedList(Arrays.asList(new String[]{"structural_variants"})));
+        map.put("mskraindance", new LinkedList(Arrays.asList(new String[]{"mutations", "structural_variants"})));
+        map.put("mskaccess", new LinkedList(Arrays.asList(new String[]{"mutations", "cna", "structural_variants"})));
         return map;
     }
 

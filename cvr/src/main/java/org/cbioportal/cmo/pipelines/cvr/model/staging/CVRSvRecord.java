@@ -133,7 +133,7 @@ public class CVRSvRecord {
         this.svStatus = "SOMATIC"; // default, not provided by CVR
        
 	// cover cases where event info is blank (this is the logic used to set the Fusion column in now deprecated data_fusion file) 
-	if (variant.getEvent_Info().equals("-")) {
+	if (variant.getEvent_Info().equals("-") && (variant.getSite1_Gene() != null || variant.getSite2_Gene() != null)) {
 		String site1GeneTrimmed = variant.getSite1_Gene().trim();
 		String site2GeneTrimmed = variant.getSite2_Gene().trim();
 		this.eventInfo = site1GeneTrimmed.equals(site2GeneTrimmed) ? site1GeneTrimmed + "-intragenic" : site2GeneTrimmed + "-" + site1GeneTrimmed + " fusion";
@@ -403,11 +403,11 @@ public class CVRSvRecord {
         this.rnaSupport = rnaSupport;
     }
 
-    public String getLength() {
+    public String getSV_Length() {
         return svLength != null ? this.svLength : "";
     }
 
-    public void setLength(String svLength) {
+    public void setSV_Length(String svLength) {
         this.svLength = svLength;
     }
 
@@ -508,7 +508,7 @@ public class CVRSvRecord {
         fieldNames.add("Annotation");
         fieldNames.add("DNA_Support");
         fieldNames.add("RNA_Support");
-        fieldNames.add("Length");
+        fieldNames.add("SV_Length");
         fieldNames.add("Normal_Read_Count");
         fieldNames.add("Tumor_Read_Count");
         fieldNames.add("Normal_Variant_Count");
