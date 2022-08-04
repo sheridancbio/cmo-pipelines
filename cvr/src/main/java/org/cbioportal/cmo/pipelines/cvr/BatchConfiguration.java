@@ -122,6 +122,11 @@ public class BatchConfiguration {
     }
 
     @Bean
+    public SvUtilities svUtilites() {
+        return new SvUtilities();
+    }
+
+    @Bean
     public Job gmlJob() {
         return jobBuilderFactory.get(GML_JOB)
                 .start(cvrSampleListsStep())

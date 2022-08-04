@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, 2022 Memorial Sloan-Kettering Cancer Center.
+ * Copyright (c) 2022 Memorial Sloan-Kettering Cancer Center.
  *
  * This library is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS
@@ -23,33 +23,34 @@
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-package org.cbioportal.cmo.pipelines.cvr;
+package org.cbioportal.cmo.pipelines.cvr.sv;
 
-import org.cbioportal.cmo.pipelines.cvr.sv.SvUtilities;
-import org.springframework.context.annotation.*;
+public class SvException extends Exception {
 
-/**
- *
- * @author ochoaa
- */
-@Configuration
-public class CvrTestConfiguration {
-
-    @Bean
-    public CVRUtilities cvrUtilities() {
-        return new CVRUtilities();
+    public SvException() {
+        super();
     }
-    
-    @Bean
-    public SvUtilities svUtilites() {
-        return new SvUtilities();
+
+    public SvException(String message) {
+        super(message);
     }
-    
+
+    public SvException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
+    public SvException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
+        super(message, cause, enableSuppression, writableStackTrace);
+    }
+
+    public SvException(Throwable cause) {
+        super(cause);
+    }
 }
