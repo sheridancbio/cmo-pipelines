@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 - 2017 Memorial Sloan-Kettering Cancer Center.
+ * Copyright (c) 2016, 2017, 2022 Memorial Sloan-Kettering Cancer Center.
  *
  * This library is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS
@@ -95,57 +95,6 @@ public class CVRSvRecord {
     private String comments;
 
     public CVRSvRecord() {
-    }
-
-    public CVRSvRecord(CVRSvVariant variant, String sampleId) {
-        this.sampleId = sampleId;
-        this.annotation = variant.getAnnotation();
-        this.breakpointType = variant.getBreakpoint_Type();
-        this.comments = variant.getComments();
-        // CVR confirmed Site1_GENE/Gene1 is a NOT_NULL field
-        // Use Gene1 to test whether v1 or v2 schema
-        if (variant.getSite1_Gene() != null && !variant.getSite1_Gene().isEmpty()) {
-            this.site1HugoSymbol = variant.getSite1_Gene();
-            this.site2HugoSymbol = variant.getSite2_Gene();
-            this.site1RegionNumber = variant.getSite1_Exon();
-            this.site2RegionNumber = variant.getSite2_Exon();
-        } else {
-            this.site1HugoSymbol = variant.getGene1();
-            this.site2HugoSymbol = variant.getGene2();
-            this.site1RegionNumber = variant.getExon1();
-            this.site2RegionNumber = variant.getExon2();
-        }
-        this.connectionType = variant.getConnection_Type();
-        this.eventInfo = variant.getEvent_Info();
-        this.ncbiBuild = "GRCh37"; // default, not provided by CVR
-        this.normalReadCount = variant.getNormal_Read_Count();
-        this.normalVariantCount = variant.getNormal_Variant_Count();
-        this.site1Chromosome = variant.getSite1_Chrom();
-        this.site1Description = variant.getSite1_Desc();
-        this.site1Position = variant.getSite1_Pos();
-        this.site2Chromosome = variant.getSite2_Chrom();
-        this.site2Description = variant.getSite2_Desc();
-        this.site2Position = variant.getSite2_Pos();
-        this.svClass = variant.getSv_Class_Name();
-        this.svLength = variant.getSv_Length();
-        this.tumorReadCount = variant.getTumor_Read_Count();
-        this.tumorVariantCount = variant.getTumor_Variant_Count();
-        this.svStatus = "SOMATIC"; // default, not provided by CVR
-    }
-
-    public CVRSvRecord(GMLCnvIntragenicVariant variant, String sampleId) {
-        this.sampleId = sampleId;
-        this.comments = (!Strings.isNullOrEmpty(variant.getInterpretation())) ? variant.getInterpretation().replaceAll("[\\t\\n\\r]+"," ") : "";
-        // set event_info and sv_class
-        this.site1HugoSymbol = variant.getGeneId().trim();
-        this.site1Chromosome = variant.getChromosome();
-        this.svStatus = "GERMLINE";
-        if (!Strings.isNullOrEmpty(variant.getCnvClassName())) {
-            String svClass = variant.getCnvClassName();
-            String eventInfo = variant.getCnvClassName().trim().replace("INTRAGENIC_", "");
-            this.eventInfo += " " + eventInfo.toLowerCase();
-            this.svClass = variant.getCnvClassName();
-        }
     }
 
     public String getSample_ID(){

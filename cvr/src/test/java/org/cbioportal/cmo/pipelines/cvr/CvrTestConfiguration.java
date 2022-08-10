@@ -51,5 +51,5 @@ public class CvrTestConfiguration {
     public SvUtilities svUtilites() {
         return new SvUtilities();
     }
-    
+
 }

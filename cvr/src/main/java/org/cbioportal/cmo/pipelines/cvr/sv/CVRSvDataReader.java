@@ -116,13 +116,7 @@ public class CVRSvDataReader implements ItemStreamReader<CVRSvRecord> {
             String sampleId = result.getMetaData().getDmpSampleId();
             List<CVRSvVariant> variants = result.getSvVariants();
             for (CVRSvVariant variant : variants) {
-                CVRSvRecord record = new CVRSvRecord(variant, sampleId);
-                try {
-                    svUtilities.simplifyIntergenicEventGeneReferences(record);
-                    svUtilities.populateEventInfoWhenEmpty(record);
-                } catch (SvException e) {
-                    log.warn(String.format("invalid sv-variants record detected in json : Site1_Hugo_Symbol = '%s' and Site2_HugoSymbol = '%s' and SampleId = '%s'. record was included but Event_Info was not filled in.", record.getSite1_Hugo_Symbol(), record.getSite2_Hugo_Symbol(), sampleId));
-                }
+                CVRSvRecord record = svUtilities.makeCvrSvRecordFromCvrSvVariant(variant, sampleId);
                 svRecords.add(record);
             }
         }

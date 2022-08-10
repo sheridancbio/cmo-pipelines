@@ -30,14 +30,15 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-package org.cbioportal.cmo.pipelines.cvr;
+package org.cbioportal.cmo.pipelines.cvr.sv;
 
+import org.cbioportal.cmo.pipelines.cvr.CvrTestConfiguration;
 import org.cbioportal.cmo.pipelines.cvr.model.staging.CVRSvRecord;
 import org.cbioportal.cmo.pipelines.cvr.sv.SvException;
 import org.cbioportal.cmo.pipelines.cvr.sv.SvUtilities;
 import org.junit.Assert;
-import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -58,11 +59,22 @@ public class SvUtilitiesTest {
     private String SITE2EMPTY = new String("");
     private String SITE2SOME = new String("SOMEGENE");
     private String SITE2OTHER = new String("OTHERGENE");
+    private String CLASSNULL = null;
+    private String CLASSEMPTY = new String("");
+    private String CLASSLOSS = new String("INTRAGENIC_LOSS");
+    private String CLASSAMPLIFICATION = new String("INTRAGENIC_AMPLIFICATION");
 
     private CVRSvRecord makeSvRecord(String site1HugoSymbol, String site2HugoSymbol) {
         CVRSvRecord cvrSvRecord = new CVRSvRecord();
         cvrSvRecord.setSite1_Hugo_Symbol(site1HugoSymbol);
         cvrSvRecord.setSite2_Hugo_Symbol(site2HugoSymbol);
+        return cvrSvRecord;
+    }
+
+    private CVRSvRecord makeSvRecordUsingClass(String site1HugoSymbol, String svClass) {
+        CVRSvRecord cvrSvRecord = new CVRSvRecord();
+        cvrSvRecord.setSite1_Hugo_Symbol(site1HugoSymbol);
+        cvrSvRecord.setSV_Class(svClass);
         return cvrSvRecord;
     }
 
@@ -222,6 +234,45 @@ public class SvUtilitiesTest {
         CVRSvRecord testSvRecord = makeSvRecord(SITE1SOME, SITE2OTHER);
         svUtilities.populateEventInfo(testSvRecord);
         Assert.assertEquals(testSvRecord.getEvent_Info(), "SOMEGENE-OTHERGENE Fusion");
+    }
+
+    // tests of cnv-intragenc-variants-gml cases
+    
+    @Test(expected = SvException.class)
+    public void testPopulateEventInfoFromGmlCnvIntragenicVariantNullGene() throws Exception {
+        CVRSvRecord testSvRecord = makeSvRecordUsingClass(SITE1NULL, CLASSLOSS);
+        svUtilities.populateEventInfoFromGmlCnvIntragenicVariant(testSvRecord);
+    }
+
+    @Test(expected = SvException.class)
+    public void testPopulateEventInfoFromGmlCnvIntragenicVariantEmptyGene() throws Exception {
+        CVRSvRecord testSvRecord = makeSvRecordUsingClass(SITE1NULL, CLASSLOSS);
+        svUtilities.populateEventInfoFromGmlCnvIntragenicVariant(testSvRecord);
+    }
+
+    @Test
+    public void testPopulateEventInfoFromGmlCnvIntragenicVariantNullClass() throws Exception {
+        CVRSvRecord testSvRecord = makeSvRecordUsingClass(SITE1SOME, CLASSNULL);
+        svUtilities.populateEventInfoFromGmlCnvIntragenicVariant(testSvRecord);
+        Assert.assertEquals(testSvRecord.getEvent_Info(), "SOMEGENE-intragenic");
+    }
+    @Test
+    public void testPopulateEventInfoFromGmlCnvIntragenicVariantEmptyClass() throws Exception {
+        CVRSvRecord testSvRecord = makeSvRecordUsingClass(SITE1SOME, CLASSEMPTY);
+        svUtilities.populateEventInfoFromGmlCnvIntragenicVariant(testSvRecord);
+        Assert.assertEquals(testSvRecord.getEvent_Info(), "SOMEGENE-intragenic");
+    }
+    @Test
+    public void testPopulateEventInfoFromGmlCnvIntragenicVariantLossClass() throws Exception {
+        CVRSvRecord testSvRecord = makeSvRecordUsingClass(SITE1SOME, CLASSLOSS);
+        svUtilities.populateEventInfoFromGmlCnvIntragenicVariant(testSvRecord);
+        Assert.assertEquals(testSvRecord.getEvent_Info(), "SOMEGENE-intragenic loss");
+    }
+    @Test
+    public void testPopulateEventInfoFromGmlCnvIntragenicVariantAmplificationClass() throws Exception {
+        CVRSvRecord testSvRecord = makeSvRecordUsingClass(SITE1SOME, CLASSAMPLIFICATION);
+        svUtilities.populateEventInfoFromGmlCnvIntragenicVariant(testSvRecord);
+        Assert.assertEquals(testSvRecord.getEvent_Info(), "SOMEGENE-intragenic amplification");
     }
 
 }
