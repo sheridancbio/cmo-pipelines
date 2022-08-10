@@ -33,18 +33,16 @@
 package org.cbioportal.cmo.pipelines.cvr.sv;
 
 import com.google.common.base.Strings;
-import org.cbioportal.cmo.pipelines.cvr.CVRUtilities;
-import org.cbioportal.cmo.pipelines.cvr.CvrSampleListUtil;
-import org.cbioportal.cmo.pipelines.cvr.model.staging.CVRSvRecord;
-import org.cbioportal.cmo.pipelines.cvr.model.GMLData;
-import org.cbioportal.cmo.pipelines.cvr.model.GMLResult;
-import org.cbioportal.cmo.pipelines.cvr.model.GMLCnvIntragenicVariant;
-
 import java.io.*;
 import java.util.*;
 import org.apache.log4j.Logger;
-
-
+import org.cbioportal.cmo.pipelines.cvr.CvrSampleListUtil;
+import org.cbioportal.cmo.pipelines.cvr.CVRUtilities;
+import org.cbioportal.cmo.pipelines.cvr.model.GMLCnvIntragenicVariant;
+import org.cbioportal.cmo.pipelines.cvr.model.GMLData;
+import org.cbioportal.cmo.pipelines.cvr.model.GMLResult;
+import org.cbioportal.cmo.pipelines.cvr.model.staging.CVRSvRecord;
+import org.cbioportal.cmo.pipelines.cvr.sv.SvUtilities;
 import org.springframework.batch.item.*;
 import org.springframework.batch.item.file.FlatFileItemReader;
 import org.springframework.batch.item.file.mapping.DefaultLineMapper;
@@ -63,6 +61,9 @@ public class GMLSvDataReader implements ItemStreamReader<CVRSvRecord> {
 
     @Autowired
     public CVRUtilities cvrUtilities;
+
+    @Autowired
+    public SvUtilities svUtilities;
 
     @Value("#{jobParameters[privateDirectory]}")
     private String privateDirectory;
@@ -108,7 +109,7 @@ public class GMLSvDataReader implements ItemStreamReader<CVRSvRecord> {
             if (samples != null) {
                 for (GMLCnvIntragenicVariant cnv : result.getCnvIntragenicVariantsGml()) {
                     for (String sampleId : samples) {
-                        CVRSvRecord record = new CVRSvRecord(cnv, sampleId);
+                        CVRSvRecord record = svUtilities.makeCvrSvRecordFromGmlCnvIntragenicVariant(cnv, sampleId);
                         String sv = getGmlSvKey(record);
                         // skip if already added sv event for sample
                         if (!gmlSvSeen.add(sv)) {

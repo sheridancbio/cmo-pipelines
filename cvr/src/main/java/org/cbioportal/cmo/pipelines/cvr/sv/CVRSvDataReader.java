@@ -32,19 +32,20 @@
 
 package org.cbioportal.cmo.pipelines.cvr.sv;
 
-import org.cbioportal.cmo.pipelines.cvr.model.staging.CVRSvRecord;
-import org.cbioportal.cmo.pipelines.cvr.*;
-import org.cbioportal.cmo.pipelines.cvr.model.*;
-
 import java.io.*;
 import java.util.*;
 import org.apache.log4j.Logger;
+import org.cbioportal.cmo.pipelines.cvr.*;
+import org.cbioportal.cmo.pipelines.cvr.sv.SvUtilities;
+import org.cbioportal.cmo.pipelines.cvr.model.*;
+import org.cbioportal.cmo.pipelines.cvr.model.staging.CVRSvRecord;
 import org.springframework.batch.item.*;
 import org.springframework.batch.item.file.FlatFileItemReader;
 import org.springframework.batch.item.file.mapping.DefaultLineMapper;
 import org.springframework.batch.item.file.transform.DelimitedLineTokenizer;
 import org.springframework.beans.factory.annotation.*;
 import org.springframework.core.io.FileSystemResource;
+
 /**
  *
  * @author heinsz
@@ -59,7 +60,10 @@ public class CVRSvDataReader implements ItemStreamReader<CVRSvRecord> {
 
     @Autowired
     public CVRUtilities cvrUtilities;
-    
+
+    @Autowired
+    public SvUtilities svUtilities;
+
     @Autowired
     public CvrSampleListUtil cvrSampleListUtil;
 
@@ -69,7 +73,7 @@ public class CVRSvDataReader implements ItemStreamReader<CVRSvRecord> {
 
     @Override
     public void open(ExecutionContext ec) throws ItemStreamException {
-        CVRData cvrData = new CVRData();        
+        CVRData cvrData = new CVRData();
         // load cvr data from cvr_data.json file
         File cvrFile = new File(privateDirectory, cvrUtilities.CVR_FILE);
         try {
@@ -78,8 +82,7 @@ public class CVRSvDataReader implements ItemStreamReader<CVRSvRecord> {
             log.error("Error reading file: " + cvrFile.getName());
             throw new ItemStreamException(e);
         }
-        
-        File svFile = new File(stagingDirectory, cvrUtilities.SV_FILE);        
+        File svFile = new File(stagingDirectory, cvrUtilities.SV_FILE);
         if (!svFile.exists()) {
             log.info("File does not exist - skipping data loading from SV file: " + svFile.getName());
         }
@@ -89,13 +92,11 @@ public class CVRSvDataReader implements ItemStreamReader<CVRSvRecord> {
             DefaultLineMapper<CVRSvRecord> mapper = new DefaultLineMapper<>();
             mapper.setLineTokenizer(tokenizer);
             mapper.setFieldSetMapper(new CVRSvFieldSetMapper());
-            
             FlatFileItemReader<CVRSvRecord> reader = new FlatFileItemReader<>();
             reader.setResource(new FileSystemResource(svFile));
             reader.setLineMapper(mapper);
             reader.setLinesToSkip(1);
             reader.open(ec);
-                
             try {
                 CVRSvRecord to_add;
                 while ((to_add = reader.read()) != null) {
@@ -111,12 +112,11 @@ public class CVRSvDataReader implements ItemStreamReader<CVRSvRecord> {
             }
             reader.close();
         }
-        
         for (CVRMergedResult result : cvrData.getResults()) {
             String sampleId = result.getMetaData().getDmpSampleId();
             List<CVRSvVariant> variants = result.getSvVariants();
             for (CVRSvVariant variant : variants) {
-                CVRSvRecord record = new CVRSvRecord(variant, sampleId);
+                CVRSvRecord record = svUtilities.makeCvrSvRecordFromCvrSvVariant(variant, sampleId);
                 svRecords.add(record);
             }
         }
