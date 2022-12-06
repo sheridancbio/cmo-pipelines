@@ -28,6 +28,12 @@ jobs:
       - run:
            name: Install requests in python 2
            command: python -m pip install requests
+      - run:
+           name: Install pandas in python 3
+           command: python3 -m pip install pandas
+      - run:
+           name: Install GitPython in python 3
+           command: python3 -m pip install GitPython
       # Use mvn clean and package as the standard maven build phase
       - run:
           name: Build
