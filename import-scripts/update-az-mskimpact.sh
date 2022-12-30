@@ -213,6 +213,23 @@ function add_metadata_headers() {
     $PYTHON_BINARY $PORTAL_HOME/scripts/add_clinical_attribute_metadata_headers.py -f $INPUT_FILENAMES -c "$CDD_URL" -s mskimpact
 }
 
+function anonymize_age_at_seq_with_cap() {
+    PATIENT_INPUT_FILEPATH="$AZ_MSK_IMPACT_DATA_HOME/data_clinical_patient.txt"
+    PATIENT_OUTPUT_FILEPATH="$AZ_MSK_IMPACT_DATA_HOME/data_clinical_patient.txt.os_months_trunc"
+    SAMPLE_INPUT_FILEPATH="$AZ_MSK_IMPACT_DATA_HOME/data_clinical_sample.txt"
+    SAMPLE_OUTPUT_FILEPATH="$AZ_MSK_IMPACT_DATA_HOME/data_clinical_sample.txt.age_anonymized"
+    UPPER_AGE_LIMIT=89
+    LOWER_AGE_LIMIT=18
+    OS_MONTHS_PRECISION=2
+
+    # Anonymize AGE_AT_SEQUENCING_REPORTED_YEARS and truncate OS_MONTHS
+    $PYTHON3_BINARY $PORTAL_HOME/scripts/anonymize_age_at_seq_with_cap_py3.py "$PATIENT_INPUT_FILEPATH" "$PATIENT_OUTPUT_FILEPATH" "$SAMPLE_INPUT_FILEPATH" "$SAMPLE_OUTPUT_FILEPATH" -u "$UPPER_AGE_LIMIT" -l "$LOWER_AGE_LIMIT" -o "$OS_MONTHS_PRECISION"
+
+    # Rewrite the patient and sample files with updated data
+    mv "$PATIENT_OUTPUT_FILEPATH" "$PATIENT_INPUT_FILEPATH" &&
+    mv "$SAMPLE_OUTPUT_FILEPATH" "$SAMPLE_INPUT_FILEPATH"
+}
+
 function generate_case_lists() {
     # Generate case lists based on our subset of patients + samples
     CASE_LIST_DIR="$AZ_MSK_IMPACT_DATA_HOME/case_lists"
@@ -278,9 +295,9 @@ if [ $? -gt 0 ] ; then
     report_error "ERROR: Failed to write out subsetted data for AstraZeneca MSK-IMPACT. Exiting."
 fi
 
-printTimeStampedDataProcessingStepMessage "Filter clinical attribute columns and add metadata headers for AstraZeneca MSK-IMPACT"
+printTimeStampedDataProcessingStepMessage "Filter clinical attribute columns, add metadata headers, and anonymize age at sequencing for AstraZeneca MSK-IMPACT"
 
-# Filter clincal attribute columns from clinical files
+# Filter clinical attribute columns from clinical files
 if ! filter_clinical_attribute_columns ; then
     report_error "ERROR: Failed to filter non-delivered clinical attribute columns for AstraZeneca MSK-IMPACT. Exiting."
 fi
@@ -288,6 +305,11 @@ fi
 # Add metadata headers to clinical files
 if ! add_metadata_headers ; then
     report_error "ERROR: Failed to add metadata headers to clinical attribute files for AstraZeneca MSK-IMPACT. Exiting."
+fi
+
+# Anonymize ages
+if ! anonymize_age_at_seq_with_cap ; then
+    report_error "ERROR: Failed to anonymize AGE_AT_SEQUENCING_REPORTED_YEARS for AstraZeneca MSK-IMPACT. Exiting."
 fi
 
 printTimeStampedDataProcessingStepMessage "Filter non-delivered files and include delivered meta files for AstraZeneca MSK-IMPACT"
