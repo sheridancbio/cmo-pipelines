@@ -1,4 +1,4 @@
-"""Provides unit tests for the changelog.py script functionality.
+"""Provides unit tests for the generate_az_study_changelog_py3.py script functionality.
 
 To run the tests, execute the following command from the parent
 directory of this script:
