@@ -205,6 +205,32 @@ def write_data(data_file, output_file):
             if not line.startswith("#"):
                 os.write(output_file, line)
 
+def write_standardized_columns(clinical_filename, output_file):
+    """
+    	Rewrites a file (assumed clinical/timeline) and replaces
+        all NA placeholders/blanks with 'NA'. Does not make same adjustment
+        to the SAMPLE_ID column (to avoid creating an actual sample tagged 'NA')
+    """
+    header = get_header(clinical_filename)
+
+    try:
+        sample_id_index = header.index('SAMPLE_ID')
+    except ValueError:
+        sample_id_index = -1
+    
+    with open(clinical_filename) as clinical_file:
+        for line in clinical_file:
+            line = line.rstrip('\n')
+            row = line.split('\t')
+            to_write = []
+            for index, field in enumerate(row):
+                if index == sample_id_index:
+                    to_write.append(field)
+                    continue
+                to_write.append(standardize_clinical_datum(field))
+            output_file.write('\t'.join(to_write))
+            output_file.write('\n')
+    
 def write_and_exclude_columns(clinical_filename, exclude_column_names, output_file):
     header = get_header(clinical_filename)
     columns_to_remove_indexes = get_indexes_for_columns(header, exclude_column_names)
@@ -259,6 +285,18 @@ def get_value_set_for_clinical_attribute(clinical_file, clinical_attribute):
     for row in parse_file(clinical_file, True):
         value_set.add(row[clinical_attribute])
     return value_set
+
+def standardize_clinical_datum(val):
+    """
+        Standardizes any NA/blank placeholder value ('', 'NA', 'N/A', None) to 'NA'
+    """
+    try:
+        vfixed = val.strip()
+    except AttributeError:
+        vfixed = 'NA'
+    if vfixed in ['', 'NA', 'N/A', None]:
+        return 'NA'
+    return vfixed
 
 def write_data_list_to_file(filename, data_list):
     """
