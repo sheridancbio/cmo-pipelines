@@ -8,6 +8,23 @@ if ! which $KUBECTL_BINARY > /dev/null 2>&1 ; then
     exit 1
 fi
 
+CLUSTER_ID_DIGITS="digits-eks"
+CLUSTER_ID_KS="knowledgesystems-kubernetes"
+
+unset portal_to_cluster_map
+declare -A portal_to_cluster_map
+portal_to_cluster_map["public"]="$CLUSTER_ID_KS"
+portal_to_cluster_map["genie-public"]="$CLUSTER_ID_KS"
+portal_to_cluster_map["genie-private"]="$CLUSTER_ID_KS"
+portal_to_cluster_map["genie-archive"]="$CLUSTER_ID_KS"
+portal_to_cluster_map["triage"]="$CLUSTER_ID_DIGITS"
+portal_to_cluster_map["hgnc"]="$CLUSTER_ID_DIGITS"
+portal_to_cluster_map["devdb"]="$CLUSTER_ID_DIGITS"
+portal_to_cluster_map["msk"]="$CLUSTER_ID_DIGITS"
+portal_to_cluster_map["msk-beta"]="$CLUSTER_ID_DIGITS"
+portal_to_cluster_map["private"]="$CLUSTER_ID_DIGITS"
+portal_to_cluster_map["sclc"]="$CLUSTER_ID_DIGITS"
+
 unset portal_to_deployment_map
 declare -A portal_to_deployment_map
 portal_to_deployment_map["public"]="cbioportal-spring-boot"
@@ -43,34 +60,29 @@ function print_portal_id_values() {
     done
 }
 
-function authenticate_msk_service_account_if_necessary() {
-    if [ -z "KUBECONFIG_ARG" ] ; then
-        /data/portal-cron/scripts/authenticate_service_account.sh
-    fi
-}
-
 portal_id=$1
-KUBECONFIG_ARG=""
-if [ "$portal_id" == "public" ] || [ "$portal_id" == "genie-private" ] || [ "$portal_id" == "genie-archive" ] || [ "$portal_id" == "genie-public" ] ; then
-    if ! [ -z $PUBLIC_CLUSTER_KUBECONFIG ] ; then
-        KUBECONFIG_ARG="--kubeconfig $PUBLIC_CLUSTER_KUBECONFIG"
-    fi
-fi
-
 if [ -z "$portal_id" ] ; then
     echo "usage : $app_name <portal id>"
     print_portal_id_values
     exit 1
 fi
 
+cluster_id=${portal_to_cluster_map[$portal_id]}
 deployment_id=${portal_to_deployment_map[$portal_id]}
-if [ -z "$deployment_id" ] ; then
+if [ -z "$cluster_id" ] || [ -z "$deployment_id" ]; then
     echo "invalid portal_id : $portal_id"
     print_portal_id_values
     exit 1
 fi
 
-authenticate_msk_service_account_if_necessary
+if [ "$cluster_id" == "$CLUSTER_ID_DIGITS" ] ; then
+    /data/portal-cron/scripts/authenticate_service_account.sh
+fi
+unset KUBECONFIG_ARG
+if ! [ -z $PUBLIC_CLUSTER_KUBECONFIG ] ; then
+    KUBECONFIG_ARG="--kubeconfig $PUBLIC_CLUSTER_KUBECONFIG"
+fi
+
 $KUBECTL_BINARY $KUBECONFIG_ARG set env deployment $deployment_id --env="LAST_RESTART=$(date)"
 webapp_restart_status=$?
 if [ $webapp_restart_status -ne 0 ] ; then
