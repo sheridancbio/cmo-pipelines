@@ -81,12 +81,12 @@ class LineProcessor:
         if self.event_type == EventType.STRUCTURAL_VARIANT:
             required_field_set = REQUIRED_STRUCTURAL_VARIANT_EVENT_FIELDS
 
-        missing_field_list = {}
+        missing_field_set = set()
         for field_name in required_field_set:
             if not field_name in self.col_indices:
-                missing_field_list.add(field_name)
-            if len(missing_field_list) > 0:
-                missing_fields = ','.join(missing_field_list)
+                missing_field_set.add(field_name)
+            if len(missing_field_set) > 0:
+                missing_fields = ','.join(missing_field_set)
                 raise IndexError(f'Unable to find required column(s) {missing_fields} in event file')
 
     def line_is_commented(self, line):
@@ -141,9 +141,7 @@ class LineProcessor:
         key_value_terms = []
         for key in sorted(unique_key_field_set):
             key_value_terms.append(key + '\t' + fields[self.col_indices[key]])
-        computed_keys = '\t'.join(computed_keys)
-
-        return computed_keys
+        return '\t'.join(key_value_terms)
 
 
 class LineGermlineEventScanner(LineProcessor):
@@ -264,14 +262,12 @@ if __name__ == '__main__':
 
     # Ensure that a recognizable event type code is input.
     event_type = None
-    if not args.event_type:
-        raise ValueError('Event type argument is missing')
     if args.event_type.casefold() == 'mutation'.casefold():
         event_type = EventType.MUTATION
     elif args.event_type.casefold() == 'structural_variant'.casefold():
         event_type = EventType.STRUCTURAL_VARIANT
     if event_type is None:
-        raise ValueError(f'Event type argument {args.event_type} not recognized or missing')
+        raise ValueError(f'Event type argument {args.event_type} not recognized')
 
     # Filter the file
     filtered_file_writer = FilteredFileWriter(input_file_path, output_file_path, event_type)
