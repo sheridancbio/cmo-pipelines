@@ -23,7 +23,7 @@ UNIQUE_MUTATION_EVENT_KEY_FIELDS = {
     'End_Position',
     'Reference_Allele',
     'Tumor_Seq_Allele2',
-    'Tumor_Sample_Barcode'
+    'Tumor_Sample_Barcode',
 }
 
 UNIQUE_STRUCTURAL_VARIANT_EVENT_KEY_FIELDS = {
@@ -44,23 +44,22 @@ UNIQUE_STRUCTURAL_VARIANT_EVENT_KEY_FIELDS = {
     'Site2_Position',
     'Event_Info',
     'Breakpoint_Type',
-    'Connection_Type'
+    'Connection_Type',
 }
 
-REQUIRED_MUTATION_EVENT_FIELDS =
-    UNIQUE_MUTATION_EVENT_KEY_FIELDS.union({'Mutation_Status'})
+REQUIRED_MUTATION_EVENT_FIELDS = UNIQUE_MUTATION_EVENT_KEY_FIELDS.union({'Mutation_Status'})
 
-REQUIRED_STRUCTURAL_VARIANT_EVENT_FIELDS =
-    UNIQUE_STRUCTURAL_VARIANT_EVENT_KEY_FIELDS.union({'SV_Status'})
+REQUIRED_STRUCTURAL_VARIANT_EVENT_FIELDS = UNIQUE_STRUCTURAL_VARIANT_EVENT_KEY_FIELDS.union({'SV_Status'})
 
-ALL_REFERENCED_EVENT_FIELDS =
-    REQUIRED_MUTATION_EVENT_FIELDS.union(REQUIRED_STRUCTURAL_VARIANT_EVENT_FIELDS)
+ALL_REFERENCED_EVENT_FIELDS = REQUIRED_MUTATION_EVENT_FIELDS.union(REQUIRED_STRUCTURAL_VARIANT_EVENT_FIELDS)
+
 
 class EventType(Enum):
     """An Enum class to represent mutation or structural variant event types."""
 
     MUTATION = 1
     STRUCTURAL_VARIANT = 2
+
 
 class LineProcessor:
     """Functionality common to all line processors"""
@@ -81,7 +80,7 @@ class LineProcessor:
             required_field_set = REQUIRED_MUTATION_EVENT_FIELDS
         if self.event_type == EventType.STRUCTURAL_VARIANT:
             required_field_set = REQUIRED_STRUCTURAL_VARIANT_EVENT_FIELDS
-        
+
         missing_field_list = {}
         for field_name in required_field_set:
             if not field_name in self.col_indices:
@@ -125,7 +124,7 @@ class LineProcessor:
         return self.convert_line_to_fields(line)[field_index]
 
     def compute_key_for_line(self, line):
-        """Computes a unique key for the given line of data, using the unique 
+        """Computes a unique key for the given line of data, using the unique
         key fields defined for the event type.
 
         Args:
@@ -136,7 +135,7 @@ class LineProcessor:
             unique_key_field_set = UNIQUE_MUTATION_EVENT_KEY_FIELDS
         if self.event_type == EventType.STRUCTURAL_VARIANT:
             unique_key_field_set = UNIQUE_STRUCTURAL_VARIANT_EVENT_KEY_FIELDS
-        
+
         # Key will be string representation of the object
         fields = self.convert_line_to_fields(line)
         key_value_terms = []
@@ -175,7 +174,7 @@ class LineGermlineEventScanner(LineProcessor):
             status_col_index = self.col_indices['Mutation_Status']
         elif event_type == EventType.STRUCTURAL_VARIANT:
             status_col_index = self.col_indices['SV_Status']
-        
+
         value = self.convert_line_to_field(status_col_index, line)
         if value.casefold() == 'GERMLINE'.casefold():
             self.germline_event_key_set.add(self.compute_key_for_line(line))
@@ -229,14 +228,18 @@ class FilteredFileWriter:
         """Processes the input file and writes out a filtered version including only somatic events"""
         # Scan for all germline events and record keys
         with open(input_file_path, 'r') as input_file_handle:
-            line_germline_event_scanner = LineGermlineEventScanner(self.event_type, self.col_indices, self.germline_event_keys)
+            line_germline_event_scanner = LineGermlineEventScanner(
+                self.event_type, self.col_indices, self.germline_event_keys
+            )
             for line in input_file_handle:
                 line_germline_event_scanner.scan(line)
-        
+
         # Read/write events, filtering those which match a germline event key
         with open(input_file_path, 'r') as input_file_handle:
             with open(output_file_path, 'w') as output_file_handle:
-                line_processor = LineFileWriter(self.event_type, self.col_indices, self.germline_event_keys, output_file_handle)
+                line_processor = LineFileWriter(
+                    self.event_type, self.col_indices, self.germline_event_keys, output_file_handle
+                )
                 for line in input_file_handle:
                     line_processor.process(line)
 
