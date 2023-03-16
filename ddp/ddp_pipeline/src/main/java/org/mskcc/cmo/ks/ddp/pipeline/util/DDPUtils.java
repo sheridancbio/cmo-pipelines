@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 - 2021 Memorial Sloan-Kettering Cancer Center.
+ * Copyright (c) 2018 - 2023 Memorial Sloan-Kettering Cancer Center.
  *
  * This library is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS
@@ -39,7 +39,6 @@ import com.google.common.base.Strings;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.ZonedDateTime;
-import java.time.ZoneOffset;
 import java.util.*;
 import java.io.*;
 import org.apache.commons.lang.StringUtils;
@@ -59,6 +58,7 @@ public class DDPUtils {
     private static Map<String, String> naaccrEthnicityMap;
     private static Map<String, String> naaccrRaceMap;
     private static Map<String, String> naaccrSexMap;
+    private static Map<String, Date> sampleSeqDateMap = new HashMap<String, Date>();
     private static Map<String, Date> patientFirstSeqDateMap = new HashMap<String, Date>();
     private static Set<String> patientsMissingSurvival = new HashSet<>();
     private static Boolean useSeqDateOsMonthsMethod = Boolean.FALSE;
@@ -107,6 +107,14 @@ public class DDPUtils {
 
     public static Map<String, String> getNaaccrSexMap() {
         return DDPUtils.naaccrSexMap;
+    }
+
+    public static void setSampleSeqDateMap(Map<String, Date> sampleSeqDateMap) {
+        DDPUtils.sampleSeqDateMap = sampleSeqDateMap;
+    }
+
+    public static Map<String, Date> getSampleSeqDateMap() {
+        return DDPUtils.sampleSeqDateMap;
     }
 
     public static void setPatientFirstSeqDateMap(Map<String, Date> patientFirstSeqDateMap) {
@@ -167,6 +175,26 @@ public class DDPUtils {
     }
 
     /**
+     * Resolve and anonymize patient age in years at date of sequencing. If either
+     * the patient date of birth or the date of sequencing is null this function returns null.
+     *
+     * @param sampleId
+     * @param patientBirthDate String date of birth
+     * @return age in years at sequencing, null if we don't know patient date of birth or sequencing date
+     * @throws ParseException
+     */
+    public static String resolveAgeAtSeqDate(String sampleId, String patientBirthDate) throws ParseException {
+        Long birthDateInDays = getDateInDays(patientBirthDate);
+        Long sampleSeqDateInDays = getDateInDays(sampleSeqDateMap.get(sampleId));
+        // if either date is null do not calculate age at sequencing date
+        Double age = (sampleSeqDateInDays == null || birthDateInDays == null) ? null : (sampleSeqDateInDays - birthDateInDays) / (DAYS_TO_YEARS_CONVERSION);
+        if (age == null || age < 0) {
+            return null;
+        }
+        return anonymizePatientAge(age.intValue());
+    }
+
+    /**
      * Given two date strings, find the number of days that has elapsed between the two
      * Order of dates does not matter
      * Option to anonymize the interval (<18 or >90 years) if the output is used for sensitive fields
@@ -198,27 +226,6 @@ public class DDPUtils {
      */
     public static String resolveIntervalInDays(String date1, String date2) throws ParseException {
         return resolveIntervalInDays(date1, date2, false);
-    }
-
-    /**
-     * Resolve and anonymize patient age at diagnosis.
-     *
-     * If birth year is null/empty then return anonymized patient age.
-     * Otherwise calculate from difference between current date and birth date.
-     *
-     * @param compositeRecord
-     * @return
-     * @throws ParseException
-     */
-    public static String resolvePatientAgeAtDiagnosis(DDPCompositeRecord compositeRecord) throws ParseException {
-        // if patient birth date is null/empty then use current age value
-        if (Strings.isNullOrEmpty(compositeRecord.getPatientBirthDate())) {
-            return anonymizePatientAge(compositeRecord.getPatientAge());
-        }
-        Long birthDateInDays = getDateInDays(compositeRecord.getPatientBirthDate());
-        Long currentDateInDays = getDateInDays(new Date());
-        Double age = (currentDateInDays - birthDateInDays) / (DAYS_TO_YEARS_CONVERSION);
-        return anonymizePatientAge(age.intValue());
     }
 
     /**

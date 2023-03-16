@@ -3,6 +3,7 @@ chunk=500
 
 # DDP Filenames
 ddp.clinical_filename=data_clinical_ddp.txt
+ddp.age_at_seq_date_filename=data_clinical_ddp_age_at_seq.txt
 ddp.timeline_chemotherapy_filename=data_timeline_ddp_chemotherapy.txt
 ddp.timeline_radiation_filename=data_timeline_ddp_radiation.txt
 ddp.timeline_surgery_filename=data_timeline_ddp_surgery.txt
@@ -42,5 +43,4 @@ naaccr.sex=naaccr_sex.json
 # Supplemental data filenames (MSKIMPACT only)
 ddp.supp.dirname=ddp
 ddp.supp.vital_status_filename=ddp_vital_status.txt
-ddp.supp.age_filename=ddp_age.txt
 ddp.supp.naaccr_filename=ddp_naaccr.txt

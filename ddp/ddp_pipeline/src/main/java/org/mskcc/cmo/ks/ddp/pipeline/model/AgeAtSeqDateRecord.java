@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Memorial Sloan-Kettering Cancer Center.
+ * Copyright (c) 2023 Memorial Sloan-Kettering Cancer Center.
  *
  * This library is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS
@@ -33,7 +33,6 @@
 package org.mskcc.cmo.ks.ddp.pipeline.model;
 
 import org.mskcc.cmo.ks.ddp.pipeline.util.DDPUtils;
-import org.mskcc.cmo.ks.ddp.source.composite.DDPCompositeRecord;
 
 import java.text.ParseException;
 import java.util.*;
@@ -41,18 +40,19 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 
 /**
  *
- * @author ochoaa
+ * @author Manda Wilson and Calla Chennault
  */
-public class SuppAgeRecord {
-
+public class AgeAtSeqDateRecord {
     private String PATIENT_ID;
-    private String AGE;
+    private String SAMPLE_ID;
+    private String AGE_AT_SEQ_REPORTED_YEARS;
 
-    public SuppAgeRecord(){}
+    public AgeAtSeqDateRecord(){}
 
-    public SuppAgeRecord(DDPCompositeRecord compositeRecord) throws ParseException {
-        this.PATIENT_ID = compositeRecord.getDmpPatientId();
-        this.AGE = DDPUtils.resolveYearsSinceBirth(compositeRecord.getPatientBirthDate());
+    public AgeAtSeqDateRecord(String patientId, String sampleId, String patientBirthDate) throws ParseException {
+        this.PATIENT_ID = patientId;
+        this.SAMPLE_ID = sampleId;
+        this.AGE_AT_SEQ_REPORTED_YEARS = DDPUtils.resolveAgeAtSeqDate(sampleId, patientBirthDate);
     }
 
     /**
@@ -70,17 +70,31 @@ public class SuppAgeRecord {
     }
 
     /**
-     * @return the AGE
+     * @return the SAMPLE_ID
      */
-    public String getAGE() {
-        return AGE;
+    public String getSAMPLE_ID() {
+        return SAMPLE_ID;
     }
 
     /**
-     * @param AGE the AGE to set
+     * @param SAMPLE_ID the SAMPLE_ID to set
      */
-    public void setAGE(String AGE) {
-        this.AGE = AGE;
+    public void setSAMPLE_ID(String SAMPLE_ID) {
+        this.SAMPLE_ID = SAMPLE_ID;
+    }
+
+    /**
+     * @return the AGE_AT_SEQ_REPORTED_YEARS
+     */
+    public String getAGE_AT_SEQ_REPORTED_YEARS() {
+        return AGE_AT_SEQ_REPORTED_YEARS;
+    }
+
+    /**
+     * @param AGE_AT_SEQ_REPORTED_YEARS the AGE_AT_SEQ_REPORTED_YEARS to set
+     */
+    public void setAGE_AT_SEQ_REPORTED_YEARS(String AGE_AT_SEQ_REPORTED_YEARS) {
+        this.AGE_AT_SEQ_REPORTED_YEARS = AGE_AT_SEQ_REPORTED_YEARS;
     }
 
     @Override
@@ -96,7 +110,8 @@ public class SuppAgeRecord {
     public static List<String> getFieldNames() {
         List<String> fieldNames = new ArrayList<>();
         fieldNames.add("PATIENT_ID");
-        fieldNames.add("AGE"); // 'AGE' refers to the number of years since birth
+        fieldNames.add("SAMPLE_ID");
+        fieldNames.add("AGE_AT_SEQ_REPORTED_YEARS");
         return fieldNames;
     }
 }

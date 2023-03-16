@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Memorial Sloan-Kettering Cancer Center.
+ * Copyright (c) 2023 Memorial Sloan Kettering Cancer Center.
  *
  * This library is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS
@@ -33,10 +33,8 @@
 package org.mskcc.cmo.ks.ddp.pipeline;
 
 import org.mskcc.cmo.ks.ddp.pipeline.model.CompositeResult;
-import org.mskcc.cmo.ks.ddp.pipeline.model.SuppAgeRecord;
-import org.mskcc.cmo.ks.ddp.pipeline.util.DDPUtils;
+import org.mskcc.cmo.ks.ddp.pipeline.model.AgeAtSeqDateRecord;
 
-import com.google.common.base.Strings;
 import java.io.*;
 import java.util.*;
 import org.apache.commons.lang.StringUtils;
@@ -48,34 +46,29 @@ import org.springframework.core.io.FileSystemResource;
 
 /**
  *
- * @author ochoaa
+ * @author Manda Wilson and Calla Chennault
  */
-public class SuppAgeWriter implements ItemStreamWriter<CompositeResult> {
+public class AgeAtSeqDateWriter implements ItemStreamWriter<CompositeResult> {
 
     @Value("#{jobParameters[outputDirectory]}")
     private String outputDirectory;
-
-    @Value("${ddp.supp.dirname}")
-    private String ddpSuppDirname;
-
-    @Value("${ddp.supp.age_filename}")
-    private String ddpSuppAgeFilename;
-
-    @Value("#{jobParameters[cohortName]}")
-    private String cohortName;
+    @Value("${ddp.age_at_seq_date_filename}")
+    private String ageAtSeqDateFilename;
+    @Value("#{jobParameters[includeAgeAtSeqDate]}")
+    private Boolean includeAgeAtSeqDate;
 
     private FlatFileItemWriter<String> flatFileItemWriter = new FlatFileItemWriter<>();
 
     @Override
     public void open(ExecutionContext ec) throws ItemStreamException {
-        if (DDPUtils.isMskimpactCohort(cohortName)) {
-            File stagingFile = new File(outputDirectory, ddpSuppDirname + File.separator + ddpSuppAgeFilename);
+        if (includeAgeAtSeqDate) {
+            File stagingFile = new File(outputDirectory, ageAtSeqDateFilename);
             LineAggregator<String> aggr = new PassThroughLineAggregator<>();
             flatFileItemWriter.setLineAggregator(aggr);
             flatFileItemWriter.setHeaderCallback(new FlatFileHeaderCallback() {
                 @Override
                 public void writeHeader(Writer writer) throws IOException {
-                    writer.write(StringUtils.join(SuppAgeRecord.getFieldNames(), "\t"));
+                    writer.write(StringUtils.join(AgeAtSeqDateRecord.getFieldNames(), "\t"));
                 }
             });
             flatFileItemWriter.setResource(new FileSystemResource(stagingFile));
@@ -88,20 +81,20 @@ public class SuppAgeWriter implements ItemStreamWriter<CompositeResult> {
 
     @Override
     public void close() throws ItemStreamException {
-        if (DDPUtils.isMskimpactCohort(cohortName)) {
+        if (includeAgeAtSeqDate) {
             flatFileItemWriter.close();
         }
     }
 
     @Override
     public void write(List<? extends CompositeResult> compositeResults) throws Exception {
-        if (DDPUtils.isMskimpactCohort(cohortName)) {
+        if (includeAgeAtSeqDate) {
             List<String> records = new ArrayList<>();
             for (CompositeResult result : compositeResults) {
-                if (Strings.isNullOrEmpty(result.getSuppAgeResult())) {
+                if (result.getAgeAtSeqDateResults() == null || result.getAgeAtSeqDateResults().isEmpty()) {
                     continue;
                 }
-                records.add(result.getSuppAgeResult());
+                records.addAll(result.getAgeAtSeqDateResults());
             }
             flatFileItemWriter.write(records);
         }

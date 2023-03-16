@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2019 Memorial Sloan-Kettering Cancer Center.
+ * Copyright (c) 2018 - 2023 Memorial Sloan Kettering Cancer Center.
  *
  * This library is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS
@@ -57,6 +57,11 @@ public class DDPCompositeRecord {
 
     public DDPCompositeRecord(String dmpPatientId) {
         this.dmpPatientId = dmpPatientId;
+    }
+
+    public DDPCompositeRecord(String dmpPatientId, List<String> dmpSampleIds) {
+        this.dmpPatientId = dmpPatientId;
+        this.dmpSampleIds = (dmpSampleIds != null) ? dmpSampleIds : new ArrayList();
     }
 
     public DDPCompositeRecord(String ddpDeidentifiedPid, String dmpPatientId, List<String> dmpSampleIds) {

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2019 Memorial Sloan-Kettering Cancer Center.
+ * Copyright (c) 2018 - 2023 Memorial Sloan Kettering Cancer Center.
  *
  * This library is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS
@@ -57,6 +57,9 @@ public class DDPCompositeProcessor implements ItemProcessor<DDPCompositeRecord, 
     @Value("#{jobParameters[includeDiagnosis]}")
     private Boolean includeDiagnosis;
 
+    @Value("#{jobParameters[includeAgeAtSeqDate]}")
+    private Boolean includeAgeAtSeqDate;
+
     @Value("#{jobParameters[includeRadiation]}")
     private Boolean includeRadiation;
 
@@ -82,6 +85,9 @@ public class DDPCompositeProcessor implements ItemProcessor<DDPCompositeRecord, 
     private ClinicalProcessor clinicalProcessor;
 
     @Autowired
+    private AgeAtSeqDateProcessor ageAtSeqDateProcessor;
+
+    @Autowired
     private TimelineRadiationProcessor timelineRadiationProcessor;
 
     @Autowired
@@ -92,9 +98,6 @@ public class DDPCompositeProcessor implements ItemProcessor<DDPCompositeRecord, 
 
     @Autowired
     private SuppVitalStatusProcessor suppVitalStatusProcessor;
-
-    @Autowired
-    private SuppAgeProcessor suppAgeProcessor;
 
     @Autowired
     private SuppNaaccrMappingsProcessor suppNaaccrMappingsProcessor;
@@ -153,9 +156,11 @@ public class DDPCompositeProcessor implements ItemProcessor<DDPCompositeRecord, 
             LOG.error("Error converting composite record into clinical record: " + compositeRecord.getDmpPatientId());
             return null;
         }
+
         // create composite result and call remaining processors
         CompositeResult compositeResult = new CompositeResult();
         compositeResult.setClinicalResult(clinicalResult);
+        compositeResult.setAgeAtSeqDateResults(ageAtSeqDateProcessor.process(compositeRecord));
         compositeResult.setTimelineRadiationResults(timelineRadiationProcessor.process(compositeRecord));
         compositeResult.setTimelineChemoResults(timelineChemoProcessor.process(compositeRecord));
         compositeResult.setTimelineSurgeryResults(timelineSurgeryProcessor.process(compositeRecord));
@@ -164,7 +169,6 @@ public class DDPCompositeProcessor implements ItemProcessor<DDPCompositeRecord, 
         // provided to genie (vital status, age as years since birth, naaccr codes)
         if (DDPUtils.isMskimpactCohort(cohortName)) {
             compositeResult.setSuppVitalStatusResult(suppVitalStatusProcessor.process(compositeRecord));
-            compositeResult.setSuppAgeResult(suppAgeProcessor.process(compositeRecord));
             compositeResult.setSuppNaccrMappingsResult(suppNaaccrMappingsProcessor.process(compositeRecord));
         }
         return compositeResult;

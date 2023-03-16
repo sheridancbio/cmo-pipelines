@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2019 Memorial Sloan-Kettering Cancer Center.
+ * Copyright (c) 2018 - 2023 Memorial Sloan Kettering Cancer Center.
  *
  * This library is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS
@@ -32,10 +32,8 @@
 package org.mskcc.cmo.ks.ddp.pipeline;
 
 import java.io.IOException;
+import org.mskcc.cmo.ks.ddp.pipeline.model.AgeAtSeqDateRecord;
 import org.mskcc.cmo.ks.ddp.pipeline.model.ClinicalRecord;
-import org.mskcc.cmo.ks.ddp.pipeline.model.SuppVitalStatusRecord;
-import org.mskcc.cmo.ks.ddp.pipeline.model.SuppAgeRecord;
-import org.mskcc.cmo.ks.ddp.pipeline.model.SuppNaaccrMappingsRecord;
 import org.mskcc.cmo.ks.ddp.pipeline.model.TimelineChemoRecord;
 import org.mskcc.cmo.ks.ddp.pipeline.model.TimelineRadiationRecord;
 import org.mskcc.cmo.ks.ddp.pipeline.model.TimelineSurgeryRecord;
@@ -62,6 +60,8 @@ public class DDPSortTasklet implements Tasklet {
     private String outputDirectory;
     @Value("${ddp.clinical_filename}")
     private String clinicalFilename;
+    @Value("${ddp.age_at_seq_date_filename}")
+    private String ageAtSeqDateFilename;
     @Value("${ddp.timeline_chemotherapy_filename}")
     private String timelineChemotherapyFilename;
     @Value("${ddp.timeline_radiation_filename}")
@@ -70,6 +70,8 @@ public class DDPSortTasklet implements Tasklet {
     private String timelineSurgeryFilename;
     @Value("#{jobParameters[includeDiagnosis]}")
     private Boolean includeDiagnosis;
+    @Value("#{jobParameters[includeAgeAtSeqDate]}")
+    private Boolean includeAgeAtSeqDate;
     @Value("#{jobParameters[includeRadiation]}")
     private Boolean includeRadiation;
     @Value("#{jobParameters[includeChemotherapy]}")
@@ -80,7 +82,6 @@ public class DDPSortTasklet implements Tasklet {
     private Integer currentDemographicsRecCount;
 
     private final double DEMOGRAPHIC_RECORD_DROP_THRESHOLD = 0.9;
-    private int recordsWritten;
 
     private final Logger LOG = Logger.getLogger(DDPSortTasklet.class);
 
@@ -91,6 +92,11 @@ public class DDPSortTasklet implements Tasklet {
         Path clinicalFilePath = Paths.get(outputDirectory, clinicalFilename);
         validateDemographicsRecordCount(clinicalFilePath.toString());
         sortAndOverwriteFile(clinicalFilePath, ClinicalRecord.getFieldNames(includeDiagnosis, includeRadiation, includeChemotherapy, includeSurgery));
+
+        if (includeAgeAtSeqDate) {
+            Path ageAtSeqDateFilePath = Paths.get(outputDirectory, ageAtSeqDateFilename);
+            sortAndOverwriteFile(ageAtSeqDateFilePath, AgeAtSeqDateRecord.getFieldNames());
+        }
 
         // sort and overwrite timeline files if applicable
         if (includeChemotherapy) {
@@ -120,8 +126,7 @@ public class DDPSortTasklet implements Tasklet {
                     ") dropped greater than 90% of current record count (" + currentDemographicsRecCount +
                     ") in backup demographics file - exiting...");
         }
-    }    
-
+    }
 
     private void sortAndOverwriteFile(Path filePath, List<String> fieldNames) throws IOException {
         LOG.info("Sorting and overwriting file:" + filePath.toString());
