@@ -48,6 +48,11 @@ function clearPersistenceCachesForHgncPortals() {
     clearPersistenceCachesForPortals "$all_hgnc_portals"
 }
 
+function clearPersistenceCachesForHgnc1938Portals() {
+    all_hgnc_1938_portals="hgnc-1938"
+    clearPersistenceCachesForPortals "$all_hgnc_1938_portals"
+}
+
 function clearPersistenceCachesForDevdbPortals() {
     all_devdb_portals="devdb"
     clearPersistenceCachesForPortals "$all_devdb_portals"
