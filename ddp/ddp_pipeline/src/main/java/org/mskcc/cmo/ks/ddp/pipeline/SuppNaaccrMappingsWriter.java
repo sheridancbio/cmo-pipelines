@@ -34,8 +34,6 @@ package org.mskcc.cmo.ks.ddp.pipeline;
 
 import org.mskcc.cmo.ks.ddp.pipeline.model.CompositeResult;
 import org.mskcc.cmo.ks.ddp.pipeline.model.SuppNaaccrMappingsRecord;
-import org.mskcc.cmo.ks.ddp.pipeline.util.DDPUtils;
-
 import com.google.common.base.Strings;
 import java.io.*;
 import java.util.*;
@@ -68,19 +66,17 @@ public class SuppNaaccrMappingsWriter implements ItemStreamWriter<CompositeResul
 
     @Override
     public void open(ExecutionContext ec) throws ItemStreamException {
-        if (DDPUtils.isMskimpactCohort(cohortName)) {
-            File stagingFile = new File(outputDirectory, ddpSuppDirname + File.separator + ddpSuppNaaccrMappingsFilename);
-            LineAggregator<String> aggr = new PassThroughLineAggregator<>();
-            flatFileItemWriter.setLineAggregator(aggr);
-            flatFileItemWriter.setHeaderCallback(new FlatFileHeaderCallback() {
-                @Override
-                public void writeHeader(Writer writer) throws IOException {
-                    writer.write(StringUtils.join(SuppNaaccrMappingsRecord.getFieldNames(), "\t"));
-                }
-            });
-            flatFileItemWriter.setResource(new FileSystemResource(stagingFile));
-            flatFileItemWriter.open(ec);
-        }
+        File stagingFile = new File(outputDirectory, ddpSuppDirname + File.separator + ddpSuppNaaccrMappingsFilename);
+        LineAggregator<String> aggr = new PassThroughLineAggregator<>();
+        flatFileItemWriter.setLineAggregator(aggr);
+        flatFileItemWriter.setHeaderCallback(new FlatFileHeaderCallback() {
+            @Override
+            public void writeHeader(Writer writer) throws IOException {
+                writer.write(String.join("\t", SuppNaaccrMappingsRecord.getFieldNames()));
+            }
+        });
+        flatFileItemWriter.setResource(new FileSystemResource(stagingFile));
+        flatFileItemWriter.open(ec);
     }
 
     @Override
@@ -88,22 +84,18 @@ public class SuppNaaccrMappingsWriter implements ItemStreamWriter<CompositeResul
 
     @Override
     public void close() throws ItemStreamException {
-        if (DDPUtils.isMskimpactCohort(cohortName)) {
-            flatFileItemWriter.close();
-        }
+        flatFileItemWriter.close();
     }
 
     @Override
     public void write(List<? extends CompositeResult> compositeResults) throws Exception {
-        if (DDPUtils.isMskimpactCohort(cohortName)) {
-            List<String> records = new ArrayList<>();
-            for (CompositeResult result : compositeResults) {
-                if (Strings.isNullOrEmpty(result.getSuppNaccrMappingsResult())) {
-                    continue;
-                }
-                records.add(result.getSuppNaccrMappingsResult());
+        List<String> records = new ArrayList<>();
+        for (CompositeResult result : compositeResults) {
+            if (Strings.isNullOrEmpty(result.getSuppNaccrMappingsResult())) {
+                continue;
             }
-            flatFileItemWriter.write(records);
+            records.add(result.getSuppNaccrMappingsResult());
         }
+        flatFileItemWriter.write(records);
     }
 }
