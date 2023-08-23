@@ -492,7 +492,7 @@ MY_FLOCK_FILEPATH="/data/portal-cron/cron-lock/fetch-dmp-data-for-import.lock"
     fi
 
     # fetch ddp demographics data
-    printTimeStampedDataProcessingStepMessage "DDP demographics fetch for acess"
+    printTimeStampedDataProcessingStepMessage "DDP demographics fetch for access"
     mskaccess_dmp_pids_file=$MSK_DMP_TMPDIR/mskaccess_patient_list.txt
     awk -F'\t' 'NR==1 { for (i=1; i<=NF; i++) { f[$i] = i } }{ if ($f["PATIENT_ID"] != "PATIENT_ID") { print $(f["PATIENT_ID"]) } }' $MSK_ACCESS_DATA_HOME/data_clinical_mskaccess_data_clinical.txt | sort | uniq > $mskaccess_dmp_pids_file
     ACCESS_DDP_DEMOGRAPHICS_RECORD_COUNT=$(wc -l < $ACCESS_REDCAP_BACKUP/data_clinical_mskaccess_data_clinical_ddp_demographics.txt)
@@ -873,7 +873,7 @@ MY_FLOCK_FILEPATH="/data/portal-cron/cron-lock/fetch-dmp-data-for-import.lock"
     ## MERGE STUDIES FOR MIXEDPACT, MSKSOLIDHEME:
     # Note: RAINDANCE is no longer being updated but the data will still be included in MIXEDPACT
     #   (1) MSK-IMPACT, HEMEPACT, RAINDANCE, ARCHER, and ACCESS (MIXEDPACT)
-    #   (1) MSK-IMPACT, HEMEPACT, ARCHER, and ACCESS (MSKSOLIDHEME)
+    #   (1) MSK-IMPACT, HEMEPACT, and ACCESS (MSKSOLIDHEME)
 
     # touch meta_sv.txt files if not already exist
     if [ ! -f $MSK_IMPACT_DATA_HOME/meta_sv.txt ] ; then
