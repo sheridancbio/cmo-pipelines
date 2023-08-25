@@ -51,6 +51,8 @@ import org.apache.log4j.Logger;
 public class DDPUtils {
 
     public static final String MSKIMPACT_STUDY_ID = "mskimpact";
+    public static final String HEMEPACT_STUDY_ID = "mskimpact_heme";
+    public static final String MSKACCESS_STUDY_ID = "mskaccess";
     public static final Double DAYS_TO_YEARS_CONVERSION = 365.2422;
     public static final Double DAYS_TO_MONTHS_CONVERSION = 30.4167;
     public static final List<String> NULL_EMPTY_VALUES = Arrays.asList(new String[]{"NA", "N/A"});
@@ -143,6 +145,14 @@ public class DDPUtils {
 
     public static Boolean isMskimpactCohort(String cohortName) {
         return (!Strings.isNullOrEmpty(cohortName) && DDPUtils.MSKIMPACT_STUDY_ID.equalsIgnoreCase(cohortName));
+    }
+
+    public static Boolean isHemepactCohort(String cohortName) {
+        return (!Strings.isNullOrEmpty(cohortName) && DDPUtils.HEMEPACT_STUDY_ID.equalsIgnoreCase(cohortName));
+    }
+
+    public static Boolean isMskaccessCohort(String cohortName) {
+        return (!Strings.isNullOrEmpty(cohortName) && DDPUtils.MSKACCESS_STUDY_ID.equalsIgnoreCase(cohortName));
     }
 
     /**
