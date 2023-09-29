@@ -106,7 +106,7 @@ public class DDPCompositeProcessor implements ItemProcessor<DDPCompositeRecord, 
 
     @Override
     public CompositeResult process(DDPCompositeRecord compositeRecord) throws Exception {
-        // all get methods are asynchrnous - won't wait for completion before completing
+        // all get methods are asynchronous - won't wait for completion before completing
         CompletableFuture<PatientDemographics> futurePatientDemographics = ddpDataSource.getPatientDemographics(compositeRecord.getDmpPatientId());
         CompletableFuture<List<PatientDiagnosis>> futurePatientDiagnosis = (includeDiagnosis ?
                 ddpDataSource.getPatientDiagnoses(compositeRecord.getDmpPatientId()) : null);
