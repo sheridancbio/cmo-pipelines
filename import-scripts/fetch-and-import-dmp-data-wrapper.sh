@@ -33,16 +33,19 @@ SKIP_DMP_IMPORT_BEFORE_HHMM=2000
     # cmo data msk imports now start after dmp imports are done
     echo "executing import-cmo-data-msk.sh"
     /data/portal-cron/scripts/import-cmo-data-msk.sh
-    date
-    echo "executing import-pdx-data.sh"
-    /data/portal-cron/scripts/import-pdx-data.sh
+    # Only run pdx updates on Friday->Saturday
+    if [ "$day_of_week_at_process_start" -eq 5 ] ; then
+        date
+        echo "executing import-pdx-data.sh"
+        /data/portal-cron/scripts/import-pdx-data.sh
+    fi
     date
     echo "executing update-msk-mind-cohort.sh"
     /data/portal-cron/scripts/update-msk-mind-cohort.sh
     date
     echo "executing update-msk-spectrum-cohort.sh"
     /data/portal-cron/scripts/update-msk-spectrum-cohort.sh
-    # Only run AstraZeneca updates on Sundays
+    # Only run AstraZeneca updates on Sunday->Monday
     if [ "$day_of_week_at_process_start" -eq 7 ] ; then
         date
         echo "executing update-az-mskimpact.sh"
