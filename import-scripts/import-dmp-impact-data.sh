@@ -7,6 +7,11 @@ if [ -z "$PORTAL_HOME" ] ; then
     echo "Error : import-dmp-impact-data.sh cannot be run without setting the PORTAL_HOME environment variable. (Use automation-environment.sh)"
     exit 1
 fi
+
+SKIP_AFFILIATE_STUDIES_IMPORT=1
+SKIP_SCLC_MSKIMPACT_IMPORT=1
+SKIP_LYMPHOMA_IMPORT=1
+
 # localize global variables / jar names and functions
 source $PORTAL_HOME/scripts/dmp-import-vars-functions.sh
 source $PORTAL_HOME/scripts/clear-persistence-cache-shell-functions.sh
@@ -104,8 +109,6 @@ IMPORT_FAIL_RIKENGENESISJAPAN=1
 IMPORT_FAIL_MSKIMPACT_PED=1
 IMPORT_FAIL_SCLC_MSKIMPACT=1
 IMPORT_FAIL_LYMPHOMA=1
-GENERATE_MASTERLIST_FAIL=0
-MERCURIAL_PUSH_FAIL=0
 
 # -------------------------------------------------------------
 # check database version before importing anything
@@ -217,208 +220,215 @@ fi
 # set 'CLEAR_CACHES_AFTER_MSK_AFFILIATE_IMPORT' flag to 1 if Kings County, Lehigh Valley, Queens Cancer Center, Miami Cancer Institute, MSKIMPACT Ped, or Lymphoma super cohort succesfully update
 CLEAR_CACHES_AFTER_MSK_AFFILIATE_IMPORT=0
 
-# TEMP STUDY IMPORT: KINGSCOUNTY
-if [ $DB_VERSION_FAIL -eq 0 ] && [ -f $MSK_KINGS_IMPORT_TRIGGER ] ; then
-    printTimeStampedDataProcessingStepMessage "import for msk_kingscounty"
-    bash $PORTAL_HOME/scripts/import-temp-study.sh --study-id="msk_kingscounty" --temp-study-id="temporary_msk_kingscounty" --backup-study-id="yesterday_msk_kingscounty" --portal-name="msk-kingscounty-portal" --study-path="$MSK_KINGS_DATA_HOME" --notification-file="$kingscounty_notification_file" --tmp-directory="$MSK_DMP_TMPDIR" --email-list="$PIPELINES_EMAIL_LIST" --oncotree-version="${ONCOTREE_VERSION_TO_USE}" --importer-jar="$PORTAL_HOME/lib/msk-dmp-importer.jar" --transcript-overrides-source="mskcc"
-    if [ $? -eq 0 ] ; then
-        CLEAR_CACHES_AFTER_MSK_AFFILIATE_IMPORT=1
-        IMPORT_FAIL_KINGS=0
-    fi
-    rm $MSK_KINGS_IMPORT_TRIGGER
-else
-    if [ $DB_VERSION_FAIL -gt 0 ] ; then
-        echo "Not importing KINGSCOUNTY - database version is not compatible"
+if ! [[ $SKIP_AFFILIATE_STUDIES_IMPORT == '1' ]] ; then
+    # TEMP STUDY IMPORT: KINGSCOUNTY
+    if [ $DB_VERSION_FAIL -eq 0 ] && [ -f $MSK_KINGS_IMPORT_TRIGGER ] ; then
+        printTimeStampedDataProcessingStepMessage "import for msk_kingscounty"
+        bash $PORTAL_HOME/scripts/import-temp-study.sh --study-id="msk_kingscounty" --temp-study-id="temporary_msk_kingscounty" --backup-study-id="yesterday_msk_kingscounty" --portal-name="msk-kingscounty-portal" --study-path="$MSK_KINGS_DATA_HOME" --notification-file="$kingscounty_notification_file" --tmp-directory="$MSK_DMP_TMPDIR" --email-list="$PIPELINES_EMAIL_LIST" --oncotree-version="${ONCOTREE_VERSION_TO_USE}" --importer-jar="$PORTAL_HOME/lib/msk-dmp-importer.jar" --transcript-overrides-source="mskcc"
+        if [ $? -eq 0 ] ; then
+            CLEAR_CACHES_AFTER_MSK_AFFILIATE_IMPORT=1
+            IMPORT_FAIL_KINGS=0
+        fi
+        rm $MSK_KINGS_IMPORT_TRIGGER
     else
-        echo "Not importing KINGSCOUNTY - something went wrong with subsetting clinical studies for KINGSCOUNTY."
+        if [ $DB_VERSION_FAIL -gt 0 ] ; then
+            echo "Not importing KINGSCOUNTY - database version is not compatible"
+        else
+            echo "Not importing KINGSCOUNTY - something went wrong with subsetting clinical studies for KINGSCOUNTY."
+        fi
     fi
-fi
-if [ $IMPORT_FAIL_KINGS -gt 0 ] ; then
-    sendImportFailureMessageMskPipelineLogsSlack "KINGSCOUNTY import"
-else
-    sendImportSuccessMessageMskPipelineLogsSlack "KINGSCOUNTY"
-fi
-
-# TEMP STUDY IMPORT: LEHIGHVALLEY
-if [ $DB_VERSION_FAIL -eq 0 ] && [ -f $MSK_LEHIGH_IMPORT_TRIGGER ] ; then
-    printTimeStampedDataProcessingStepMessage "import for msk_lehighvalley"
-    bash $PORTAL_HOME/scripts/import-temp-study.sh --study-id="msk_lehighvalley" --temp-study-id="temporary_msk_lehighvalley" --backup-study-id="yesterday_msk_lehighvalley" --portal-name="msk-lehighvalley-portal" --study-path="$MSK_LEHIGH_DATA_HOME" --notification-file="$lehighvalley_notification_file" --tmp-directory="$MSK_DMP_TMPDIR" --email-list="$PIPELINES_EMAIL_LIST" --oncotree-version="${ONCOTREE_VERSION_TO_USE}" --importer-jar="$PORTAL_HOME/lib/msk-dmp-importer.jar" --transcript-overrides-source="mskcc"
-    if [ $? -eq 0 ] ; then
-        CLEAR_CACHES_AFTER_MSK_AFFILIATE_IMPORT=1
-        IMPORT_FAIL_LEHIGH=0
-    fi
-    rm $MSK_LEHIGH_IMPORT_TRIGGER
-else
-    if [ $DB_VERSION_FAIL -gt 0 ] ; then
-        echo "Not importing LEHIGHVALLEY - database version is not compatible"
+    if [ $IMPORT_FAIL_KINGS -gt 0 ] ; then
+        sendImportFailureMessageMskPipelineLogsSlack "KINGSCOUNTY import"
     else
-        echo "Not importing LEHIGHVALLEY - something went wrong with subsetting clinical studies for LEHIGHVALLEY."
+        sendImportSuccessMessageMskPipelineLogsSlack "KINGSCOUNTY"
     fi
-fi
-if [ $IMPORT_FAIL_LEHIGH -gt 0 ] ; then
-    sendImportFailureMessageMskPipelineLogsSlack "LEHIGHVALLEY import"
-else
-    sendImportSuccessMessageMskPipelineLogsSlack "LEHIGHVALLEY"
-fi
-
-# TEMP STUDY IMPORT: QUEENSCANCERCENTER
-if [ $DB_VERSION_FAIL -eq 0 ] && [ -f $MSK_QUEENS_IMPORT_TRIGGER ] ; then
-    printTimeStampedDataProcessingStepMessage "import for msk_queenscancercenter"
-    bash $PORTAL_HOME/scripts/import-temp-study.sh --study-id="msk_queenscancercenter" --temp-study-id="temporary_msk_queenscancercenter" --backup-study-id="yesterday_msk_queenscancercenter" --portal-name="msk-queenscancercenter-portal" --study-path="$MSK_QUEENS_DATA_HOME" --notification-file="$queenscancercenter_notification_file" --tmp-directory="$MSK_DMP_TMPDIR" --email-list="$PIPELINES_EMAIL_LIST" --oncotree-version="${ONCOTREE_VERSION_TO_USE}" --importer-jar="$PORTAL_HOME/lib/msk-dmp-importer.jar" --transcript-overrides-source="mskcc"
-    if [ $? -eq 0 ] ; then
-        CLEAR_CACHES_AFTER_MSK_AFFILIATE_IMPORT=1
-        IMPORT_FAIL_QUEENS=0
-    fi
-    rm $MSK_QUEENS_IMPORT_TRIGGER
-else
-    if [ $DB_VERSION_FAIL -gt 0 ] ; then
-        echo "Not importing QUEENSCANCERCENTER - database version is not compatible"
+    
+    # TEMP STUDY IMPORT: LEHIGHVALLEY
+    if [ $DB_VERSION_FAIL -eq 0 ] && [ -f $MSK_LEHIGH_IMPORT_TRIGGER ] ; then
+        printTimeStampedDataProcessingStepMessage "import for msk_lehighvalley"
+        bash $PORTAL_HOME/scripts/import-temp-study.sh --study-id="msk_lehighvalley" --temp-study-id="temporary_msk_lehighvalley" --backup-study-id="yesterday_msk_lehighvalley" --portal-name="msk-lehighvalley-portal" --study-path="$MSK_LEHIGH_DATA_HOME" --notification-file="$lehighvalley_notification_file" --tmp-directory="$MSK_DMP_TMPDIR" --email-list="$PIPELINES_EMAIL_LIST" --oncotree-version="${ONCOTREE_VERSION_TO_USE}" --importer-jar="$PORTAL_HOME/lib/msk-dmp-importer.jar" --transcript-overrides-source="mskcc"
+        if [ $? -eq 0 ] ; then
+            CLEAR_CACHES_AFTER_MSK_AFFILIATE_IMPORT=1
+            IMPORT_FAIL_LEHIGH=0
+        fi
+        rm $MSK_LEHIGH_IMPORT_TRIGGER
     else
-        echo "Not importing QUEENSCANCERCENTER - something went wrong with subsetting clinical studies for QUEENSCANCERCENTER."
+        if [ $DB_VERSION_FAIL -gt 0 ] ; then
+            echo "Not importing LEHIGHVALLEY - database version is not compatible"
+        else
+            echo "Not importing LEHIGHVALLEY - something went wrong with subsetting clinical studies for LEHIGHVALLEY."
+        fi
     fi
-fi
-if [ $IMPORT_FAIL_QUEENS -gt 0 ] ; then
-    sendImportFailureMessageMskPipelineLogsSlack "QUEENSCANCERCENTER import"
-else
-    sendImportSuccessMessageMskPipelineLogsSlack "QUEENSCANCERCENTER"
-fi
-
-# TEMP STUDY IMPORT: MIAMICANCERINSTITUTE
-if [ $DB_VERSION_FAIL -eq 0 ] && [ -f $MSK_MCI_IMPORT_TRIGGER ] ; then
-    printTimeStampedDataProcessingStepMessage "import for msk_miamicancerinstitute"
-    bash $PORTAL_HOME/scripts/import-temp-study.sh --study-id="msk_miamicancerinstitute" --temp-study-id="temporary_msk_miamicancerinstitute" --backup-study-id="yesterday_msk_miamicancerinstitute" --portal-name="msk-mci-portal" --study-path="$MSK_MCI_DATA_HOME" --notification-file="$miamicancerinstitute_notification_file" --tmp-directory="$MSK_DMP_TMPDIR" --email-list="$PIPELINES_EMAIL_LIST" --oncotree-version="${ONCOTREE_VERSION_TO_USE}" --importer-jar="$PORTAL_HOME/lib/msk-dmp-importer.jar" --transcript-overrides-source="mskcc"
-    if [ $? -eq 0 ] ; then
-        CLEAR_CACHES_AFTER_MSK_AFFILIATE_IMPORT=1
-        IMPORT_FAIL_MCI=0
-    fi
-    rm $MSK_MCI_IMPORT_TRIGGER
-else
-    if [ $DB_VERSION_FAIL -gt 0 ] ; then
-        echo "Not importing MIAMICANCERINSTITUTE - database version is not compatible"
+    if [ $IMPORT_FAIL_LEHIGH -gt 0 ] ; then
+        sendImportFailureMessageMskPipelineLogsSlack "LEHIGHVALLEY import"
     else
-        echo "Not importing MIAMICANCERINSTITUTE - something went wrong with subsetting clinical studies for MIAMICANCERINSTITUTE."
+        sendImportSuccessMessageMskPipelineLogsSlack "LEHIGHVALLEY"
     fi
-fi
-if [ $IMPORT_FAIL_MCI -gt 0 ] ; then
-    sendImportFailureMessageMskPipelineLogsSlack "MIAMICANCERINSTITUTE import"
-else
-    sendImportSuccessMessageMskPipelineLogsSlack "MIAMICANCERINSTITUTE"
-fi
-
-# TEMP STUDY IMPORT: HARTFORDHEALTHCARE
-if [ $DB_VERSION_FAIL -eq 0 ] && [ -f $MSK_HARTFORD_IMPORT_TRIGGER ] ; then
-    printTimeStampedDataProcessingStepMessage "import for msk_hartfordhealthcare"
-    bash $PORTAL_HOME/scripts/import-temp-study.sh --study-id="msk_hartfordhealthcare" --temp-study-id="temporary_msk_hartfordhealthcare" --backup-study-id="yesterday_msk_hartfordhealthcare" --portal-name="msk-hartford-portal" --study-path="$MSK_HARTFORD_DATA_HOME" --notification-file="$hartfordhealthcare_notification_file" --tmp-directory="$MSK_DMP_TMPDIR" --email-list="$PIPELINES_EMAIL_LIST" --oncotree-version="${ONCOTREE_VERSION_TO_USE}" --importer-jar="$PORTAL_HOME/lib/msk-dmp-importer.jar" --transcript-overrides-source="mskcc"
-    if [ $? -eq 0 ] ; then
-        CLEAR_CACHES_AFTER_MSK_AFFILIATE_IMPORT=1
-        IMPORT_FAIL_HARTFORD=0
-    fi
-    rm $MSK_HARTFORD_IMPORT_TRIGGER
-else
-    if [ $DB_VERSION_FAIL -gt 0 ] ; then
-        echo "Not importing HARTFORDHEALTHCARE - database version is not compatible"
+    
+    # TEMP STUDY IMPORT: QUEENSCANCERCENTER
+    if [ $DB_VERSION_FAIL -eq 0 ] && [ -f $MSK_QUEENS_IMPORT_TRIGGER ] ; then
+        printTimeStampedDataProcessingStepMessage "import for msk_queenscancercenter"
+        bash $PORTAL_HOME/scripts/import-temp-study.sh --study-id="msk_queenscancercenter" --temp-study-id="temporary_msk_queenscancercenter" --backup-study-id="yesterday_msk_queenscancercenter" --portal-name="msk-queenscancercenter-portal" --study-path="$MSK_QUEENS_DATA_HOME" --notification-file="$queenscancercenter_notification_file" --tmp-directory="$MSK_DMP_TMPDIR" --email-list="$PIPELINES_EMAIL_LIST" --oncotree-version="${ONCOTREE_VERSION_TO_USE}" --importer-jar="$PORTAL_HOME/lib/msk-dmp-importer.jar" --transcript-overrides-source="mskcc"
+        if [ $? -eq 0 ] ; then
+            CLEAR_CACHES_AFTER_MSK_AFFILIATE_IMPORT=1
+            IMPORT_FAIL_QUEENS=0
+        fi
+        rm $MSK_QUEENS_IMPORT_TRIGGER
     else
-        echo "Not importing HARTFORDHEALTHCARE - something went wrong with subsetting clinical studies for HARTFORDHEALTHCARE."
+        if [ $DB_VERSION_FAIL -gt 0 ] ; then
+            echo "Not importing QUEENSCANCERCENTER - database version is not compatible"
+        else
+            echo "Not importing QUEENSCANCERCENTER - something went wrong with subsetting clinical studies for QUEENSCANCERCENTER."
+        fi
     fi
-fi
-if [ $IMPORT_FAIL_HARTFORD -gt 0 ] ; then
-    sendImportFailureMessageMskPipelineLogsSlack "HARTFORDHEALTHCARE import"
-else
-    sendImportSuccessMessageMskPipelineLogsSlack "HARTFORDHEALTHCARE"
-fi
-
-# TEMP STUDY IMPORT: RALPHLAUREN
-if [ $DB_VERSION_FAIL -eq 0 ] && [ -f $MSK_RALPHLAUREN_IMPORT_TRIGGER ] ; then
-    printTimeStampedDataProcessingStepMessage "import for msk_ralphlauren"
-    bash $PORTAL_HOME/scripts/import-temp-study.sh --study-id="msk_ralphlauren" --temp-study-id="temporary_msk_ralphlauren" --backup-study-id="yesterday_msk_ralphlauren" --portal-name="msk-ralphlauren-portal" --study-path="$MSK_RALPHLAUREN_DATA_HOME" --notification-file="$ralphlauren_notification_file" --tmp-directory="$MSK_DMP_TMPDIR" --email-list="$PIPELINES_EMAIL_LIST" --oncotree-version="${ONCOTREE_VERSION_TO_USE}" --importer-jar="$PORTAL_HOME/lib/msk-dmp-importer.jar" --transcript-overrides-source="mskcc"
-    if [ $? -eq 0 ] ; then
-        CLEAR_CACHES_AFTER_MSK_AFFILIATE_IMPORT=1
-        IMPORT_FAIL_RALPHLAUREN=0
-    fi
-    rm $MSK_RALPHLAUREN_IMPORT_TRIGGER
-else
-    if [ $DB_VERSION_FAIL -gt 0 ] ; then
-        echo "Not importing RALPHLAUREN - database version is not compatible"
+    if [ $IMPORT_FAIL_QUEENS -gt 0 ] ; then
+        sendImportFailureMessageMskPipelineLogsSlack "QUEENSCANCERCENTER import"
     else
-        echo "Not importing RALPHLAUREN - something went wrong with subsetting clinical studies for RALPHLAUREN."
+        sendImportSuccessMessageMskPipelineLogsSlack "QUEENSCANCERCENTER"
     fi
-fi
-if [ $IMPORT_FAIL_RALPHLAUREN -gt 0 ] ; then
-    sendImportFailureMessageMskPipelineLogsSlack "RALPHLAUREN import"
-else
-    sendImportSuccessMessageMskPipelineLogsSlack "RALPHLAUREN"
-fi
-
-# TEMP STUDY IMPORT: RIKENGENESISJAPAN
-if [ $DB_VERSION_FAIL -eq 0 ] && [ -f $MSK_RIKENGENESISJAPAN_IMPORT_TRIGGER ] ; then
-    printTimeStampedDataProcessingStepMessage "import for msk_rikengenesisjapan"
-    bash $PORTAL_HOME/scripts/import-temp-study.sh --study-id="msk_rikengenesisjapan" --temp-study-id="temporary_msk_rikengenesisjapan" --backup-study-id="yesterday_msk_rikengenesisjapan" --portal-name="msk-tailormedjapan-portal" --study-path="$MSK_RIKENGENESISJAPAN_DATA_HOME" --notification-file="$rikengenesisjapan_notification_file" --tmp-directory="$MSK_DMP_TMPDIR" --email-list="$PIPELINES_EMAIL_LIST" --oncotree-version="${ONCOTREE_VERSION_TO_USE}" --importer-jar="$PORTAL_HOME/lib/msk-dmp-importer.jar" --transcript-overrides-source="mskcc"
-    if [ $? -eq 0 ] ; then
-        CLEAR_CACHES_AFTER_MSK_AFFILIATE_IMPORT=1
-        IMPORT_FAIL_RIKENGENESISJAPAN=0
-    fi
-    rm $MSK_RIKENGENESISJAPAN_IMPORT_TRIGGER
-else
-    if [ $DB_VERSION_FAIL -gt 0 ] ; then
-        echo "Not importing RIKENGENESISJAPAN - database version is not compatible"
+    
+    # TEMP STUDY IMPORT: MIAMICANCERINSTITUTE
+    if [ $DB_VERSION_FAIL -eq 0 ] && [ -f $MSK_MCI_IMPORT_TRIGGER ] ; then
+        printTimeStampedDataProcessingStepMessage "import for msk_miamicancerinstitute"
+        bash $PORTAL_HOME/scripts/import-temp-study.sh --study-id="msk_miamicancerinstitute" --temp-study-id="temporary_msk_miamicancerinstitute" --backup-study-id="yesterday_msk_miamicancerinstitute" --portal-name="msk-mci-portal" --study-path="$MSK_MCI_DATA_HOME" --notification-file="$miamicancerinstitute_notification_file" --tmp-directory="$MSK_DMP_TMPDIR" --email-list="$PIPELINES_EMAIL_LIST" --oncotree-version="${ONCOTREE_VERSION_TO_USE}" --importer-jar="$PORTAL_HOME/lib/msk-dmp-importer.jar" --transcript-overrides-source="mskcc"
+        if [ $? -eq 0 ] ; then
+            CLEAR_CACHES_AFTER_MSK_AFFILIATE_IMPORT=1
+            IMPORT_FAIL_MCI=0
+        fi
+        rm $MSK_MCI_IMPORT_TRIGGER
     else
-        echo "Not importing RIKENGENESISJAPAN - something went wrong with subsetting clinical studies for RIKENGENESISJAPAN."
+        if [ $DB_VERSION_FAIL -gt 0 ] ; then
+            echo "Not importing MIAMICANCERINSTITUTE - database version is not compatible"
+        else
+            echo "Not importing MIAMICANCERINSTITUTE - something went wrong with subsetting clinical studies for MIAMICANCERINSTITUTE."
+        fi
     fi
+    if [ $IMPORT_FAIL_MCI -gt 0 ] ; then
+        sendImportFailureMessageMskPipelineLogsSlack "MIAMICANCERINSTITUTE import"
+    else
+        sendImportSuccessMessageMskPipelineLogsSlack "MIAMICANCERINSTITUTE"
+    fi
+    
+    # TEMP STUDY IMPORT: HARTFORDHEALTHCARE
+    if [ $DB_VERSION_FAIL -eq 0 ] && [ -f $MSK_HARTFORD_IMPORT_TRIGGER ] ; then
+        printTimeStampedDataProcessingStepMessage "import for msk_hartfordhealthcare"
+        bash $PORTAL_HOME/scripts/import-temp-study.sh --study-id="msk_hartfordhealthcare" --temp-study-id="temporary_msk_hartfordhealthcare" --backup-study-id="yesterday_msk_hartfordhealthcare" --portal-name="msk-hartford-portal" --study-path="$MSK_HARTFORD_DATA_HOME" --notification-file="$hartfordhealthcare_notification_file" --tmp-directory="$MSK_DMP_TMPDIR" --email-list="$PIPELINES_EMAIL_LIST" --oncotree-version="${ONCOTREE_VERSION_TO_USE}" --importer-jar="$PORTAL_HOME/lib/msk-dmp-importer.jar" --transcript-overrides-source="mskcc"
+        if [ $? -eq 0 ] ; then
+            CLEAR_CACHES_AFTER_MSK_AFFILIATE_IMPORT=1
+            IMPORT_FAIL_HARTFORD=0
+        fi
+        rm $MSK_HARTFORD_IMPORT_TRIGGER
+    else
+        if [ $DB_VERSION_FAIL -gt 0 ] ; then
+            echo "Not importing HARTFORDHEALTHCARE - database version is not compatible"
+        else
+            echo "Not importing HARTFORDHEALTHCARE - something went wrong with subsetting clinical studies for HARTFORDHEALTHCARE."
+        fi
+    fi
+    if [ $IMPORT_FAIL_HARTFORD -gt 0 ] ; then
+        sendImportFailureMessageMskPipelineLogsSlack "HARTFORDHEALTHCARE import"
+    else
+        sendImportSuccessMessageMskPipelineLogsSlack "HARTFORDHEALTHCARE"
+    fi
+    
+    # TEMP STUDY IMPORT: RALPHLAUREN
+    if [ $DB_VERSION_FAIL -eq 0 ] && [ -f $MSK_RALPHLAUREN_IMPORT_TRIGGER ] ; then
+        printTimeStampedDataProcessingStepMessage "import for msk_ralphlauren"
+        bash $PORTAL_HOME/scripts/import-temp-study.sh --study-id="msk_ralphlauren" --temp-study-id="temporary_msk_ralphlauren" --backup-study-id="yesterday_msk_ralphlauren" --portal-name="msk-ralphlauren-portal" --study-path="$MSK_RALPHLAUREN_DATA_HOME" --notification-file="$ralphlauren_notification_file" --tmp-directory="$MSK_DMP_TMPDIR" --email-list="$PIPELINES_EMAIL_LIST" --oncotree-version="${ONCOTREE_VERSION_TO_USE}" --importer-jar="$PORTAL_HOME/lib/msk-dmp-importer.jar" --transcript-overrides-source="mskcc"
+        if [ $? -eq 0 ] ; then
+            CLEAR_CACHES_AFTER_MSK_AFFILIATE_IMPORT=1
+            IMPORT_FAIL_RALPHLAUREN=0
+        fi
+        rm $MSK_RALPHLAUREN_IMPORT_TRIGGER
+    else
+        if [ $DB_VERSION_FAIL -gt 0 ] ; then
+            echo "Not importing RALPHLAUREN - database version is not compatible"
+        else
+            echo "Not importing RALPHLAUREN - something went wrong with subsetting clinical studies for RALPHLAUREN."
+        fi
+    fi
+    if [ $IMPORT_FAIL_RALPHLAUREN -gt 0 ] ; then
+        sendImportFailureMessageMskPipelineLogsSlack "RALPHLAUREN import"
+    else
+        sendImportSuccessMessageMskPipelineLogsSlack "RALPHLAUREN"
+    fi
+    
+    # TEMP STUDY IMPORT: RIKENGENESISJAPAN
+    if [ $DB_VERSION_FAIL -eq 0 ] && [ -f $MSK_RIKENGENESISJAPAN_IMPORT_TRIGGER ] ; then
+        printTimeStampedDataProcessingStepMessage "import for msk_rikengenesisjapan"
+        bash $PORTAL_HOME/scripts/import-temp-study.sh --study-id="msk_rikengenesisjapan" --temp-study-id="temporary_msk_rikengenesisjapan" --backup-study-id="yesterday_msk_rikengenesisjapan" --portal-name="msk-tailormedjapan-portal" --study-path="$MSK_RIKENGENESISJAPAN_DATA_HOME" --notification-file="$rikengenesisjapan_notification_file" --tmp-directory="$MSK_DMP_TMPDIR" --email-list="$PIPELINES_EMAIL_LIST" --oncotree-version="${ONCOTREE_VERSION_TO_USE}" --importer-jar="$PORTAL_HOME/lib/msk-dmp-importer.jar" --transcript-overrides-source="mskcc"
+        if [ $? -eq 0 ] ; then
+            CLEAR_CACHES_AFTER_MSK_AFFILIATE_IMPORT=1
+            IMPORT_FAIL_RIKENGENESISJAPAN=0
+        fi
+        rm $MSK_RIKENGENESISJAPAN_IMPORT_TRIGGER
+    else
+        if [ $DB_VERSION_FAIL -gt 0 ] ; then
+            echo "Not importing RIKENGENESISJAPAN - database version is not compatible"
+        else
+            echo "Not importing RIKENGENESISJAPAN - something went wrong with subsetting clinical studies for RIKENGENESISJAPAN."
+        fi
+    fi
+    if [ $IMPORT_FAIL_RIKENGENESISJAPAN -gt 0 ] ; then
+        sendImportFailureMessageMskPipelineLogsSlack "RIKENGENESISJAPAN import"
+    else
+        sendImportSuccessMessageMskPipelineLogsSlack "RIKENGENESISJAPAN"
+    fi
+    
+    ## END Institute affiliate imports
 fi
-if [ $IMPORT_FAIL_RIKENGENESISJAPAN -gt 0 ] ; then
-    sendImportFailureMessageMskPipelineLogsSlack "RIKENGENESISJAPAN import"
-else
-    sendImportSuccessMessageMskPipelineLogsSlack "RIKENGENESISJAPAN"
-fi
-
-## END Institute affiliate imports
-
+    
 #-------------------------------------------------------------------------------------------------------------------------------------
 CLEAR_CACHES_AFTER_SCLC_IMPORT=0
-# TEMP STUDY IMPORT: SCLCMSKIMPACT
-if [ $DB_VERSION_FAIL -eq 0 ] && [ -f $MSK_SCLC_IMPORT_TRIGGER ] ; then
-    printTimeStampedDataProcessingStepMessage "import for sclc_mskimpact_2017 study"
-    bash $PORTAL_HOME/scripts/import-temp-study.sh --study-id="sclc_mskimpact_2017" --temp-study-id="temporary_sclc_mskimpact_2017" --backup-study-id="yesterday_sclc_mskimpact_2017" --portal-name="msk-sclc-portal" --study-path="$MSK_SCLC_DATA_HOME" --notification-file="$sclc_mskimpact_notification_file" --tmp-directory="$MSK_DMP_TMPDIR" --email-list="$PIPELINES_EMAIL_LIST" --oncotree-version="${ONCOTREE_VERSION_TO_USE}" --importer-jar="$PORTAL_HOME/lib/msk-dmp-importer.jar" --transcript-overrides-source="mskcc"
-    if [ $? -eq 0 ] ; then
-        CLEAR_CACHES_AFTER_SCLC_IMPORT=1
-        IMPORT_FAIL_SCLC_MSKIMPACT=0
-    fi
-    rm $MSK_SCLC_IMPORT_TRIGGER
-else
-    if [ $DB_VERSION_FAIL -gt 0 ] ; then
-        echo "Not importing SCLCMSKIMPACT - database version is not compatible"
+
+if ! [[ $SKIP_SCLC_MSKIMPACT_IMPORT == '1' ]] ; then
+    # TEMP STUDY IMPORT: SCLCMSKIMPACT
+    if [ $DB_VERSION_FAIL -eq 0 ] && [ -f $MSK_SCLC_IMPORT_TRIGGER ] ; then
+        printTimeStampedDataProcessingStepMessage "import for sclc_mskimpact_2017 study"
+        bash $PORTAL_HOME/scripts/import-temp-study.sh --study-id="sclc_mskimpact_2017" --temp-study-id="temporary_sclc_mskimpact_2017" --backup-study-id="yesterday_sclc_mskimpact_2017" --portal-name="msk-sclc-portal" --study-path="$MSK_SCLC_DATA_HOME" --notification-file="$sclc_mskimpact_notification_file" --tmp-directory="$MSK_DMP_TMPDIR" --email-list="$PIPELINES_EMAIL_LIST" --oncotree-version="${ONCOTREE_VERSION_TO_USE}" --importer-jar="$PORTAL_HOME/lib/msk-dmp-importer.jar" --transcript-overrides-source="mskcc"
+        if [ $? -eq 0 ] ; then
+            CLEAR_CACHES_AFTER_SCLC_IMPORT=1
+            IMPORT_FAIL_SCLC_MSKIMPACT=0
+        fi
+        rm $MSK_SCLC_IMPORT_TRIGGER
     else
-        echo "Not importing SCLCMSKIMPACT - something went wrong with subsetting clinical studies for SCLCMSKIMPACT."
+        if [ $DB_VERSION_FAIL -gt 0 ] ; then
+            echo "Not importing SCLCMSKIMPACT - database version is not compatible"
+        else
+            echo "Not importing SCLCMSKIMPACT - something went wrong with subsetting clinical studies for SCLCMSKIMPACT."
+        fi
     fi
-fi
-if [ $IMPORT_FAIL_SCLC_MSKIMPACT -gt 0 ] ; then
-    sendImportFailureMessageMskPipelineLogsSlack "SCLCMSKIMPACT import"
-else
-    sendImportSuccessMessageMskPipelineLogsSlack "SCLCMSKIMPACT"
+    if [ $IMPORT_FAIL_SCLC_MSKIMPACT -gt 0 ] ; then
+        sendImportFailureMessageMskPipelineLogsSlack "SCLCMSKIMPACT import"
+    else
+        sendImportSuccessMessageMskPipelineLogsSlack "SCLCMSKIMPACT"
+    fi
 fi
 
 # END SCLCMSKIMPACT import
 
-# TEMP STUDY IMPORT: LYMPHOMASUPERCOHORT
-if [ $DB_VERSION_FAIL -eq 0 ] && [ -f $LYMPHOMA_SUPER_COHORT_IMPORT_TRIGGER ] ; then
-    printTimeStampedDataProcessingStepMessage "import for lymphoma_super_cohort_fmi_msk study"
-    bash $PORTAL_HOME/scripts/import-temp-study.sh --study-id="lymphoma_super_cohort_fmi_msk" --temp-study-id="temporary_lymphoma_super_cohort_fmi_msk" --backup-study-id="yesterday_lymphoma_super_cohort_fmi_msk" --portal-name="msk-fmi-lymphoma-portal" --study-path="$LYMPHOMA_SUPER_COHORT_DATA_HOME" --notification-file="$lymphoma_super_cohort_notification_file" --tmp-directory="$MSK_DMP_TMPDIR" --email-list="$PIPELINES_EMAIL_LIST" --oncotree-version="${ONCOTREE_VERSION_TO_USE}" --importer-jar="$PORTAL_HOME/lib/msk-dmp-importer.jar" --transcript-overrides-source="mskcc"
-    if [ $? -eq 0 ] ; then
-        CLEAR_CACHES_AFTER_MSK_AFFILIATE_IMPORT=1
-        IMPORT_FAIL_LYMPHOMA=0
-    fi
-    rm $LYMPHOMA_SUPER_COHORT_IMPORT_TRIGGER
-else
-    if [ $DB_VERSION_FAIL -gt 0 ] ; then
-        echo "Not importing LYMPHOMASUPERCOHORT - database version is not compatible"
+if ! [[ $SKIP_LYMPHOMA_IMPORT == '1' ]] ; then
+    # TEMP STUDY IMPORT: LYMPHOMASUPERCOHORT
+    if [ $DB_VERSION_FAIL -eq 0 ] && [ -f $LYMPHOMA_SUPER_COHORT_IMPORT_TRIGGER ] ; then
+        printTimeStampedDataProcessingStepMessage "import for lymphoma_super_cohort_fmi_msk study"
+        bash $PORTAL_HOME/scripts/import-temp-study.sh --study-id="lymphoma_super_cohort_fmi_msk" --temp-study-id="temporary_lymphoma_super_cohort_fmi_msk" --backup-study-id="yesterday_lymphoma_super_cohort_fmi_msk" --portal-name="msk-fmi-lymphoma-portal" --study-path="$LYMPHOMA_SUPER_COHORT_DATA_HOME" --notification-file="$lymphoma_super_cohort_notification_file" --tmp-directory="$MSK_DMP_TMPDIR" --email-list="$PIPELINES_EMAIL_LIST" --oncotree-version="${ONCOTREE_VERSION_TO_USE}" --importer-jar="$PORTAL_HOME/lib/msk-dmp-importer.jar" --transcript-overrides-source="mskcc"
+        if [ $? -eq 0 ] ; then
+            CLEAR_CACHES_AFTER_MSK_AFFILIATE_IMPORT=1
+            IMPORT_FAIL_LYMPHOMA=0
+        fi
+        rm $LYMPHOMA_SUPER_COHORT_IMPORT_TRIGGER
     else
-        echo "Not importing LYMPHOMASUPERCOHORT - something went wrong with subsetting clinical studies for Lymphoma super cohort."
+        if [ $DB_VERSION_FAIL -gt 0 ] ; then
+            echo "Not importing LYMPHOMASUPERCOHORT - database version is not compatible"
+        else
+            echo "Not importing LYMPHOMASUPERCOHORT - something went wrong with subsetting clinical studies for Lymphoma super cohort."
+        fi
     fi
-fi
-if [ $IMPORT_FAIL_LYMPHOMA -gt 0 ] ; then
-    sendImportFailureMessageMskPipelineLogsSlack "LYMPHOMASUPERCOHORT import"
-else
-    sendImportSuccessMessageMskPipelineLogsSlack "LYMPHOMASUPERCOHORT"
+    if [ $IMPORT_FAIL_LYMPHOMA -gt 0 ] ; then
+        sendImportFailureMessageMskPipelineLogsSlack "LYMPHOMASUPERCOHORT import"
+    else
+        sendImportSuccessMessageMskPipelineLogsSlack "LYMPHOMASUPERCOHORT"
+    fi
 fi
 
 # clear persistence cache only if at least one of these studies succesfully updated.
