@@ -3,7 +3,7 @@
 MY_FLOCK_FILEPATH="/data/portal-cron/cron-lock/fetch-and-import-dmp-data-wrapper.lock"
 
 SKIP_OVER_ALL_DMP_COHORT_PROCESSING=0
-SKIP_DMP_IMPORT_AFTER_HHMM=0700
+SKIP_DMP_IMPORT_AFTER_HHMM=1200
 SKIP_DMP_IMPORT_BEFORE_HHMM=2000
 
 (
@@ -19,6 +19,8 @@ SKIP_DMP_IMPORT_BEFORE_HHMM=2000
     if [[ -z "$SKIP_OVER_ALL_DMP_COHORT_PROCESSING" || "$SKIP_OVER_ALL_DMP_COHORT_PROCESSING" == 0 ]] ; then
         date
         echo executing fetch-dmp-data-for-import.sh
+        oldwd=$(pwd)
+        cd /data/portal-cron/tmp/separate_working_directory_for_dmp
         /data/portal-cron/scripts/fetch-dmp-data-for-import.sh
         # we don't want to start dmp imports too late (after 07:00), and we also do not want to exit prematurely once the script has started
         current_time=$(date +"%H%M")
@@ -28,6 +30,7 @@ SKIP_DMP_IMPORT_BEFORE_HHMM=2000
             echo "executing import-dmp-impact-data.sh"
             /data/portal-cron/scripts/import-dmp-impact-data.sh
         fi
+        cd ${oldwd}
     fi
     date
     # cmo data msk imports now start after dmp imports are done
