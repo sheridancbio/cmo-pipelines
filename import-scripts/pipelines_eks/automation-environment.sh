@@ -99,10 +99,6 @@ export START_HGNC_1938_IMPORT_TRIGGER_FILENAME=$PORTAL_HOME/import-trigger/hgnc-
 export KILL_HGNC_1938_IMPORT_TRIGGER_FILENAME=$PORTAL_HOME/import-trigger/hgnc-1938-import-kill-request
 export HGNC_1938_IMPORT_IN_PROGRESS_FILENAME=$PORTAL_HOME/import-trigger/hgnc-1938-import-in-progress
 export HGNC_1938_IMPORT_KILLING_FILENAME=$PORTAL_HOME/import-trigger/hgnc-1938-import-killing
-export START_DEVDB_IMPORT_TRIGGER_FILENAME=$PORTAL_HOME/import-trigger/devdb-import-start-request
-export KILL_DEVDB_IMPORT_TRIGGER_FILENAME=$PORTAL_HOME/import-trigger/devdb-import-kill-request
-export DEVDB_IMPORT_IN_PROGRESS_FILENAME=$PORTAL_HOME/import-trigger/devdb-import-in-progress
-export DEVDB_IMPORT_KILLING_FILENAME=$PORTAL_HOME/import-trigger/devdb-import-killing
 export PUBLIC_CLUSTER_KUBECONFIG=$PORTAL_HOME/pipelines-credentials/public-eks-config
 
 #######################

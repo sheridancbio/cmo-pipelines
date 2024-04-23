@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-DBS=("devdb" "cgds_triage" "keycloak" "redcap")
+DBS=("cgds_triage" "keycloak" "redcap")
 LOCAL_BACKUP_DIR=/data/mysql-dumps
 SLACK_URL=`cat /data/portal-cron/pipelines-credentials/mskcc-sysadmin-slack.url`
 

@@ -10,8 +10,9 @@ CVR_FETCHER_JAR_FILENAME="$PORTAL_HOME/lib/cvr_fetcher.jar"
 DDP_FETCHER_JAR_FILENAME="$PORTAL_HOME/lib/ddp_fetcher.jar"
 REDCAP_PIPELINE_JAR_FILENAME="$PORTAL_HOME/lib/redcap_pipeline.jar"
 IMPORTER_JAR_FILENAME="$PORTAL_HOME/lib/msk-dmp-importer.jar"
+JAVA_DD_AGENT_ARGS="-javaagent:/opt/datadog/apm/library/java/dd-java-agent.jar -Ddd.profiling.enabled=true -Ddd.profiling.directallocation.enabled=true -Ddd.profiling.allocation.enabled=true -Ddd.profiling.ddprof.liveheap.enabled=true -Ddd.service=msk-impact-cvr-fetcher -Ddd.env=dev -Ddd.version=3.0"
 JAVA_CRDB_FETCHER_ARGS="--add-opens java.base/java.lang=ALL-UNNAMED -jar $CRDB_FETCHER_JAR_FILENAME"
-JAVA_CVR_FETCHER_ARGS="-Xmx64g -jar $CVR_FETCHER_JAR_FILENAME"
+JAVA_CVR_FETCHER_ARGS="-Xmx70g $JAVA_DD_AGENT_ARGS -jar $CVR_FETCHER_JAR_FILENAME"
 JAVA_DDP_FETCHER_ARGS="-Xmx48g $JAVA_SSL_ARGS -jar $DDP_FETCHER_JAR_FILENAME"
 JAVA_REDCAP_PIPELINE_ARGS="$JAVA_SSL_ARGS -jar $REDCAP_PIPELINE_JAR_FILENAME"
 # the cvr server safety lockouts are no longer in use now that cvr timeout/retry loops are in effect
@@ -26,7 +27,7 @@ ENABLE_DEBUGGING=0
 if [ $ENABLE_DEBUGGING != "0" ] ; then
     java_debug_args="-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=27182"
 fi
-JAVA_IMPORTER_ARGS="$JAVA_PROXY_ARGS $java_debug_args $JAVA_SSL_ARGS -Dspring.profiles.active=dbcp -Djava.io.tmpdir=$MSK_DMP_TMPDIR -ea -cp $IMPORTER_JAR_FILENAME org.mskcc.cbio.importer.Admin"
+JAVA_IMPORTER_ARGS="$JAVA_PROXY_ARGS $java_debug_args $JAVA_SSL_ARGS $JAVA_DD_AGENT_ARGS -Dspring.profiles.active=dbcp -Djava.io.tmpdir=$MSK_DMP_TMPDIR -ea -cp $IMPORTER_JAR_FILENAME org.mskcc.cbio.importer.Admin"
 PIPELINES_EMAIL_LIST="cbioportal-pipelines@cbioportal.org"
 SLACK_PIPELINES_MONITOR_URL=`cat $SLACK_URL_FILE`
 
