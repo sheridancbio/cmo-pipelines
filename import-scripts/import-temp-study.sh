@@ -23,6 +23,8 @@
 #     RENAME_BACKUP_FAIL     if non-zero indicates that the original study failed to rename to the backup study id
 #     RENAME_FAIL            if non-zero indicates that the temporary study failed to rename to the original study id
 
+source "$PORTAL_HOME/scripts/slack-message-functions.sh"
+
 function usage {
     echo "import-temp-study.sh"
     echo -e "\t-i | --study-id                      cancer study identifier"
@@ -41,7 +43,7 @@ function usage {
 
 function sendFailureMessageMskPipelineLogsSlack {
     MESSAGE=$1
-    curl -X POST --data-urlencode "payload={\"channel\": \"#msk-pipeline-logs\", \"username\": \"cbioportal_importer\", \"text\": \"MSK temporary study import process failed: $MESSAGE\", \"icon_emoji\": \":tired_face:\"}" $SLACK_PIPELINES_MONITOR_URL
+    send_slack_message_to_channel "#msk-pipeline-logs" "string" "MSK temporary study import process failed :tired_face: : $MESSAGE"
 }
 
 # set default value(s)
