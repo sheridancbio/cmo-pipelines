@@ -6,6 +6,11 @@ SKIP_OVER_ALL_DMP_COHORT_PROCESSING=0
 SKIP_DMP_IMPORT_AFTER_HHMM=1200
 SKIP_DMP_IMPORT_BEFORE_HHMM=2000
 
+if [ -z "$PORTAL_HOME" ] ; then
+    export PORTAL_HOME=/data/portal-cron
+fi
+source "$PORTAL_HOME/scripts/slack-message-functions.sh"
+
 (
     date
     # check lock so that executions of this script not overlap
@@ -26,6 +31,8 @@ SKIP_DMP_IMPORT_BEFORE_HHMM=2000
         current_time=$(date +"%H%M")
         if [ "$current_time" -gt "$SKIP_DMP_IMPORT_AFTER_HHMM" ] && [ "$current_time" -lt "$SKIP_DMP_IMPORT_BEFORE_HHMM" ] ; then
             echo "skipping import-dmp-impact-data.sh"
+            message=":warning: the import of dmp studies has been skipped because the clock time was after the cutoff ($SKIP_DMP_IMPORT_AFTER_HHMM)"
+            send_slack_message_to_channel "#msk-pipeline-logs" "string" "$message"
         else
             echo "executing import-dmp-impact-data.sh"
             /data/portal-cron/scripts/import-dmp-impact-data.sh

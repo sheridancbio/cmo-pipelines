@@ -29,7 +29,6 @@ if [ $ENABLE_DEBUGGING != "0" ] ; then
 fi
 JAVA_IMPORTER_ARGS="$JAVA_PROXY_ARGS $java_debug_args $JAVA_SSL_ARGS $JAVA_DD_AGENT_ARGS -Dspring.profiles.active=dbcp -Djava.io.tmpdir=$MSK_DMP_TMPDIR -ea -cp $IMPORTER_JAR_FILENAME org.mskcc.cbio.importer.Admin"
 PIPELINES_EMAIL_LIST="cbioportal-pipelines@cbioportal.org"
-SLACK_PIPELINES_MONITOR_URL=`cat $SLACK_URL_FILE`
 
 DEFAULT_DDP_DEMOGRAPHICS_ROW_COUNT=2
 
@@ -39,25 +38,27 @@ FILTER_EMPTY_COLUMNS_KEEP_COLUMN_LIST="PATIENT_ID,SAMPLE_ID,ONCOTREE_CODE,PARTA_
 # -----------------------------------------------------------------------------------------------------------
 ## FUNCTIONS
 
+# import needed function send_slack_message_to_channel
+source "$PORTAL_HOME/scripts/slack-message-functions.sh"
 # import needed function waitWhileWithinTimePeriod()
-source $PORTAL_HOME/scripts/date-and-time-handling-functions.sh
+source "$PORTAL_HOME/scripts/date-and-time-handling-functions.sh"
 
 # Function for alerting slack channel of any failures
 function sendPreImportFailureMessageMskPipelineLogsSlack() {
     MESSAGE=$1
-    curl -X POST --data-urlencode "payload={\"channel\": \"#msk-pipeline-logs\", \"username\": \"cbioportal_importer\", \"text\": \"MSK cBio pipelines pre-import process failed: $MESSAGE\", \"icon_emoji\": \":tired_face:\"}" $SLACK_PIPELINES_MONITOR_URL
+    send_slack_message_to_channel "#msk-pipeline-logs" "string" "MSK cBio pipelines pre-import process failed :tired_face: : $MESSAGE"
 }
 
 # Function for alerting slack channel of any failures
 function sendImportFailureMessageMskPipelineLogsSlack() {
     MESSAGE=$1
-    curl -X POST --data-urlencode "payload={\"channel\": \"#msk-pipeline-logs\", \"username\": \"cbioportal_importer\", \"text\": \"MSK cBio pipelines import process failed: $MESSAGE\", \"icon_emoji\": \":tired_face:\"}" $SLACK_PIPELINES_MONITOR_URL
+    send_slack_message_to_channel "#msk-pipeline-logs" "string" "MSK cBio pipelines import process failed :tired_face: : $MESSAGE"
 }
 
 # Function for alerting slack channel of successful imports
 function sendImportSuccessMessageMskPipelineLogsSlack() {
     STUDY_ID=$1
-    curl -X POST --data-urlencode "payload={\"channel\": \"#msk-pipeline-logs\", \"username\": \"cbioportal_importer\", \"text\": \"MSK cBio pipelines import success: $STUDY_ID\", \"icon_emoji\": \":tada:\"}" $SLACK_PIPELINES_MONITOR_URL
+    send_slack_message_to_channel "#msk-pipeline-logs" "string" "MSK cBio pipelines import success: $STUDY_ID"
 }
 
 function printTimeStampedDataProcessingStepMessage {
