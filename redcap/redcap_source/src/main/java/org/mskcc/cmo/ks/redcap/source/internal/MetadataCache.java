@@ -110,6 +110,13 @@ public class MetadataCache {
         } else {
             metadataArray = cddSessionManager.getRedcapMetadata();
         }
+        int size = metadataArray.length + 1;
+        RedcapAttributeMetadata tmpArray[] = new RedcapAttributeMetadata[size];
+        for (int i=0; i < metadataArray.length; i++) {
+            tmpArray[i] = metadataArray[i];
+        }
+        tmpArray[size-1] = new RedcapAttributeMetadata("CYCLE_THRESHOLD", "Cycle Threshold", "Cycle Threshold", "NUMBER", "SAMPLE", "0");
+        metadataArray = tmpArray;
     }
 
     private void initializeMetadataMaps() {
