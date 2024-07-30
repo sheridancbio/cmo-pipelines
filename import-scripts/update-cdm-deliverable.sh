@@ -2,6 +2,11 @@
 
 DELIVERED_SAMPLE_ATTRIBUTES="SAMPLE_ID PATIENT_ID CANCER_TYPE CANCER_TYPE_DETAILED"
 
+if ! [ -n "$PORTAL_HOME" ] ; then
+  echo "Error : update-cdm-deliverable.sh cannot be run without setting the PORTAL_HOME environment variable."
+  exit 1
+fi
+
 if [ ! -f $PORTAL_HOME/scripts/automation-environment.sh ] || [ ! -f $PORTAL_HOME/scripts/filter-clinical-arg-functions.sh ] ; then
   echo "`date`: Unable to locate automation_env and additional modules, exiting..."
   exit 1
@@ -20,6 +25,14 @@ MSK_SOLID_HEME_CLINICAL_FILE="$MSK_SOLID_HEME_DATA_HOME/data_clinical_sample.txt
 MSK_ACCESS_SEQ_DATE="$MSK_ACCESS_DATA_HOME/$SEQ_DATE_FILENAME"
 MSK_HEMEPACT_SEQ_DATE="$MSK_HEMEPACT_DATA_HOME/$SEQ_DATE_FILENAME"
 MSK_IMPACT_SEQ_DATE="$MSK_IMPACT_DATA_HOME/$SEQ_DATE_FILENAME"
+
+TMP_LOG_FILE="${PORTAL_HOME}/tmp/trigger_s3_dag.log"
+AIRFLOW_ADMIN_CREDENTIALS_FILE="${PORTAL_HOME}/pipelines-credentials/airflow-admin.credentials"
+AIRFLOW_CREDS=$(cat $AIRFLOW_ADMIN_CREDENTIALS_FILE)
+AIRFLOW_CERT="${PORTAL_HOME}/pipelines-credentials/airflow-dev-cert.pem"
+AIRFLOW_URL="https://airflow.cbioportal.dev.aws.mskcc.org"
+DAG_ID="cdm_etl_cbioportal_s3_pull"
+AIRFLOW_API_ENDPOINT="${AIRFLOW_URL}/api/v1/dags/${DAG_ID}/dagRuns"
 
 if [ ! -f $MSK_SOLID_HEME_CLINICAL_FILE ] || [ ! -f $MSK_ACCESS_SEQ_DATE ] || [ ! -f $MSK_HEMEPACT_SEQ_DATE ] || [ ! -f $MSK_IMPACTSEQ_DATE ] ; then
   echo "`date`: Unable to locate required files, exiting..."
@@ -56,5 +69,17 @@ fi
 rm $TMP_SAMPLE_FILE
 rm $TMP_MERGED_SEQ_DATE
 rm $CDM_DELIVERABLE
+
+# Trigger CDM DAG to pull updated data_clinical_sample.txt from S3
+# This DAG will kick off the rest of the CDM pipeline when it completes
+HTTP_STATUS_CODE=$(curl -X POST --write-out "%{http_code}" --silent --output $TMP_LOG_FILE --header "Authorization: Basic ${AIRFLOW_CREDS}" --header "Content-Type: application/json" --cacert $AIRFLOW_CERT --data "{}" $AIRFLOW_API_ENDPOINT)
+if [ $HTTP_STATUS_CODE -ne 200 ] ; then
+  # Send alert for HTTP status code if not 200
+  echo "`date`: Failed attempt to trigger DAG ${DAG_ID} on Airflow server ${AIRFLOW_URL}. HTTP status code = ${HTTP_STATUS_CODE}, exiting..."
+  # Write out failed HTTP response contents and exit with error
+  cat $TMP_LOG_FILE
+  rm $TMP_LOG_FILE
+  exit 1
+fi
 
 echo "`date`: CDM deliverable generation and upload complete"
