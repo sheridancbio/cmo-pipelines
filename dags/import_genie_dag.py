@@ -13,7 +13,6 @@ from airflow.utils.trigger_rule import TriggerRule
 args = {
     "owner": "airflow",
     "depends_on_past": False,
-    "email": ["chennac@mskcc.org"],
     "email_on_failure": True,
     "email_on_retry": False,
     "retries": 0,
@@ -31,7 +30,6 @@ with DAG(
     dag_id="import_genie_dag",
     default_args=args,
     description="Imports Genie study to MySQL and ClickHouse databases using blue/green deployment strategy",
-    dagrun_timeout=timedelta(minutes=360),
     max_active_runs=1,
     start_date=datetime(2024, 12, 3),
     schedule_interval=None,
@@ -42,7 +40,7 @@ with DAG(
     }
 ) as dag:
 
-    conn_id = "genie_importer_ssh"
+    conn_id = "importer_ssh"
     import_scripts_path = "/data/portal-cron/scripts"
     db_properties_filepath="/data/portal-cron/pipelines-credentials/manage_genie_database_update_tools.properties"
     
