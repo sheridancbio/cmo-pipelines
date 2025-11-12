@@ -85,7 +85,7 @@ function download_derived_table_construction_script() {
     # Attempt to download the derived table SQL files from github
     if ! $DOWNLOAD_DERVIED_TABLE_SQL_FILES_SCRIPT_FILEPATH --github_branch_name "$CLICKHOUSE_SCHEMA_BRANCH_NAME" "$derived_table_sql_script_dirpath" ; then
         echo "Error during download of derived table construction .sql files from github" >&2
-        exit 1
+        return 1
     fi
     echo "downloaded clickhouse derived table construction file(s) from branch "$CLICKHOUSE_SCHEMA_BRANCH_NAME" of cbioportal github repository"
     return 0
