@@ -72,8 +72,11 @@ if [[ -d "$derived_table_sql_script_dirpath" && "$derived_table_sql_script_dirpa
 fi
 
 # Attempt to download the derived table SQL files from github
-# TODO: we need to modify this code eventually so that the derived table SQL script can be pulled from a dev branch
-if ! $DOWNLOAD_DERVIED_TABLE_SQL_FILES_SCRIPT_FILEPATH --github_branch_name master "$derived_table_sql_script_dirpath" ; then
+clickhouse_schema_branch_name="master" # default
+if [ "$PORTAL_DATABASE" == "public" ] ; then
+    clickhouse_schema_branch_name="public-portal-db-clickhouse-sql-for-import"
+fi
+if ! $DOWNLOAD_DERVIED_TABLE_SQL_FILES_SCRIPT_FILEPATH --github_branch_name "$clickhouse_schema_branch_name" "$derived_table_sql_script_dirpath" ; then
     echo "Error during download of derived table construction .sql files from github" >&2
     exit 1
 fi
