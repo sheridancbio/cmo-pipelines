@@ -134,6 +134,7 @@ def build_import_dag(config: ImporterConfig) -> DAG:
             "clear_persistence_caches": _script(
                 scripts_dir,
                 "airflow-clear-persistence-caches.sh",
+                importer,
                 scripts_dir,
             ),
             "set_import_running": _script(

@@ -10,6 +10,7 @@ PORTAL_SCRIPTS_DIRECTORY=$2
 source "$PORTAL_SCRIPTS_DIRECTORY/automation-environment.sh"
 source "$PORTAL_SCRIPTS_DIRECTORY/clear-persistence-cache-shell-functions.sh"
 
+echo "Clearing persistence caches for $PORTAL_DATABASE portal..."
 case "$PORTAL_DATABASE" in
     triage)
         clearPersistenceCachesForTriagePortals
@@ -19,3 +20,4 @@ case "$PORTAL_DATABASE" in
         exit 1
         ;;
 esac
+echo "Persistence caches for $PORTAL_DATABASE cleared successfully"
