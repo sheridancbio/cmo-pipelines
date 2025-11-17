@@ -131,6 +131,11 @@ def build_import_dag(config: ImporterConfig) -> DAG:
                 db_properties_filepath,
                 color_swap_config_filepath,
             ),
+            "clear_persistence_caches": _script(
+                scripts_dir,
+                "airflow-clear-persistence-caches.sh",
+                scripts_dir,
+            ),
             "set_import_running": _script(
                 scripts_dir,
                 "set_update_process_state.sh",
