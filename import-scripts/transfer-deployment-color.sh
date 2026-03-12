@@ -22,54 +22,8 @@ declare -A DEPLOYMENT_TO_CACHE_WARMING_POLICY=()
 declare -A DEPLOYMENT_TO_YAML_FILEPATH_MAP=()
 declare -A HOST_TO_SERVICE_MAP_BLUE=()
 declare -A HOST_TO_SERVICE_MAP_GREEN=()
-
-function read_scalar() {
-    local key="$1"
-    local value
-    value=$("$YQ_BINARY" -r "$key" "$COLOR_SWAP_CONFIG_FILEPATH")
-    if [ "$value" == "null" ] || [ -z "$value" ] ; then
-        echo "Error : missing required scalar '$key' in $COLOR_SWAP_CONFIG_FILEPATH" >&2
-        exit 1
-    fi
-    printf '%s\n' "$value"
-}
-
-function read_array() {
-    local dest_var="$1"
-    local path="$2"
-    local array_path="${path}[]"
-    local file="$COLOR_SWAP_CONFIG_FILEPATH"
-    local type=$("$YQ_BINARY" -r "$path | type" "$file")
-    if [ "$type" != "!!seq" ] ; then
-        echo "Error : expected array at '$path' in $file" >&2
-        exit 1
-    fi
-    unset "$dest_var"
-    declare -g -a "$dest_var"
-    readarray -t "$dest_var" < <("$YQ_BINARY" -r "$array_path" "$file")
-}
-
-function read_map() {
-    local dest_var="$1"
-    local path="$2"
-    local file="$COLOR_SWAP_CONFIG_FILEPATH"
-    local type=$("$YQ_BINARY" -r "$path | type" "$file")
-    if [ "$type" != "!!map" ] ; then
-        echo "Error : expected map at '$path' in $file" >&2
-        exit 1
-    fi
-    unset "$dest_var"
-    declare -gA "$dest_var"
-    local has_entries=0
-    while IFS=$'\t' read -r entry_key entry_value ; do
-        printf -v "$dest_var[$entry_key]" '%s' "$entry_value"
-        has_entries=1
-    done < <("$YQ_BINARY" -r "$path | to_entries[] | [.key, .value] | @tsv" "$file")
-    if [ "$has_entries" -eq 0 ] ; then
-        echo "Error : map at '$path' in $file must contain at least one entry" >&2
-        exit 1
-    fi
-}
+declare -A HOST_TO_INGRESS_NAME_MAP=()
+declare -A HOST_TO_INGRESS_YAML_FILEPATH_MAP=()
 
 function load_color_swap_config() {
     local config_path="$1"
@@ -78,32 +32,32 @@ function load_color_swap_config() {
         exit 1
     fi
 
-    SERVICE_ACCOUNT=$(read_scalar '.service_account')
-    CLUSTER_KUBECONFIG=$(read_scalar '.cluster_cfg')
-    TEMP_DIR_PATH=$(read_scalar '.temp_dir_path')
-    KS_K8S_DEPL_REPO_DIRPATH=$(read_scalar '.ks_k8s_depl_repo_dirpath')
-    INGRESS_YAML_FILEPATH=$(read_scalar '.ingress_yaml_filepath')
-    REPLICA_READY_CHECK_PAUSE_SECONDS=$(read_scalar '.replica_ready_check_pause_seconds')
-    REPLICA_READY_CHECK_MAX_CHECKCOUNT=$(read_scalar '.replica_ready_check_max_checkcount')
-    WARM_CACHES=$(read_scalar '.warm_caches')
-    SYNCHRONIZE_USER_TABLES=$(read_scalar '.synchronize_user_tables')
-    CLEAR_PERSISTENCE_CACHES_BLUE_FUNCTION=$(read_scalar '.clear_persistence_caches_blue_function')
-    CLEAR_PERSISTENCE_CACHES_GREEN_FUNCTION=$(read_scalar '.clear_persistence_caches_green_function')
-    GIT_COMMIT_MSG=$(read_scalar '.git_commit_msg')
+    SERVICE_ACCOUNT=$(read_scalar_from_yaml "$config_path" '.service_account')
+    CLUSTER_KUBECONFIG=$(read_scalar_from_yaml "$config_path" '.cluster_cfg')
+    TEMP_DIR_PATH=$(read_scalar_from_yaml "$config_path" '.temp_dir_path')
+    KS_K8S_DEPL_REPO_DIRPATH=$(read_scalar_from_yaml "$config_path" '.ks_k8s_depl_repo_dirpath')
+    REPLICA_READY_CHECK_PAUSE_SECONDS=$(read_scalar_from_yaml "$config_path" '.replica_ready_check_pause_seconds')
+    REPLICA_READY_CHECK_MAX_CHECKCOUNT=$(read_scalar_from_yaml "$config_path" '.replica_ready_check_max_checkcount')
+    WARM_CACHES=$(read_scalar_from_yaml "$config_path" '.warm_caches')
+    SYNCHRONIZE_USER_TABLES=$(read_scalar_from_yaml "$config_path" '.synchronize_user_tables')
+    CLEAR_PERSISTENCE_CACHES_BLUE_FUNCTION=$(read_scalar_from_yaml "$config_path" '.clear_persistence_caches_blue_function')
+    CLEAR_PERSISTENCE_CACHES_GREEN_FUNCTION=$(read_scalar_from_yaml "$config_path" '.clear_persistence_caches_green_function')
+    GIT_COMMIT_MSG=$(read_scalar_from_yaml "$config_path" '.git_commit_msg')
 
-    read_array BLUE_DEPLOYMENT_LIST '.blue_deployment_list'
-    read_array GREEN_DEPLOYMENT_LIST '.green_deployment_list'
-    read_map DEPLOYMENT_TO_FULL_REPLICA_COUNT_MAP '.deployment_to_full_replica_count_map'
-    read_map DEPLOYMENT_TO_YAML_FILEPATH_MAP '.deployment_to_yaml_filepath_map'
-    read_map HOST_TO_SERVICE_MAP_BLUE '.host_to_service_map.blue'
-    read_map HOST_TO_SERVICE_MAP_GREEN '.host_to_service_map.green'
-
+    read_array_from_yaml BLUE_DEPLOYMENT_LIST "$config_path" '.blue_deployment_list'
+    read_array_from_yaml GREEN_DEPLOYMENT_LIST "$config_path" '.green_deployment_list'
+    read_map_from_yaml DEPLOYMENT_TO_FULL_REPLICA_COUNT_MAP "$config_path" '.deployment_to_full_replica_count_map'
+    read_map_from_yaml DEPLOYMENT_TO_YAML_FILEPATH_MAP "$config_path" '.deployment_to_yaml_filepath_map'
+    read_map_from_yaml HOST_TO_SERVICE_MAP_BLUE "$config_path" '.host_to_service_map.blue'
+    read_map_from_yaml HOST_TO_SERVICE_MAP_GREEN "$config_path" '.host_to_service_map.green'
+    read_map_from_yaml HOST_TO_INGRESS_NAME_MAP "$config_path" '.host_to_ingress_name_map'
+    read_map_from_yaml HOST_TO_INGRESS_YAML_FILEPATH_MAP "$config_path" '.host_to_ingress_yaml_filepath_map'
     if [ "$WARM_CACHES" == "true" ]; then
-        CACHE_WARMING_POD_LIST_FILEPATH=$(read_scalar '.cache_warming_pod_list_filepath')
-        CACHE_WARMING_POD_SUBLIST_FILEPATH=$(read_scalar '.cache_warming_pod_sublist_filepath')
-        CACHE_WARMING_USERNAME=$(read_scalar '.cache_warming_username')
-        CACHE_WARMING_PASSWORD=$(read_scalar '.cache_warming_password')
-        read_map DEPLOYMENT_TO_CACHE_WARMING_POLICY '.deployment_to_cache_warming_policy'
+        CACHE_WARMING_POD_LIST_FILEPATH=$(read_scalar_from_yaml "$config_path" '.cache_warming_pod_list_filepath')
+        CACHE_WARMING_POD_SUBLIST_FILEPATH=$(read_scalar_from_yaml "$config_path" '.cache_warming_pod_sublist_filepath')
+        CACHE_WARMING_USERNAME=$(read_scalar_from_yaml "$config_path" '.cache_warming_username')
+        CACHE_WARMING_PASSWORD=$(read_scalar_from_yaml "$config_path" '.cache_warming_password')
+        read_map_from_yaml DEPLOYMENT_TO_CACHE_WARMING_POLICY "$config_path" '.deployment_to_cache_warming_policy'
     fi
 }
 
@@ -208,14 +162,14 @@ function yaml_file_is_current_with_production() {
 }
 
 function git_repo_clone_matches_cluster_config() {
+    local all_yaml_files_are_current="yes"
     pos=0
     while [ $pos -lt ${#BLUE_DEPLOYMENT_LIST[@]} ] ; do
         deployment=${BLUE_DEPLOYMENT_LIST[$pos]}
         yaml_filepath="${DEPLOYMENT_TO_YAML_FILEPATH_MAP[$deployment]}"
         if ! yaml_file_is_current_with_production "$yaml_filepath" ; then
-            echo "current master branch of kubernetes yaml repo does not match the production environment"
             echo "mismatch exists in file $KS_K8S_DEPL_REPO_DIRPATH/$yaml_filepath"
-            return 1
+            all_yaml_files_are_current="no"
         fi
         pos=$(($pos+1))
     done
@@ -224,15 +178,19 @@ function git_repo_clone_matches_cluster_config() {
         deployment=${GREEN_DEPLOYMENT_LIST[$pos]}
         yaml_filepath="${DEPLOYMENT_TO_YAML_FILEPATH_MAP[$deployment]}"
         if ! yaml_file_is_current_with_production "$yaml_filepath" ; then
-            echo "current master branch of kubernetes yaml repo does not match the production environment"
             echo "mismatch exists in file $KS_K8S_DEPL_REPO_DIRPATH/$yaml_filepath"
-            return 1
+            all_yaml_files_are_current="no"
         fi
         pos=$(($pos+1))
     done
-    if ! yaml_file_is_current_with_production "$INGRESS_YAML_FILEPATH" ; then
+    for yaml_filepath in ${HOST_TO_INGRESS_YAML_FILEPATH_MAP[*]} ; do
+        if ! yaml_file_is_current_with_production "$yaml_filepath" ; then
+            echo "mismatch exists in file $KS_K8S_DEPL_REPO_DIRPATH/$yaml_filepath"
+            all_yaml_files_are_current="no"
+        fi
+    done
+    if ! [ "$all_yaml_files_are_current" == "yes" ] ; then
         echo "current master branch of kubernetes yaml repo does not match the production environment"
-        echo "mismatch exists in file $KS_K8S_DEPL_REPO_DIRPATH/$INGRESS_YAML_FILEPATH"
         return 1
     fi
     return 0
@@ -440,8 +398,8 @@ function attempt_to_warm_caches_of_incoming_deployments() {
 
 function switchover_ingress_rules_to_destination_database_deployment() {
     local DESTINATION_COLOR=$1
-    local ingress_yaml_filepath="$KS_K8S_DEPL_REPO_DIRPATH/$INGRESS_YAML_FILEPATH"
     local host_map_name="HOST_TO_SERVICE_MAP_BLUE"
+    local host_to_ingress_filepath_map_name="HOST_TO_INGRESS_YAML_FILEPATH_MAP"
 
     if [ "$DESTINATION_COLOR" == "green" ] ; then
         host_map_name="HOST_TO_SERVICE_MAP_GREEN"
@@ -463,6 +421,9 @@ function switchover_ingress_rules_to_destination_database_deployment() {
         escaped_host=$(printf '%q' "$host")
         local service
         eval "service=\${${host_map_name}[$escaped_host]}"
+        local ingress_yaml_filepath_relative
+        eval "ingress_yaml_filepath_relative=\${$host_to_ingress_filepath_map_name[$escaped_host]}"
+        local ingress_yaml_filepath="$KS_K8S_DEPL_REPO_DIRPATH/$ingress_yaml_filepath_relative"
         if ! "$YQ_BINARY" --inplace "(.spec.rules[] | select(.host == \"$host\") | .http.paths[].backend.service.name) = \"$service\"" "$ingress_yaml_filepath" ; then
             echo "Error : failed to update service mapping for host '$host' in $ingress_yaml_filepath" >&2
             exit 1
@@ -488,7 +449,17 @@ function switchover_ingress_rules_to_destination_database_deployment() {
     done
 
     echo "switching traffic over to the updated database deployment"
-    kubectl --kubeconfig $CLUSTER_KUBECONFIG apply -f "$ingress_yaml_filepath"
+    unset yaml_files_already_applied
+    declare -a yaml_files_already_applied
+    for ingress_yaml_filepath_relative in ${HOST_TO_INGRESS_YAML_FILEPATH_MAP[*]} ; do
+        if [ -z ${yaml_files_already_applied[$ingress_yaml_filepath_relative]} ] ; then
+            local ingress_yaml_filepath="$KS_K8S_DEPL_REPO_DIRPATH/$ingress_yaml_filepath_relative"
+            if ! kubectl --kubeconfig $CLUSTER_KUBECONFIG apply -f "$ingress_yaml_filepath" ; then
+                echo "Warning : received non-zero exit status for command kubectl --kubeconfig $CLUSTER_KUBECONFIG apply -f $ingress_yaml_filepath"
+            fi
+            yaml_files_already_applied[$ingress_yaml_filepath_relative]="done"
+        fi
+    done
 }
 
 function adjust_replica_count_in_deployment_yaml_file() {
@@ -557,10 +528,11 @@ function check_in_changes_to_kubernetes_into_github() {
         fi
         pos=$(($pos+1))
     done
-    yaml_filepath="$INGRESS_YAML_FILEPATH"
-    if ! $GIT_BINARY -C $KS_K8S_DEPL_REPO_DIRPATH add "$yaml_filepath" >/dev/null 2>&1 ; then
-        echo "warning : failure when adding file $yaml_filepath to changeset" >&2
-    fi
+    for ingress_yaml_filepath_relative in ${HOST_TO_INGRESS_YAML_FILEPATH_MAP[*]} ; do
+        if ! $GIT_BINARY -C $KS_K8S_DEPL_REPO_DIRPATH add "$ingress_yaml_filepath_relative" >/dev/null 2>&1 ; then
+            echo "warning : failure when adding file $ingress_yaml_filepath_relative to changeset" >&2
+        fi
+    done
     date_string=$(date +%Y-%m-%d)
     commit_message_string="$GIT_COMMIT_MSG $date_string"
     if ! $GIT_BINARY -C $KS_K8S_DEPL_REPO_DIRPATH commit -m "$commit_message_string" >/dev/null 2>&1 ; then
@@ -589,6 +561,7 @@ function main() {
     fi
     source /data/portal-cron/scripts/automation-environment.sh
     source /data/portal-cron/scripts/clear-persistence-cache-shell-functions.sh
+    source /data/portal-cron/scripts/color-config-parsing-functions.sh
     load_color_swap_config "$COLOR_SWAP_CONFIG_FILEPATH"
 
     echo "starting transfer-deployment-color.sh"

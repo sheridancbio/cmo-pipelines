@@ -12,32 +12,7 @@
 
 declare -a BLUE_SERVICE_LIST=()
 declare -a GREEN_SERVICE_LIST=()
-
-function read_scalar() {
-    local key="$1"
-    local value
-    value=$("$YQ_BINARY" -r "$key" "$COLOR_SWAP_CONFIG_FILEPATH")
-    if [ "$value" == "null" ] || [ -z "$value" ] ; then
-        echo "Error : missing required scalar '$key' in $COLOR_SWAP_CONFIG_FILEPATH" >&2
-        exit 1
-    fi
-    printf '%s\n' "$value"
-}
-
-function read_array() {
-    local dest_var="$1"
-    local path="$2"
-    local array_path="${path}[]"
-    local file="$COLOR_SWAP_CONFIG_FILEPATH"
-    local type=$("$YQ_BINARY" -r "$path | type" "$file")
-    if [ "$type" != "!!seq" ] ; then
-        echo "Error : expected array at '$path' in $file" >&2
-        exit 1
-    fi
-    unset "$dest_var"
-    declare -g -a "$dest_var"
-    readarray -t "$dest_var" < <("$YQ_BINARY" -r "$array_path" "$file")
-}
+declare -a HOST_TO_INGRESS_NAME_MAP=()
 
 function load_color_swap_config() {
     if ! [ -f "$COLOR_SWAP_CONFIG_FILEPATH" ] || ! [ -r "$COLOR_SWAP_CONFIG_FILEPATH" ] ; then
@@ -48,12 +23,12 @@ function load_color_swap_config() {
         echo "Error : unable to locate yq binary '$YQ_BINARY' required to read config file" >&2
         exit 1
     fi
-    SERVICE_ACCOUNT=$(read_scalar '.service_account')
-    CLUSTER_KUBECONFIG=$(read_scalar '.cluster_cfg')
-    TEMP_DIR_PATH=$(read_scalar '.temp_dir_path')
-    INGRESS_NAME=$(read_scalar '.ingress_name')
-    read_array BLUE_SERVICE_LIST '.blue_deployment_list'
-    read_array GREEN_SERVICE_LIST '.green_deployment_list'
+    SERVICE_ACCOUNT=$(read_scalar_from_yaml "$COLOR_SWAP_CONFIG_FILEPATH" '.service_account')
+    CLUSTER_KUBECONFIG=$(read_scalar_from_yaml "$COLOR_SWAP_CONFIG_FILEPATH" '.cluster_cfg')
+    TEMP_DIR_PATH=$(read_scalar_from_yaml "$COLOR_SWAP_CONFIG_FILEPATH" '.temp_dir_path')
+    read_map_from_yaml HOST_TO_INGRESS_NAME_MAP "$COLOR_SWAP_CONFIG_FILEPATH" '.host_to_ingress_name_map'
+    read_array_from_yaml BLUE_SERVICE_LIST "$COLOR_SWAP_CONFIG_FILEPATH" '.blue_deployment_list'
+    read_array_from_yaml GREEN_SERVICE_LIST "$COLOR_SWAP_CONFIG_FILEPATH" '.green_deployment_list'
     mkdir -p "$TEMP_DIR_PATH"
 }
 
@@ -103,9 +78,21 @@ function output_production_color_from_management_database() {
 }
 
 function output_production_color_from_kubernetes_cluster() {
+    # dump all ingress rules into common file
     /data/portal-cron/scripts/authenticate_service_account.sh "$SERVICE_ACCOUNT" >&2
     ingress_output_filepath="$(mktemp "$TEMP_DIR_PATH/ingress_output_XXXXXXXX.yaml")"
-    kubectl --kubeconfig "$CLUSTER_KUBECONFIG" get ingress --output=yaml "$INGRESS_NAME" > "$ingress_output_filepath"
+    rm -f "$ingress_output_filepath"
+    unset ingress_name_already_output
+    declare -a ingress_name_already_output
+    for ingress_name in ${HOST_TO_INGRESS_NAME_MAP[*]} ; do
+        if [ -z ${ingress_name_already_output[$ingress_name]} ] ; then
+            if !  kubectl --kubeconfig "$CLUSTER_KUBECONFIG" get ingress --output=yaml "$ingress_name" >> "$ingress_output_filepath" ; then
+                echo "Warning : received non-zero exit status for command kubectl --kubeconfig $CLUSTER_KUBECONFIG get ingress --output=yaml $ingress_name"
+            fi
+            ingress_name_already_output[$ingress_name]="done"
+        fi
+    done
+    # examine services in dump file
     found_blue_services="false"
     found_green_services="false"
     pos=0
@@ -160,6 +147,7 @@ function main() {
     COLOR_SWAP_CONFIG_FILEPATH=$2
     validate_arguments $@
     source /data/portal-cron/scripts/automation-environment.sh
+    source /data/portal-cron/scripts/color-config-parsing-functions.sh
     load_color_swap_config
     echo "starting verify-management-state.sh"
     actual_production_color=$(output_production_color_from_kubernetes_cluster)
